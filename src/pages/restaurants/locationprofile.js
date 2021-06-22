@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dimensions, SafeAreaView, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 
-import Cart from '../components/cart'
+import Cart from '../../components/restaurants/cart'
 
 import Entypo from 'react-native-vector-icons/Entypo'
 
@@ -101,7 +101,7 @@ export default function locationProfile(props) {
 								{item.row.map(( product, index ) => (
 									<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { id: product.id })}>
 										<View style={style.productImageHolder}>
-											<Image source={require("../../assets/product-image.png")} style={{ height: imageSize, width: imageSize }}/>
+											<Image source={require("../../../assets/product-image.png")} style={{ height: imageSize, width: imageSize }}/>
 										</View>
 										<Text style={style.productName}>{product.name}</Text>
 									</TouchableOpacity>
@@ -119,7 +119,7 @@ export default function locationProfile(props) {
 								{item.row.map(( product, index ) => (
 									<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { id: product.id })}>
 										<View style={style.productImageHolder}>
-											<Image source={require("../../assets/product-image.png")} style={{ height: imageSize, width: imageSize }}/>
+											<Image source={require("../../../assets/product-image.png")} style={{ height: imageSize, width: imageSize }}/>
 										</View>
 										<Text style={style.productName}>{product.name}</Text>
 									</TouchableOpacity>

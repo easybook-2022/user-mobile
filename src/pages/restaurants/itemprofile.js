@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dimensions, SafeAreaView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 
-import Cart from '../components/cart'
+import Cart from '../../components/restaurants/cart'
 
 import Entypo from 'react-native-vector-icons/Entypo'
 
@@ -277,7 +277,7 @@ export default function itemProfile(props) {
 											friend.username ? 
 												<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
 													<View style={style.friendProfileHolder}>
-
+														<Image source={require("../../../assets/profile.jpeg")} style={{ height: 60, width: 60 }}/>
 													</View>
 													<Text style={style.friendName}>{friend.username}</Text>
 												</TouchableOpacity>
@@ -300,7 +300,7 @@ export default function itemProfile(props) {
 											friend.username ? 
 												<TouchableOpacity key={friend.key} style={style.friend} onPress={() => {}}>
 													<View style={style.friendProfileHolder}>
-
+														<Image source={require("../../../assets/profile.jpeg")}/>
 													</View>
 													<Text style={style.friendName}>{friend.username}</Text>
 												</TouchableOpacity>
@@ -314,7 +314,7 @@ export default function itemProfile(props) {
 
 						<View style={style.itemContainer}>
 							<View style={style.itemImageHolder}>
-								<Image style={{ height: 100, width: 100 }} source={require("../../assets/product-image.png")}/>
+								<Image style={{ height: 100, width: 100 }} source={require("../../../assets/product-image.png")}/>
 							</View>
 							<View style={style.itemInfos}>
 								{orderingItem.info.map((info, infoindex) => (
@@ -381,7 +381,7 @@ const style = StyleSheet.create({
 	friendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
 	friend: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
-	friendProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, width: 60 },
+	friendProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
 	friendName: { textAlign: 'center' },
 
 	// selected friends list

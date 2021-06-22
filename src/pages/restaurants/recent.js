@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, FlatList, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView, FlatList, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 
 export default function recent({ navigation }) {
 	const [items, setItems] = useState([
@@ -68,6 +68,7 @@ export default function recent({ navigation }) {
 						<View style={style.item} key={item.key}>
 							<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 								<View style={style.itemImageHolder}>
+									<Image source={require("../../../assets/product-image.png")} style={{ height: 100, width: 100 }}/>
 								</View>
 								<View style={style.itemInfos}>
 									{item.info.map((info, infoindex) => (
@@ -96,7 +97,7 @@ const style = StyleSheet.create({
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, width: 100 },
+	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, overflow: 'hidden', width: 100 },
 	itemInfos: {  },
 	itemInfo: { fontSize: 15 },
 	header: { fontSize: 15 },

@@ -9,17 +9,18 @@ import * as Font from 'expo-font';
 import Login from './src/pages/login'
 import Register from './src/pages/register'
 
+import Main from './src/pages/main'
 
 // restaurants
-import Main from './src/pages/main'
-import Locationprofile from './src/pages/locationprofile'
-import Itemprofile from './src/pages/itemprofile'
+import Restaurants from './src/pages/restaurants'
+import Locationprofile from './src/pages/restaurants/locationprofile'
+import Itemprofile from './src/pages/restaurants/itemprofile'
+import Recent from './src/pages/restaurants/recent'
+
+// restaurants' components
+import Cart from './src/components/restaurants/cart'
 
 import Account from './src/pages/account'
-import Recent from './src/pages/recent'
-
-// components
-import Cart from './src/components/cart'
 import Notifications from './src/components/notifications'
 
 const Stack = createStackNavigator();
@@ -44,6 +45,7 @@ export default function App() {
                         <Stack.Screen name="login" component={Login} options={{ headerShown: false }}/>
                         <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
+                        <Stack.Screen name="restaurants" component={Restaurants} options={{ headerShown: false }}/>
                         <Stack.Screen name="locationprofile" component={Locationprofile} options={{ headerShown: false }}/>
                         <Stack.Screen name="itemprofile" component={Itemprofile} options={{ headerShown: false }}/>
                         <Stack.Screen name="cart" component={Cart} options={{ headerShown: false }}/>
