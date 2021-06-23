@@ -61,7 +61,7 @@ export default function restaurants({ navigation }) {
 		]}
 	])
 	const [loadingSpecialAndDeals, setLoadingSpecialAndDeals] = useState(true)
-	const [viewType, setViewType] = useState('specialanddeals')
+	const [viewType, setViewType] = useState('restaurants')
 	const [openCart, setOpencart] = useState(false)
 	const [openNotifications, setOpenNotifications] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(2)
@@ -197,6 +197,9 @@ export default function restaurants({ navigation }) {
 			<View style={style.box}>
 				<View style={style.header}>
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+						<TouchableOpacity style={{ marginVertical: 10 }} onPress={() => navigation.goBack()}>
+							<Ionicons name="chevron-back" size={40}/>
+						</TouchableOpacity>
 						<TextInput style={style.searchInput} placeholder="Search any restaurants, food, drinks"/>
 						<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
 							<FontAwesome name="bell" size={30}/>
@@ -219,7 +222,7 @@ export default function restaurants({ navigation }) {
 					</View>
 				</View>
 
-				<View style={style.body}>
+				<View>
 					{viewType == 'restaurants' ? 
 						<FlatList
 							ListFooterComponent={() => {
@@ -229,7 +232,7 @@ export default function restaurants({ navigation }) {
 
 								return null
 							}}
-							style={{ height: height - 233 }}
+							style={{ height: height - 245 }}
 							onEndReached={() => getLocations(false)}
 							onEndReachedThreshold={0}
 							showsVerticalScrollIndicator={false}
@@ -238,7 +241,7 @@ export default function restaurants({ navigation }) {
 								<View key={item.key} style={style.row}>
 									{item.row.map(info => (
 										info.id ? 
-											<TouchableOpacity key={info.key} style={style.restaurant} onPress={() => navigation.navigate("locationprofile", { name: info.name })}>
+											<TouchableOpacity key={info.key} style={style.restaurant} onPress={() => navigation.navigate("restaurantprofile", { name: info.name })}>
 												<View style={style.restaurantInfo}>
 													<Image style={style.restaurantLogo} source={info.logo.photo}/>
 													<Text style={style.restaurantName}>{info.name}</Text>
@@ -261,7 +264,7 @@ export default function restaurants({ navigation }) {
 
 								return null
 							}}
-							style={{ height: height - 233 }}
+							style={{ height: height - 245 }}
 							onEndReached={() => getSpecialAndDeals(false)}
 							onEndReachedThreshold={0}
 							showsVerticalScrollIndicator={false}
@@ -317,8 +320,8 @@ export default function restaurants({ navigation }) {
 
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	header: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: 110, justifyContent: 'space-between', padding: 5, width: '100%' },
-	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 15, margin: 10, padding: 10, width: width - 80 },
+	header: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: 120, justifyContent: 'space-between', padding: 5, width: '100%' },
+	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 15, margin: 10, padding: 10, width: width - 110 },
 	notification: { flexDirection: 'row', marginRight: 10, marginVertical: 10 },
 	navs: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	nav: { alignItems: 'center' },

@@ -16,50 +16,61 @@ const { height, width } = Dimensions.get('window')
 export default function main({ navigation }) {
 	const [services, setServices] = useState([
 		{ key: "0", service: "restaurants", header: "Restaurant(s)", locations: [
-			{ key: 'l-0', id: "d9df9dsfsdf-0", service: "d9dsofidsoif-0", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 0", radiusKm: 1 },
-			{ key: 'l-1', id: "d9df9dsfsdf-1", service: "d9dsofidsoif-1", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 1", radiusKm: 2 },
-			{ key: 'l-2', id: "d9df9dsfsdf-2", service: "d9dsofidsoif-2", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 2", radiusKm: 3 },
-			{ key: 'l-3', id: "d9df9dsfsdf-3", service: "d9dsofidsoif-3", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 3", radiusKm: 4 },
-			{ key: 'l-4', id: "d9df9dsfsdf-4", service: "d9dsofidsoif-4", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 4", radiusKm: 5 },
-			{ key: 'l-5', id: "d9df9dsfsdf-5", service: "d9dsofidsoif-5", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 5", radiusKm: 6 }
+			{ key: 'l-0', id: "d9df9dsfsdf-0", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 0", radiusKm: 1 },
+			{ key: 'l-1', id: "d9df9dsfsdf-1", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 1", radiusKm: 2 },
+			{ key: 'l-2', id: "d9df9dsfsdf-2", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 2", radiusKm: 3 },
+			{ key: 'l-3', id: "d9df9dsfsdf-3", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 3", radiusKm: 4 },
+			{ key: 'l-4', id: "d9df9dsfsdf-4", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 4", radiusKm: 5 },
+			{ key: 'l-5', id: "d9df9dsfsdf-5", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 5", radiusKm: 6 }
 		], loading: true },
 		{ key: "1", service: "salons", header: "Salon(s)", locations: [
-			{ key: "s-0", id: "29d9c90d0c-0", service: "ds9fidsfidsof-0", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 0", radiusKm: 5 },
-			{ key: "s-1", id: "29d9c90d0c-1", service: "ds9fidsfidsof-1", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 1", radiusKm: 5 },
-			{ key: "s-2", id: "29d9c90d0c-2", service: "ds9fidsfidsof-2", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 2", radiusKm: 5 },
-			{ key: "s-3", id: "29d9c90d0c-3", service: "ds9fidsfidsof-3", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 3", radiusKm: 5 },
-			{ key: "s-4", id: "29d9c90d0c-4", service: "ds9fidsfidsof-4", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 4", radiusKm: 5 },
-			{ key: "s-5", id: "29d9c90d0c-5", service: "ds9fidsfidsof-5", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 5", radiusKm: 5 }
+			{ key: "s-0", id: "29d9c90d0c-0", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 0", radiusKm: 5 },
+			{ key: "s-1", id: "29d9c90d0c-1", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 1", radiusKm: 5 },
+			{ key: "s-2", id: "29d9c90d0c-2", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 2", radiusKm: 5 },
+			{ key: "s-3", id: "29d9c90d0c-3", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 3", radiusKm: 5 },
+			{ key: "s-4", id: "29d9c90d0c-4", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 4", radiusKm: 5 },
+			{ key: "s-5", id: "29d9c90d0c-5", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 5", radiusKm: 5 }
 		], loading: true }
 	])
 	const [openNotifications, setOpenNotifications] = useState(false)
 
 	const getLocations = (type, index, start) => {
-		let { locations } = services[index]
+		let newServices = [...services]
+		let { locations } = newServices[index]
 		let last_item = locations[locations.length - 1]
-		let itemkey = parseInt(last_item.key.replace("s-", ""))
+		let keyname = last_item.key.substr(0, 2)
+		let keynum = parseInt(last_item.key.substr(2))
 		let km = last_item.radiusKm
+		let info = { 
+			"restaurants": {
+				"id": "d9df9dsfsdf",
+				"photo": require('../../assets/restaurant-logo.png')
+			}, 
+			"salons": {
+				"id": "29d9c90d0c",
+				"photo": require('../../assets/salon-logo.jpeg')
+			} 
+		}
 
 		for (let k = 1; k <= 10; k++) {
-			itemkey += 1
+			keynum += 1
 			km += 5
 
 			locations.push({
-				key: "s-" + itemkey,
-				id: "29d9c90d0c-" + itemkey,
-				service: "ds9fidsfidsof-" + itemkey,
+				key: keyname + "" + keynum,
+				id: info[type].id + "-" + keynum,
 				logo: { 
-					photo: '',
+					photo: info[type].photo,
 					width: 0, height: 0
 				},
-				name: type == "restaurants" ? "Tim Hortons " + itemkey : "Hair Salon " + itemkey,
+				name: type == "restaurants" ? "Tim Hortons " + keynum : "Hair Salon " + keynum,
 				radiusKm: km
 			})
 		}
 
-		services[index].locations = locations
+		newServices[index].locations = locations
 
-		setServices(services)
+		setServices(newServices)
 	}
 
 	return (
@@ -82,7 +93,11 @@ export default function main({ navigation }) {
 						data={services}
 						renderItem={({ item, index }) => 
 							<View key={item.key} style={style.service}>
-								<Text style={style.rowHeader}>{item.header} ({item.locations.length})</Text>
+								<Text style={style.rowHeader}>{item.locations.length} {item.header} near you</Text>
+
+								<TouchableOpacity style={style.seeMore} onPress={() => navigation.navigate(item.service)}>
+									<Text style={style.seeMoreHeader}>See More</Text>
+								</TouchableOpacity>
 
 								<View style={style.row}>
 									<FlatList
@@ -149,6 +164,7 @@ const style = StyleSheet.create({
 
 	service: { marginBottom: 10, marginHorizontal: 5 },
 	rowHeader: { fontWeight: 'bold', margin: 10 },
+	seeMore: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	row: { flexDirection: 'row' },
 	location: { alignItems: 'center', flexDirection: 'column', height: 100, justifyContent: 'space-between', margin: 5, width: 100 },
 	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', height: 80, overflow: 'hidden', width: 80 },

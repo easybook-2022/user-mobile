@@ -13,12 +13,17 @@ import Main from './src/pages/main'
 
 // restaurants
 import Restaurants from './src/pages/restaurants'
-import Locationprofile from './src/pages/restaurants/locationprofile'
+import Restaurantprofile from './src/pages/restaurants/restaurantprofile'
 import Itemprofile from './src/pages/restaurants/itemprofile'
 import Recent from './src/pages/restaurants/recent'
 
 // restaurants' components
 import Cart from './src/components/restaurants/cart'
+
+// salons
+import Salons from './src/pages/salons'
+import Salonprofile from './src/pages/salons/salonprofile'
+import Serviceslist from './src/pages/salons/serviceslist'
 
 import Account from './src/pages/account'
 import Notifications from './src/components/notifications'
@@ -46,12 +51,15 @@ export default function App() {
                         <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
                         <Stack.Screen name="restaurants" component={Restaurants} options={{ headerShown: false }}/>
-                        <Stack.Screen name="locationprofile" component={Locationprofile} options={{ headerShown: false }}/>
+                        <Stack.Screen name="restaurantprofile" component={Restaurantprofile} options={{ headerShown: false }}/>
                         <Stack.Screen name="itemprofile" component={Itemprofile} options={{ headerShown: false }}/>
+                        <Stack.Screen name="recent" component={Recent} options={{ headerShown: false }}/>
                         <Stack.Screen name="cart" component={Cart} options={{ headerShown: false }}/>
+                        <Stack.Screen name="salons" component={Salons} options={{ headerShown: false }}/>
+                        <Stack.Screen name="salonprofile" component={Salonprofile} options={{ headerShown: false }}/>
+                        <Stack.Screen name="serviceslist" component={Serviceslist} options={{ headerShown: false }}/>
                         <Stack.Screen name="notifications" component={Notifications} options={{ headerShown: false }}/>
                         <Stack.Screen name="account" component={Account} options={{ headerShown: false }}/>
-                        <Stack.Screen name="recent" component={Recent} options={{ headerShown: false }}/>
                     </Stack.Navigator>
                 </NavigationContainer>
             )

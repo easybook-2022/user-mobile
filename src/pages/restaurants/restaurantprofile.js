@@ -9,7 +9,7 @@ const { height, width } = Dimensions.get('window')
 const itemSize = (width * 0.3) - 10
 const imageSize = (width * 0.3) - 50
 
-export default function locationProfile(props) {
+export default function restaurantprofile(props) {
 	let { name } = props.route.params
 
 	const [locationName, setLocationname] = useState(name)
