@@ -19,45 +19,45 @@ const items = {
 		},
 		{ 
 			key: "s-3", 
-			name: "Express Pedicure", time: "30 Mins", 
+			name: "Express Pedicure", time: { month: "", week: "", day: "", hour: "", minute: "30" }, 
 			info: "Includes warm whirlpool soak, color removal, trimming and shaping nails, cuticles care and regular polish.", 
 			price: "$30 +"
 		},
 		{ 
 			key: "s-4", 
-			name: "Spa Pedicure", time: "35 Mins", 
+			name: "Spa Pedicure", time: { month: "", week: "", day: "", hour: "", minute: "35" }, 
 			info: "Includes warm whirlpool soak with Rock Sea Salt, nails, cuticles & callous care, a mini massage with oil, hot towel wrap, and application of regular polish. \n\n Add Paraffin:...", 
 			price: "$45 +"
 		},
 		{
 			key: "s-5",
-			name: "Deluxe Pedicure", time: "45 Mins",
+			name: "Deluxe Pedicure", time: { month: "", week: "", day: "", hour: "", minute: "45" },
 			info: "Includes warm whirlpool soak with Foaming Flower Soap; nails, cuticles & callous care, relaxing lotion massage, paraffin, and mint mask, finishing with hot towel wrap and regular polish.", 
 			price: "$59 +"
 		},
 		{
 			key: "s-6",
-			name: "The One Lavender Pedicure", time: "55 Mins",
+			name: "The One Lavender Pedicure", time: { month: "", week: "", day: "", hour: "", minute: "55" },
 			info: "Enjoy the relaxing and anti-stress benefits of Lavender. This treatment starts with a gentle exfoliation consisting of Lavender Salt and scrubs to remove dry skin and improve skin's texture. The feet are wrapped in Lavender paraffin & a mask. Regular polish is included.", 
 			price: "$69 +"
 		},
 		{
 			key: "s-7",
-			name: "The One Jell-ous Feet Treat", time: "60 Mins",
+			name: "The One Jell-ous Feet Treat", time: { month: "", week: "", day: "", hour: "", minute: "60" },
 			info: "Translucent fluffy jelly provides the ultimate relief for stress and aching muscles. Exfoliates and hydrates dry skin.", 
 			price: "$79 +"
 		},
 		{
 			key: "s-8",
-			name: "The One Organic Pedicure", time: "60 Mins",
+			name: "The One Organic Pedicure", time: { month: "", week: "", day: "", hour: "", minute: "60" },
 			info: "Designed to brighten & lighten skin tone for a flawless, porcelain finish without the use of dangerous chemicals in purely natural & organic treatment. \n\n Your choice of fresh lemon & ginger/orange & ginger", 
 			price: "$89 +"
 		}
 	],
 	"Foot Massage": [
-		{ key: "s-0", time: "10 Mins", price: "$20" },
-		{ key: "s-1", time: "20 Mins", price: "$30" },
-		{ key: "s-2", time: "15 Mins", price: "$25" },
+		{ key: "s-0", time: { month: "", week: "", day: "", hour: "", minute: "10" }, price: "$20" },
+		{ key: "s-1", time: { month: "", week: "", day: "", hour: "", minute: "20" }, price: "$30" },
+		{ key: "s-2", time: { month: "", week: "", day: "", hour: "", minute: "15" }, price: "$25" },
 	],
 	"Nail Enhancement": [
 		{ key: "s-0", name: "Manicure", price: "$10" },
@@ -96,7 +96,7 @@ const items = {
 	],
 	"Eyelash Extensions": [
 		{ key: "s-0", name: "Single Mink Lashes", price: "$145 +" },
-		{ key: "s-1", name: "Refill", time: "2 weeks", price: "$60 +" },
+		{ key: "s-1", name: "Refill", time: { month: "", week: "2", day: "", hour: "", minute: "" }, price: "$60 +" },
 	],
 
 	"Waxing for women": [
@@ -140,11 +140,12 @@ export default function serviceslist(props) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<View style={style.body}>
+				<View>
 					<Text style={style.bodyHeader}>{services.length} {name} service(s)</Text>
 
 					<FlatList
 						data={services}
+						style={{ height: height - 230 }}
 						renderItem={({ item, index }) => 
 							<View key={item.key} style={style.service}>
 								<Text style={style.serviceName}>{item.name}</Text>
@@ -152,8 +153,12 @@ export default function serviceslist(props) {
 
 								<View style={{ flexDirection: 'row' }}>
 									<Text style={style.serviceDetail}>{item.price}</Text>
-									<Text style={style.serviceDetail}>{item.time}</Text>
+									<Text style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
 								</View>
+
+								<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { name: item.name, time: item.time })}>
+									<Text>Book a time</Text>
+								</TouchableOpacity>
 							</View>
 						}
 					/>
@@ -168,11 +173,11 @@ const style = StyleSheet.create({
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
-	body: { height: height - 149 },
 	bodyHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 
 	service: { marginBottom: 50, marginHorizontal: 10 },
 	serviceName: { fontSize: 20, fontWeight: 'bold' },
 	serviceInfo: { fontSize: 15 },
-	serviceDetail: { fontSize: 15, marginHorizontal: 10, marginVertical: 20 },
+	serviceDetail: { fontSize: 15, marginHorizontal: 10, marginVertical: 5 },
+	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 })

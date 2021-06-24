@@ -17,22 +17,22 @@ const { height, width } = Dimensions.get('window')
 export default function restaurants({ navigation }) {
 	const [locations, setLocations] = useState([
 		{ key: "l-row-0", row: [
-			{ key: 'l-0', id: "d9df9dsfsdf-0", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 0", address: "547 Gerrard St", radiusKm: 1 },
-			{ key: 'l-1', id: "d9df9dsfsdf-1", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 1", address: "547 Gerrard St", radiusKm: 2 },
-			{ key: 'l-2', id: "d9df9dsfsdf-2", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 2", address: "547 Gerrard St", radiusKm: 3 }
+			{ key: 'l-0', id: "d9df9dsfsdf-0", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 0", address: "547 Gerrard St", radiusKm: 1 },
+			{ key: 'l-1', id: "d9df9dsfsdf-1", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 1", address: "547 Gerrard St", radiusKm: 2 },
+			{ key: 'l-2', id: "d9df9dsfsdf-2", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 2", address: "547 Gerrard St", radiusKm: 3 }
 		]},
 		{ key: "l-row-1", row: [
-			{ key: 'l-3', id: "d9df9dsfsdf-3", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 3", address: "547 Gerrard St", radiusKm: 4 },
-			{ key: 'l-4', id: "d9df9dsfsdf-4", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 4", address: "547 Gerrard St", radiusKm: 5 },
-			{ key: 'l-5', id: "d9df9dsfsdf-5", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 5", address: "547 Gerrard St", radiusKm: 6 }
+			{ key: 'l-3', id: "d9df9dsfsdf-3", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 3", address: "547 Gerrard St", radiusKm: 4 },
+			{ key: 'l-4', id: "d9df9dsfsdf-4", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 4", address: "547 Gerrard St", radiusKm: 5 },
+			{ key: 'l-5', id: "d9df9dsfsdf-5", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 5", address: "547 Gerrard St", radiusKm: 6 }
 		]},
 		{ key: "l-row-2", row: [
-			{ key: 'l-6', id: "d9df9dsfsdf-6", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 6", address: "547 Gerrard St", radiusKm: 7 },
-			{ key: 'l-7', id: "d9df9dsfsdf-7", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 7", address: "547 Gerrard St", radiusKm: 8 },
-			{ key: 'l-8', id: "d9df9dsfsdf-8", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 8", address: "547 Gerrard St", radiusKm: 9 }
+			{ key: 'l-6', id: "d9df9dsfsdf-6", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 6", address: "547 Gerrard St", radiusKm: 7 },
+			{ key: 'l-7', id: "d9df9dsfsdf-7", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 7", address: "547 Gerrard St", radiusKm: 8 },
+			{ key: 'l-8', id: "d9df9dsfsdf-8", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 8", address: "547 Gerrard St", radiusKm: 9 }
 		]},
 		{ key: "l-row-3", row: [
-			{ key: 'l-9', id: "d9df9dsfsdf-9", logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 9", address: "547 Gerrard St", radiusKm: 10 },
+			{ key: 'l-9', id: "d9df9dsfsdf-9", image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 9", address: "547 Gerrard St", radiusKm: 10 },
 			{ key: 'l-10' },
 			{ key: 'l-11' }
 		]}
@@ -40,22 +40,22 @@ export default function restaurants({ navigation }) {
 	const [loadingLocations, setLoadingLocations] = useState(true)
 	const [specialAndDeals, setSpecialAndDeals] = useState([
 		{ key: "sp-row-0", row: [
-			{ key: 'sp-0', id: '1v99d-sd9d9s999d9d-0', name: 'roasted milk tea 0', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 },
-			{ key: 'sp-1', id: '1v99d-sd9d9s999d9d-1', name: 'roasted milk tea 1', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 },
-			{ key: 'sp-2', id: '1v99d-sd9d9s999d9d-2', name: 'roasted milk tea 2', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 }
+			{ key: 'sp-0', id: '1v99d-sd9d9s999d9d-0', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 0', address: "547 Gerrard St", radiusKm: 1 },
+			{ key: 'sp-1', id: '1v99d-sd9d9s999d9d-1', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 1', address: "547 Gerrard St", radiusKm: 2 },
+			{ key: 'sp-2', id: '1v99d-sd9d9s999d9d-2', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 2', address: "547 Gerrard St", radiusKm: 3 }
 		]},
 		{ key: "sp-row-1", row: [
-			{ key: 'sp-3', id: '1v99d-sd9d9s999d9d-3', name: 'roasted milk tea 3', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 },
-			{ key: 'sp-4', id: '1v99d-sd9d9s999d9d-4', name: 'roasted milk tea 4', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 },
-			{ key: 'sp-5', id: '1v99d-sd9d9s999d9d-5', name: 'roasted milk tea 5', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 }
+			{ key: 'sp-3', id: '1v99d-sd9d9s999d9d-3', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 3', address: "547 Gerrard St", radiusKm: 4 },
+			{ key: 'sp-4', id: '1v99d-sd9d9s999d9d-4', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 4', address: "547 Gerrard St", radiusKm: 5 },
+			{ key: 'sp-5', id: '1v99d-sd9d9s999d9d-5', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 5', address: "547 Gerrard St", radiusKm: 6 }
 		]},
 		{ key: "sp-row-2", row: [
-			{ key: 'sp-6', id: '1v99d-sd9d9s999d9d-6', name: 'roasted milk tea 6', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 },
-			{ key: 'sp-7', id: '1v99d-sd9d9s999d9d-7', name: 'roasted milk tea 7', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 },
-			{ key: 'sp-8', id: '1v99d-sd9d9s999d9d-8', name: 'roasted milk tea 8', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 }
+			{ key: 'sp-6', id: '1v99d-sd9d9s999d9d-6', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 6', address: "547 Gerrard St", radiusKm: 7 },
+			{ key: 'sp-7', id: '1v99d-sd9d9s999d9d-7', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 7', address: "547 Gerrard St", radiusKm: 8 },
+			{ key: 'sp-8', id: '1v99d-sd9d9s999d9d-8', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 8', address: "547 Gerrard St", radiusKm: 9 }
 		]},
 		{ key: "sp-row-3", row: [
-			{ key: 'sp-9', id: '1v99d-sd9d9s999d9d-9', name: 'roasted milk tea 9', image: { photo: '', width: 0, height: 0 }, radiusKm: 5 },
+			{ key: 'sp-9', id: '1v99d-sd9d9s999d9d-9', image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 }, nav: "itemprofile", name: 'roasted milk tea 9', address: "547 Gerrard St", radiusKm: 10 },
 			{ key: 'sp-10' },
 			{ key: 'sp-11' }
 		]}
@@ -89,7 +89,7 @@ export default function restaurants({ navigation }) {
 			newLocation = {
 				id: "d9df9dsfsdf-" + itemkey,
 				key: 'l-' + itemkey.toString(),
-				logo: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, 
+				image: { photo: require('../../../assets/restaurant-logo.png'), width: 0, height: 0 }, 
 				name: "Tim Hortons " + itemkey, 
 				address: "547 Gerrard St",
 				radiusKm: km
@@ -152,7 +152,7 @@ export default function restaurants({ navigation }) {
 			newSpecialAndDeal = {
 				id: "1v99d-sd9d9s999d9d-" + itemkey,
 				key: 'sp-' + itemkey.toString(),
-				image: { photo: '', width: 0, height: 0 },
+				image: { photo: require('../../../assets/product-image.png'), width: 0, height: 0 },
 				name: "Product name " + itemkey,
 				radiusKm: km
 			}
@@ -222,70 +222,38 @@ export default function restaurants({ navigation }) {
 					</View>
 				</View>
 
-				<View>
-					{viewType == 'restaurants' ? 
-						<FlatList
-							ListFooterComponent={() => {
-								if (loadingLocations) {
-									return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
-								}
+				<FlatList
+					ListFooterComponent={() => {
+						if (loadingLocations) {
+							return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
+						}
 
-								return null
-							}}
-							style={{ height: height - 245 }}
-							onEndReached={() => getLocations(false)}
-							onEndReachedThreshold={0}
-							showsVerticalScrollIndicator={false}
-							data={locations}
-							renderItem={({ item }) => 
-								<View key={item.key} style={style.row}>
-									{item.row.map(info => (
-										info.id ? 
-											<TouchableOpacity key={info.key} style={style.restaurant} onPress={() => navigation.navigate("restaurantprofile", { name: info.name })}>
-												<View style={style.restaurantInfo}>
-													<Image style={style.restaurantLogo} source={info.logo.photo}/>
-													<Text style={style.restaurantName}>{info.name}</Text>
-													<Text style={style.radiusKm}>{info.radiusKm} km away</Text>
-												</View>
-												<Text style={style.restaurantAddress}>{info.address}</Text>
-											</TouchableOpacity>
-											:
-											<View key={info.key} style={style.restaurantDisabled}></View>
-									))}
-								</View>
-							}
-						/>
-						:
-						<FlatList
-							ListFooterComponent={() => {
-								if (loadingSpecialAndDeals) {
-									return <ActivityIndicator style={{ marginVertical: 20 }} size="large"/>
-								}
-
-								return null
-							}}
-							style={{ height: height - 245 }}
-							onEndReached={() => getSpecialAndDeals(false)}
-							onEndReachedThreshold={0}
-							showsVerticalScrollIndicator={false}
-							data={specialAndDeals}
-							renderItem={({ item }) => 
-								<View key={item.key} style={style.row}>
-									{item.row.map(info => (
-										info.id ? 
-											<TouchableOpacity key={info.key} style={style.specialAndDeal} onPress={() => navigation.navigate("itemprofile", { id: info.id })}>
-												<Image style={style.specialAndDealImage} source={require('../../../assets/product-image.png')}/>
-												<Text style={style.specialAndDealName}>{info.name}</Text>
-												<Text style={style.radiusKm}>{info.radiusKm} km away</Text>
-											</TouchableOpacity>
-											:
-											<View key={info.key} style={style.specialAndDealDisabled}></View>
-									))}
-								</View>
-							}
-						/>
+						return null
+					}}
+					style={{ height: height - 245 }}
+					onEndReached={() => getLocations(false)}
+					onEndReachedThreshold={0}
+					showsVerticalScrollIndicator={false}
+					data={viewType == 'restaurants' ? locations : specialAndDeals}
+					renderItem={({ item }) => 
+						<View key={item.key} style={style.row}>
+							{item.row.map(info => (
+								info.id ? 
+									<TouchableOpacity key={info.key} style={style.item} onPress={() => navigation.navigate("restaurantprofile", { name: info.name })}>
+										<View style={style.itemInfo}>
+											<Image style={style.itemLogo} source={info.image.photo}/>
+											<Text style={style.itemName}>{info.name}</Text>
+											<Text style={style.radiusKm}>{info.radiusKm} km away</Text>
+										</View>
+										<Text style={style.itemAddress}>{info.address}</Text>
+									</TouchableOpacity>
+									:
+									<View key={info.key} style={style.itemDisabled}></View>
+							))}
+						</View>
 					}
-				</View>
+				/>
+
 				<View style={style.bottomNavs}>
 					<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
 						<Entypo name="shopping-cart" size={30}/>
@@ -328,24 +296,14 @@ const style = StyleSheet.create({
 
 	row: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 
-	// nearest restaurants
-	restaurant: { backgroundColor: 'white', margin: 5, padding: 5, width: '30%' },
-	restaurantDisabled: { margin: 5, paddingVertical: 5, width: '30%' },
-	restaurantInfo: { alignItems: 'center' },
-	restaurantAddress: { fontWeight: 'bold', textAlign: 'center' },
-	restaurantLogo: { height: 70, width: 70 },
-	restaurantName: {  },
-	radiusKm: { },
-
-	// special and deals
-	specialAndDeal: { alignItems: 'center', backgroundColor: 'white', margin: 5, paddingVertical: 5, width: '30%' },
-	specialAndDealDisabled: { margin: 5, paddingVertical: 5, width: '30%' },
-	specialAndDealImage: { height: 50, width: 50 },
-	specialAndDealName: { fontWeight: 'bold', paddingHorizontal: 5, paddingVertical: 15 },
-	radiusKm: { fontWeight: 'bold', paddingVertical: 15 },
+	item: { alignItems: 'center', backgroundColor: 'white', margin: 5, paddingVertical: 5, width: '30%' },
+	itemDisabled: { margin: 5, paddingVertical: 5, width: '30%' },
+	itemInfo: { alignItems: 'center' },
+	itemAddress: { fontWeight: 'bold', textAlign: 'center' },
+	itemLogo: { height: 70, width: 70 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	numCartItemsHeader: { fontWeight: 'bold' },
+	numCartItemsHeader: { fontWeight: 'bold' }
 })

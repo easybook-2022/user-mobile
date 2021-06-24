@@ -45,12 +45,13 @@ export default function salonprofile(props) {
 					<Text style={style.header}>5 km away</Text>
 				</View>
 
-				<View style={style.body}>
+				<View>
 					<Text style={style.bodyHeader}>9 Service(s)</Text>
 
 					<FlatList
 						showsVerticalScrollIndicator={false}
 						data={services}
+						style={{ height: height - 338 }}
 						renderItem={({ item, index }) => 
 							<View key={item.key} style={style.row}>
 								{item.items.map(( service, index ) => (
@@ -77,8 +78,7 @@ const style = StyleSheet.create({
 	headers: { marginVertical: 20 },
 	header: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginVertical: 5, paddingHorizontal: 50, textAlign: 'center' },
 
-	body: { alignItems: 'center' },
-	bodyHeader: { fontSize: 20, fontWeight: 'bold' },
+	bodyHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 
 	service: { alignItems: 'center', height: width * 0.5, width: width * 0.5 },

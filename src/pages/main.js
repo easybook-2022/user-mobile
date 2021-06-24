@@ -16,20 +16,20 @@ const { height, width } = Dimensions.get('window')
 export default function main({ navigation }) {
 	const [services, setServices] = useState([
 		{ key: "0", service: "restaurants", header: "Restaurant(s)", locations: [
-			{ key: 'l-0', id: "d9df9dsfsdf-0", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 0", radiusKm: 1 },
-			{ key: 'l-1', id: "d9df9dsfsdf-1", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 1", radiusKm: 2 },
-			{ key: 'l-2', id: "d9df9dsfsdf-2", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 2", radiusKm: 3 },
-			{ key: 'l-3', id: "d9df9dsfsdf-3", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 3", radiusKm: 4 },
-			{ key: 'l-4', id: "d9df9dsfsdf-4", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 4", radiusKm: 5 },
-			{ key: 'l-5', id: "d9df9dsfsdf-5", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, name: "Tim Hortons 5", radiusKm: 6 }
+			{ key: 'l-0', id: "d9df9dsfsdf-0", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 0", radiusKm: 1 },
+			{ key: 'l-1', id: "d9df9dsfsdf-1", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 1", radiusKm: 2 },
+			{ key: 'l-2', id: "d9df9dsfsdf-2", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 2", radiusKm: 3 },
+			{ key: 'l-3', id: "d9df9dsfsdf-3", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 3", radiusKm: 4 },
+			{ key: 'l-4', id: "d9df9dsfsdf-4", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 4", radiusKm: 5 },
+			{ key: 'l-5', id: "d9df9dsfsdf-5", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 5", radiusKm: 6 }
 		], loading: true },
 		{ key: "1", service: "salons", header: "Salon(s)", locations: [
-			{ key: "s-0", id: "29d9c90d0c-0", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 0", radiusKm: 5 },
-			{ key: "s-1", id: "29d9c90d0c-1", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 1", radiusKm: 5 },
-			{ key: "s-2", id: "29d9c90d0c-2", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 2", radiusKm: 5 },
-			{ key: "s-3", id: "29d9c90d0c-3", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 3", radiusKm: 5 },
-			{ key: "s-4", id: "29d9c90d0c-4", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 4", radiusKm: 5 },
-			{ key: "s-5", id: "29d9c90d0c-5", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, name: "Hair Salon 5", radiusKm: 5 }
+			{ key: "s-0", id: "29d9c90d0c-0", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 0", radiusKm: 5 },
+			{ key: "s-1", id: "29d9c90d0c-1", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 1", radiusKm: 5 },
+			{ key: "s-2", id: "29d9c90d0c-2", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 2", radiusKm: 5 },
+			{ key: "s-3", id: "29d9c90d0c-3", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 3", radiusKm: 5 },
+			{ key: "s-4", id: "29d9c90d0c-4", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 4", radiusKm: 5 },
+			{ key: "s-5", id: "29d9c90d0c-5", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 5", radiusKm: 5 }
 		], loading: true }
 	])
 	const [openNotifications, setOpenNotifications] = useState(false)
@@ -86,7 +86,7 @@ export default function main({ navigation }) {
 					</View>
 				</View>
 
-				<View style={style.body}>
+				<View>
 					<FlatList
 						style={{ height: height - 223 }}
 						showsVerticalScrollIndicator={false}
@@ -114,7 +114,7 @@ export default function main({ navigation }) {
 										showsHorizontalScrollIndicator={false}
 										data={item.locations}
 										renderItem={({ item }) => 
-											<TouchableOpacity style={style.location}>
+											<TouchableOpacity style={style.location} onPress={() => navigation.navigate(item.nav, { name: item.name })}>
 												<View style={style.locationPhotoHolder}>
 													<Image source={item.logo.photo} style={{ height: 80, width: 80 }}/>
 												</View>

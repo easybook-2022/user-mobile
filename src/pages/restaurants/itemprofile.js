@@ -4,16 +4,17 @@ import { Dimensions, SafeAreaView, View, FlatList, Image, Text, TextInput, Touch
 import Cart from '../../components/restaurants/cart'
 
 import Entypo from 'react-native-vector-icons/Entypo'
+import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const itemSize = (width * 0.3) - 10
 const imageSize = (width * 0.3) - 50
 
 export default function itemProfile(props) {
-	let { id } = props.route.params
+	let { id, name } = props.route.params
 
 	const productId = useState(id)
-	const [name, setName] = useState("roasted milk tea")
+	const [itemName, setItemname] = useState(name)
 	const [info, setInfo] = useState([
 		{ 
 			key: "info-0", header: 'Size', type: 'options', 
@@ -40,22 +41,28 @@ export default function itemProfile(props) {
 	const [openFriendsList, setOpenfriendslist] = useState(false)
 	const [friends, setFriends] = useState([
 		{ key: "friend-row-0", row: [
-			{ key: "friend-0", id: "10d0d9d-d-s-d-0", profile: { photo: '', width: 0, height: 0 }, username: "good girl 0" },
-			{ key: "friend-1", id: "10d0d9d-d-s-d-1", profile: { photo: '', width: 0, height: 0 }, username: "good girl 1" },
-			{ key: "friend-2", id: "10d0d9d-d-s-d-2", profile: { photo: '', width: 0, height: 0 }, username: "good girl 2" },
-			{ key: "friend-3", id: "10d0d9d-d-s-d-3", profile: { photo: '', width: 0, height: 0 }, username: "good girl 3" },
+			{ key: "friend-0", id: "10d0d9d-d-s-d-0", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 0" },
+			{ key: "friend-1", id: "10d0d9d-d-s-d-1", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 1" },
+			{ key: "friend-2", id: "10d0d9d-d-s-d-2", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 2" },
+			{ key: "friend-3", id: "10d0d9d-d-s-d-3", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 3" },
 		]},
 		{ key: "friend-row-1", row: [
-			{ key: "friend-4", id: "10d0d9d-d-s-d-4", profile: { photo: '', width: 0, height: 0 }, username: "good girl 4" },
-			{ key: "friend-5", id: "10d0d9d-d-s-d-5", profile: { photo: '', width: 0, height: 0 }, username: "good girl 5" },
-			{ key: "friend-6", id: "10d0d9d-d-s-d-6", profile: { photo: '', width: 0, height: 0 }, username: "good girl 6" },
-			{ key: "friend-7", id: "10d0d9d-d-s-d-7", profile: { photo: '', width: 0, height: 0 }, username: "good girl 7" },
+			{ key: "friend-4", id: "10d0d9d-d-s-d-4", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 4" },
+			{ key: "friend-5", id: "10d0d9d-d-s-d-5", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 5" },
+			{ key: "friend-6", id: "10d0d9d-d-s-d-6", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 6" },
+			{ key: "friend-7", id: "10d0d9d-d-s-d-7", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 7" },
 		]},
 		{ key: "friend-row-2", row: [
-			{ key: "friend-8", id: "10d0d9d-d-s-d-8", profile: { photo: '', width: 0, height: 0 }, username: "good girl 8" },
-			{ key: "friend-9", id: "10d0d9d-d-s-d-9", profile: { photo: '', width: 0, height: 0 }, username: "good girl 9" },
-			{ key: "friend-10" },
-			{ key: "friend-11" }
+			{ key: "friend-8", id: "10d0d9d-d-s-d-8", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 8" },
+			{ key: "friend-9", id: "10d0d9d-d-s-d-9", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 9" },
+			{ key: "friend-10", id: "10d0d9d-d-s-d-10", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 10" },
+			{ key: "friend-11", id: "10d0d9d-d-s-d-11", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 11" },
+		]},
+		{ key: "friend-row-3", row: [
+			{ key: "friend-12", id: "10d0d9d-d-s-d-12", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 12" },
+			{ key: "friend-13", id: "10d0d9d-d-s-d-13", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 13" },
+			{ key: "friend-14", id: "10d0d9d-d-s-d-14", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 14" },
+			{ key: "friend-15", id: "10d0d9d-d-s-d-15", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 15" },
 		]}
 	])
 	const [selectedFriends, setSelectedFriends] = useState([])
@@ -106,69 +113,143 @@ export default function itemProfile(props) {
 		}
 	}
 	const addCart = () => {
-
+		setNumcartitems(numCartItems + 1)
 	}
 	const selectFriend = (userid) => {
 		let list = [...friends]
 		let selectedList = [...selectedFriends]
+		let newNumSelectedFriends = 0
 		let selected = null, latest = null, empty = false, added = false
 		let rowkey = "", itemkey = ""
 
-		list.forEach(function (items) {
-			items.row.forEach(function (item) {
-				if (item.id == userid) {
-					selected = item
-				}
-			})
-		})
-
-		selectedList.forEach(function (items, index) {
-			items.row.forEach(function (item) {
-				if (item.id) {
-					latest = item
-				} else if (!added) {
-					added = true
-
-					item.id = selected.id
-					item.profile = selected.profile
-					item.username = selected.username
-				}
-			})
-		})
-
-		if (!added) {
-			if (selectedList.length > 0) {
-				rowkey = parseInt(selectedList[selectedList.length - 1].key.replace("selected-friend-row-", ""))
-				itemkey = parseInt(latest.key.replace("selected-friend-", ""))
-
-				selected.key = "selected-friend-" + (itemkey + 1)
-
-				selectedList.push({ 
-					key: "selected-friend-row-" + (rowkey + 1),
-					row: [
-						selected,
-						{ key: "selected-friend-" + (itemkey + 2)}, 
-						{ key: "selected-friend-" + (itemkey + 3)}, 
-						{ key: "selected-friend-" + (itemkey + 4)}
-					]
+		if (!JSON.stringify(selectedList).includes(userid)) {
+			list.forEach(function (items) {
+				items.row.forEach(function (item) {
+					if (item.id == userid) {
+						selected = {
+							...selected,
+							id: item.id,
+							username: item.username,
+							profile: item.profile
+						}
+					}
 				})
-			} else {
-				selected.key = "selected-friend-0"
+			})
 
-				selectedList.push({ 
-					key: "selected-friend-row-0",
-					row: [
-						selected,
-						{ key: "selected-friend-1" }, 
-						{ key: "selected-friend-2" }, 
-						{ key: "selected-friend-3" }
-					]
+			selectedList.forEach(function (items, index) {
+				items.row.forEach(function (item) {
+					if (item.id) {
+						latest = item
+						
+						newNumSelectedFriends += 1
+					} else if (!added) {
+						added = true
+
+						item.id = selected.id
+						item.profile = selected.profile
+						item.username = selected.username
+
+						newNumSelectedFriends += 1
+					}
+
+
 				})
+			})
+
+			if (!added) {
+				if (selectedList.length > 0) {
+					rowkey = parseInt(selectedList[selectedList.length - 1].key.replace("selected-friend-row-", ""))
+					itemkey = parseInt(latest.key.replace("selected-friend-", ""))
+
+					selected.key = "selected-friend-" + (itemkey + 1)
+
+					selectedList.push({ 
+						key: "selected-friend-row-" + (rowkey + 1),
+						row: [
+							selected,
+							{ key: "selected-friend-" + (itemkey + 2)}, 
+							{ key: "selected-friend-" + (itemkey + 3)}, 
+							{ key: "selected-friend-" + (itemkey + 4)}
+						]
+					})
+
+					newNumSelectedFriends += 1
+				} else {
+					selected.key = "selected-friend-0"
+
+					selectedList.push({ 
+						key: "selected-friend-row-0",
+						row: [
+							selected,
+							{ key: "selected-friend-1" }, 
+							{ key: "selected-friend-2" }, 
+							{ key: "selected-friend-3" }
+						]
+					})
+
+					newNumSelectedFriends += 1
+				}
 			}
+
+			setSelectedFriends(selectedList)
+			setNumSelectedFriends(newNumSelectedFriends)
+		}
+	}
+	const deselectFriend = (userid) => {
+		let friends = [...selectedFriends]
+		let newFriends = [], newNumFriends = 0
+		let itemrow = [], itemnum = 0, rownum = 0
+
+		friends.forEach(function ({ row }, friendindex) {
+			row.forEach(function (info, rowindex) {
+				if (info.id && info.id != userid) {
+					itemrow.push({
+						key: "selected-friend-row-" + itemnum,
+						id: "10d0d9d-d-s-d-" + itemnum,
+						profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 },
+						username: info.username
+					})
+					newNumFriends += 1
+					itemnum += 1
+
+					if (itemrow.length == 4) {
+						newFriends.push({
+							key: "friend-row-" + rownum,
+							row: itemrow
+						})
+
+						itemrow = []
+
+						rownum += 1
+					}
+				}
+			})
+		})
+
+		if (itemrow.length > 0) {
+			while (itemrow.length < 4) {
+				itemrow.push({
+					key: "selected-friend-" + itemnum
+				})
+
+				itemnum += 1
+			}
+
+			newFriends.push({
+				key: "friend-row-" + rownum,
+				row: itemrow
+			})
+
+			itemrow = []
 		}
 
-		setSelectedFriends(selectedList)
-		setNumSelectedFriends(numSelectedFriends + 1)
+		if (!JSON.stringify(newFriends).includes("id")) {
+			newFriends = []
+			newNumFriends = 0
+		}
+
+		setSelectedFriends(newFriends)
+		setNumSelectedFriends(newNumFriends)
 	}
 
 	return (
@@ -178,7 +259,7 @@ export default function itemProfile(props) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 				
-				<Text style={style.boxHeader}>{name}</Text>
+				<Text style={style.boxHeader}>{itemName}</Text>
 
 				{info.map((item, index) => (
 					<View key={item.key} style={style.info}>
@@ -243,7 +324,7 @@ export default function itemProfile(props) {
 
 				<View style={style.itemActions}>
 					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.itemAction} onPress={() => setNumcartitems(numCartItems + 1)}>
+						<TouchableOpacity style={style.itemAction} onPress={() => addCart()}>
 							<Text style={style.itemActionHeader}>Add to your cart</Text>
 						</TouchableOpacity>
 						<TouchableOpacity style={style.itemAction} onPress={() => setOpenfriendslist(true)}>
@@ -272,12 +353,12 @@ export default function itemProfile(props) {
 							<FlatList
 								data={friends}
 								renderItem={({ item, index }) => 
-									<View style={style.row}>
+									<View key={item.key} style={style.row}>
 										{item.row.map(friend => (
 											friend.username ? 
 												<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
 													<View style={style.friendProfileHolder}>
-														<Image source={require("../../../assets/profile.jpeg")} style={{ height: 60, width: 60 }}/>
+														<Image source={friend.profile.photo} style={{ height: 60, width: 60 }}/>
 													</View>
 													<Text style={style.friendName}>{friend.username}</Text>
 												</TouchableOpacity>
@@ -295,15 +376,18 @@ export default function itemProfile(props) {
 							<FlatList
 								data={selectedFriends}
 								renderItem={({ item, index }) => 
-									<View style={style.row}>
+									<View key={item.key} style={style.row}>
 										{item.row.map(friend => (
 											friend.username ? 
-												<TouchableOpacity key={friend.key} style={style.friend} onPress={() => {}}>
+												<View key={friend.key} style={style.friend}>
+													<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
+														<AntDesign name="closecircleo" size={15}/>
+													</TouchableOpacity>
 													<View style={style.friendProfileHolder}>
-														<Image source={require("../../../assets/profile.jpeg")}/>
+														<Image source={friend.profile.photo} style={{ height: 60, width: 60 }}/>
 													</View>
 													<Text style={style.friendName}>{friend.username}</Text>
-												</TouchableOpacity>
+												</View>
 												:
 												<View key={friend.key} style={style.friend}></View>
 										))}
@@ -325,7 +409,11 @@ export default function itemProfile(props) {
 						</View>
 
 						<View style={{ alignItems: 'center' }}>
-							<TouchableOpacity style={style.checkout} onPress={() => setOpenfriendslist(false)}>
+							<TouchableOpacity style={style.checkout} onPress={() => {
+								setOpenfriendslist(false)
+								setSelectedFriends([])
+								setNumSelectedFriends(0)
+							}}>
 								<Text style={style.checkoutHeader}>Checkout</Text>
 							</TouchableOpacity>
 						</View>
@@ -381,6 +469,7 @@ const style = StyleSheet.create({
 	friendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
 	friend: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
+	friendDelete: { marginBottom: -5, marginLeft: 60 },
 	friendProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
 	friendName: { textAlign: 'center' },
 

@@ -99,7 +99,7 @@ export default function restaurantprofile(props) {
 						renderItem={({ item, index }) => 
 							<View key={item.key} style={style.row}>
 								{item.row.map(( product, index ) => (
-									<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { id: product.id })}>
+									<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { id: product.id, name: product.name })}>
 										<View style={style.productImageHolder}>
 											<Image source={require("../../../assets/product-image.png")} style={{ height: imageSize, width: imageSize }}/>
 										</View>
@@ -117,7 +117,7 @@ export default function restaurantprofile(props) {
 						renderItem={({ item, index }) => 
 							<View key={item.key} style={style.row}>
 								{item.row.map(( product, index ) => (
-									<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { id: product.id })}>
+									<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { id: product.id, name: product.name })}>
 										<View style={style.productImageHolder}>
 											<Image source={require("../../../assets/product-image.png")} style={{ height: imageSize, width: imageSize }}/>
 										</View>

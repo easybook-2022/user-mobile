@@ -1,6 +1,7 @@
 import axios from 'axios'
+import { API_URL } from "@env"
 
-const url = "http://localhost:5000/users/"
+const url = `${API_URL}/users/`
 
 export const loginUser = (data) => {
 	return axios.post(
