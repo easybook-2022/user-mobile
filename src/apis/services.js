@@ -9,3 +9,31 @@ export const requestAppointment = (data) => {
 		data
 	)
 }
+
+export const cancelPurchase = (data) => {
+	return axios.post(
+		url + "cancel_purchase",
+		data
+	)
+}
+
+export const confirmPurchase = (data) => {
+	return axios.post(
+		url + "confirm_purchase",
+		data
+	)
+}
+
+export const cancelRequest = (data) => {
+	return axios.post(
+		url + "cancel_request",
+		data
+	)
+}
+
+export const confirmRequest = (data) => {
+	return axios.post(
+		url + "confirm_request",
+		data
+	)
+}

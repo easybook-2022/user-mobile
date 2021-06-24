@@ -151,7 +151,7 @@ export default function main({ navigation }) {
 				</View>
 			</View>
 
-			<Modal visible={openNotifications}><Notifications close={() => setOpenNotifications(false)}/></Modal>
+			<Modal visible={openNotifications}><Notifications navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>
 		</SafeAreaView>
 	)
 }

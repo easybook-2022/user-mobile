@@ -3,7 +3,7 @@ import { ActivityIndicator, SafeAreaView, ScrollView, View, Text, TouchableOpaci
 import { requestAppointment } from '../../apis/services'
 
 export default function booktime(props) {
-	let { name, time } = props.route.params
+	let { name } = props.route.params
 
 	let [service, setService] = useState(name)
 	let [times, setTimes] = useState([])
@@ -15,7 +15,7 @@ export default function booktime(props) {
 		let timenow = Date.now()
 		let k = 1
 
-		while (times.length < 200) {
+		while (times.length < 100) {
 			timenow += (1000 * (60 * 10)) // push every 10 minutes
 
 			let timestr = new Date(timenow).toString().split(" ")[4]
@@ -164,7 +164,7 @@ const style = StyleSheet.create({
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },
