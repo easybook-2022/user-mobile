@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AsyncStorage, SafeAreaView, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 
-import Cart from '../../components/restaurants/cart'
+import Cart from '../../components/cart'
 import Notifications from '../../components/notifications'
 
 import Ionicons from 'react-native-vector-icons/Ionicons'

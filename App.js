@@ -10,6 +10,7 @@ const { height, width } = Dimensions.get('window')
 // pages
 import Login from './src/pages/login'
 import Register from './src/pages/register'
+import Setup from './src/pages/setup'
 
 import Main from './src/pages/main'
 
@@ -20,12 +21,12 @@ import Itemprofile from './src/pages/restaurants/itemprofile'
 import Recent from './src/pages/restaurants/recent'
 
 // restaurants' components
-import Cart from './src/components/restaurants/cart'
+import Cart from './src/components/cart'
 
 // salons
 import Salons from './src/pages/salons'
 import Salonprofile from './src/pages/salons/salonprofile'
-import Serviceslist from './src/pages/salons/serviceslist'
+import Menu from './src/pages/salons/menu'
 import Booktime from './src/pages/salons/booktime'
 
 import Account from './src/pages/account'
@@ -39,9 +40,18 @@ export default function App() {
 
     if (loaded) {
         const retrieveId = async() => {
-            let id = await AsyncStorage.getItem("id")
+            let userid = await AsyncStorage.getItem("userid")
+            let setup = await AsyncStorage.getItem("setup")
 
-            setRoute(id ? "main" : "login")
+            if (userid) {
+                if (setup == "true") {
+                    setRoute("main")
+                } else {
+                    setRoute("setup")
+                }
+            } else {
+                setRoute("login")
+            }
         }
 
         retrieveId()
@@ -52,6 +62,7 @@ export default function App() {
                     <Stack.Navigator initialRouteName={route}>
                         <Stack.Screen name="login" component={Login} options={{ headerShown: false }}/>
                         <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
+                        <Stack.Screen name="setup" component={Setup} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
 
                         <Stack.Screen name="restaurants" component={Restaurants} options={{ headerShown: false }}/>
@@ -62,7 +73,7 @@ export default function App() {
 
                         <Stack.Screen name="salons" component={Salons} options={{ headerShown: false }}/>
                         <Stack.Screen name="salonprofile" component={Salonprofile} options={{ headerShown: false }}/>
-                        <Stack.Screen name="serviceslist" component={Serviceslist} options={{ headerShown: false }}/>
+                        <Stack.Screen name="menu" component={Menu} options={{ headerShown: false }}/>
                         <Stack.Screen name="booktime" component={Booktime} options={{ headerShown: false }}/>
 
                         <Stack.Screen name="notifications" component={Notifications} options={{ headerShown: false }}/>

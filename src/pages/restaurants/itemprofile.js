@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import { Dimensions, SafeAreaView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { AsyncStorage, Dimensions, SafeAreaView, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { logo_url } from '../../../assets/info'
+import { searchFriends } from '../../apis/users'
+import { getProductInfo } from '../../apis/products'
+import { getNumCartItems, addItemtocart } from '../../apis/carts'
 
-import Cart from '../../components/restaurants/cart'
+import Cart from '../../components/cart'
 
 import Entypo from 'react-native-vector-icons/Entypo'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -11,108 +15,125 @@ const itemSize = (width * 0.3) - 10
 const imageSize = (width * 0.3) - 50
 
 export default function itemProfile(props) {
-	let { id, name } = props.route.params
+	const { locationid, menuid, productid } = props.route.params
 
-	const productId = useState(id)
-	const [itemName, setItemname] = useState(name)
-	const [info, setInfo] = useState([
-		{ 
-			key: "info-0", header: 'Size', type: 'options', 
-			options: [
-				{ key: "info-opt-0", header: 'small' },
-				{ key: "info-opt-1", header: 'medium' },
-				{ key: "info-opt-2", header: 'large' },
-				{ key: "info-opt-3", header: "extra large" }
-			], selected: 'small' 
-		},
-		{ 
-			key: "info-1", header: 'Sugar', type: 'amount', selected: 3 
-		},
-		{ 
-			key: "info-2", header: 'Cream', type: 'amount', selected: 3 
-		},
-		{
-			key: "info-3", header: 'Milk', type: 'percentage', selected: 10
-		}
-	])
+	const [itemName, setItemname] = useState('')
+	const [itemImage, setItemimage] = useState('')
+	const [itemPrice, setItemprice] = useState(0)
+	const [options, setOptions] = useState([])
 	const [quantity, setQuantity] = useState(1)
+	const [errorMsg, setErrormsg] = useState('')
 
 	// friends list
 	const [openFriendsList, setOpenfriendslist] = useState(false)
-	const [friends, setFriends] = useState([
-		{ key: "friend-row-0", row: [
-			{ key: "friend-0", id: "10d0d9d-d-s-d-0", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 0" },
-			{ key: "friend-1", id: "10d0d9d-d-s-d-1", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 1" },
-			{ key: "friend-2", id: "10d0d9d-d-s-d-2", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 2" },
-			{ key: "friend-3", id: "10d0d9d-d-s-d-3", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 3" },
-		]},
-		{ key: "friend-row-1", row: [
-			{ key: "friend-4", id: "10d0d9d-d-s-d-4", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 4" },
-			{ key: "friend-5", id: "10d0d9d-d-s-d-5", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 5" },
-			{ key: "friend-6", id: "10d0d9d-d-s-d-6", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 6" },
-			{ key: "friend-7", id: "10d0d9d-d-s-d-7", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 7" },
-		]},
-		{ key: "friend-row-2", row: [
-			{ key: "friend-8", id: "10d0d9d-d-s-d-8", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 8" },
-			{ key: "friend-9", id: "10d0d9d-d-s-d-9", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 9" },
-			{ key: "friend-10", id: "10d0d9d-d-s-d-10", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 10" },
-			{ key: "friend-11", id: "10d0d9d-d-s-d-11", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 11" },
-		]},
-		{ key: "friend-row-3", row: [
-			{ key: "friend-12", id: "10d0d9d-d-s-d-12", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 12" },
-			{ key: "friend-13", id: "10d0d9d-d-s-d-13", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 13" },
-			{ key: "friend-14", id: "10d0d9d-d-s-d-14", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 14" },
-			{ key: "friend-15", id: "10d0d9d-d-s-d-15", profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 }, username: "good girl 15" },
-		]}
-	])
+	const [friends, setFriends] = useState([])
+	const [numFriends, setNumfriends] = useState(0)
 	const [selectedFriends, setSelectedFriends] = useState([])
 	const [numSelectedFriends, setNumSelectedFriends] = useState(0)
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(2)
 	const [orderingItem, setOrderingItem] = useState({
-		key: "item-0",
 		name: "Roasted milk tea", 
-		info: [
-			{ key: "item-info-0", header: 'Size', selected: 'small' },
-			{ key: "item-info-1", header: 'Sugar', selected: 3 },
-			{ key: "item-info-2", header: 'Cream', selected: 3 }
+		image: require("../../../assets/product-image.png"),
+		options: [
+			{ key: "item-info-0", header: 'Size', selected: 'small', type: 'size' },
+			{ key: "item-info-1", header: 'Sugar', selected: 3, type: 'percentage' },
+			{ key: "item-info-2", header: 'Cream', selected: 3, type: 'quantity' }
 		], 
-		quantity: 4, price: 5.49
+		quantity: 4, cost: 0
 	})
 
-	const changeOption = (index, selected) => {
-		let newInfo = [...info]
+	const getTheNumCartItems = async() => {
+		const userid = await AsyncStorage.getItem("userid")
 
-		newInfo[index].selected = selected
-
-		setInfo(newInfo)
+		getNumCartItems(userid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setNumcartitems(res.numCartItems)
+				}
+			})
 	}
-	const changeAmount = (index, action) => {
-		let newInfo = [...info]
-		let { selected } = newInfo[index]
+	const changeOption = (index, selected) => {
+		let newOptions = [...options]
+
+		newOptions[index].selected = selected
+
+		setOptions(newOptions)
+	}
+	const changeQuantity = (index, action) => {
+		let newOptions = [...options]
+		let { selected } = newOptions[index]
 
 		selected = action == "+" ? selected + 1 : selected - 1
 
 		if (selected >= 0) {
-			newInfo[index].selected = selected
+			newOptions[index].selected = selected
 
-			setInfo(newInfo)
+			setOptions(newOptions)
 		}
 	}
 	const changePercentage = (index, action) => {
-		let newInfo = [...info]
-		let { selected } = newInfo[index]
+		let newOptions = [...options]
+		let { selected } = newOptions[index]
 
 		selected = action == "+" ? selected + 10 : selected - 10
 
 		if (selected >= 0 && selected <= 100) {
-			newInfo[index].selected = selected
+			newOptions[index].selected = selected
 
-			setInfo(newInfo)
+			setOptions(newOptions)
 		}
 	}
-	const addCart = () => {
+	const addCart = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+		let callfor = [], newOptions = JSON.parse(JSON.stringify(options))
+
+		selectedFriends.forEach(function (info) {
+			info.row.forEach(function (friend) {
+				if (friend.username) {
+					callfor.push({ userid: friend.id, status: 'waiting' })
+				}
+			})
+		})
+
+		newOptions.forEach(function (option) {
+			delete option['key']
+
+			if (option['options']) {
+				delete option['options']
+			}
+		})
+
+		const data = { userid, productid, quantity, callfor, options: newOptions }
+
+		addItemtocart(data)
+			.then((res) => {
+				if (res.status == 200) {
+					if (!res.data.errormsg) {
+						return res.data
+					} else {
+						setErrormsg(res.data.errormsg)
+					}
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setOpenfriendslist(false)
+					showCart()
+				}
+			})
+	}
+	const showCart = () => {
+		setOpenfriendslist(false)
+		setSelectedFriends([])
+		setNumSelectedFriends(0)
+		setOpencart(true)
 		setNumcartitems(numCartItems + 1)
 	}
 	const selectFriend = (userid) => {
@@ -151,8 +172,6 @@ export default function itemProfile(props) {
 
 						newNumSelectedFriends += 1
 					}
-
-
 				})
 			})
 
@@ -252,102 +271,185 @@ export default function itemProfile(props) {
 		setNumSelectedFriends(newNumFriends)
 	}
 
+	const getTheProductInfo = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+		const data = { userid, locationid, menuid, productid }
+
+		getProductInfo(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const { image, info, name, options, price } = res.productInfo
+
+					setItemname(name)
+					setItemimage(image)
+					setItemprice(price)
+					setOptions(options)
+				}
+			})
+	}
+	const getFriendsList = async(username) => {
+		const userid = await AsyncStorage.getItem("userid")
+		const data = { userid, username }
+
+		searchFriends(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setFriends(res.searchedFriends)
+					setNumfriends(res.numSearchedFriends)
+				}
+			})
+	}
+	const openFriendsCart = async() => {
+		let newOrderingItem = {...orderingItem}
+		let newOptions = JSON.parse(JSON.stringify(options))
+		let empty = false
+
+		newOptions.forEach(function (option) {
+			if (option["type"] == "size" && option["selected"] == "") {
+				empty = true
+			}
+
+			if (option["options"]) {
+				delete option["options"]
+			}
+		})
+
+		if (!empty) {
+			newOrderingItem.name = itemName
+			newOrderingItem.image = itemImage
+			newOrderingItem.options = newOptions
+			newOrderingItem.quantity = quantity
+			newOrderingItem.cost = (itemPrice * quantity).toFixed(2)
+
+			setOpenfriendslist(true)
+			setOrderingItem(newOrderingItem)
+		} else {
+			setErrormsg("Please choose a size")
+		}
+	}
+
+	useEffect(() => {
+		getTheNumCartItems()
+		getTheProductInfo()
+	}, [])
+
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
-			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
-					<Text style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
-				
-				<Text style={style.boxHeader}>{itemName}</Text>
-
-				{info.map((item, index) => (
-					<View key={item.key} style={style.info}>
-						<Text style={style.infoHeader}>{item.header}:</Text>
-
-						{item.type == "options" && (
-							<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-								<View style={style.options}>
-									{item.options.map((option, optindex) => (
-										<TouchableOpacity key={option.key} style={item.selected == option ? style.optionSelected : style.option} onPress={() => changeOption(index, option.header)}>
-											<Text style={item.selected == option ? style.optionSelectedHeader : style.optionHeader}>{option.header}</Text>
-										</TouchableOpacity>
-									))}
-								</View>
-							</View>
-						)}
-
-						{item.type == "amount" && (
-							<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: width - 100 }}>
-								<View style={style.amount}>
-									<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
-										<Text style={style.amountActionHeader}>-</Text>
-									</TouchableOpacity>
-									<Text style={style.amountHeader}>{item.selected}</Text>
-									<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
-										<Text style={style.amountActionHeader}>+</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						)}
-
-						{item.type == "percentage" && (
-							<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: width - 100 }}>
-								<View style={style.percentage}>
-									<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
-										<Text style={style.percentageActionHeader}>-</Text>
-									</TouchableOpacity>
-									<Text style={style.percentageHeader}>{item.selected}%</Text>
-									<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
-										<Text style={style.percentageActionHeader}>+</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						)}
+			<ScrollView>
+				<View style={style.box}>
+					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+						<Text style={style.backHeader}>Back</Text>
+					</TouchableOpacity>
+					
+					<View style={{ alignItems: 'center', marginVertical: 20 }}>
+						<View style={style.imageHolder}>
+							<Image source={{ uri: logo_url + itemImage }} style={style.image}/>
+						</View>
 					</View>
-				))}
+					<Text style={style.boxHeader}>{itemName}</Text>
 
-				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-					<View style={{ flexDirection: 'row' }}>
-						<Text style={style.quantityHeader}>Quantity</Text>
-						<View style={style.quantity}>
-							<TouchableOpacity style={style.quantityAction} onPress={() => setQuantity(quantity > 1 ? quantity - 1 : quantity)}>
-								<Text style={style.quantityActionHeader}>-</Text>
+					{options.map((option, index) => (
+						<View key={option.key} style={style.info}>
+							<Text style={style.infoHeader}>{option.header}:</Text>
+
+							{option.type == "size" && (
+								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+									<View style={style.options}>
+										{option.options.map((info, optindex) => (
+											<TouchableOpacity key={info.key} style={option.selected == info.header ? style.optionSelected : style.option} onPress={() => changeOption(index, info.header)}>
+												<Text style={option.selected == info.header ? style.optionSelectedHeader : style.optionHeader}>{info.header}</Text>
+											</TouchableOpacity>
+										))}
+									</View>
+								</View>
+							)}
+
+							{option.type == "quantity" && (
+								<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: width - 100 }}>
+									<View style={style.quantity}>
+										<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity(index, "-")}>
+											<Text style={style.quantityActionHeader}>-</Text>
+										</TouchableOpacity>
+										<Text style={style.quantityHeader}>{option.selected}</Text>
+										<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity(index, "+")}>
+											<Text style={style.quantityActionHeader}>+</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							)}
+
+							{option.type == "percentage" && (
+								<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: width - 100 }}>
+									<View style={style.percentage}>
+										<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
+											<Text style={style.percentageActionHeader}>-</Text>
+										</TouchableOpacity>
+										<Text style={style.percentageHeader}>{option.selected}%</Text>
+										<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
+											<Text style={style.percentageActionHeader}>+</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							)}
+						</View>
+					))}
+
+					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+						<View style={{ flexDirection: 'row' }}>
+							<Text style={style.quantityHeader}>Quantity</Text>
+							<View style={style.quantity}>
+								<TouchableOpacity style={style.quantityAction} onPress={() => setQuantity(quantity > 1 ? quantity - 1 : quantity)}>
+									<Text style={style.quantityActionHeader}>-</Text>
+								</TouchableOpacity>
+								<Text style={style.quantityHeader}>{quantity}</Text>
+								<TouchableOpacity style={style.quantityAction} onPress={() => setQuantity(quantity + 1)}>
+									<Text style={style.quantityActionHeader}>+</Text>
+								</TouchableOpacity>
+							</View>
+						</View>
+					</View>
+
+					<Text style={style.price}>Cost: $ {(itemPrice * quantity).toFixed(2)}</Text>
+
+					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
+
+					<View style={style.itemActions}>
+						<View style={{ flexDirection: 'row' }}>
+							<TouchableOpacity style={style.itemAction} onPress={() => addCart()}>
+								<Text style={style.itemActionHeader}>Add to your cart</Text>
 							</TouchableOpacity>
-							<Text style={style.quantityHeader}>{quantity}</Text>
-							<TouchableOpacity style={style.quantityAction} onPress={() => setQuantity(quantity + 1)}>
-								<Text style={style.quantityActionHeader}>+</Text>
+							<TouchableOpacity style={style.itemAction} onPress={() => openFriendsCart()}>
+								<Text style={style.itemActionHeader}>Add to a friend's cart</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
-				</View>
 
-				<View style={style.itemActions}>
-					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.itemAction} onPress={() => addCart()}>
-							<Text style={style.itemActionHeader}>Add to your cart</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.itemAction} onPress={() => setOpenfriendslist(true)}>
-							<Text style={style.itemActionHeader}>Add to a friend's cart</Text>
+					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+						<TouchableOpacity style={style.cart} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
 						</TouchableOpacity>
 					</View>
 				</View>
-
-				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-					<TouchableOpacity style={style.cart} onPress={() => setOpencart(true)}>
-						<Entypo name="shopping-cart" size={30}/>
-						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-					</TouchableOpacity>
-				</View>
-			</View>
+			</ScrollView>
 
 			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
 			<Modal visible={openFriendsList}>
 				<SafeAreaView style={{ flex: 1 }}>
 					<View style={style.friendsList}>
-						<TextInput style={style.friendNameInput} placeholder="Search friend to order for"/>
+						<TextInput style={style.friendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)}/>
 
-						<Text style={style.friendsHeader}>Your friend(s)</Text>
+						<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
 
 						<View style={{ height: '30%', marginVertical: 10 }}>
 							<FlatList
@@ -358,7 +460,7 @@ export default function itemProfile(props) {
 											friend.username ? 
 												<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
 													<View style={style.friendProfileHolder}>
-														<Image source={friend.profile.photo} style={{ height: 60, width: 60 }}/>
+														<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
 													</View>
 													<Text style={style.friendName}>{friend.username}</Text>
 												</TouchableOpacity>
@@ -384,7 +486,7 @@ export default function itemProfile(props) {
 														<AntDesign name="closecircleo" size={15}/>
 													</TouchableOpacity>
 													<View style={style.friendProfileHolder}>
-														<Image source={friend.profile.photo} style={{ height: 60, width: 60 }}/>
+														<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
 													</View>
 													<Text style={style.friendName}>{friend.username}</Text>
 												</View>
@@ -398,24 +500,37 @@ export default function itemProfile(props) {
 
 						<View style={style.itemContainer}>
 							<View style={style.itemImageHolder}>
-								<Image style={{ height: 100, width: 100 }} source={require("../../../assets/product-image.png")}/>
+								<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
 							</View>
 							<View style={style.itemInfos}>
-								{orderingItem.info.map((info, infoindex) => (
-									<Text key={info.key} style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>{info.header}:</Text> {info.selected}</Text>
+								<Text style={style.itemName}>{orderingItem.name}</Text>
+								{orderingItem.options.map((info, infoindex) => (
+									<Text key={info.key} style={style.itemInfo}>
+										<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
+										{info.selected}
+										{info.type == 'percentage' && '%'}
+									</Text>
 								))}
 							</View>
-							<Text style={style.orderingQuantity}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
+							<View>
+								<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
+								<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost}</Text>
+							</View>
 						</View>
 
 						<View style={{ alignItems: 'center' }}>
-							<TouchableOpacity style={style.checkout} onPress={() => {
-								setOpenfriendslist(false)
-								setSelectedFriends([])
-								setNumSelectedFriends(0)
-							}}>
-								<Text style={style.checkoutHeader}>Checkout</Text>
-							</TouchableOpacity>
+							<View style={style.actions}>
+								<TouchableOpacity style={style.action} onPress={() => {
+									setOpenfriendslist(false)
+									setSelectedFriends([])
+									setNumSelectedFriends(0)
+								}}>
+									<Text style={style.actionHeader}>Close</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.action} onPress={() => addCart()}>
+									<Text style={style.actionHeader}>Done</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
 					</View>
 				</SafeAreaView>
@@ -429,9 +544,11 @@ const style = StyleSheet.create({
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
+	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
+	image: { height: 200, width: 200 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 
-	info: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30, marginHorizontal: 10 },
+	info: { flexDirection: 'row', marginBottom: 30, marginHorizontal: 10 },
 	infoHeader: { fontWeight: 'bold', margin: 5, width: 100 },
 
 	// options
@@ -441,10 +558,10 @@ const style = StyleSheet.create({
 	option: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 2, padding: 8 },
 	optionHeader: { color: 'black', fontSize: 15 },
 
-	// amount
-	amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
-	amountAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	amountHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+	// quantity
+	quantity: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
+	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
+	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
 
 	// percentage
 	percentage: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
@@ -456,8 +573,11 @@ const style = StyleSheet.create({
 	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
 	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
 
+	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 100, padding: 10, width: 100 },
+	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
 	itemActionHeader: { textAlign: 'center' },
 
 	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
@@ -465,7 +585,7 @@ const style = StyleSheet.create({
 
 	// friends list
 	friendsList: { height: '100%', width: '100%' },
-	friendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.5)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
+	friendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
 	friendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
 	friend: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
@@ -479,6 +599,11 @@ const style = StyleSheet.create({
 	// ordering item
 	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', margin: 10, padding: 10 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, overflow: 'hidden', width: 100 },
+	itemName: { fontWeight: 'bold', marginBottom: 20 },
 	itemInfo: { fontSize: 15 },
-	orderingQuantity: { fontSize: 15 },
+	itemHeader: { fontSize: 15 },
+
+	actions: { flexDirection: 'row', justifyContent: 'space-around' },
+	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 60 },
+	actionHeader: { textAlign: 'center' },
 })

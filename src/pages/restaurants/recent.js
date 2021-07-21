@@ -1,57 +1,54 @@
-import React, { useState } from 'react';
-import { SafeAreaView, FlatList, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { AsyncStorage, SafeAreaView, FlatList, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { logo_url } from '../../../assets/info'
+import { getTransactions } from '../../apis/transactions'
 
 export default function recent({ navigation }) {
-	const [items, setItems] = useState([
-		{
-			key: "r-0", 
-			id: "19x9c-c9c9c9c-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			date: "Tue, Jan 18, 2021 at 9:30 AM"
-		},
-		{
-			key: "r-1", 
-			id: "19x9c-c9c9c9c-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			date: "Tue, Jan 17, 2021 at 9:30 AM"
-		},
-		{
-			key: "r-2", 
-			id: "19x9c-c9c9c9c-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			date: "Tue, Jan 15, 2021 at 9:30 AM"
-		},
-		{
-			key: "r-3", 
-			id: "19x9c-c9c9c9c-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			date: "Tue, Jan 13, 2021 at 9:30 AM"
+	const [items, setItems] = useState([])
+	const [cartIndex, setCartindex] = useState(0)
+	const getTheTransactions = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+		const data = { userid, cartIndex: 0 }
+
+		getTransactions(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setItems(res.transactions)
+				}
+			})
+	}
+	const displayDateStr = (unixtime) => {
+		let weekdays = { "Mon": "Monday", "Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday", "Fri": "Friday", "Sat": "Saturday", "Sun": "Sunday" }
+		let months = { 
+			"Jan": "January", "Feb": "February", "Mar": "March", "Apr": "April", "May": "May", "Jun": "June", 
+			"Jul": "July", "Aug": "August", "Sep": "September", "Oct": "October", "Nov": "November", "Dec": "December" 
 		}
-	])
+		let d = new Date(unixtime).toString().split(" ")
+		let day = weekdays[d[0]]
+		let month = months[d[1]]
+		let date = d[2]
+		let year = d[3]
+
+		let time = d[4].split(":")
+		let hour = parseInt(time[0])
+		let minute = time[1]
+		let period = hour > 11 ? "pm" : "am"
+
+		hour = hour > 12 ? hour - 12 : hour
+
+		let datestr = day + ", " + month + " " + date + ", " + year + " at " + hour + ":" + minute + " " + period;
+
+		return datestr
+	}
+
+	useEffect(() => {
+		getTheTransactions()
+	}, [])
 
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
@@ -65,23 +62,26 @@ export default function recent({ navigation }) {
 					showsVerticalScrollIndicator={false}
 					data={items}
 					renderItem={({ item, index }) => 
-						<View style={style.item} key={item.key}>
-							<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-								<View style={style.itemImageHolder}>
-									<Image source={require("../../../assets/product-image.png")} style={{ height: 100, width: 100 }}/>
+						<View key={item.key} style={style.group}>
+							{item.items.map(product => (
+								<View style={style.item} key={product.key}>
+									<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+										<View style={style.itemImageHolder}>
+											<Image source={{ uri: logo_url + product.image }} style={{ height: 100, width: 100 }}/>
+										</View>
+										<View style={style.itemInfos}>
+											{product.options.map((option, infoindex) => (
+												<Text key={infoindex.toString()} style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> {option.selected}</Text>
+											))}
+										</View>
+										<View>
+											<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>price:</Text> ${product.price}</Text>
+										</View>
+									</View>
 								</View>
-								<View style={style.itemInfos}>
-									{item.info.map((info, infoindex) => (
-										<Text key={infoindex.toString()} style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>{info.header}:</Text> {info.selected}</Text>
-									))}
-								</View>
-								<View>
-									<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
-									<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>price:</Text> ${item.price}</Text>
-								</View>
-							</View>
+							))}
 
-							<Text style={style.dateHeader}><Text style={{ fontWeight: 'bold' }}>Date:</Text> {item.date}</Text>
+							<Text style={style.dateHeader}><Text style={{ fontWeight: 'bold' }}>Purchased:</Text> {displayDateStr(item.time)}</Text>
 						</View>
 					}
 				/>
@@ -96,7 +96,8 @@ const style = StyleSheet.create({
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
-	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
+	group: { borderRadius: 10, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+	item: { marginBottom: 5 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, overflow: 'hidden', width: 100 },
 	itemInfos: {  },
 	itemInfo: { fontSize: 15 },

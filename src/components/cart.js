@@ -1,113 +1,53 @@
-import React, { useState } from 'react';
-import { SafeAreaView, View, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { AsyncStorage, SafeAreaView, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { logo_url } from '../../assets/info'
+import { getCartItems, removeFromCart, checkoutCart } from '../apis/carts'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 export default function cart(props) {
-	const [items, setItems] = useState([
-		{ 
-			key: "0", 
-			id: "1d9s-sdid-s-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			orderers: [
-				{ key: "0-0", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "0-1", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "0-2", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "0-3", username: "good girl", profile: { photo: "", width: 0, height: 0 }}
-			]
-		},
-		{ 
-			key: "1", 
-			id: "1d9s-sdid-s-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			orderers: [
-				{ key: "1-0", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "1-1", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "1-2", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "1-3", username: "good girl", profile: { photo: "", width: 0, height: 0 }}
-			]
-		},
-		{ 
-			key: "2", 
-			id: "1d9s-sdid-s-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			orderers: [
-				{ key: "2-0", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "2-1", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "2-2", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "2-3", username: "good girl", profile: { photo: "", width: 0, height: 0 }}
-			]
-		},
-		{
-			key: "3", 
-			id: "1d9s-sdid-s-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			orderers: [
-				{ key: "3-0", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "3-1", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "3-2", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "3-3", username: "good girl", profile: { photo: "", width: 0, height: 0 }}
-			]
-		},
-		{
-			key: "4", 
-			id: "1d9s-sdid-s-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			orderers: [
-				{ key: "4-0", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "4-1", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "4-2", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "4-3", username: "good girl", profile: { photo: "", width: 0, height: 0 }}
-			]
-		},
-		{
-			key: "5", 
-			id: "1d9s-sdid-s-0",
-			name: "Roasted milk tea", 
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			orderers: [
-				{ key: "5-0", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "5-1", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "5-2", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "5-3", username: "good girl", profile: { photo: "", width: 0, height: 0 }}
-			]
-		}
-	])
+	const [items, setItems] = useState([])
+	const [activeCheckout, setActivecheckout] = useState(false)
+	const [showConfirm, setShowconfirm] = useState(false)
+
+	const getTheCartItems = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+
+		getCartItems(userid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setItems(res.cartItems)
+					setActivecheckout(res.activeCheckout)
+				}
+			})
+	}
+	const checkout = async() => {
+		const time = Date.now()
+		const userid = await AsyncStorage.getItem("userid")
+		const data = { userid, time }
+
+		checkoutCart(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setActivecheckout(false)
+					setShowconfirm(true)
+				}
+			})
+	}
+
+	useEffect(() => {
+		getTheCartItems()
+	}, [])
 
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
@@ -125,11 +65,36 @@ export default function cart(props) {
 					renderItem={({ item, index }) => 
 						<View style={style.item} key={item.key}>
 							<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+								<TouchableOpacity style={style.itemRemove} onPress={async() => {
+									removeFromCart(item.id)
+										.then((res) => {
+											if (res.status == 200) {
+												return res.data
+											}
+										})
+										.then((res) => {
+											if (res) {
+												let newItems = [...items]
+
+												newItems.splice(index, 1)
+
+												setItems(newItems)
+											}
+										})
+								}}>
+									<AntDesign name="closecircleo" size={20}/>
+								</TouchableOpacity>
 								<View style={style.itemImageHolder}>
+									<Image source={{ uri: logo_url + item.image }} style={style.itemImage}/>
 								</View>
 								<View style={style.itemInfos}>
-									{item.info.map((info, infoindex) => (
-										<Text key={infoindex.toString()} style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>{info.header}:</Text> {info.selected}</Text>
+									<Text style={style.itemName}>{item.name}</Text>
+									{item.options.map((option, infoindex) => (
+										<Text key={infoindex.toString()} style={style.itemInfo}>
+											<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+											{option.selected}
+											{option.type == 'percentage' && '%'}
+										</Text>
 									))}
 								</View>
 								<View>
@@ -137,31 +102,57 @@ export default function cart(props) {
 									<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>price:</Text> ${item.price}</Text>
 								</View>
 							</View>
-							<View style={style.orderersContainer}>
-								<Text style={style.orderersHeader}>Ordering for</Text>
 
-								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-									<View style={style.orderers}>
-										{item.orderers.map(orderer => (
-											<View key={orderer.key} style={style.orderer}>
-												<View style={style.ordererProfile}>
+							{item.orderers.length > 0 && (
+								<View style={style.orderersContainer}>
+									<Text style={style.orderersHeader}>Calling for</Text>
+
+									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+										<View style={style.orderers}>
+											{item.orderers.map(orderer => (
+												<View key={orderer.key} style={style.orderer}>
+													<View style={style.ordererProfileHolder}>
+														<Image source={{ uri: logo_url + orderer.profile }} style={style.ordererProfile}/>
+													</View>
+													<Text style={style.ordererHeader}>{orderer.username}</Text>
+													<Text style={style.ordererStatus}>{orderer.status}</Text>
 												</View>
-												<Text style={style.ordererHeader}>{orderer.username}</Text>
-											</View>
-										))}
+											))}
+										</View>
 									</View>
 								</View>
-							</View>
+							)}
 						</View>
 					}
 				/>
 
 				<View style={{ alignItems: 'center' }}>
-					<TouchableOpacity style={style.checkout} onPress={() => props.close()}>
+					<TouchableOpacity style={activeCheckout ? style.checkout : style.checkoutDisabled} disabled={!activeCheckout} onPress={() => checkout()}>
 						<Text style={style.checkoutHeader}>Checkout</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
+
+			{showConfirm.show && (
+				<Modal transparent={true}>
+					<SafeAreaView style={{ flex: 1 }}>
+						<View style={style.confirmBox}>
+							<View style={style.confirmContainer}>
+								<Text style={style.confirmHeader}>Checkout and purchases completed</Text>
+
+								<View style={style.confirmOptions}>
+									<TouchableOpacity style={style.confirmOption} onPress={() => {
+										setShowconfirm(false)
+										props.close()
+									}}>
+										<Text style={style.confirmOptionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</SafeAreaView>
+				</Modal>
+			)}
 		</SafeAreaView>
 	);
 }
@@ -172,17 +163,31 @@ const style = StyleSheet.create({
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, width: 100 },
+	itemRemove: { marginVertical: 30, marginRight: 0 },
+	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, overflow: 'hidden', width: 100 },
+	itemImage: { height: 100, width: 100 },
 	itemInfos: {  },
+	itemName: { fontSize: 20, marginBottom: 10 },
 	itemInfo: { fontSize: 15 },
 	header: { fontSize: 15 },
-	orderersContainer: { backgroundColor: 'rgba(127, 127, 127, 0.5)', borderRadius: 5, marginVertical: 10, padding: 5 },
+	orderersContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginVertical: 10, padding: 5 },
 	orderersHeader: { fontWeight: 'bold', textAlign: 'center' },
 	orderers: { flexDirection: 'row' },
 	orderer: { alignItems: 'center', margin: 10 },
-	ordererProfile: { backgroundColor: 'white', borderRadius: 20, height: 40, width: 40 },
+	ordererProfileHolder: { backgroundColor: 'white', borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
+	ordererProfile: { height: 40, width: 40 },
 	ordererHeader: {  },
+	ordererStatus: { fontWeight: 'bold' },
 
 	checkout: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 20, padding: 10 },
+	checkoutDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 20, opacity: 0.3, padding: 10 },
 	checkoutHeader: { },
+
+	// confirm & requested box
+	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+	confirmHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmOptions: { flexDirection: 'row', justifyContent: 'space-around' },
+	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	confirmOptionHeader: { },
 })

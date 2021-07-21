@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Dimensions, SafeAreaView, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 
-import Cart from '../../components/restaurants/cart'
+import Cart from '../../components/cart'
 
 import Entypo from 'react-native-vector-icons/Entypo'
 

@@ -1,69 +1,18 @@
-import React, { useState } from 'react';
-import { SafeAreaView, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { cancelPurchase, confirmPurchase, cancelRequest, reschedule, confirmRequest } from '../apis/services'
+import React, { useState, useEffect } from 'react';
+import { AsyncStorage, SafeAreaView, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { logo_url } from '../../assets/info'
+import { getNotifications } from '../apis/users'
+import { cancelRequest, reschedule, confirmRequest } from '../apis/services'
+import { cancelPurchase, confirmPurchase } from '../apis/products'
+import { closeRequest } from '../apis/appointments'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 
 export default function notifications(props) {
-	const [items, setItems] = useState([
-		{
-			key: "0", 
-			type: "order",
-			id: "1-x900d0d0d-0",
-			name: "Roasted milk tea", 
-			image: { photo: require('../../assets/product-image.png'), width: 0, height: 0 },
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 10, price: 5.49,
-			orderers: [
-				{ key: "0-0", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "0-1", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "0-2", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "0-3", username: "good girl", profile: { photo: "", width: 0, height: 0 }}
-			],
-			adder: { username: "good girl", profile: { photo: '', width: 0, height: 0 }}
-		},
-		{
-			key: "1", 
-			type: "order",
-			id: "1-x900d0d0d-1",
-			name: "Roasted milk tea", 
-			image: { photo: require('../../assets/product-image.png'), width: 0, height: 0 },
-			info: [
-				{ header: 'Size', selected: 'small' },
-				{ header: 'Sugar', selected: 3 },
-				{ header: 'Cream', selected: 3 }
-			], 
-			quantity: 4, price: 5.49,
-			orderers: [
-				{ key: "0-0", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "0-1", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "0-2", username: "good girl", profile: { photo: "", width: 0, height: 0 }},
-				{ key: "0-3", username: "good girl", profile: { photo: "", width: 0, height: 0 }}
-			],
-			adder: { username: "good girl", profile: { photo: '', width: 0, height: 0 }}
-		},
-		{
-			key: "2",
-			type: "service",
-			id: "1-x900d0d0d-2",
-			location: "The One - Nail Salon",
-			service: "Foot Care",
-			locationimage: { photo: require("../../assets/nail-salon-logo.png"), width: 0, height: 0 },
-			serviceimage: { photo: require("../../assets/nailsalon/footcare.jpeg"), width: 0, height: 0 },
-			time: "5:40 pm",
-			action: "taken", // rejected, taken,
-
-			nexttime: 1624540847504, // '1624540847504', only if action = 'taken' or (sometimes 'rejected'),
-			reason: "", // 'Our store doesn't provide that service anymore. Sorry', only if action == 'rejected'
-		}
-	])
-	let [confirm, setConfirm] = useState({ show: false, name: "", price: "", quality: "" })
+	const [items, setItems] = useState([])
+	const [confirm, setConfirm] = useState({ show: false, index: 0, name: "", price: "", quality: "" })
 
 	const displayDateStr = (unixtime) => {
 		let weekdays = { "Mon": "Monday", "Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday", "Fri": "Friday", "Sat": "Saturday", "Sun": "Sunday" }
@@ -82,17 +31,15 @@ export default function notifications(props) {
 		let minute = time[1]
 		let period = hour > 11 ? "pm" : "am"
 
-		hour = hour > 11 ? hour - 11 : hour
+		hour = hour > 12 ? hour - 12 : hour
 
 		let datestr = day + ", " + month + " " + date + ", " + year + " at " + hour + ":" + minute + " " + period;
 
 		return datestr
 	}
 
-	const cancelThePurchase = (orderid) => {
-		const data = { orderid }
-
-		cancelPurchase(data)
+	const cancelThePurchase = (cartid, index) => {
+		cancelPurchase(cartid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -100,48 +47,29 @@ export default function notifications(props) {
 			})
 			.then((res) => {
 				if (res) {
-					alert(JSON.stringify(res))
-				}
-			})
-	}
-
-	const confirmThePurchase = (data) => {
-		const { id, name, quantity, price } = data
-		const newItems = items.filter((item) => {
-			return item.id != id
-		})
-
-		confirmPurchase(id)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setConfirm({
-						...confirm,
-						show: true,
-						name: name,
-						quantity: quantity,
-						price: price
+					const newItems = items.filter((item) => {
+						return item.id != id
 					})
 
-					setTimeout(function () {
-						setConfirm({
-							...confirm,
-							show: false,
-							name: "",
-							quantity: "",
-							price: ""
-						})
-
-						setItems(newItems)
-					}, 2000)
+					setItems(newItems)
 				}
 			})
 	}
+	const confirmThePurchase = async(info, index) => {
+		const userid = await AsyncStorage.getItem("userid")
+		const { id, name, quantity, price } = info
+		const data = { userid, id }
 
+		confirmPurchase(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) setConfirm({ ...confirm, show: true, index: index, name: name, quantity: quantity, price: price })
+			})
+	}
 	const cancelTheRequest = (serviceid) => {
 		const data = { serviceid }
 
@@ -157,7 +85,6 @@ export default function notifications(props) {
 				}
 			})
 	}
-
 	const confirmTheRequest = (serviceid) => {
 		const data = { serviceid }
 
@@ -173,6 +100,26 @@ export default function notifications(props) {
 				}
 			})
 	}
+
+	const getTheNotifications = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+
+		getNotifications(userid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setItems(res.notifications)
+				}
+			})
+	}
+
+	useEffect(() => {
+		getTheNotifications()
+	}, [])
 
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
@@ -193,11 +140,16 @@ export default function notifications(props) {
 								<>
 									<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 										<View style={style.itemImageHolder}>
-											<Image source={item.image.photo} style={{ height: 100, width: 100 }}/>
+											<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
 										</View>
 										<View style={style.itemInfos}>
-											{item.info.map((info, infoindex) => (
-												<Text key={infoindex.toString()} style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>{info.header}:</Text> {info.selected}</Text>
+											<Text style={style.itemName}>{item.name}</Text>
+											{item.options.map((option, infoindex) => (
+												<Text key={infoindex.toString()} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+													{option.selected}
+													{option.type == 'percentage' && '%'}
+												</Text>
 											))}
 										</View>
 										<Text style={style.quantity}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
@@ -206,7 +158,7 @@ export default function notifications(props) {
 										<View style={{ flexDirection: 'row' }}>
 											<View style={style.adderInfo}>
 												<View style={style.adderInfoProfile}>
-													<Image source={require('../../assets/profile.jpeg')} style={{ height: 40, width: 40 }}/>
+													<Image source={{ uri: logo_url + item.adder.profile }} style={{ height: 40, width: 40 }}/>
 												</View>
 												<Text style={style.adderInfoUsername}>{item.adder.username}</Text>
 											</View>
@@ -217,10 +169,10 @@ export default function notifications(props) {
 									<Text style={style.itemHeader}>Want to purchase this?</Text>
 									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 										<View style={style.actions}>
-											<TouchableOpacity style={style.action} onPress={() => cancelThePurchase(item.id)}>
+											<TouchableOpacity style={style.action} onPress={() => cancelThePurchase(item.id, index)}>
 												<Text style={style.actionHeader}>No</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={style.action} onPress={() => confirmThePurchase(item)}>
+											<TouchableOpacity style={style.action} onPress={() => confirmThePurchase(item, index)}>
 												<Text style={style.actionHeader}>Yes</Text>
 											</TouchableOpacity>
 										</View>
@@ -229,83 +181,126 @@ export default function notifications(props) {
 							)}
 
 							{item.type == "service" && (
-								<>
-									<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-										<View style={style.itemImageHolders}>
-											<View style={style.itemLocationImageHolder}>
-												<Image source={item.locationimage.photo} style={{ height: 80, width: 80 }}/>
-											</View>
-											<View style={style.itemServiceImageHolder}>
-												<Image source={item.serviceimage.photo} style={{ height: 100, width: 100 }}/>
-											</View>
+								<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+									<View style={style.itemImageHolders}>
+										<View style={style.itemLocationImageHolder}>
+											<Image source={{ uri: logo_url + item.locationimage }} style={{ height: 80, width: 80 }}/>
 										</View>
-										<View style={{ flexDirection: 'column', justifyContent: 'space-between', width: width - 130 }}>
-											<Text style={style.itemServiceHeader}>You requested an appointment for{' '}
-												<Text style={{ fontFamily: 'appFont' }}>{item.service}</Text> at{' '}
-												<Text style={{ fontFamily: 'appFont' }}>{item.time}</Text> at{' '}
-												<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
-											</Text>
-											{item.action == "accepted" ? 
-												<Text style={style.itemServiceResponseHeader}>Your requested appointment has been accepted. Please show up 2-3 minutes earlier</Text>
-											: null }
-											{item.action == "rejected" || item.action == "taken" ? 
-												<View style={style.storeRequested}>
-													<Text style={style.itemServiceResponseHeader}>
-														{item.action == "rejected" ? 
-															"Your requested appointment has been rejected"
-															:
-															"Unfortunately, this time has been taken."
-														}								
-													</Text>
-
-													{item.reason ? <Text style={style.itemServiceResponseHeader}>{item.reason}</Text> : null }
-													{item.nexttime > 0 && (
-														<View>
-															<Text style={style.itemHeader}>
-																<Text>The store requested this time for you.</Text>
-																{'\n'}
-																<Text style={style.itemServiceResponseHeader}>{displayDateStr(item.nexttime)}</Text>
-																{'\n\n'}
-																<Text>Will you be available?</Text>
-															</Text>
-															<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-																<View style={style.actions}>
-																	<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item.id)}>
-																		<Text style={style.actionHeader}>Cancel</Text>
-																	</TouchableOpacity>
-																	<TouchableOpacity style={style.action} onPress={() => {
-																		props.close()
-																		props.navigation.navigate("booktime", { name: item.service })
-																	}}>
-																		<Text style={style.actionHeader}>Reschedule</Text>
-																	</TouchableOpacity>
-																	<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(item.id)}>
-																		<Text style={style.actionHeader}>Yes</Text>
-																	</TouchableOpacity>
-																</View>
-															</View>
-														</View>
-													)}
-												</View>
-											: null }
+										<View style={style.itemServiceImageHolder}>
+											<Image source={{ uri: logo_url + item.serviceimage }} style={{ height: 100, width: 100 }}/>
 										</View>
 									</View>
-								</>
+									<View style={{ flexDirection: 'column', width: width - 130 }}>
+										<Text style={style.itemServiceHeader}>You requested an appointment for {' '}
+											<Text style={{ fontFamily: 'appFont' }}>{item.service}</Text>
+											{'\n'}at{'\n'}
+											<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
+											{'\n'}on{'\n'}
+											<Text style={{ fontFamily: 'appFont' }}>{displayDateStr(item.time)}</Text>
+										</Text>
+										{item.action == "accepted" && (
+											<Text style={style.itemServiceResponseHeader}>
+												Your requested appointment has been accepted.
+											</Text>
+										)}
+										{item.action == "cancel" || item.action == "rebook" ? 
+											<View style={style.storeRequested}>
+												<Text style={style.itemServiceResponseHeader}>
+													{item.action == "cancel" ? 
+														"Your requested appointment has been cancelled"
+														:
+														"Unfortunately, this time has been taken."
+													}								
+												</Text>
+
+												{item.reason && (
+													<View>
+														<Text style={style.itemServiceResponseHeader}>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>
+														<View style={{ alignItems: 'center' }}>
+															<TouchableOpacity style={style.itemServiceResponseTouch} onPress={() => {
+																closeRequest(item.id)
+																	.then((res) => {
+																		if (res.status == 200) {
+																			return res.data
+																		}
+																	})
+																	.then((res) => {
+																		if (res) {
+																			const newItems = [...items]
+
+																			newItems.splice(index, 1)
+
+																			setItems(newItems)
+																		}
+																	})
+															}}>
+																<Text style={style.itemServiceResponseTouchHeader}>Ok</Text>
+															</TouchableOpacity>
+														</View>
+													</View>
+												)}
+												{item.nextTime > 0 && (
+													<>
+														<Text style={style.itemHeader}>
+															<Text>The store requested this time for you.</Text>
+															{'\n'}
+															<Text style={style.itemServiceResponseHeader}>{displayDateStr(item.nextTime)}</Text>
+															{'\n\n'}
+															<Text>Will you be available?</Text>
+														</Text>
+														<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+															<View style={style.actions}>
+																<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item.id)}>
+																	<Text style={style.actionHeader}>Cancel</Text>
+																</TouchableOpacity>
+																<TouchableOpacity style={style.action} onPress={() => {
+																	props.close()
+																	props.navigation.navigate("booktime", { locationid: item.locationid, menuid: item.menuid, serviceid: item.serviceid })
+																}}>
+																	<Text style={style.actionHeader}>Reschedule</Text>
+																</TouchableOpacity>
+																<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(item.id)}>
+																	<Text style={style.actionHeader}>Yes</Text>
+																</TouchableOpacity>
+															</View>
+														</View>
+													</>
+												)}
+											</View>
+										: null }
+									</View>
+								</View>
 							)}
 						</View>
 					}
 				/>
 			</View>
 
-			<Modal visible={confirm.show} transparent={true}>
-				<SafeAreaView style={{ flex: 1 }}>
-					<View style={style.confirmBox}>
-						<View style={style.confirmContainer}>
-							<Text style={style.confirmHeader}>Purchased {confirm.name} at ${confirm.price}</Text>
+			{confirm.show && (
+				<Modal transparent={true}>
+					<SafeAreaView style={{ flex: 1 }}>
+						<View style={style.confirmBox}>
+							<View style={style.confirmContainer}>
+								<Text style={style.confirmHeader}>Purchased {confirm.quantity} {confirm.name} at ${confirm.price}</Text>
+
+								<View style={style.confirmOptions}>
+									<TouchableOpacity style={style.confirmOption} onPress={() => {
+										const newItems = [...items]
+
+										newItems.splice(confirm.index, 1)
+
+										setItems(newItems)
+
+										setConfirm({ ...confirm, show: false, index: 0, name: "", quantity: "", price: "" })
+									}}>
+										<Text style={style.confirmOptionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
 						</View>
-					</View>
-				</SafeAreaView>
-			</Modal>
+					</SafeAreaView>
+				</Modal>
+			)}
 		</SafeAreaView>
 	);
 }
@@ -321,8 +316,10 @@ const style = StyleSheet.create({
 	itemServiceImageHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
 
 	// service
-	itemServiceHeader: { fontWeight: 'bold', margin: 10 },
+	itemServiceHeader: { fontWeight: 'bold', margin: 10, textAlign: 'center' },
 	itemServiceResponseHeader: { fontWeight: 'bold', margin: 10 },
+	itemServiceResponseTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 60 },
+	itemServiceResponseTouchHeader: { fontWeight: 'bold', textAlign: 'center' },
 	storeRequested: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 3, padding: 5 },
 	itemServiceNewTimeHeader: {  },
 	itemServiceNewTimeActions: { flexDirection: 'row' },
@@ -331,6 +328,7 @@ const style = StyleSheet.create({
 
 	// order
 	itemInfos: {  },
+	itemName: { fontSize: 20, marginBottom: 10 },
 	itemInfo: { fontSize: 15 },
 	quantity: { fontSize: 15 },
 	adderInfo: { alignItems: 'center' },
@@ -346,7 +344,7 @@ const style = StyleSheet.create({
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
 	confirmHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	confirmOptions: { flexDirection: 'row' },
+	confirmOptions: { flexDirection: 'row', justifyContent: 'space-around' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },
 })

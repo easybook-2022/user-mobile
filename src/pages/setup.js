@@ -1,55 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, Dimensions, SafeAreaView, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
+import * as Location from 'expo-location';
 import { CommonActions } from '@react-navigation/native';
-import { info, logo_url } from '../../assets/info'
-import { getUserInfo, updateUser } from '../apis/users'
+import { setupUser } from '../apis/users'
+import { info } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
 
-export default function account({ navigation }) {
+export default function setup({ navigation }) {
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
-
-	const [username, setUsername] = useState('')
-	const [phonenumber, setPhonenumber] = useState(info.cellnumber)
-	const [password, setPassword] = useState(info.password)
-	const [confirmpassword, setConfirmpassword] = useState(info.password)
 	const [profile, setProfile] = useState({ uri: '', name: '' })
+	const [username, setUsername] = useState('')
 	const [errorMsg, setErrormsg] = useState('')
-
-	const getTheUserInfo = async() => {
+	
+	const setupAccount = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		getUserInfo(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const userInfo = res.userInfo
+		if (username && profile.name) {
+			const data = { userid, username, profile }
 
-					setUsername(userInfo.username)
-					setPhonenumber(userInfo.cellnumber)
-					setProfile({ uri: logo_url + userInfo.profile, name: userInfo.profile })
-				}
-			})
-	}
-	const updateAccount = async() => {
-		const userid = await AsyncStorage.getItem("userid")
-
-		if (username && phonenumber && profile.name) {
-			const data = { userid, username, phonenumber, profile }
-
-			updateUser(data)
+			setupUser(data)
 				.then((res) => {
 					if (res.status == 200) {
 						if (!res.data.errormsg) {
@@ -61,6 +42,8 @@ export default function account({ navigation }) {
 				})
 				.then((res) => {
 					if (res) {
+						AsyncStorage.setItem("setup", "true")
+
 						navigation.dispatch(
 							CommonActions.reset({
 								index: 0,
@@ -72,12 +55,6 @@ export default function account({ navigation }) {
 		} else {
 			if (!username) {
 				setErrormsg("Please enter a username you like")
-
-				return
-			}
-
-			if (!phonenumber) {
-				setErrormsg("Please enter your cell phone number")
 
 				return
 			}
@@ -146,29 +123,21 @@ export default function account({ navigation }) {
 	}
 
 	useEffect(() => {
-		getTheUserInfo()
-		openCamera()
+		(async() => openCamera())()
 	}, [])
 
-	return (
-		<SafeAreaView style={{ flex: 1 }}>
-			<ScrollView style={{ width: '100%' }}>
-				<TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
-					<Text style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
+	if (permission === null) return <View/>
 
+	return (
+		<View style={{ paddingVertical: offsetPadding }}>
+			<ScrollView style={{ width: '100%' }}>
 				<View style={style.box}>
-					<Text style={style.boxHeader}>Account</Text>
+					<Text style={style.boxHeader}>Setup</Text>
 
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Username:</Text>
-							<TextInput style={style.input} placeholder="username" onChangeText={(username) => setUsername(username)} value={username}/>
-						</View>
-
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Cell number:</Text>
-							<TextInput style={style.input} placeholder="cell phone number" onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber}/>
+							<TextInput style={style.input} placeholder="Enter a username" onChangeText={(username) => setUsername(username)} value={username}/>
 						</View>
 
 						<View style={style.cameraContainer}>
@@ -196,20 +165,38 @@ export default function account({ navigation }) {
 
 					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 
-					<TouchableOpacity style={style.updateButton} onPress={() => updateAccount()}>
+					<TouchableOpacity style={style.setupButton} onPress={() => setupAccount()}>
 						<Text>Done</Text>
 					</TouchableOpacity>
 				</View>
 			</ScrollView>
-		</SafeAreaView>
-	);
+
+			<View style={style.bottomNavs}>
+				<View style={{ flexDirection: 'row' }}>
+					<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("settings")}>
+						<AntDesign name="setting" size={30}/>
+					</TouchableOpacity>
+					<TouchableOpacity style={style.bottomNav} onPress={() => {
+						AsyncStorage.clear()
+
+						navigation.dispatch(
+							CommonActions.reset({
+								index: 1,
+								routes: [{ name: 'login' }]
+							})
+						);
+					}}>
+						<Text style={style.bottomNavHeader}>Log-Out</Text>
+					</TouchableOpacity>
+				</View>
+			</View>
+		</View>
+	)
 }
 
 const style = StyleSheet.create({
-	box: { alignItems: 'center', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
+	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 30 },
@@ -220,5 +207,9 @@ const style = StyleSheet.create({
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
+	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
+
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 })

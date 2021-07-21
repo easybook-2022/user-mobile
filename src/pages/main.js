@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { AsyncStorage, SafeAreaView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import { CommonActions } from '@react-navigation/native';
+import * as Location from 'expo-location';
+import { logo_url } from '../../assets/info'
+import { getNotifications, getNumNotifications } from '../apis/users'
+import { getLocations, getMoreLocations } from '../apis/locations'
+import { getNumCartItems } from '../apis/carts'
 
 import Notifications from '../components/notifications'
+import Cart from '../components/cart'
 
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -14,74 +20,196 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 
 export default function main({ navigation }) {
-	const [services, setServices] = useState([
-		{ key: "0", service: "restaurants", header: "Restaurant(s)", locations: [
-			{ key: 'l-0', id: "d9df9dsfsdf-0", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 0", radiusKm: 1 },
-			{ key: 'l-1', id: "d9df9dsfsdf-1", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 1", radiusKm: 2 },
-			{ key: 'l-2', id: "d9df9dsfsdf-2", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 2", radiusKm: 3 },
-			{ key: 'l-3', id: "d9df9dsfsdf-3", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 3", radiusKm: 4 },
-			{ key: 'l-4', id: "d9df9dsfsdf-4", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 4", radiusKm: 5 },
-			{ key: 'l-5', id: "d9df9dsfsdf-5", logo: { photo: require('../../assets/restaurant-logo.png'), width: 0, height: 0 }, nav: "restaurantprofile", name: "Tim Hortons 5", radiusKm: 6 }
-		], loading: true },
-		{ key: "1", service: "salons", header: "Salon(s)", locations: [
-			{ key: "s-0", id: "29d9c90d0c-0", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 0", radiusKm: 5 },
-			{ key: "s-1", id: "29d9c90d0c-1", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 1", radiusKm: 5 },
-			{ key: "s-2", id: "29d9c90d0c-2", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 2", radiusKm: 5 },
-			{ key: "s-3", id: "29d9c90d0c-3", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 3", radiusKm: 5 },
-			{ key: "s-4", id: "29d9c90d0c-4", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 4", radiusKm: 5 },
-			{ key: "s-5", id: "29d9c90d0c-5", logo: { photo: require('../../assets/salon-logo.jpeg'), width: 0, height: 0 }, nav: "salonprofile", name: "Hair Salon 5", radiusKm: 5 }
-		], loading: true }
-	])
+	const [locationPermission, setLocationpermission] = useState(false)
+	const [geolocation, setGeolocation] = useState({ longitude: null, latitude: null })
+	const [trackUser, setTrackuser] = useState()
+	const [searchLocationname, setSearchlocationname] = useState('')
+	const [locations, setLocations] = useState([])
 	const [openNotifications, setOpenNotifications] = useState(false)
+	const [numNotifications, setNumnotifications] = useState(0)
 
-	const getLocations = (type, index, start) => {
-		let newServices = [...services]
-		let { locations } = newServices[index]
-		let last_item = locations[locations.length - 1]
-		let keyname = last_item.key.substr(0, 2)
-		let keynum = parseInt(last_item.key.substr(2))
-		let km = last_item.radiusKm
-		let info = { 
-			"restaurants": {
-				"id": "d9df9dsfsdf",
-				"photo": require('../../assets/restaurant-logo.png')
-			}, 
-			"salons": {
-				"id": "29d9c90d0c",
-				"photo": require('../../assets/salon-logo.jpeg')
-			} 
-		}
+	const [currentGeo, setCurrentgeo] = useState({ msg: "not yet" })
+	const [lastGeo, setLastgeo] = useState({ msg: "not yet" })
+	const [openCart, setOpencart] = useState(false)
+	const [numCartItems, setNumcartitems] = useState(0)
 
-		for (let k = 1; k <= 10; k++) {
-			keynum += 1
-			km += 5
+	const getTheNumNotifications = async() => {
+		const userid = await AsyncStorage.getItem("userid")
 
-			locations.push({
-				key: keyname + "" + keynum,
-				id: info[type].id + "-" + keynum,
-				logo: { 
-					photo: info[type].photo,
-					width: 0, height: 0
-				},
-				name: type == "restaurants" ? "Tim Hortons " + keynum : "Hair Salon " + keynum,
-				radiusKm: km
+		getNumNotifications(userid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
 			})
+			.then((res) => {
+				if (res) setNumnotifications(res.numNotifications)
+			})
+	}
+	const getTheNumCartItems = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+
+		getNumCartItems(userid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setNumcartitems(res.numCartItems)
+				}
+			})
+	}
+
+	const getTheLocations = async(longitude, latitude, locationName) => {
+		const userid = await AsyncStorage.getItem("userid")
+		const data = { userid, longitude, latitude, locationName }
+
+		getLocations(data)
+			.then((res) => {
+				if (res.status == 200) {
+					if (!res.data.errormsg) {
+						return res.data
+					}
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setLocations(res.locations)
+					setSearchlocationname(locationName)
+				}
+			})
+	}
+	const getTheMoreLocations = async(type, lindex, index) => {
+		const userid = await AsyncStorage.getItem("userid")
+		const newLocations = [...locations]
+		const { longitude, latitude } = geolocation
+		const data = { userid, longitude, latitude, locationName: searchLocationname, type, index }
+
+		getMoreLocations(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const { index, max, newlocations } = res
+
+					newLocations[lindex]["locations"] = newLocations[lindex]["locations"].concat(newlocations)
+					newLocations[lindex]["index"] = index
+					newLocations[lindex]["max"] = max
+
+					setLocations(newLocations)
+				}
+			})
+	}
+	const getLocationPermission = async() => {
+		const info = await Location.hasServicesEnabledAsync()
+		let longitude = await AsyncStorage.getItem("longitude")
+		let latitude = await AsyncStorage.getItem("latitude")
+		let permission = false
+
+		if (longitude && latitude) {
+			setGeolocation({ longitude, latitude })
+
+			setLocationpermission(true)
+			getTheLocations(longitude, latitude, '')
 		}
 
-		newServices[index].locations = locations
+		if (info) { // location service is enabled
+			const getfore = await Location.getForegroundPermissionsAsync()
+			const getback = await Location.getBackgroundPermissionsAsync()
 
-		setServices(newServices)
+			if (getfore.status == 'granted' || getback.status == 'granted') {
+				setLocationpermission(true)
+			} else {
+				const fore = await Location.requestForegroundPermissionsAsync()
+				const back = await Location.requestBackgroundPermissionsAsync()
+
+				if (fore.status == 'granted' && back.status == 'granted') {
+					setLocationpermission(true)
+				}
+			}
+
+			const current = await Location.getCurrentPositionAsync()
+			const last = await Location.getLastKnownPositionAsync()
+
+			if (current.coords.longitude && current.coords.latitude) {
+				longitude = current.coords.longitude
+				latitude = current.coords.latitude
+
+				setGeolocation({ longitude, latitude })
+
+				AsyncStorage.setItem("longitude", longitude.toString())
+				AsyncStorage.setItem("latitude", latitude.toString())
+			} else if (last.coords.longitude && last.coords.latitude) {
+				longitude = last.coords.longitude
+				latitude = last.coords.latitude
+
+				setGeolocation({ longitude, latitude })
+
+				AsyncStorage.setItem("longitude", longitude.toString())
+				AsyncStorage.setItem("latitude", latitude.toString())
+			}
+
+			if (longitude && latitude) {
+				getTheLocations(longitude, latitude, '')
+				setTrackuser(setInterval(() => trackUserLocation(), 1000))
+			} else {
+				const longitude = parseFloat(await AsyncStorage.getItem("longitude"))
+				const latitude = parseFloat(await AsyncStorage.getItem("latitude"))
+
+				setGeolocation({ longitude, latitude })
+			}
+		}
 	}
+	const trackUserLocation = async() => {
+		if (locationPermission) {
+			const current = await Location.getCurrentPositionAsync()
+			const last = await Location.getLastKnownPositionAsync()
+			let known = false
+
+			if (current.coords.longitude && current.coords.latitude) {
+				const { longitude, latitude } = current.coords
+
+				setGeolocation({ longitude, latitude })
+
+				known = true
+			}
+
+			if (last.coords.longitude && last.coords.latitude && !known) {
+				const { longitude, latitude } = last.coords
+
+				setGeolocation({ longitude, latitude })
+
+				known = true
+			}
+		}
+	}
+
+	useEffect(() => {
+		getTheNumNotifications()
+		getTheNumCartItems()
+		getLocationPermission()
+
+		return () => {
+			if (locationPermission) {
+				clearInterval(trackUser)
+			}
+		}
+	}, [])
 
 	return (
 		<SafeAreaView style={{ flex: 1 }}>
 			<View style={style.box}>
 				<View style={style.header}>
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-						<TextInput style={style.searchInput} placeholder="Search any services"/>
+						<TextInput style={style.searchInput} placeholder="Search any locations" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)}/>
 						<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
 							<FontAwesome name="bell" size={30}/>
-							<Text style={{ fontWeight: 'bold' }}>12</Text>
+							{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -90,33 +218,35 @@ export default function main({ navigation }) {
 					<FlatList
 						style={{ height: height - 223 }}
 						showsVerticalScrollIndicator={false}
-						data={services}
+						data={locations}
 						renderItem={({ item, index }) => 
 							<View key={item.key} style={style.service}>
 								<Text style={style.rowHeader}>{item.locations.length} {item.header} near you</Text>
 
-								<TouchableOpacity style={style.seeMore} onPress={() => navigation.navigate(item.service)}>
-									<Text style={style.seeMoreHeader}>See More</Text>
-								</TouchableOpacity>
+								{item.index < item.max && (
+									<TouchableOpacity style={style.seeMore} onPress={() => navigation.navigate(item.service)}>
+										<Text style={style.seeMoreHeader}>See More</Text>
+									</TouchableOpacity>
+								)}
 
 								<View style={style.row}>
 									<FlatList
 										ListFooterComponent={() => {
-											if (item.loading) {
+											if (item.loading && item.index < item.max) {
 												return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
 											}
 
 											return null
 										}}
 										horizontal
-										onEndReached={() => getLocations(item.service, index, false)}
+										onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
 										onEndReachedThreshold={0}
 										showsHorizontalScrollIndicator={false}
 										data={item.locations}
 										renderItem={({ item }) => 
-											<TouchableOpacity style={style.location} onPress={() => navigation.navigate(item.nav, { name: item.name })}>
+											<TouchableOpacity style={style.location} onPress={() => navigation.navigate(item.nav, { locationid: item.id })}>
 												<View style={style.locationPhotoHolder}>
-													<Image source={item.logo.photo} style={{ height: 80, width: 80 }}/>
+													<Image source={{ uri: logo_url + item.logo }} style={{ height: 80, width: 80 }}/>
 												</View>
 
 												<Text style={style.locationName}>{item.name}</Text>
@@ -136,6 +266,10 @@ export default function main({ navigation }) {
 					<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("recent")}>
 						<FontAwesome name="history" size={30}/>
 					</TouchableOpacity>
+					<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+						<Entypo name="shopping-cart" size={30}/>
+						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+					</TouchableOpacity>
 					<TouchableOpacity style={style.bottomNav} onPress={() => {
 						AsyncStorage.clear()
 
@@ -152,6 +286,7 @@ export default function main({ navigation }) {
 			</View>
 
 			<Modal visible={openNotifications}><Notifications navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>
+			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
 		</SafeAreaView>
 	)
 }
@@ -167,10 +302,10 @@ const style = StyleSheet.create({
 	seeMore: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	row: { flexDirection: 'row' },
 	location: { alignItems: 'center', flexDirection: 'column', height: 100, justifyContent: 'space-between', margin: 5, width: 100 },
-	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', height: 80, overflow: 'hidden', width: 80 },
-
+	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	numCartItemsHeader: { fontWeight: 'bold' },
 })

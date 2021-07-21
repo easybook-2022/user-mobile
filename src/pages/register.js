@@ -2,19 +2,24 @@ import React, { useState } from 'react';
 import { AsyncStorage, SafeAreaView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { registerUser } from '../apis/users'
+import { info } from '../../assets/info'
 
 export default function register({ navigation }) {
-	const [phonenumber, setPhonenumber] = useState('1231231234')
-	const [password, setPassword] = useState('password')
-	const [confirmpassword, setConfirmpassword] = useState('c password')
+	const [phonenumber, setPhonenumber] = useState(info.cellnumber)
+	const [password, setPassword] = useState(info.password)
+	const [confirmpassword, setConfirmpassword] = useState(info.password)
 
 	const register = () => {
-		const data = { cellnumber: phonenumber, password: password }
+		const data = { cellnumber: phonenumber, password: password, confirmPassword: confirmpassword }
 
 		registerUser(data)
 			.then((res) => {
 				if (res.status == 200) {
-					return res.data
+					if (!res.data.errormsg) {
+						return res.data
+					} else {
+						setErrormsg(res.data.errormsg)
+					}
 				}
 
 				return
@@ -23,14 +28,10 @@ export default function register({ navigation }) {
 				if (res) {
 					const { id } = res
 
-					AsyncStorage.setItem("id", id)
+					AsyncStorage.setItem("userid", id.toString())
+					AsyncStorage.setItem("setup", "false")
 					
-					navigation.dispatch(
-						CommonActions.reset({
-							index: 1,
-							routes: [{ name: 'main' }]
-						})
-					);
+					navigation.navigate("setup")
 				}
 			})
 	}
@@ -49,12 +50,12 @@ export default function register({ navigation }) {
 
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Password:</Text>
-						<TextInput style={style.input} secureEntry={true} onChangeText={(password) => setPassword(password)} value={password}/>
+						<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password}/>
 					</View>
 
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Confirm Password:</Text>
-						<TextInput style={style.input} secureEntry={true} onChangeText={(confirmpassword) => setPassword(confirmpassword)} value={confirmpassword}/>
+						<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmpassword) => setPassword(confirmpassword)} value={confirmpassword}/>
 					</View>
 				</View>
 
