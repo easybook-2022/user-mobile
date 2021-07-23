@@ -4,7 +4,7 @@ import { logo_url } from '../../assets/info'
 import { getNotifications } from '../apis/users'
 import { cancelRequest, reschedule, confirmRequest } from '../apis/services'
 import { cancelPurchase, confirmPurchase } from '../apis/products'
-import { closeRequest } from '../apis/appointments'
+import { closeRequest } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -191,13 +191,22 @@ export default function notifications(props) {
 										</View>
 									</View>
 									<View style={{ flexDirection: 'column', width: width - 130 }}>
-										<Text style={style.itemServiceHeader}>You requested an appointment for {' '}
-											<Text style={{ fontFamily: 'appFont' }}>{item.service}</Text>
-											{'\n'}at{'\n'}
-											<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
-											{'\n'}on{'\n'}
-											<Text style={{ fontFamily: 'appFont' }}>{displayDateStr(item.time)}</Text>
-										</Text>
+										{item.locationtype == "restaurant" ? 
+											<Text style={style.itemServiceHeader}>You requested a reservation for 
+												{'\n'}
+												<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
+												{'\n'}on{'\n'}
+												<Text style={{ fontFamily: 'appFont' }}>{displayDateStr(item.time)}</Text>
+											</Text>
+											:
+											<Text style={style.itemServiceHeader}>You requested an appointment for {' '}
+												<Text style={{ fontFamily: 'appFont' }}>{item.service}</Text>
+												{'\n'}at{'\n'}
+												<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
+												{'\n'}on{'\n'}
+												<Text style={{ fontFamily: 'appFont' }}>{displayDateStr(item.time)}</Text>
+											</Text>
+										}
 										{item.action == "accepted" && (
 											<Text style={style.itemServiceResponseHeader}>
 												Your requested appointment has been accepted.
@@ -213,8 +222,8 @@ export default function notifications(props) {
 													}								
 												</Text>
 
-												{item.reason && (
-													<View>
+												{item.reason != "" ? 
+													<>
 														<Text style={style.itemServiceResponseHeader}>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>
 														<View style={{ alignItems: 'center' }}>
 															<TouchableOpacity style={style.itemServiceResponseTouch} onPress={() => {
@@ -237,8 +246,8 @@ export default function notifications(props) {
 																<Text style={style.itemServiceResponseTouchHeader}>Ok</Text>
 															</TouchableOpacity>
 														</View>
-													</View>
-												)}
+													</>
+												: null }
 												{item.nextTime > 0 && (
 													<>
 														<Text style={style.itemHeader}>
@@ -255,7 +264,12 @@ export default function notifications(props) {
 																</TouchableOpacity>
 																<TouchableOpacity style={style.action} onPress={() => {
 																	props.close()
-																	props.navigation.navigate("booktime", { locationid: item.locationid, menuid: item.menuid, serviceid: item.serviceid })
+																	
+																	if (item.locationtype == "restaurant") {
+																		props.navigation.navigate("makereservation", { locationid: item.locationid })
+																	} else {
+																		props.navigation.navigate("booktime", { locationid: item.locationid, menuid: item.menuid, serviceid: item.serviceid })
+																	}
 																}}>
 																	<Text style={style.actionHeader}>Reschedule</Text>
 																</TouchableOpacity>

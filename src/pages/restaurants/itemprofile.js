@@ -18,6 +18,7 @@ export default function itemProfile(props) {
 	const { locationid, menuid, productid } = props.route.params
 
 	const [itemName, setItemname] = useState('')
+	const [itemInfo, setIteminfo] = useState('')
 	const [itemImage, setItemimage] = useState('')
 	const [itemPrice, setItemprice] = useState(0)
 	const [options, setOptions] = useState([])
@@ -286,6 +287,7 @@ export default function itemProfile(props) {
 					const { image, info, name, options, price } = res.productInfo
 
 					setItemname(name)
+					setIteminfo(info)
 					setItemimage(image)
 					setItemprice(price)
 					setOptions(options)
@@ -357,6 +359,7 @@ export default function itemProfile(props) {
 						</View>
 					</View>
 					<Text style={style.boxHeader}>{itemName}</Text>
+					<Text style={style.boxHeaderInfo}>{itemInfo}</Text>
 
 					{options.map((option, index) => (
 						<View key={option.key} style={style.info}>
@@ -546,10 +549,11 @@ const style = StyleSheet.create({
 
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	image: { height: 200, width: 200 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
+	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+	boxHeaderInfo: {  fontSize: 15, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 
-	info: { flexDirection: 'row', marginBottom: 30, marginHorizontal: 10 },
-	infoHeader: { fontWeight: 'bold', margin: 5, width: 100 },
+	info: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30, paddingHorizontal: 5, width: '100%' },
+	infoHeader: { fontWeight: 'bold', margin: 5 },
 
 	// options
 	options: { flexDirection: 'row', justifyContent: 'space-between' },

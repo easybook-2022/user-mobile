@@ -17,6 +17,7 @@ import Main from './src/pages/main'
 // restaurants
 import Restaurants from './src/pages/restaurants'
 import Restaurantprofile from './src/pages/restaurants/restaurantprofile'
+import Makereservation from './src/pages/restaurants/makereservation'
 import Itemprofile from './src/pages/restaurants/itemprofile'
 import Recent from './src/pages/restaurants/recent'
 
@@ -53,7 +54,7 @@ export default function App() {
                 setRoute("login")
             }
         }
-
+        
         retrieveId()
 
         if (route != null) {
@@ -66,7 +67,9 @@ export default function App() {
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
 
                         <Stack.Screen name="restaurants" component={Restaurants} options={{ headerShown: false }}/>
+                        
                         <Stack.Screen name="restaurantprofile" component={Restaurantprofile} options={{ headerShown: false }}/>
+                        <Stack.Screen name="makereservation" component={Makereservation} options={{ headerShown: false }}/>
                         <Stack.Screen name="itemprofile" component={Itemprofile} options={{ headerShown: false }}/>
                         <Stack.Screen name="recent" component={Recent} options={{ headerShown: false }}/>
                         <Stack.Screen name="cart" component={Cart} options={{ headerShown: false }}/>

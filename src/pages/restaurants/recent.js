@@ -56,7 +56,7 @@ export default function recent({ navigation }) {
 				<TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
-				<Text style={style.boxHeader}>Recent</Text>
+				<Text style={style.boxHeader}>Recent(s)</Text>
 
 				<FlatList
 					showsVerticalScrollIndicator={false}
@@ -70,6 +70,7 @@ export default function recent({ navigation }) {
 											<Image source={{ uri: logo_url + product.image }} style={{ height: 100, width: 100 }}/>
 										</View>
 										<View style={style.itemInfos}>
+											<Text style={style.itemName}>{product.name}</Text>
 											{product.options.map((option, infoindex) => (
 												<Text key={infoindex.toString()} style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> {option.selected}</Text>
 											))}
@@ -100,6 +101,7 @@ const style = StyleSheet.create({
 	item: { marginBottom: 5 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, overflow: 'hidden', width: 100 },
 	itemInfos: {  },
+	itemName: { fontSize: 20, marginBottom: 10 },
 	itemInfo: { fontSize: 15 },
 	header: { fontSize: 15 },
 	dateHeader: { marginTop: 10 },

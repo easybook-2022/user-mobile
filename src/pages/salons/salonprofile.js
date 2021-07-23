@@ -13,6 +13,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
+const imageSize = (width / 3) - 10
 
 export default function salonprofile(props) {
 	let { locationid } = props.route.params
@@ -20,24 +21,6 @@ export default function salonprofile(props) {
 	const [locationName, setLocationname] = useState('')
 	const [address, setAddress] = useState('')
 	const [phonenumber, setPhonenumber] = useState('')
-
-	const [openCart, setOpencart] = useState(false)
-	const [numCartItems, setNumcartitems] = useState(0)
-	const getTheNumCartItems = async() => {
-		const userid = await AsyncStorage.getItem("userid")
-
-		getNumCartItems(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setNumcartitems(res.numCartItems)
-				}
-			})
-	}
 
 	const [showMenus, setShowmenus] = useState(false)
 	const [menus, setMenus] = useState([])
@@ -73,6 +56,24 @@ export default function salonprofile(props) {
 	])
 	const [numServices, setNumservices] = useState(0)
 
+	const [openCart, setOpencart] = useState(false)
+	const [numCartItems, setNumcartitems] = useState(0)
+
+	const getTheNumCartItems = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+
+		getNumCartItems(userid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setNumcartitems(res.numCartItems)
+				}
+			})
+	}
 	const getTheLocationProfile = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const data = { userid, locationid }
@@ -144,6 +145,7 @@ export default function salonprofile(props) {
 			.then((res) => {
 				if (res) {
 					setProducts(res.products)
+					setNumproducts(res.numproducts)
 					setShowproducts(true)
 				}
 			})
@@ -160,6 +162,7 @@ export default function salonprofile(props) {
 			.then((res) => {
 				if (res) {
 					setServices(res.services)
+					setNumservices(res.numservices)
 					setShowservices(true)
 				}
 			})
@@ -223,13 +226,23 @@ export default function salonprofile(props) {
 								style={{ height: height - 386 }}
 								renderItem={({ item, index }) => 
 									<View key={item.key} style={style.row}>
-										{item.items.map(( product, index ) => (
-											<TouchableOpacity key={product.key} style={style.item} onPress={() => {}}>
-												<View style={style.itemPhotoHolder}>
-													<Image source={{ uri: logo_url + product.image }} style={{ height: (width * 0.5) - 100, width: (width * 0.5) - 100 }}/>
+										{item.row.map(product => (
+											product.name ? 
+												<View key={product.key} style={style.product}>
+													<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
+													<Text style={style.productName}>{product.name}</Text>
+													{product.info && <Text style={style.productInfo}>{product.info}</Text>}
+
+													<View style={{ flexDirection: 'row' }}>
+														<Text style={style.productDetail}>{product.price}</Text>
+													</View>
+
+													<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid, productid: product.id })}>
+														<Text style={style.productBuyHeader}>Buy</Text>
+													</TouchableOpacity>
 												</View>
-												<Text style={style.itemHeader}>{product.name}</Text>
-											</TouchableOpacity>
+												:
+												<View key={product.key} style={style.product}></View>
 										))}
 									</View>
 								}
@@ -246,15 +259,19 @@ export default function salonprofile(props) {
 								data={services}
 								style={{ height: height - 386 }}
 								renderItem={({ item, index }) => 
-									<View key={item.key} style={style.row}>
-										{item.items.map(( service, index ) => (
-											<TouchableOpacity key={service.key} style={style.item} onPress={() => {}}>
-												<View style={style.itemPhotoHolder}>
-													<Image source={{ uri: logo_url + service.image }} style={{ height: (width * 0.5) - 100, width: (width * 0.5) - 100 }}/>
-												</View>
-												<Text style={style.itemHeader}>{service.name}</Text>
+									<View key={item.key} style={style.service}>
+										<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
+										<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
+											<Text style={style.serviceName}>{item.name}</Text>
+											{item.info ? <Text style={style.serviceInfo}>{item.info}</Text> : null}
+
+											<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
+											<Text style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
+
+											<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id })}>
+												<Text>Book a time</Text>
 											</TouchableOpacity>
-										))}
+										</View>
 									</View>
 								}
 							/>
@@ -283,12 +300,29 @@ const style = StyleSheet.create({
 	header: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginVertical: 5, paddingHorizontal: 50, textAlign: 'center' },
 	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 
-	bodyHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	bodyHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 
 	item: { alignItems: 'center', height: width * 0.5, width: width * 0.5 },
 	itemPhotoHolder: { borderRadius: ((width * 0.5) - 100) / 2, height: (width * 0.5) - 100, overflow: 'hidden', width: (width * 0.5) - 100 },
 	itemHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 20 },
+
+	// product
+	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10 },
+	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
+	productName: { fontSize: 20, fontWeight: 'bold' },
+	productInfo: { fontSize: 15 },
+	productDetail: { fontSize: 15, marginHorizontal: 10, marginVertical: 5 },
+	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
+	productBuyHeader: { textAlign: 'center' },
+
+	// service
+	service: { alignItems: 'center', flexDirection: 'row', marginBottom: 50, marginHorizontal: 10 },
+	serviceImage: { borderRadius: 50, height: 100, width: 100 },
+	serviceName: { fontSize: 15, fontWeight: 'bold', marginBottom: 10 },
+	serviceInfo: { fontSize: 15, marginBottom: 10 },
+	serviceDetail: { fontSize: 15 },
+	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 
 	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { LOCAL_API_URL, WIFI_API_URL } from "@env"
 
-const url = LOCAL_API_URL
+const url = WIFI_API_URL
 
 export const getLocations = (data) => {
 	return axios.post(
@@ -20,6 +20,13 @@ export const getMoreLocations = (data) => {
 export const getLocationProfile = (data) => {
 	return axios.post(
 		`${url}/locations/get_location_profile`,
+		data
+	)
+}
+
+export const makeReservation = (data) => {
+	return axios.post(
+		`${url}/locations/make_reservation`,
 		data
 	)
 }

@@ -133,7 +133,7 @@ export default function cart(props) {
 				</View>
 			</View>
 
-			{showConfirm.show && (
+			{showConfirm && (
 				<Modal transparent={true}>
 					<SafeAreaView style={{ flex: 1 }}>
 						<View style={style.confirmBox}>

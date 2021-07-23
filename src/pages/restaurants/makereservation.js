@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, SafeAreaView, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { getServiceInfo } from '../../apis/services'
-import { getLocationHours } from '../../apis/locations'
-import { requestAppointment } from '../../apis/schedules'
+import { getLocationHours, getLocationProfile, makeReservation } from '../../apis/locations'
 
-import AntDesign from 'react-native-vector-icons/AntDesign'
+import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 
 const { width } = Dimensions.get('window')
 
 export default function booktime(props) {
-	let { locationid, menuid, serviceid } = props.route.params
-
+	let { locationid } = props.route.params
+	
 	const [name, setName] = useState(name)
+	const [seaters, setSeaters] = useState(2)
 	const [times, setTimes] = useState([])
 	const [openTime, setOpentime] = useState(0)
 	const [closeTime, setClosetime] = useState(0)
@@ -19,8 +18,11 @@ export default function booktime(props) {
 
 	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", requested: false })
 
-	const getTheServiceInfo = async() => {
-		getServiceInfo(serviceid)
+	const getTheLocationProfile = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+		const data = { userid, locationid }
+
+		getLocationProfile(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -28,9 +30,9 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { serviceInfo } = res
+					const { locationInfo } = res
 
-					setName(serviceInfo.name)
+					setName(locationInfo.name)
 					getTheLocationHours()
 				}
 			})
@@ -83,17 +85,15 @@ export default function booktime(props) {
 				}
 			})
 	}
-	const requestAnAppointment = async() => {
+	const makeTheReservation = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const { timeheader, time } = confirm
-		const data = { userid, locationid, menuid, serviceid, time }
+		const data = { userid, locationid, time, seaters }
 
-		requestAppointment(data)
+		makeReservation(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					}
+					return res.data
 				}
 			})
 			.then((res) => {
@@ -103,7 +103,7 @@ export default function booktime(props) {
 	}
 
 	useEffect(() => {
-		getTheServiceInfo()
+		getTheLocationProfile()
 	}, [])
 
 	return (
@@ -113,13 +113,30 @@ export default function booktime(props) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Book a time for</Text>
+				<Text style={style.boxHeader}>Make a reservation for</Text>
 				<Text style={style.serviceHeader}>{name}</Text>
 
 				{!loaded ? 
 					<ActivityIndicator size="small"/>
 					:
 					<ScrollView>
+						<View style={{ alignItems: 'center', marginVertical: 20 }}>
+							<View style={style.seatersBox}>
+								<Text style={style.seatersHeader}>Number of seaters</Text>
+								<View style={style.seatersSelection}>
+									<Text style={style.seatersSelectionHeader}>{seaters}</Text>
+									<View style={style.seatersSelectionActions}>
+										<TouchableOpacity onPress={() => setSeaters(seaters + 1)}>
+											<SimpleLineIcons name="arrow-up" size={20}/>
+										</TouchableOpacity>
+										<TouchableOpacity onPress={() => setSeaters(seaters > 0 ? seaters - 1 : 0)}>
+											<SimpleLineIcons name="arrow-down" size={20}/>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+
 						<Text style={style.timesHeader}>Availabilities</Text>
 						<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
 							<View style={style.times}>
@@ -145,8 +162,8 @@ export default function booktime(props) {
 								{!confirm.requested ? 
 									<>
 										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request an appointment for </Text>
-											{confirm.service + '\n'}
+											<Text style={{ fontFamily: 'appFont' }}>Request a reservation at </Text>
+											{'\n' + confirm.service + '\n'}
 											at
 											{'\n' + confirm.timeheader}
 										</Text>
@@ -156,7 +173,7 @@ export default function booktime(props) {
 												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, service: "", time: "" })}>
 													<Text style={style.confirmOptionHeader}>No</Text>
 												</TouchableOpacity>
-												<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
+												<TouchableOpacity style={style.confirmOption} onPress={() => makeTheReservation()}>
 													<Text style={style.confirmOptionHeader}>Yes</Text>
 												</TouchableOpacity>
 											</View>
@@ -165,10 +182,10 @@ export default function booktime(props) {
 									:
 									<>
 										<View style={style.requestedHeaders}>
-											<Text style={style.requestedHeader}>Appointment requested {'\n'}</Text>
+											<Text style={style.requestedHeader}>Reservation requested at {'\n'}</Text>
 											<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
 											<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>You will get notified by the salon in your notification very soon</Text>
+											<Text style={style.requestedHeaderInfo}>You will get notified by the restaurant in your notification very soon</Text>
 											<TouchableOpacity style={style.requestedClose} onPress={() => {
 												setConfirm({ ...confirm, show: false, requested: false })
 												props.navigation.goBack()
@@ -194,6 +211,11 @@ const style = StyleSheet.create({
 
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center', marginBottom: 50 },
+
+	seatersBox: { flexDirection: 'row' },
+	seatersHeader: { fontSize: 15, padding: 20 },
+	seatersSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-around', padding: 5, width: 80 },
+	seatersSelectionHeader: { fontSize: 30, margin: 3 },
 
 	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
 	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 300 },

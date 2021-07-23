@@ -48,7 +48,7 @@ export default function login({ navigation }) {
 	}
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
+		<View style={{ paddingTop: offsetPadding }}>
 			<View style={style.box}>
 				<Image style={style.background} source={require('../../assets/auto-bg.jpg')}/>
 				<Text style={style.boxHeader}>Log-In</Text>

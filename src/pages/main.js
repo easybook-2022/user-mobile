@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, SafeAreaView, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { logo_url } from '../../assets/info'
@@ -18,6 +19,8 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
 
 export default function main({ navigation }) {
 	const [locationPermission, setLocationpermission] = useState(false)
@@ -25,6 +28,7 @@ export default function main({ navigation }) {
 	const [trackUser, setTrackuser] = useState()
 	const [searchLocationname, setSearchlocationname] = useState('')
 	const [locations, setLocations] = useState([])
+	const [updateNotifications, setUpdatenotifications] = useState()
 	const [openNotifications, setOpenNotifications] = useState(false)
 	const [numNotifications, setNumnotifications] = useState(0)
 
@@ -84,6 +88,7 @@ export default function main({ navigation }) {
 	const getTheMoreLocations = async(type, lindex, index) => {
 		const userid = await AsyncStorage.getItem("userid")
 		const newLocations = [...locations]
+		const location = newLocations[lindex]
 		const { longitude, latitude } = geolocation
 		const data = { userid, longitude, latitude, locationName: searchLocationname, type, index }
 
@@ -97,11 +102,14 @@ export default function main({ navigation }) {
 				if (res) {
 					const { index, max, newlocations } = res
 
-					newLocations[lindex]["locations"] = newLocations[lindex]["locations"].concat(newlocations)
-					newLocations[lindex]["index"] = index
-					newLocations[lindex]["max"] = max
+					if (newlocations.length > 0) {
+						location["locations"] = location["locations"].concat(newlocations)
+						location["index"] = index
+						location["max"] = max
 
-					setLocations(newLocations)
+						newLocations[lindex] = location
+						setLocations(newLocations)
+					}
 				}
 			})
 	}
@@ -156,7 +164,7 @@ export default function main({ navigation }) {
 
 			if (longitude && latitude) {
 				getTheLocations(longitude, latitude, '')
-				setTrackuser(setInterval(() => trackUserLocation(), 1000))
+				setTrackuser(setInterval(() => trackUserLocation(), 5000))
 			} else {
 				const longitude = parseFloat(await AsyncStorage.getItem("longitude"))
 				const latitude = parseFloat(await AsyncStorage.getItem("latitude"))
@@ -194,15 +202,18 @@ export default function main({ navigation }) {
 		getTheNumCartItems()
 		getLocationPermission()
 
+		setUpdatenotifications(setInterval(() => getTheNumNotifications(), 5000))
+
 		return () => {
 			if (locationPermission) {
 				clearInterval(trackUser)
+				clearInterval(updateNotifications)
 			}
 		}
 	}, [])
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ marginTop: offsetPadding }}>
 			<View style={style.box}>
 				<View style={style.header}>
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -214,9 +225,8 @@ export default function main({ navigation }) {
 					</View>
 				</View>
 
-				<View>
+				<View style={style.body}>
 					<FlatList
-						style={{ height: height - 223 }}
 						showsVerticalScrollIndicator={false}
 						data={locations}
 						renderItem={({ item, index }) => 
@@ -271,6 +281,11 @@ export default function main({ navigation }) {
 						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
 					</TouchableOpacity>
 					<TouchableOpacity style={style.bottomNav} onPress={() => {
+						if (locationPermission) {
+							clearInterval(trackUser)
+							clearInterval(updateNotifications)
+						}
+			
 						AsyncStorage.clear()
 
 						navigation.dispatch(
@@ -287,7 +302,7 @@ export default function main({ navigation }) {
 
 			<Modal visible={openNotifications}><Notifications navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>
 			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
-		</SafeAreaView>
+		</View>
 	)
 }
 
@@ -297,14 +312,17 @@ const style = StyleSheet.create({
 	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 15, margin: 10, padding: 10, width: width - 80 },
 	notification: { flexDirection: 'row', marginRight: 10, marginVertical: 10 },
 
+	body: { height: screenHeight - 100 },
+
 	service: { marginBottom: 10, marginHorizontal: 5 },
 	rowHeader: { fontWeight: 'bold', margin: 10 },
 	seeMore: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	row: { flexDirection: 'row' },
-	location: { alignItems: 'center', flexDirection: 'column', height: 100, justifyContent: 'space-between', margin: 5, width: 100 },
+	row: { flexDirection: 'row', marginBottom: 50 },
+	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: 100 },
 	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
+	locationName: { textAlign: 'center' },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 50, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
