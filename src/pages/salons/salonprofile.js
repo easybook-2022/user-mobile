@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
+import { CommonActions } from '@react-navigation/native';
 import { logo_url } from '../../../assets/info'
 import { getLocationProfile } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
@@ -230,9 +231,10 @@ export default function salonprofile(props) {
 										<View key={item.key} style={style.row}>
 											{item.row.map(product => (
 												product.name ? 
-													<View key={product.key} style={style.product}>
+													<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: product.id })}>
 														<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
 														<Text style={style.productName}>{product.name}</Text>
+														
 														{product.info && <Text style={style.productInfo}>{product.info}</Text>}
 
 														<View style={{ flexDirection: 'row' }}>
@@ -242,7 +244,7 @@ export default function salonprofile(props) {
 														<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: product.id })}>
 															<Text style={style.productBuyHeader}>Buy</Text>
 														</TouchableOpacity>
-													</View>
+													</TouchableOpacity>
 													:
 													<View key={product.key} style={style.product}></View>
 											))}
@@ -284,11 +286,23 @@ export default function salonprofile(props) {
 					<ActivityIndicator size="small"/>
 				}
 
-				<View style={{ flexDirection: 'row', height: 40, justifyContent: 'space-around' }}>
-					<TouchableOpacity style={style.cart} onPress={() => setOpencart(true)}>
-						<Entypo name="shopping-cart" size={30}/>
-						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-					</TouchableOpacity>
+				<View style={style.bottomActionsContainer}>
+					<View style={style.bottomActions}>
+						<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomAction} onPress={() => {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 0,
+									routes: [{ name: "main" }]
+								})
+							)
+						}}>
+							<Entypo name="home" size={30}/>
+						</TouchableOpacity>
+					</View>
 				</View>
 			</View>
 
@@ -332,6 +346,8 @@ const style = StyleSheet.create({
 	serviceDetail: { fontSize: 15 },
 	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 
-	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomActionsContainer: { backgroundColor: 'rgba(0, 0, 0, 0.1)', flexDirection: 'row', justifyContent: 'space-around' },
+	bottomActions: { flexDirection: 'row', height: 40, justifyContent: 'space-between', width: 100 },
+	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 })

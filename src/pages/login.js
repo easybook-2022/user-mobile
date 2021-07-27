@@ -50,9 +50,7 @@ export default function login({ navigation }) {
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
-				<View style={style.backgroundContainer}>
-					<Image style={style.background} source={require('../../assets/auto-bg.png')}/>
-				</View>
+				<Image style={style.background} source={require('../../assets/auto-bg.png')}/>
 				<Text style={style.boxHeader}>Log-In</Text>
 
 				<View style={style.inputsBox}>
@@ -94,9 +92,8 @@ export default function login({ navigation }) {
 
 const style = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	backgroundContainer: { flexDirection: 'column', height: '100%', justifyContent: 'space-around', position: 'absolute', width: '100%' },
-	background: { height: height, width: width },
-	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+	background: { height: '100%', position: 'absolute', width: '100%' },
+	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { backgroundColor: 'rgba(255, 255, 255, 0.5)', height: '40%', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 30 },
@@ -107,6 +104,6 @@ const style = StyleSheet.create({
 	options: { flexDirection: 'row' },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 5 },
 	optionHeader: {  },
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 20 },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10 },
 	submitHeader: { fontWeight: 'bold' },
 })

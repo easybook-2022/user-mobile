@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { logo_url } from '../../assets/info'
-import { getNotifications, getNumNotifications } from '../apis/users'
+import { getNumUpdates } from '../apis/users'
 import { getLocations, getMoreLocations } from '../apis/locations'
 import { getNumCartItems } from '../apis/carts'
 
@@ -37,13 +37,13 @@ export default function main({ navigation }) {
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 
-	const getTheNumNotifications = async() => {
+	const getTheNumUpdates = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const time = Date.now()
 		const data = { userid, time }
 
 		if (userid != null) {
-			getNumNotifications(data)
+			getNumUpdates(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -211,11 +211,11 @@ export default function main({ navigation }) {
 	}
 
 	useEffect(() => {
-		getTheNumNotifications()
+		getTheNumUpdates()
 		getTheNumCartItems()
 		getLocationPermission()
 
-		setUpdatenotifications(setInterval(() => getTheNumNotifications(), 5000))
+		setUpdatenotifications(setInterval(() => getTheNumUpdates(), 5000))
 
 		return () => {
 			if (locationPermission) {

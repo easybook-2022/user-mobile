@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AsyncStorage, SafeAreaView, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 
 import Cart from '../../components/cart'
@@ -13,6 +13,8 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - offsetPadding
 
 export default function restaurants({ navigation }) {
 	const [locations, setLocations] = useState([
@@ -193,7 +195,7 @@ export default function restaurants({ navigation }) {
 	}
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingTop: offsetPadding }}>
 			<View style={style.box}>
 				<View style={style.header}>
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -282,7 +284,7 @@ export default function restaurants({ navigation }) {
 
 			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
 			<Modal visible={openNotifications}><Notifications close={() => setOpenNotifications(false)}/></Modal>
-		</SafeAreaView>
+		</View>
 	);
 }
 

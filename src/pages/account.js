@@ -140,8 +140,8 @@ export default function account({ navigation }) {
 
 						number: '',
 						placeholder: "****" + last4,
-						expMonth: exp_month,
-						expYear: exp_year,
+						expMonth: exp_month.toString(),
+						expYear: exp_year.toString(),
 						cvc: ''
 					})
 				}
@@ -300,10 +300,10 @@ export default function account({ navigation }) {
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
+				<Text style={style.boxHeader}>Account</Text>
+
 				{loaded ? 
 					<ScrollView>
-						<Text style={style.boxHeader}>Account</Text>
-
 						<View style={style.inputsBox}>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Username:</Text>
@@ -395,7 +395,9 @@ export default function account({ navigation }) {
 						{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 					</ScrollView>
 					:
-					<ActivityIndicator size="small"/>
+					<View style={{ flexDirection: 'column', height: screenHeight - 87, justifyContent: 'space-around' }}>
+						<ActivityIndicator size="small"/>
+					</View>
 				}
 			</View>
 
@@ -404,7 +406,7 @@ export default function account({ navigation }) {
 					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.form}>
 							<View style={style.formContainer}>
-								<View style={{ alignItems: 'center', marginVertical: 20 }}>
+								<View style={{ alignItems: 'center', marginVertical: 5 }}>
 									<TouchableOpacity onPress={() => {
 										setPaymentmethodform({
 											show: false,
@@ -416,35 +418,37 @@ export default function account({ navigation }) {
 									</TouchableOpacity>
 								</View>
 
-								<Text style={style.formHeader}>{paymentMethodForm.type == 'add' ? 'Add' : 'Editing'} payment method</Text>
+								<Text style={style.formHeader}>Enter card information</Text>
 
-								<View style={style.formInputField}>
-									<Text style={style.formInputHeader}>Card number</Text>
-									<TextInput style={style.formInputInput} onChangeText={(number) => setPaymentmethodform({
-										...paymentMethodForm,
-										number: number.toString()
-									})} value={paymentMethodForm.number} keyboardType="numeric"/>
-								</View>
-								<View style={style.formInputField}>
-									<Text style={style.formInputHeader}>Expiry month</Text>
-									<TextInput style={style.formInputInput} onChangeText={(expMonth) => setPaymentmethodform({
-										...paymentMethodForm,
-										expMonth: expMonth.toString()
-									})} value={paymentMethodForm.expMonth} keyboardType="numeric" placeholder="MM" maxLength={2}/>
-								</View>
-								<View style={style.formInputField}>
-									<Text style={style.formInputHeader}>Expiry Year</Text>
-									<TextInput style={style.formInputInput} onChangeText={(expYear) => setPaymentmethodform({
-										...paymentMethodForm,
-										expYear: expYear.toString()
-									})} value={paymentMethodForm.expYear} keyboardType="numeric" placeholder="YYYY" maxLength={4}/>
-								</View>
-								<View style={style.formInputField}>
-									<Text style={style.formInputHeader}>Security Code</Text>
-									<TextInput style={style.formInputInput} onChangeText={(cvc) => setPaymentmethodform({
-										...paymentMethodForm,
-										cvc: cvc.toString()
-									})} value={paymentMethodForm.cvc} keyboardType="numeric"/>
+								<View style={style.formInputBox}>
+									<View style={style.formInputField}>
+										<Text style={style.formInputHeader}>Card number</Text>
+										<TextInput style={style.formInputInput} onChangeText={(number) => setPaymentmethodform({
+											...paymentMethodForm,
+											number: number.toString()
+										})} value={paymentMethodForm.number} placeholder={paymentMethodForm.placeholder} keyboardType="numeric"/>
+									</View>
+									<View style={style.formInputField}>
+										<Text style={style.formInputHeader}>Expiry month</Text>
+										<TextInput style={style.formInputInput} onChangeText={(expMonth) => setPaymentmethodform({
+											...paymentMethodForm,
+											expMonth: expMonth.toString()
+										})} value={paymentMethodForm.expMonth} keyboardType="numeric" placeholder="MM" maxLength={2}/>
+									</View>
+									<View style={style.formInputField}>
+										<Text style={style.formInputHeader}>Expiry Year</Text>
+										<TextInput style={style.formInputInput} onChangeText={(expYear) => setPaymentmethodform({
+											...paymentMethodForm,
+											expYear: expYear.toString()
+										})} value={paymentMethodForm.expYear} keyboardType="numeric" placeholder="YYYY" maxLength={4}/>
+									</View>
+									<View style={style.formInputField}>
+										<Text style={style.formInputHeader}>Security Code</Text>
+										<TextInput style={style.formInputInput} onChangeText={(cvc) => setPaymentmethodform({
+											...paymentMethodForm,
+											cvc: cvc.toString()
+										})} value={paymentMethodForm.cvc} keyboardType="numeric"/>
+									</View>
 								</View>
 
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -504,7 +508,7 @@ const style = StyleSheet.create({
 
 	// form
 	form: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	formContainer: { backgroundColor: 'white', height: '70%', width: '80%' },
+	formContainer: { backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-between', paddingVertical: 10, width: '90%' },
 	formHeader: { fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	formInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
 	formInputHeader: { fontSize: 20, fontWeight: 'bold' },

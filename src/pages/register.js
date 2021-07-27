@@ -7,7 +7,7 @@ import { info } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
+const screenHeight = height - offsetPadding
 
 export default function register({ navigation }) {
 	const [phonenumber, setPhonenumber] = useState(info.cellnumber)
@@ -64,7 +64,7 @@ export default function register({ navigation }) {
 						<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmpassword) => setPassword(confirmpassword)} value={confirmpassword}/>
 					</View>
 
-					<Text style={style.errorMsg}>{errorMsg}</Text>
+					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
 				</View>
 
 				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -93,7 +93,7 @@ export default function register({ navigation }) {
 const style = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	background: { height: '100%', position: 'absolute', width: '100%' },
-	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { backgroundColor: 'white', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 20 },
@@ -104,6 +104,6 @@ const style = StyleSheet.create({
 	options: { flexDirection: 'row' },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 5 },
 	optionHeader: {  },
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 20 },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10 },
 	submitHeader: { fontWeight: 'bold' },
 })

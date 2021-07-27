@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, SafeAreaView, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getCartItems, removeFromCart, checkoutCart } from '../apis/carts'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
+const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - offsetPadding
+
 export default function cart(props) {
 	const [items, setItems] = useState([])
+	const [loaded, setLoaded] = useState(false)
 	const [activeCheckout, setActivecheckout] = useState(false)
 	const [showConfirm, setShowconfirm] = useState(false)
 
@@ -23,6 +29,7 @@ export default function cart(props) {
 				if (res) {
 					setItems(res.cartItems)
 					setActivecheckout(res.activeCheckout)
+					setLoaded(true)
 				}
 			})
 	}
@@ -50,7 +57,7 @@ export default function cart(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<View style={{ alignItems: 'center', width: '100%' }}>
 					<TouchableOpacity style={style.close} onPress={() => props.close()}>
@@ -59,77 +66,95 @@ export default function cart(props) {
 				</View>
 				<Text style={style.boxHeader}>Cart</Text>
 
-				<FlatList
-					showsVerticalScrollIndicator={false}
-					data={items}
-					renderItem={({ item, index }) => 
-						<View style={style.item} key={item.key}>
-							<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-								<TouchableOpacity style={style.itemRemove} onPress={async() => {
-									removeFromCart(item.id)
-										.then((res) => {
-											if (res.status == 200) {
-												return res.data
-											}
-										})
-										.then((res) => {
-											if (res) getTheCartItems()
-										})
-								}}>
-									<AntDesign name="closecircleo" size={20}/>
-								</TouchableOpacity>
-								<View style={style.itemImageHolder}>
-									<Image source={{ uri: logo_url + item.image }} style={style.itemImage}/>
-								</View>
-								<View style={style.itemInfos}>
-									<Text style={style.itemName}>{item.name}</Text>
-									{item.options.map((option, infoindex) => (
-										<Text key={infoindex.toString()} style={style.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-											{option.selected}
-											{option.type == 'percentage' && '%'}
-										</Text>
-									))}
-								</View>
-								<View>
-									<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
-									<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>price:</Text> ${item.price}</Text>
-								</View>
-							</View>
-
-							{item.orderers.length > 0 && (
-								<View style={style.orderersContainer}>
-									<Text style={style.orderersHeader}>Calling for</Text>
-
-									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<View style={style.orderers}>
-											{item.orderers.map(orderer => (
-												<View key={orderer.key} style={style.orderer}>
-													<View style={style.ordererProfileHolder}>
-														<Image source={{ uri: logo_url + orderer.profile }} style={style.ordererProfile}/>
-													</View>
-													<Text style={style.ordererHeader}>{orderer.username}</Text>
-													<Text style={style.ordererStatus}>{orderer.status}</Text>
-												</View>
-											))}
+				{loaded ? 
+					items.length > 0 ?
+						<>
+							<FlatList
+								showsVerticalScrollIndicator={false}
+								data={items}
+								renderItem={({ item, index }) => 
+									<View style={style.item} key={item.key}>
+										<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+											<TouchableOpacity style={style.itemRemove} onPress={async() => {
+												removeFromCart(item.id)
+													.then((res) => {
+														if (res.status == 200) {
+															return res.data
+														}
+													})
+													.then((res) => {
+														if (res) getTheCartItems()
+													})
+											}}>
+												<AntDesign name="closecircleo" size={20}/>
+											</TouchableOpacity>
+											<View style={style.itemImageHolder}>
+												<Image source={{ uri: logo_url + item.image }} style={style.itemImage}/>
+											</View>
+											<View style={style.itemInfos}>
+												<Text style={style.itemName}>{item.name}</Text>
+												{item.options.map((option, infoindex) => (
+													<Text key={infoindex.toString()} style={style.itemInfo}>
+														<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+														{option.selected}
+														{option.type == 'percentage' && '%'}
+													</Text>
+												))}
+											</View>
+											<View>
+												<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
+												<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>price:</Text> ${item.price}</Text>
+											</View>
 										</View>
-									</View>
-								</View>
-							)}
-						</View>
-					}
-				/>
 
-				<View style={{ alignItems: 'center' }}>
-					<TouchableOpacity style={activeCheckout ? style.checkout : style.checkoutDisabled} disabled={!activeCheckout} onPress={() => checkout()}>
-						<Text style={style.checkoutHeader}>Checkout</Text>
-					</TouchableOpacity>
-				</View>
+										{item.orderers.length > 0 && (
+											<View style={style.orderersContainer}>
+												<Text style={style.orderersHeader}>Calling for</Text>
+
+												<View style={style.orderers}>
+													{item.orderers.map((item) => (
+														<View key={item.key} style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+															{item.row.map((info) => (
+																info.id ? 
+																	<View key={info.key} style={style.orderer}>
+																		<View style={style.ordererProfileHolder}>
+																			<Image source={{ uri: logo_url + info.profile }} style={style.ordererProfile}/>
+																		</View>
+																		<Text style={style.ordererHeader}>{info.username}</Text>
+																		<Text style={style.ordererStatus}>{info.status}</Text>
+																	</View>
+																	:
+																	<View key={info.key} style={style.orderer}></View>
+															))}
+														</View>
+													))}
+												</View>
+											</View>
+										)}
+									</View>
+								}
+							/>
+
+							<View style={{ alignItems: 'center' }}>
+								<TouchableOpacity style={activeCheckout ? style.checkout : style.checkoutDisabled} disabled={!activeCheckout} onPress={() => checkout()}>
+									<Text style={style.checkoutHeader}>Checkout</Text>
+								</TouchableOpacity>
+							</View>
+						</>
+						:
+						<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
+							<Text>Your cart is empty</Text>
+						</View>
+					:
+					<View style={{ flexDirection: 'column', height: screenHeight - 113, justifyContent: 'space-around' }}>
+						<ActivityIndicator size="small"/>
+					</View>
+				}
 			</View>
 
 			{showConfirm && (
 				<Modal transparent={true}>
-					<SafeAreaView style={{ flex: 1 }}>
+					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.confirmBox}>
 							<View style={style.confirmContainer}>
 								<Text style={style.confirmHeader}>Checkout and purchases completed</Text>
@@ -144,10 +169,10 @@ export default function cart(props) {
 								</View>
 							</View>
 						</View>
-					</SafeAreaView>
+					</View>
 				</Modal>
 			)}
-		</SafeAreaView>
+		</View>
 	);
 }
 
@@ -166,8 +191,8 @@ const style = StyleSheet.create({
 	header: { fontSize: 15 },
 	orderersContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginVertical: 10, padding: 5 },
 	orderersHeader: { fontWeight: 'bold', textAlign: 'center' },
-	orderers: { flexDirection: 'row' },
-	orderer: { alignItems: 'center', margin: 10 },
+	orderers: {  },
+	orderer: { alignItems: 'center', margin: 10, width: width / 4 },
 	ordererProfileHolder: { backgroundColor: 'white', borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 	ordererProfile: { height: 40, width: 40 },
 	ordererHeader: {  },

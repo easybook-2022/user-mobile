@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { AsyncStorage, Dimensions, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { AsyncStorage, Dimensions, StyleSheet, Text, View } from 'react-native';
 import * as Font from 'expo-font';
 
 const { height, width } = Dimensions.get('window')
@@ -15,7 +15,6 @@ import Setup from './src/pages/setup'
 import Main from './src/pages/main'
 
 // restaurants
-import Restaurants from './src/pages/restaurants'
 import Restaurantprofile from './src/pages/restaurants/restaurantprofile'
 import Makereservation from './src/pages/restaurants/makereservation'
 import Itemprofile from './src/pages/restaurants/itemprofile'
@@ -65,8 +64,6 @@ export default function App() {
                         <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
                         <Stack.Screen name="setup" component={Setup} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
-
-                        <Stack.Screen name="restaurants" component={Restaurants} options={{ headerShown: false }}/>
                         
                         <Stack.Screen name="restaurantprofile" component={Restaurantprofile} options={{ headerShown: false }}/>
                         <Stack.Screen name="makereservation" component={Makereservation} options={{ headerShown: false }}/>

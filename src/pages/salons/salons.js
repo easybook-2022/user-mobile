@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
-import { AsyncStorage, SafeAreaView, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 
 import Notifications from '../../components/notifications'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - offsetPadding
 
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -101,7 +104,7 @@ export default function salons({ navigation }) {
 	}
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<View style={style.header}>
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -150,7 +153,7 @@ export default function salons({ navigation }) {
 			</View>
 
 			<Modal visible={openNotifications}><Notifications close={() => setOpenNotifications(false)}/></Modal>
-		</SafeAreaView>
+		</View>
 	)
 }
 

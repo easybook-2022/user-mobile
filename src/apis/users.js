@@ -91,9 +91,9 @@ export const getNotifications = id => {
 	return axios.get(`${WIFI_API_URL}/users/get_notifications/${id}`)
 }
 
-export const getUpdates = data => {
+export const getNumUpdates = data => {
 	return axios.post(
-		`${WIFI_API_URL}/users/get_updates`,
+		`${WIFI_API_URL}/users/get_num_updates`,
 		data
 	)
 }

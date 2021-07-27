@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, Dimensions, SafeAreaView, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import Constants from 'expo-constants';
 import { logo_url } from '../../../assets/info'
 import { searchFriends } from '../../apis/users'
 import { getProductInfo } from '../../apis/products'
@@ -11,6 +12,8 @@ import Entypo from 'react-native-vector-icons/Entypo'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - (offsetPadding * 2)
 const itemSize = (width * 0.3) - 10
 const imageSize = (width * 0.3) - 50
 
@@ -139,7 +142,7 @@ export default function itemProfile(props) {
 		let selected = null, latest = null, empty = false, added = false
 		let rowkey = "", itemkey = ""
 
-		if (!JSON.stringify(selectedList).includes(userid)) {
+		if (!JSON.stringify(selectedList).includes("\"userid\": " + userid + ",")) {
 			list.forEach(function (items) {
 				items.row.forEach(function (item) {
 					if (item.id == userid) {
@@ -221,7 +224,7 @@ export default function itemProfile(props) {
 					itemrow.push({
 						key: "selected-friend-row-" + itemnum,
 						id: "10d0d9d-d-s-d-" + itemnum,
-						profile: { photo: require("../../../assets/profile.jpeg"), width: 0, height: 0 },
+						profile: info.profile,
 						username: info.username
 					})
 					newNumFriends += 1
@@ -341,9 +344,9 @@ export default function itemProfile(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
-			<ScrollView>
-				<View style={style.box}>
+		<View style={{ paddingVertical: offsetPadding }}>
+			<ScrollView style={style.box}>
+				<View>
 					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
@@ -431,69 +434,91 @@ export default function itemProfile(props) {
 							</TouchableOpacity>
 						</View>
 					</View>
-
-					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-						<TouchableOpacity style={style.cart} onPress={() => setOpencart(true)}>
-							<Entypo name="shopping-cart" size={30}/>
-							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-						</TouchableOpacity>
-					</View>
 				</View>
 			</ScrollView>
 
+			<View style={style.bottomActionsContainer}>
+				<View style={style.bottomActions}>
+					<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
+						<Entypo name="shopping-cart" size={30}/>
+						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+					</TouchableOpacity>
+					<TouchableOpacity style={style.bottomAction} onPress={() => {
+						props.navigation.dispatch(
+							CommonActions.reset({
+								index: 0,
+								routes: [{ name: "main" }]
+							})
+						)
+					}}>
+						<Entypo name="home" size={30}/>
+					</TouchableOpacity>
+				</View>
+			</View>
+
 			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
 			<Modal visible={openFriendsList}>
-				<SafeAreaView style={{ flex: 1 }}>
+				<View style={{ paddingVertical: offsetPadding }}>
 					<View style={style.friendsList}>
 						<TextInput style={style.friendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)}/>
 
-						<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
+						<View style={style.friendsListContainer}>
+							<View style={{ height: '50%', overflow: 'hidden' }}>
+								<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
 
-						<View style={{ height: '30%', marginVertical: 10 }}>
-							<FlatList
-								data={friends}
-								renderItem={({ item, index }) => 
-									<View key={item.key} style={style.row}>
-										{item.row.map(friend => (
-											friend.username ? 
-												<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
-													<View style={style.friendProfileHolder}>
-														<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+								<View>
+									<FlatList
+										data={friends}
+										renderItem={({ item, index }) => 
+											<View key={item.key} style={style.row}>
+												{item.row.map(friend => (
+													friend.username ? 
+														<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
+															<View style={style.friendProfileHolder}>
+																<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+															</View>
+															<Text style={style.friendName}>{friend.username}</Text>
+														</TouchableOpacity>
+														:
+														<View key={friend.key} style={style.friend}></View>
+												))}
+											</View>
+										}
+									/>
+								</View>
+							</View>
+						
+							<View style={{ height: '50%', overflow: 'hidden' }}>
+								{selectedFriends.length > 0 && (
+									<>
+										<Text style={style.selectedFriendsHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
+
+										<View>
+											<FlatList
+												data={selectedFriends}
+												renderItem={({ item, index }) => 
+													<View key={item.key} style={style.row}>
+														{item.row.map(friend => (
+															friend.username ? 
+																<View key={friend.key} style={style.friend}>
+																	<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
+																		<AntDesign name="closecircleo" size={15}/>
+																	</TouchableOpacity>
+																	<View style={style.friendProfileHolder}>
+																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+																	</View>
+																	<Text style={style.friendName}>{friend.username}</Text>
+																</View>
+																:
+																<View key={friend.key} style={style.friend}></View>
+														))}
 													</View>
-													<Text style={style.friendName}>{friend.username}</Text>
-												</TouchableOpacity>
-												:
-												<View key={friend.key} style={style.friend}></View>
-										))}
-									</View>
-								}
-							/>
-						</View>
-
-						<Text style={style.selectedFriendsHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
-
-						<View style={{ height: '30%', marginVertical: 10 }}>
-							<FlatList
-								data={selectedFriends}
-								renderItem={({ item, index }) => 
-									<View key={item.key} style={style.row}>
-										{item.row.map(friend => (
-											friend.username ? 
-												<View key={friend.key} style={style.friend}>
-													<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
-														<AntDesign name="closecircleo" size={15}/>
-													</TouchableOpacity>
-													<View style={style.friendProfileHolder}>
-														<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-													</View>
-													<Text style={style.friendName}>{friend.username}</Text>
-												</View>
-												:
-												<View key={friend.key} style={style.friend}></View>
-										))}
-									</View>
-								}
-							/>
+												}
+											/>
+										</View>
+									</>
+								)}
+							</View>
 						</View>
 
 						<View style={style.itemContainer}>
@@ -534,9 +559,9 @@ export default function itemProfile(props) {
 							</View>
 						</View>
 					</View>
-				</SafeAreaView>
+				</View>
 			</Modal>
-		</SafeAreaView>
+		</View>
 	);
 }
 
@@ -582,12 +607,15 @@ const style = StyleSheet.create({
 	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
 	itemActionHeader: { textAlign: 'center' },
 
-	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomActionsContainer: { backgroundColor: 'rgba(0, 0, 0, 0.1)', bottom: 0, flexDirection: 'row', justifyContent: 'space-around', position: 'absolute', width: '100%' },
+	bottomActions: { flexDirection: 'row', height: 40, justifyContent: 'space-between', width: 100 },
+	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 
 	// friends list
-	friendsList: { height: '100%', width: '100%' },
+	friendsList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	friendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
+	friendsListContainer: { flexDirection: 'column', height: '70%', justifyContent: 'space-between' },
 	friendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
 	friend: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
@@ -596,11 +624,11 @@ const style = StyleSheet.create({
 	friendName: { textAlign: 'center' },
 
 	// selected friends list
-	selectedFriendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	selectedFriendsHeader: { fontWeight: 'bold', textAlign: 'center' },
 
 	// ordering item
-	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', margin: 10, padding: 10 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, overflow: 'hidden', width: 100 },
+	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
+	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	itemName: { fontWeight: 'bold', marginBottom: 20 },
 	itemInfo: { fontSize: 15 },
 	itemHeader: { fontSize: 15 },

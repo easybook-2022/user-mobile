@@ -222,7 +222,7 @@ export default function restaurantprofile(props) {
 						<ActivityIndicator size="small"/>
 					}
 				</View>
-
+				
 				<View style={style.body}>
 					{loaded ? 
 						<>
