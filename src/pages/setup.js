@@ -14,7 +14,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 
 export default function setup({ navigation }) {
 	const [permission, setPermission] = useState(null);
@@ -127,9 +127,9 @@ export default function setup({ navigation }) {
 	}, [])
 
 	if (permission === null) return <View/>
-
+		
 	return (
-		<View style={{ paddingTop: offsetPadding }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>
 				<View style={style.box}>
 					<Text style={style.boxHeader}>Setup</Text>
@@ -137,7 +137,7 @@ export default function setup({ navigation }) {
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Username:</Text>
-							<TextInput style={style.input} placeholder="Enter a username" onChangeText={(username) => setUsername(username)} value={username}/>
+							<TextInput style={style.input} placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username}/>
 						</View>
 
 						<View style={style.cameraContainer}>

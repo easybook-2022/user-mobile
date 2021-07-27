@@ -43,9 +43,9 @@ export default function register({ navigation }) {
 	}
 
 	return (
-		<View style={{ paddingTop: offsetPadding }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
-				<Image style={style.background} source={require('../../assets/auto-bg.jpg')}/>
+				<Image style={style.background} source={require('../../assets/auto-bg.png')}/>
 				<Text style={style.boxHeader}>Sign-Up</Text>
 
 				<View style={style.inputsBox}>
@@ -93,7 +93,7 @@ export default function register({ navigation }) {
 const style = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	background: { height: '100%', position: 'absolute', width: '100%' },
-	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { backgroundColor: 'white', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 20 },

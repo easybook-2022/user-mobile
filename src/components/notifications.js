@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, SafeAreaView, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getNotifications } from '../apis/users'
-import { cancelRequest, reschedule, confirmRequest } from '../apis/services'
-import { cancelPurchase, confirmPurchase } from '../apis/products'
-import { closeRequest } from '../apis/schedules'
+import { cancelOrder, confirmOrder } from '../apis/products'
+import { acceptRequest, closeRequest } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - offsetPadding
 
 export default function notifications(props) {
 	const [items, setItems] = useState([])
+	const [loaded, setLoaded] = useState(false)
 	const [confirm, setConfirm] = useState({ show: false, index: 0, name: "", price: "", quality: "" })
 
 	const displayDateStr = (unixtime) => {
@@ -38,8 +41,8 @@ export default function notifications(props) {
 		return datestr
 	}
 
-	const cancelThePurchase = (cartid, index) => {
-		cancelPurchase(cartid)
+	const cancelTheOrder = (cartid, index) => {
+		cancelOrder(cartid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -47,20 +50,20 @@ export default function notifications(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const newItems = items.filter((item) => {
-						return item.id != id
-					})
+					const newItems = [...items]
+
+					newItems.splice(index, 1)
 
 					setItems(newItems)
 				}
 			})
 	}
-	const confirmThePurchase = async(info, index) => {
+	const confirmTheOrder = async(info, index) => {
 		const userid = await AsyncStorage.getItem("userid")
 		const { id, name, quantity, price } = info
 		const data = { userid, id }
 
-		confirmPurchase(data)
+		confirmOrder(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -70,10 +73,8 @@ export default function notifications(props) {
 				if (res) setConfirm({ ...confirm, show: true, index: index, name: name, quantity: quantity, price: price })
 			})
 	}
-	const cancelTheRequest = (serviceid) => {
-		const data = { serviceid }
-
-		cancelRequest(data)
+	const deleteTheRequest = (appointmentid, index) => {
+		closeRequest(appointmentid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -81,14 +82,16 @@ export default function notifications(props) {
 			})
 			.then((res) => {
 				if (res) {
-					alert(JSON.stringify(res))
+					const newItems = [...items]
+
+					newItems.splice(index, 1)
+
+					setItems(newItems)
 				}
 			})
 	}
-	const confirmTheRequest = (serviceid) => {
-		const data = { serviceid }
-
-		confirmRequest(data)
+	const acceptTheRequest = (id, index) => {
+		acceptRequest(id)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -96,7 +99,11 @@ export default function notifications(props) {
 			})
 			.then((res) => {
 				if (res) {
-					alert(JSON.stringify(res))
+					const newItems = [...items]
+
+					newItems.splice(index, 1)
+
+					setItems(newItems)
 				}
 			})
 	}
@@ -113,6 +120,7 @@ export default function notifications(props) {
 			.then((res) => {
 				if (res) {
 					setItems(res.notifications)
+					setLoaded(true)
 				}
 			})
 	}
@@ -122,7 +130,7 @@ export default function notifications(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingTop: offsetPadding }}>
 			<View style={style.box}>
 				<View style={{ alignItems: 'center', width: '100%' }}>
 					<TouchableOpacity style={style.close} onPress={() => props.close()}>
@@ -131,171 +139,173 @@ export default function notifications(props) {
 				</View>
 				<Text style={style.boxHeader}>{items.length} Notification(s)</Text>
 
-				<FlatList
-					showsVerticalScrollIndicator={false}
-					data={items}
-					renderItem={({ item, index }) => 
-						<View style={style.item} key={item.key}>
-							{item.type == "order" && (
-								<>
-									<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-										<View style={style.itemImageHolder}>
-											<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
-										</View>
-										<View style={style.itemInfos}>
-											<Text style={style.itemName}>{item.name}</Text>
-											{item.options.map((option, infoindex) => (
-												<Text key={infoindex.toString()} style={style.itemInfo}>
-													<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-													{option.selected}
-													{option.type == 'percentage' && '%'}
-												</Text>
-											))}
-										</View>
-										<Text style={style.quantity}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
-									</View>
-									<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 }}>
-										<View style={{ flexDirection: 'row' }}>
-											<View style={style.adderInfo}>
-												<View style={style.adderInfoProfile}>
-													<Image source={{ uri: logo_url + item.adder.profile }} style={{ height: 40, width: 40 }}/>
+				<View style={style.body}>
+					{loaded ? 
+						<FlatList
+							showsVerticalScrollIndicator={false}
+							data={items}
+							renderItem={({ item, index }) => 
+								<View style={style.item} key={item.key}>
+									{item.type == "order" && (
+										<>
+											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+												<View style={style.itemImageHolder}>
+													<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
 												</View>
-												<Text style={style.adderInfoUsername}>{item.adder.username}</Text>
-											</View>
-											<Text style={style.adderInfoHeader}> added this item to your cart.</Text>
-										</View>
-									</View>
-									
-									<Text style={style.itemHeader}>Want to purchase this?</Text>
-									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<View style={style.actions}>
-											<TouchableOpacity style={style.action} onPress={() => cancelThePurchase(item.id, index)}>
-												<Text style={style.actionHeader}>No</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.action} onPress={() => confirmThePurchase(item, index)}>
-												<Text style={style.actionHeader}>Yes</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								</>
-							)}
-
-							{item.type == "service" && (
-								<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-									<View style={style.itemImageHolders}>
-										<View style={style.itemLocationImageHolder}>
-											<Image source={{ uri: logo_url + item.locationimage }} style={{ height: 80, width: 80 }}/>
-										</View>
-										<View style={style.itemServiceImageHolder}>
-											<Image source={{ uri: logo_url + item.serviceimage }} style={{ height: 100, width: 100 }}/>
-										</View>
-									</View>
-									<View style={{ flexDirection: 'column', width: width - 130 }}>
-										{item.locationtype == "restaurant" ? 
-											<Text style={style.itemServiceHeader}>You requested a reservation for 
-												{'\n'}
-												<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
-												{'\n'}on{'\n'}
-												<Text style={{ fontFamily: 'appFont' }}>{displayDateStr(item.time)}</Text>
-											</Text>
-											:
-											<Text style={style.itemServiceHeader}>You requested an appointment for {' '}
-												<Text style={{ fontFamily: 'appFont' }}>{item.service}</Text>
-												{'\n'}at{'\n'}
-												<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
-												{'\n'}on{'\n'}
-												<Text style={{ fontFamily: 'appFont' }}>{displayDateStr(item.time)}</Text>
-											</Text>
-										}
-										{item.action == "accepted" && (
-											<Text style={style.itemServiceResponseHeader}>
-												Your requested appointment has been accepted.
-											</Text>
-										)}
-										{item.action == "cancel" || item.action == "rebook" ? 
-											<View style={style.storeRequested}>
-												<Text style={style.itemServiceResponseHeader}>
-													{item.action == "cancel" ? 
-														"Your requested appointment has been cancelled"
-														:
-														"Unfortunately, this time has been taken."
-													}								
-												</Text>
-
-												{item.reason != "" ? 
-													<>
-														<Text style={style.itemServiceResponseHeader}>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>
-														<View style={{ alignItems: 'center' }}>
-															<TouchableOpacity style={style.itemServiceResponseTouch} onPress={() => {
-																closeRequest(item.id)
-																	.then((res) => {
-																		if (res.status == 200) {
-																			return res.data
-																		}
-																	})
-																	.then((res) => {
-																		if (res) {
-																			const newItems = [...items]
-
-																			newItems.splice(index, 1)
-
-																			setItems(newItems)
-																		}
-																	})
-															}}>
-																<Text style={style.itemServiceResponseTouchHeader}>Ok</Text>
-															</TouchableOpacity>
-														</View>
-													</>
-												: null }
-												{item.nextTime > 0 && (
-													<>
-														<Text style={style.itemHeader}>
-															<Text>The store requested this time for you.</Text>
-															{'\n'}
-															<Text style={style.itemServiceResponseHeader}>{displayDateStr(item.nextTime)}</Text>
-															{'\n\n'}
-															<Text>Will you be available?</Text>
+												<View style={style.itemInfos}>
+													<Text style={style.itemName}>{item.name}</Text>
+													{item.options.map((option, infoindex) => (
+														<Text key={infoindex.toString()} style={style.itemInfo}>
+															<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+															{option.selected}
+															{option.type == 'percentage' && '%'}
 														</Text>
-														<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-															<View style={style.actions}>
-																<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item.id)}>
-																	<Text style={style.actionHeader}>Cancel</Text>
-																</TouchableOpacity>
-																<TouchableOpacity style={style.action} onPress={() => {
-																	props.close()
-																	
-																	if (item.locationtype == "restaurant") {
-																		props.navigation.navigate("makereservation", { locationid: item.locationid })
-																	} else {
-																		props.navigation.navigate("booktime", { locationid: item.locationid, menuid: item.menuid, serviceid: item.serviceid })
-																	}
-																}}>
-																	<Text style={style.actionHeader}>Reschedule</Text>
-																</TouchableOpacity>
-																<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(item.id)}>
-																	<Text style={style.actionHeader}>Yes</Text>
-																</TouchableOpacity>
-															</View>
-														</View>
-													</>
-												)}
+													))}
+												</View>
+												<Text style={style.quantity}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
 											</View>
-										: null }
-									</View>
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 }}>
+												<View style={{ flexDirection: 'row' }}>
+													<View style={style.adderInfo}>
+														<View style={style.adderInfoProfile}>
+															<Image source={{ uri: logo_url + item.adder.profile }} style={{ height: 40, width: 40 }}/>
+														</View>
+														<Text style={style.adderInfoUsername}>{item.adder.username}</Text>
+													</View>
+													<Text style={style.adderInfoHeader}> added this item to your cart.</Text>
+												</View>
+											</View>
+											
+											<Text style={style.itemHeader}>Want to purchase this?</Text>
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={style.actions}>
+													<TouchableOpacity style={style.action} onPress={() => cancelTheOrder(item.id, index)}>
+														<Text style={style.actionHeader}>No</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.action} onPress={() => confirmTheOrder(item, index)}>
+														<Text style={style.actionHeader}>Yes</Text>
+													</TouchableOpacity>
+												</View>
+											</View>
+										</>
+									)}
+
+									{item.type == "service" && (
+										<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+											<View style={style.itemImageHolders}>
+												<View style={style.itemLocationImageHolder}>
+													<Image source={{ uri: logo_url + item.locationimage }} style={{ height: 80, width: 80 }}/>
+												</View>
+												{item.serviceimage != '' ? 
+													<View style={style.itemServiceImageHolder}>
+														<Image source={{ uri: logo_url + item.serviceimage }} style={{ height: 100, width: 100 }}/>
+													</View>
+												: null }
+											</View>
+											<View style={{ flexDirection: 'column', width: width - 130 }}>
+												{item.locationtype == "restaurant" ? 
+													<Text style={style.itemServiceHeader}>You requested a reservation for 
+														{'\n'}
+														<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
+														{'\n'}on{'\n'}
+														<Text style={{ fontFamily: 'appFont' }}>{displayDateStr(item.time)}</Text>
+													</Text>
+													:
+													<Text style={style.itemServiceHeader}>You requested an appointment for {' '}
+														<Text style={{ fontFamily: 'appFont' }}>{item.service}</Text>
+														{'\n'}at{'\n'}
+														<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
+														{'\n'}on{'\n'}
+														<Text style={{ fontFamily: 'appFont' }}>{displayDateStr(item.time)}</Text>
+													</Text>
+												}
+												{item.action == "accepted" && (
+													<Text style={style.itemServiceResponseHeader}>
+														{item.locationtype == 'restaurant' ? 
+															"Your reservation has been accepted"
+															:
+															"Your requested appointment has been accepted."
+														}
+													</Text>
+												)}
+												{item.action == "cancel" || item.action == "rebook" ? 
+													<View style={style.storeRequested}>
+														<Text style={style.itemServiceResponseHeader}>
+															{item.action == "cancel" ? 
+																item.locationtype == 'restaurant' ? 
+																	"Your reservation has been cancelled"
+																	:
+																	"Your requested appointment has been cancelled"
+																:
+																"Unfortunately, this time has been taken."
+															}								
+														</Text>
+
+														{item.reason != "" ? 
+															<>
+																<Text style={style.itemServiceResponseHeader}>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>
+																<View style={{ alignItems: 'center' }}>
+																	<TouchableOpacity style={style.itemServiceResponseTouch} onPress={() => deleteTheRequest(item.id, index)}>
+																		<Text style={style.itemServiceResponseTouchHeader}>Ok</Text>
+																	</TouchableOpacity>
+																</View>
+															</>
+														: null }
+														{item.nextTime > 0 && (
+															<>
+																<Text style={style.itemHeader}>
+																	<Text>The store requested this time for you.</Text>
+																	{'\n'}
+																	<Text style={style.itemServiceResponseHeader}>{displayDateStr(item.nextTime)}</Text>
+																	{'\n\n'}
+																	<Text>Will you be available?</Text>
+																</Text>
+																<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+																	<View style={style.actions}>
+																		<TouchableOpacity style={style.action} onPress={() => deleteTheRequest(item.id, index)}>
+																			<Text style={style.actionHeader}>Cancel</Text>
+																		</TouchableOpacity>
+																		<TouchableOpacity style={style.action} onPress={() => {
+																			props.close()
+																			
+																			if (item.locationtype == "restaurant") {
+																				props.navigation.navigate("makereservation", { locationid: item.locationid })
+																			} else {
+																				props.navigation.navigate("booktime", { locationid: item.locationid, menuid: item.menuid, serviceid: item.serviceid })
+																			}
+																		}}>
+																			<Text style={style.actionHeader}>Reschedule</Text>
+																		</TouchableOpacity>
+																		<TouchableOpacity style={style.action} onPress={() => acceptTheRequest(item.id, index)}>
+																			<Text style={style.actionHeader}>Yes</Text>
+																		</TouchableOpacity>
+																	</View>
+																</View>
+															</>
+														)}
+													</View>
+												: null }
+											</View>
+										</View>
+									)}
 								</View>
-							)}
-						</View>
+							}
+						/>
+						:
+						<ActivityIndicator size="small"/>
 					}
-				/>
+				</View>
 			</View>
 
 			{confirm.show && (
 				<Modal transparent={true}>
-					<SafeAreaView style={{ flex: 1 }}>
+					<View style={{ paddingTop: offsetPadding }}>
 						<View style={style.confirmBox}>
 							<View style={style.confirmContainer}>
-								<Text style={style.confirmHeader}>Purchased {confirm.quantity} {confirm.name} at ${confirm.price}</Text>
+								<Text style={style.confirmHeader}>
+									Confirmed Order: 
+									{'\n\n Quantity: ' + confirm.quantity + '\n\n'} {confirm.name + '\n\n'} at ${confirm.price}
+								</Text>
 
 								<View style={style.confirmOptions}>
 									<TouchableOpacity style={style.confirmOption} onPress={() => {
@@ -312,10 +322,10 @@ export default function notifications(props) {
 								</View>
 							</View>
 						</View>
-					</SafeAreaView>
+					</View>
 				</Modal>
 			)}
-		</SafeAreaView>
+		</View>
 	);
 }
 
@@ -324,8 +334,9 @@ const style = StyleSheet.create({
 	close: { margin: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
+	body: { flexDirection: 'column', height: screenHeight - 112, justifyContent: 'space-around' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
-	itemImageHolders: { height: 220, width: 100 },
+	itemImageHolders: { width: 100 },
 	itemLocationImageHolder: { borderRadius: 50, height: 80, overflow: 'hidden', width: 80 },
 	itemServiceImageHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
 
@@ -351,7 +362,7 @@ const style = StyleSheet.create({
 
 	itemHeader: { textAlign: 'center' },
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
-	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: 80 },
+	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: 75 },
 	actionHeader: { fontSize: 10, textAlign: 'center' },
 
 	// confirm & requested box

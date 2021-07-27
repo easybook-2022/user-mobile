@@ -11,7 +11,7 @@ const { width } = Dimensions.get('window')
 export default function booktime(props) {
 	let { locationid, menuid, serviceid } = props.route.params
 
-	const [name, setName] = useState(name)
+	const [name, setName] = useState('')
 	const [times, setTimes] = useState([])
 	const [openTime, setOpentime] = useState(0)
 	const [closeTime, setClosetime] = useState(0)
@@ -47,7 +47,7 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { openTime, closeTime } = res
+					const { openTime, closeTime, scheduled } = res
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
 
@@ -75,7 +75,7 @@ export default function booktime(props) {
 						let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
 
 						k++
-						newTimes.push({ key: (k - 1).toString(), header: timedisplay, time: openDateStr, booked: false })
+						newTimes.push({ key: (k - 1).toString(), header: timedisplay, time: openDateStr, booked: scheduled.indexOf(openDateStr) > -1 ? true : false })
 					}
 
 					setTimes(newTimes)
@@ -93,6 +93,8 @@ export default function booktime(props) {
 				if (res.status == 200) {
 					if (!res.data.errormsg) {
 						return res.data
+					} else {
+
 					}
 				}
 			})
@@ -121,7 +123,7 @@ export default function booktime(props) {
 					:
 					<ScrollView>
 						<Text style={style.timesHeader}>Availabilities</Text>
-						<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+						<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 							<View style={style.times}>
 								{times.map(info => (
 									<TouchableOpacity style={info.booked ? style.selected : style.unselect} disabled={info.booked} key={info.key} onPress={() => {

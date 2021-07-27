@@ -73,13 +73,7 @@ export default function cart(props) {
 											}
 										})
 										.then((res) => {
-											if (res) {
-												let newItems = [...items]
-
-												newItems.splice(index, 1)
-
-												setItems(newItems)
-											}
+											if (res) getTheCartItems()
 										})
 								}}>
 									<AntDesign name="closecircleo" size={20}/>

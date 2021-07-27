@@ -63,6 +63,8 @@ export default function recent({ navigation }) {
 					data={items}
 					renderItem={({ item, index }) => 
 						<View key={item.key} style={style.group}>
+							<Text style={style.dateHeader}><Text style={{ fontWeight: 'bold' }}>Purchased:</Text> {displayDateStr(item.time)}</Text>
+
 							{item.items.map(product => (
 								<View style={style.item} key={product.key}>
 									<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -81,8 +83,6 @@ export default function recent({ navigation }) {
 									</View>
 								</View>
 							))}
-
-							<Text style={style.dateHeader}><Text style={{ fontWeight: 'bold' }}>Purchased:</Text> {displayDateStr(item.time)}</Text>
 						</View>
 					}
 				/>
@@ -98,11 +98,11 @@ const style = StyleSheet.create({
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	group: { borderRadius: 10, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+	dateHeader: { fontSize: 15, marginVertical: 10 },
 	item: { marginBottom: 5 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, overflow: 'hidden', width: 100 },
 	itemInfos: {  },
 	itemName: { fontSize: 20, marginBottom: 10 },
 	itemInfo: { fontSize: 15 },
-	header: { fontSize: 15 },
-	dateHeader: { marginTop: 10 },
+	header: { fontSize: 15 }
 })

@@ -34,16 +34,7 @@ export default function itemProfile(props) {
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(2)
-	const [orderingItem, setOrderingItem] = useState({
-		name: "Roasted milk tea", 
-		image: require("../../../assets/product-image.png"),
-		options: [
-			{ key: "item-info-0", header: 'Size', selected: 'small', type: 'size' },
-			{ key: "item-info-1", header: 'Sugar', selected: 3, type: 'percentage' },
-			{ key: "item-info-2", header: 'Cream', selected: 3, type: 'quantity' }
-		], 
-		quantity: 4, cost: 0
-	})
+	const [orderingItem, setOrderingItem] = useState({ name: "", image: "", options: [], quantity: 0, cost: 0 })
 
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -95,40 +86,44 @@ export default function itemProfile(props) {
 		const userid = await AsyncStorage.getItem("userid")
 		let callfor = [], newOptions = JSON.parse(JSON.stringify(options))
 
-		selectedFriends.forEach(function (info) {
-			info.row.forEach(function (friend) {
-				if (friend.username) {
-					callfor.push({ userid: friend.id, status: 'waiting' })
-				}
-			})
-		})
-
-		newOptions.forEach(function (option) {
-			delete option['key']
-
-			if (option['options']) {
-				delete option['options']
-			}
-		})
-
-		const data = { userid, productid, quantity, callfor, options: newOptions }
-
-		addItemtocart(data)
-			.then((res) => {
-				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setErrormsg(res.data.errormsg)
+		if (openFriendsList && selectedFriends.length == 0) {
+			setErrormsg("You didn't select anyone")
+		} else {
+			selectedFriends.forEach(function (info) {
+				info.row.forEach(function (friend) {
+					if (friend.username) {
+						callfor.push({ userid: friend.id, status: 'waiting' })
 					}
+				})
+			})
+
+			newOptions.forEach(function (option) {
+				delete option['key']
+
+				if (option['options']) {
+					delete option['options']
 				}
 			})
-			.then((res) => {
-				if (res) {
-					setOpenfriendslist(false)
-					showCart()
-				}
-			})
+
+			const data = { userid, productid, quantity, callfor, options: newOptions }
+
+			addItemtocart(data)
+				.then((res) => {
+					if (res.status == 200) {
+						if (!res.data.errormsg) {
+							return res.data
+						} else {
+							setErrormsg(res.data.errormsg)
+						}
+					}
+				})
+				.then((res) => {
+					if (res) {
+						setOpenfriendslist(false)
+						showCart()
+					}
+				})
+		}
 	}
 	const showCart = () => {
 		setOpenfriendslist(false)
@@ -274,9 +269,8 @@ export default function itemProfile(props) {
 
 	const getTheProductInfo = async() => {
 		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, locationid, menuid, productid }
 
-		getProductInfo(data)
+		getProductInfo(productid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -335,6 +329,7 @@ export default function itemProfile(props) {
 
 			setOpenfriendslist(true)
 			setOrderingItem(newOrderingItem)
+			setErrormsg('')
 		} else {
 			setErrormsg("Please choose a size")
 		}
@@ -521,12 +516,15 @@ export default function itemProfile(props) {
 							</View>
 						</View>
 
+						<Text style={style.errorMsg}>{errorMsg}</Text>
+
 						<View style={{ alignItems: 'center' }}>
 							<View style={style.actions}>
 								<TouchableOpacity style={style.action} onPress={() => {
 									setOpenfriendslist(false)
 									setSelectedFriends([])
 									setNumSelectedFriends(0)
+									setErrormsg('')
 								}}>
 									<Text style={style.actionHeader}>Close</Text>
 								</TouchableOpacity>

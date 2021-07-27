@@ -39,16 +39,20 @@ export default function main({ navigation }) {
 
 	const getTheNumNotifications = async() => {
 		const userid = await AsyncStorage.getItem("userid")
+		const time = Date.now()
+		const data = { userid, time }
 
-		getNumNotifications(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) setNumnotifications(res.numNotifications)
-			})
+		if (userid != null) {
+			getNumNotifications(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) setNumnotifications(res.numNotifications)
+				})
+		}
 	}
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -141,18 +145,9 @@ export default function main({ navigation }) {
 				}
 			}
 
-			const current = await Location.getCurrentPositionAsync()
 			const last = await Location.getLastKnownPositionAsync()
 
-			if (current.coords.longitude && current.coords.latitude) {
-				longitude = current.coords.longitude
-				latitude = current.coords.latitude
-
-				setGeolocation({ longitude, latitude })
-
-				AsyncStorage.setItem("longitude", longitude.toString())
-				AsyncStorage.setItem("latitude", latitude.toString())
-			} else if (last.coords.longitude && last.coords.latitude) {
+			if (last) {
 				longitude = last.coords.longitude
 				latitude = last.coords.latitude
 
@@ -160,6 +155,18 @@ export default function main({ navigation }) {
 
 				AsyncStorage.setItem("longitude", longitude.toString())
 				AsyncStorage.setItem("latitude", latitude.toString())
+			} else {
+				const current = await Location.getCurrentPositionAsync()
+
+				if (current.coords.longitude && current.coords.latitude) {
+					longitude = current.coords.longitude
+					latitude = current.coords.latitude
+
+					setGeolocation({ longitude, latitude })
+
+					AsyncStorage.setItem("longitude", longitude.toString())
+					AsyncStorage.setItem("latitude", latitude.toString())
+				}
 			}
 
 			if (longitude && latitude) {
@@ -174,26 +181,32 @@ export default function main({ navigation }) {
 		}
 	}
 	const trackUserLocation = async() => {
+		let longitude, latitude
+
 		if (locationPermission) {
-			const current = await Location.getCurrentPositionAsync()
 			const last = await Location.getLastKnownPositionAsync()
-			let known = false
 
-			if (current.coords.longitude && current.coords.latitude) {
-				const { longitude, latitude } = current.coords
-
-				setGeolocation({ longitude, latitude })
-
-				known = true
-			}
-
-			if (last.coords.longitude && last.coords.latitude && !known) {
-				const { longitude, latitude } = last.coords
+			if (last.coords.longitude && last.coords.latitude) {
+				longitude = last.coords.longitude
+				latitude = last.coords.latitude
 
 				setGeolocation({ longitude, latitude })
 
-				known = true
-			}
+				AsyncStorage.setItem("longitude", longitude.toString())
+				AsyncStorage.setItem("latitude", latitude.toString())
+			} else {
+				const current = await Location.getCurrentPositionAsync()
+
+				if (current.coords.longitude && current.coords.latitude) {
+					longitude = current.coords.longitude
+					latitude = current.coords.latitude
+
+					setGeolocation({ longitude, latitude })
+
+					AsyncStorage.setItem("longitude", longitude.toString())
+					AsyncStorage.setItem("latitude", latitude.toString())
+				}
+			}			
 		}
 	}
 
@@ -213,9 +226,9 @@ export default function main({ navigation }) {
 	}, [])
 
 	return (
-		<View style={{ marginTop: offsetPadding }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
-				<View style={style.header}>
+				<View style={style.headers}>
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 						<TextInput style={style.searchInput} placeholder="Search any locations" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)}/>
 						<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
@@ -226,47 +239,52 @@ export default function main({ navigation }) {
 				</View>
 
 				<View style={style.body}>
-					<FlatList
-						showsVerticalScrollIndicator={false}
-						data={locations}
-						renderItem={({ item, index }) => 
-							<View key={item.key} style={style.service}>
-								<Text style={style.rowHeader}>{item.locations.length} {item.header} near you</Text>
+					{geolocation.longitude && geolocation.latitude ? 
+						<FlatList
+							showsVerticalScrollIndicator={false}
+							data={locations}
+							renderItem={({ item, index }) => 
+								<View key={item.key} style={style.service}>
+									<Text style={style.rowHeader}>{item.locations.length} {item.header} near you</Text>
 
-								{item.index < item.max && (
-									<TouchableOpacity style={style.seeMore} onPress={() => navigation.navigate(item.service)}>
-										<Text style={style.seeMoreHeader}>See More</Text>
-									</TouchableOpacity>
-								)}
+									{item.index < item.max && (
+										<TouchableOpacity style={style.seeMore} onPress={() => navigation.navigate(item.service)}>
+											<Text style={style.seeMoreHeader}>See More</Text>
+										</TouchableOpacity>
+									)}
 
-								<View style={style.row}>
-									<FlatList
-										ListFooterComponent={() => {
-											if (item.loading && item.index < item.max) {
-												return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
+									<View style={style.row}>
+										<FlatList
+											ListFooterComponent={() => {
+												if (item.loading && item.index < item.max) {
+													return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
+												}
+
+												return null
+											}}
+											horizontal
+											onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
+											onEndReachedThreshold={0}
+											showsHorizontalScrollIndicator={false}
+											data={item.locations}
+											renderItem={({ item }) => 
+												<TouchableOpacity style={style.location} onPress={() => navigation.navigate(item.nav, { locationid: item.id })}>
+													<View style={style.locationPhotoHolder}>
+														<Image source={{ uri: logo_url + item.logo }} style={{ height: 80, width: 80 }}/>
+													</View>
+
+													<Text style={style.locationName}>{item.name}</Text>
+													<Text style={style.locationDistance}>{item.distance}</Text>
+												</TouchableOpacity>
 											}
-
-											return null
-										}}
-										horizontal
-										onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
-										onEndReachedThreshold={0}
-										showsHorizontalScrollIndicator={false}
-										data={item.locations}
-										renderItem={({ item }) => 
-											<TouchableOpacity style={style.location} onPress={() => navigation.navigate(item.nav, { locationid: item.id })}>
-												<View style={style.locationPhotoHolder}>
-													<Image source={{ uri: logo_url + item.logo }} style={{ height: 80, width: 80 }}/>
-												</View>
-
-												<Text style={style.locationName}>{item.name}</Text>
-											</TouchableOpacity>
-										}
-									/>
+										/>
+									</View>
 								</View>
-							</View>
-						}
-					/>
+							}
+						/>
+						:
+						<ActivityIndicator size="large"/>
+					}
 				</View>
 
 				<View style={style.bottomNavs}>
@@ -285,7 +303,7 @@ export default function main({ navigation }) {
 							clearInterval(trackUser)
 							clearInterval(updateNotifications)
 						}
-			
+
 						AsyncStorage.clear()
 
 						navigation.dispatch(
@@ -308,11 +326,11 @@ export default function main({ navigation }) {
 
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	header: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: 70, justifyContent: 'space-between', padding: 5, width: '100%' },
+	headers: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: 70, justifyContent: 'space-between', padding: 5, width: '100%' },
 	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 15, margin: 10, padding: 10, width: width - 80 },
 	notification: { flexDirection: 'row', marginRight: 10, marginVertical: 10 },
 
-	body: { height: screenHeight - 100 },
+	body: { flexDirection: 'column', height: screenHeight - 100, justifyContent: 'space-around' },
 
 	service: { marginBottom: 10, marginHorizontal: 5 },
 	rowHeader: { fontWeight: 'bold', margin: 10 },
@@ -321,6 +339,7 @@ const style = StyleSheet.create({
 	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: 100 },
 	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 	locationName: { textAlign: 'center' },
+	locationDistance: { fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 50, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { AsyncStorage, Dimensions, SafeAreaView, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, Dimensions, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import Constants from 'expo-constants';
 import { logo_url } from '../../../assets/info'
 import { getInfo } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
@@ -12,12 +13,15 @@ import Cart from '../../components/cart'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const imageSize = (width / 3) - 10
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - offsetPadding
+const imageSize = (width / 3) - 50
 
 export default function menu(props) {
 	let { locationid, menuid } = props.route.params
 
 	const [menuName, setMenuname] = useState('')
+	const [menuInfo, setMenuinfo] = useState('')
 
 	const [showMenus, setShowmenus] = useState(false)
 	const [menus, setMenus] = useState([])
@@ -60,9 +64,10 @@ export default function menu(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { msg, menuName } = res
+					const { msg, menuName, menuInfo } = res
 
 					setMenuname(menuName)
+					setMenuinfo(menuInfo)
 
 					if (msg == "menus") {
 						getAllMenus()
@@ -145,13 +150,18 @@ export default function menu(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingTop: offsetPadding }}>
 			<View style={style.box}>
 				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
-				<View>
+				<View style={style.body}>
+					<View style={style.headers}>
+						<Text style={[style.header, { fontFamily: 'appFont' }]}>{menuName}</Text>
+						<Text style={style.header}>{menuInfo}</Text>
+					</View>
+
 					{showMenus && (
 						<>
 							<Text style={style.bodyHeader}>{numMenus} Menu(s)</Text>
@@ -183,9 +193,8 @@ export default function menu(props) {
 							<FlatList
 								showsVerticalScrollIndicator={false}
 								data={products}
-								style={{ height: height - 269 }}
 								renderItem={({ item, index }) => 
-									<View style={{ flexDirection: 'row' }}>
+									<View style={style.row}>
 										{item.row.map(product => (
 											product.name ? 
 												<View key={product.key} style={style.product}>
@@ -239,7 +248,7 @@ export default function menu(props) {
 					)}
 				</View>
 
-				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+				<View style={{ flexDirection: 'row', height: 40, justifyContent: 'space-around' }}>
 					<TouchableOpacity style={style.cart} onPress={() => setOpencart(true)}>
 						<Entypo name="shopping-cart" size={30}/>
 						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
@@ -248,19 +257,24 @@ export default function menu(props) {
 			</View>
 
 			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
-		</SafeAreaView>
+		</View>
 	)
 }
 
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
+	body: { height: screenHeight - 114 },
+	headers: { marginBottom: 20 },
+	header: { fontSize: 20, textAlign: 'center' },
 	bodyHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 
+	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+
 	// product
-	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10 },
+	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10, width: (width / 3) },
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
 	productName: { fontSize: 20, fontWeight: 'bold' },
 	productInfo: { fontSize: 15 },

@@ -51,7 +51,7 @@ export default function App() {
                     setRoute("setup")
                 }
             } else {
-                setRoute("login")
+                setRoute("register")
             }
         }
         

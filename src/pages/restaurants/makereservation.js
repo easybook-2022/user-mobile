@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, SafeAreaView, ScrollView, View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { getLocationHours, getLocationProfile, makeReservation } from '../../apis/locations'
+import { getReservationInfo } from '../../apis/schedules'
 
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 
@@ -8,9 +9,9 @@ const { width } = Dimensions.get('window')
 
 export default function booktime(props) {
 	let { locationid } = props.route.params
-	
+
 	const [name, setName] = useState(name)
-	const [seaters, setSeaters] = useState(2)
+	const [seaters, setSeaters] = useState(1)
 	const [times, setTimes] = useState([])
 	const [openTime, setOpentime] = useState(0)
 	const [closeTime, setClosetime] = useState(0)
@@ -20,24 +21,29 @@ export default function booktime(props) {
 
 	const getTheLocationProfile = async() => {
 		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, locationid }
+		const longitude = await AsyncStorage.getItem("longitude")
+		const latitude = await AsyncStorage.getItem("latitude")
+		const data = { userid, locationid, longitude, latitude }
 
 		getLocationProfile(data)
 			.then((res) => {
 				if (res.status == 200) {
-					return res.data
+					if (!res.data.errormsg) {
+						return res.data
+					}
 				}
 			})
 			.then((res) => {
 				if (res) {
-					const { locationInfo } = res
+					const { name } = res.locationInfo
 
-					setName(locationInfo.name)
+					setName(name)
 					getTheLocationHours()
 				}
 			})
 	}
 	const getTheLocationHours = async() => {
+		const userid = await AsyncStorage.getItem("userid")
 		const day = new Date(Date.now()).toString().split(" ")[0]
 		const data = { locationid, day }
 
@@ -49,7 +55,7 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { openTime, closeTime } = res
+					const { openTime, closeTime, scheduled } = res
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
 
@@ -77,7 +83,7 @@ export default function booktime(props) {
 						let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
 
 						k++
-						newTimes.push({ key: (k - 1).toString(), header: timedisplay, time: openDateStr, booked: false })
+						newTimes.push({ key: (k - 1).toString(), header: timedisplay, time: openDateStr, booked: scheduled.indexOf(openDateStr) > -1 })
 					}
 
 					setTimes(newTimes)
@@ -93,8 +99,14 @@ export default function booktime(props) {
 		makeReservation(data)
 			.then((res) => {
 				if (res.status == 200) {
-					return res.data
+					if (!res.data.errormsg) {
+						return res.data
+					} else {
+						alert(res.data.errormsg)
+					}
 				}
+
+				return
 			})
 			.then((res) => {
 				if (res) setConfirm({ ...confirm, requested: true })
@@ -120,17 +132,17 @@ export default function booktime(props) {
 					<ActivityIndicator size="small"/>
 					:
 					<ScrollView>
-						<View style={{ alignItems: 'center', marginVertical: 20 }}>
+						<View style={{ alignItems: 'center', marginBottom: 20 }}>
 							<View style={style.seatersBox}>
-								<Text style={style.seatersHeader}>Number of seaters</Text>
+								<Text style={style.seatersHeader}>Number of people</Text>
 								<View style={style.seatersSelection}>
 									<Text style={style.seatersSelectionHeader}>{seaters}</Text>
 									<View style={style.seatersSelectionActions}>
-										<TouchableOpacity onPress={() => setSeaters(seaters + 1)}>
-											<SimpleLineIcons name="arrow-up" size={20}/>
+										<TouchableOpacity style={style.seatersSelectionAction} onPress={() => setSeaters(seaters + 1)}>
+											<SimpleLineIcons name="arrow-up" size={25}/>
 										</TouchableOpacity>
-										<TouchableOpacity onPress={() => setSeaters(seaters > 0 ? seaters - 1 : 0)}>
-											<SimpleLineIcons name="arrow-down" size={20}/>
+										<TouchableOpacity style={style.seatersSelectionAction} onPress={() => setSeaters(seaters > 0 ? seaters - 1 : 0)}>
+											<SimpleLineIcons name="arrow-down" size={25}/>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -182,7 +194,8 @@ export default function booktime(props) {
 									:
 									<>
 										<View style={style.requestedHeaders}>
-											<Text style={style.requestedHeader}>Reservation requested at {'\n'}</Text>
+											<Text style={style.requestedHeader}>Reservation requested</Text>
+											<Text style={style.requestedHeader}>at</Text>
 											<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
 											<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
 											<Text style={style.requestedHeaderInfo}>You will get notified by the restaurant in your notification very soon</Text>
@@ -210,12 +223,14 @@ const style = StyleSheet.create({
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
-	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center', marginBottom: 50 },
+	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
 
-	seatersBox: { flexDirection: 'row' },
-	seatersHeader: { fontSize: 15, padding: 20 },
-	seatersSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-around', padding: 5, width: 80 },
-	seatersSelectionHeader: { fontSize: 30, margin: 3 },
+	seatersBox: { flexDirection: 'row', marginVertical: 10 },
+	seatersHeader: { fontSize: 15, paddingVertical: 35 },
+	seatersSelection: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-around', marginLeft: 10, padding: 5, width: 80 },
+	seatersSelectionHeader: { fontSize: 30, marginVertical: 15 },
+	seatersSelectionActions: { flexDirection: 'column', height: 70, justifyContent: 'space-between' },
+	seatersSelectionAction: { },
 
 	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
 	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 300 },

@@ -48,9 +48,11 @@ export default function login({ navigation }) {
 	}
 
 	return (
-		<View style={{ paddingTop: offsetPadding }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
-				<Image style={style.background} source={require('../../assets/auto-bg.jpg')}/>
+				<View style={style.backgroundContainer}>
+					<Image style={style.background} source={require('../../assets/auto-bg.png')}/>
+				</View>
 				<Text style={style.boxHeader}>Log-In</Text>
 
 				<View style={style.inputsBox}>
@@ -82,7 +84,7 @@ export default function login({ navigation }) {
 					</View>
 				</View>
 
-				<TouchableOpacity style={style.submit} onPress={login}>
+				<TouchableOpacity style={style.submit} onPress={() => login()}>
 					<Text style={style.submitHeader}>Sign-In</Text>
 				</TouchableOpacity>
 			</View>
@@ -92,10 +94,11 @@ export default function login({ navigation }) {
 
 const style = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	background: { height: '100%', position: 'absolute', width: '100%' },
-	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+	backgroundContainer: { flexDirection: 'column', height: '100%', justifyContent: 'space-around', position: 'absolute', width: '100%' },
+	background: { height: height, width: width },
+	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 
-	inputsBox: { backgroundColor: 'white', height: '40%', paddingHorizontal: 20, width: '80%' },
+	inputsBox: { backgroundColor: 'rgba(255, 255, 255, 0.5)', height: '40%', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: 30 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10 },

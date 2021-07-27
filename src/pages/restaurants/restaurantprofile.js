@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, Dimensions, SafeAreaView, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
+import Constants from 'expo-constants';
 import { logo_url } from '../../../assets/info'
 import { getLocationProfile } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
@@ -12,15 +13,19 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - offsetPadding
 const itemSize = (width * 0.3) - 10
 const imageSize = (width * 0.3) - 50
 
 export default function restaurantprofile(props) {
 	let { locationid } = props.route.params
 
-	const [locationName, setLocationname] = useState('')
+	const [logo, setLogo] = useState('')
+	const [name, setName] = useState('')
 	const [address, setAddress] = useState('')
 	const [phonenumber, setPhonenumber] = useState('')
+	const [distance, setDistance] = useState(0)
 
 	const [showMenus, setShowmenus] = useState(true)
 	const [menus, setMenus] = useState([])
@@ -57,6 +62,7 @@ export default function restaurantprofile(props) {
 		]}
 	])
 	const [numSpecials, setNumspecials] = useState(0)
+	const [loaded, setLoaded] = useState(false)
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
@@ -78,7 +84,9 @@ export default function restaurantprofile(props) {
 	}
 	const getTheLocationProfile = async() => {
 		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, locationid }
+		const longitude = await AsyncStorage.getItem("longitude")
+		const latitude = await AsyncStorage.getItem("latitude")
+		const data = { userid, locationid, longitude, latitude }
 
 		getLocationProfile(data)
 			.then((res) => {
@@ -89,18 +97,22 @@ export default function restaurantprofile(props) {
 			.then((res) => {
 				if (res) {
 					const { locationInfo, msg } = res
-					const { name, addressOne, addressTwo, city, province, postalcode, phonenumber, longitude, latitude } = locationInfo
+					const { name, logo, addressOne, addressTwo, city, province, postalcode, phonenumber, distance, longitude, latitude } = locationInfo
 					const address = addressOne + " " + addressTwo + ", " + city + " " + province + ", " + postalcode
 
-					setLocationname(name)
+					setLogo(logo)
+					setName(name)
 					setAddress(address)
 					setPhonenumber(phonenumber)
+					setDistance(distance)
 
 					if (msg == "menus") {
 						getAllMenus()
 					} else if (msg == "products") {
 						getAllProducts()
 					}
+
+					setLoaded(true)
 				}
 			})
 	}
@@ -167,114 +179,133 @@ export default function restaurantprofile(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={{ flex: 1 }}>
+		<View style={{ paddingTop: offsetPadding }}>
 			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
-					<Text style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
-				<View style={style.headers}>
-					<Text style={style.header}>{locationName}</Text>
-					<Text style={style.header}>{address}</Text>
-					<View style={{ alignItems: 'center' }}>
-						<View style={{ flexDirection: 'row' }}>
-							<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
-								<AntDesign name="phone" size={30}/>
-							</TouchableOpacity>
-							<Text style={style.phonenumber}>{phonenumber}</Text>
-						</View>
-					</View>
-					<Text style={style.header}>5 km away</Text>
-				</View>
+				<View style={style.profileInfo}>
+					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+						<Text style={style.backHeader}>Back</Text>
+					</TouchableOpacity>
 
-				<View style={style.navs}>
-					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.nav} onPress={() => {}}>
-							<Text>menu ({numMenus})</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.nav} onPress={() => {}}>
-							<Text>specials ({numSpecials})</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("makereservation", { locationid })}>
-							<Text>Make a reserve</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-
-				{showMenus && (
-					<FlatList
-						showsVerticalScrollIndicator={false}
-						style={{ marginHorizontal: 20, marginTop: 20 }}
-						data={menus}
-						renderItem={({ item, index }) => 
-							<View key={item.key} style={style.row}>
-								{item.row.map(( menu, index ) => (
-									menu.name ? 
-										<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id })}>
-											<View style={style.itemImageHolder}>
-												<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
-											</View>
-											<Text style={style.itemName}>{menu.name}</Text>
+					{loaded ? 
+						<>
+							<View style={style.headers}>
+								<View style={style.logoHolder}>
+									<Image style={style.logo} source={{ uri: logo_url + logo }}/>
+								</View>
+								<Text style={style.header}>{name}</Text>
+								<Text style={style.header}>{address}</Text>
+								<View style={{ alignItems: 'center' }}>
+									<View style={{ flexDirection: 'row' }}>
+										<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
+											<AntDesign name="phone" size={30}/>
 										</TouchableOpacity>
-										:
-										<View key={menu.key} style={style.itemDisabled}></View>
-								))}
+										<Text style={style.phonenumber}>{phonenumber}</Text>
+									</View>
+								</View>
+								<Text style={style.header}>{distance}</Text>
 							</View>
-						}i
-					/>
-				)}
+							<View style={style.navs}>
+								<View style={{ flexDirection: 'row' }}>
+									<TouchableOpacity style={style.nav} onPress={() => getAllMenus()}>
+										<Text>menu ({numMenus})</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.nav} onPress={() => {}}>
+										<Text>specials ({numSpecials})</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("makereservation", { locationid })}>
+										<Text>Book Table</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</>
+						:
+						<ActivityIndicator size="small"/>
+					}
+				</View>
 
-				{showProducts && (
-					<FlatList
-						showsVerticalScrollIndicator={false}
-						data={products}
-						style={{ height: height - 386 }}
-						renderItem={({ item, index }) => 
-							<View key={item.key} style={style.row}>
-								{item.row.map(product => (
-									product.name ? 
-										<View key={product.key} style={style.product}>
-											<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
-											<Text style={style.productName}>{product.name}</Text>
-											{product.info && <Text style={style.productInfo}>{product.info}</Text>}
-
-											<View style={{ flexDirection: 'row' }}>
-												<Text style={style.productDetail}>{product.price}</Text>
-											</View>
-
-											<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: product.id })}>
-												<Text style={style.productBuyHeader}>Buy</Text>
-											</TouchableOpacity>
+				<View style={style.body}>
+					{loaded ? 
+						<>
+							{showMenus && (
+								<FlatList
+									showsVerticalScrollIndicator={false}
+									style={{ marginHorizontal: 20, marginTop: 20 }}
+									data={menus}
+									renderItem={({ item, index }) => 
+										<View key={item.key} style={style.row}>
+											{item.row.map(( menu, index ) => (
+												menu.name ? 
+													<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id })}>
+														<View style={style.itemImageHolder}>
+															<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
+														</View>
+														<Text style={style.itemName}>{menu.name}</Text>
+													</TouchableOpacity>
+													:
+													<View key={menu.key} style={style.itemDisabled}></View>
+											))}
 										</View>
-										:
-										<View key={product.key} style={style.product}></View>
-								))}
-							</View>
-						}
-					/>
-				)}
+									}i
+								/>
+							)}
 
-				{showSpecials && (
-					<FlatList
-						showsVerticalScrollIndicator={false}
-						style={{ height: height - 100, margin: 20 }}
-						data={specials}
-						renderItem={({ item, index }) => 
-							<View key={item.key} style={style.row}>
-								{item.row.map(( item, index ) => (
-									item.name ? 
-										<TouchableOpacity key={item.key} style={style.item} onPress={() => props.navigation.navigate("itemprofile", { id: item.id, name: item.name })}>
-											<View style={style.itemImageHolder}>
-												<Image source={require("../../../assets/product-image.png")} style={{ height: imageSize, width: imageSize }}/>
-											</View>
-											<Text style={style.itemName}>{item.name}</Text>
-										</TouchableOpacity>
-										:
-										<View key={item.key} style={style.itemDisabled}></View>
-								))}
-							</View>
-						}
-					/>
-				)}
+							{showProducts && (
+								<FlatList
+									showsVerticalScrollIndicator={false}
+									data={products}
+									style={{ height: height - 386 }}
+									renderItem={({ item, index }) => 
+										<View key={item.key} style={style.row}>
+											{item.row.map(product => (
+												product.name ? 
+													<View key={product.key} style={style.product}>
+														<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
+														<Text style={style.productName}>{product.name}</Text>
+														{product.info && <Text style={style.productInfo}>{product.info}</Text>}
+
+														<View style={{ flexDirection: 'row' }}>
+															<Text style={style.productDetail}>{product.price}</Text>
+														</View>
+
+														<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: product.id })}>
+															<Text style={style.productBuyHeader}>Buy</Text>
+														</TouchableOpacity>
+													</View>
+													:
+													<View key={product.key} style={style.product}></View>
+											))}
+										</View>
+									}
+								/>
+							)}
+
+							{showSpecials && (
+								<FlatList
+									showsVerticalScrollIndicator={false}
+									style={{ height: height - 100, margin: 20 }}
+									data={specials}
+									renderItem={({ item, index }) => 
+										<View key={item.key} style={style.row}>
+											{item.row.map(( item, index ) => (
+												item.name ? 
+													<TouchableOpacity key={item.key} style={style.item} onPress={() => props.navigation.navigate("itemprofile", { id: item.id, name: item.name })}>
+														<View style={style.itemImageHolder}>
+															<Image source={require("../../../assets/product-image.png")} style={{ height: imageSize, width: imageSize }}/>
+														</View>
+														<Text style={style.itemName}>{item.name}</Text>
+													</TouchableOpacity>
+													:
+													<View key={item.key} style={style.itemDisabled}></View>
+											))}
+										</View>
+									}
+								/>
+							)}
+						</>
+						:
+						<ActivityIndicator size="small"/>
+					}
+				</View>
 
 				<View style={style.bottomNavs}>
 					<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
@@ -285,21 +316,26 @@ export default function restaurantprofile(props) {
 			</View>
 
 			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
-		</SafeAreaView>
+		</View>
 	);
 }
 
 const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+
+	profileInfo: { height: 320 },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	headers: { margin: 20 },
-	header: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginVertical: 5, textAlign: 'center' },
-	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+	headers: { alignItems: 'center' },
+	logoHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 50, height: 90, overflow: 'hidden', width: 90 },
+	logo: { height: 90, width: 90 },
+	header: { fontFamily: 'appFont', fontSize: 15, fontWeight: 'bold', marginVertical: 5 },
+	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8 },
 
 	navs: { flexDirection: 'row', justifyContent: 'space-around' },
 	nav: { alignItems: 'center', backgroundColor: 'white', borderRadius: 8, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 5, width: 100 },
 
+	body: { flexDirection: 'column', height: screenHeight - 260, justifyContent: 'space-around' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
 	item: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, flexDirection: 'column', height: itemSize, justifyContent: 'space-between', padding: 2, width: itemSize },
 	itemDisabled: { height: itemSize, width: itemSize },
@@ -315,7 +351,7 @@ const style = StyleSheet.create({
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
 	productBuyHeader: { textAlign: 'center' },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 })
