@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
-import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { registerUser } from '../apis/users'
-import { info } from '../../assets/info'
+import { userInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - offsetPadding
 
 export default function register({ navigation }) {
-	const [phonenumber, setPhonenumber] = useState(info.cellnumber)
-	const [password, setPassword] = useState(info.password)
-	const [confirmpassword, setConfirmpassword] = useState(info.password)
+	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
+	const [password, setPassword] = useState(userInfo.password)
+	const [confirmpassword, setConfirmpassword] = useState(userInfo.password)
+
+	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const register = () => {
 		const data = { cellnumber: phonenumber, password: password, confirmPassword: confirmpassword }
+
+		setLoading(true)
 
 		registerUser(data)
 			.then((res) => {
@@ -24,6 +28,7 @@ export default function register({ navigation }) {
 					if (!res.data.errormsg) {
 						return res.data
 					} else {
+						setLoading(false)
 						setErrormsg(res.data.errormsg)
 					}
 				}
@@ -67,6 +72,8 @@ export default function register({ navigation }) {
 					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
 				</View>
 
+				{loading ? <ActivityIndicator size="small"/> : null}
+
 				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 					<View style={style.options}>
 						<TouchableOpacity style={style.option} onPress={() => {
@@ -99,7 +106,7 @@ const style = StyleSheet.create({
 	inputContainer: { marginVertical: 20 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10 },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 
 	options: { flexDirection: 'row' },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 5 },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
@@ -7,7 +7,7 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as Location from 'expo-location';
 import { CommonActions } from '@react-navigation/native';
 import { setupUser } from '../apis/users'
-import { info } from '../../assets/info'
+import { userInfo } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -21,7 +21,9 @@ export default function setup({ navigation }) {
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 	const [profile, setProfile] = useState({ uri: '', name: '' })
-	const [username, setUsername] = useState('')
+	const [username, setUsername] = useState(userInfo.username)
+
+	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 	
 	const setupAccount = async() => {
@@ -30,12 +32,15 @@ export default function setup({ navigation }) {
 		if (username && profile.name) {
 			const data = { userid, username, profile }
 
+			setLoading(true)
+
 			setupUser(data)
 				.then((res) => {
 					if (res.status == 200) {
 						if (!res.data.errormsg) {
 							return res.data
 						} else {
+							setLoading(false)
 							setErrormsg(res.data.errormsg)
 						}
 					}
@@ -165,7 +170,9 @@ export default function setup({ navigation }) {
 
 					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 
-					<TouchableOpacity style={style.setupButton} onPress={() => setupAccount()}>
+					{loading ? <ActivityIndicator size="small"/> : null}
+
+					<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupAccount()}>
 						<Text>Done</Text>
 					</TouchableOpacity>
 				</View>
@@ -204,7 +211,7 @@ const style = StyleSheet.create({
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10 },
+	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

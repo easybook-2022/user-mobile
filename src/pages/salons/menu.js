@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { AsyncStorage, Dimensions, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
+import { CommonActions } from '@react-navigation/native';
 import { logo_url } from '../../../assets/info'
 import { getInfo } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
@@ -79,7 +80,7 @@ export default function menu(props) {
 				}
 			})
 	}
-
+	
 	const getAllMenus = async() => {
 		const data = { locationid, parentmenuid: menuid }
 
@@ -197,7 +198,7 @@ export default function menu(props) {
 									<View style={style.row}>
 										{item.row.map(product => (
 											product.name ? 
-												<View key={product.key} style={style.product}>
+												<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid, productid: product.id })}>
 													<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
 													<Text style={style.productName}>{product.name}</Text>
 													{product.info && <Text style={style.productInfo}>{product.info}</Text>}
@@ -206,10 +207,10 @@ export default function menu(props) {
 														<Text style={style.productDetail}>{product.price}</Text>
 													</View>
 
-													<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid, productid: product.id })}>
+													<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid, productid: product.id })}>
 														<Text style={style.productBuyHeader}>Buy</Text>
 													</TouchableOpacity>
-												</View>
+												</TouchableOpacity>
 												:
 												<View key={product.key} style={style.product}></View>
 										))}
@@ -228,7 +229,7 @@ export default function menu(props) {
 								data={services}
 								style={{ height: height - 269 }}
 								renderItem={({ item, index }) => 
-									<View key={item.key} style={style.service}>
+									<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { locationid, menuid, serviceid: item.id })}>
 										<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
 										<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
 											<Text style={style.serviceName}>{item.name}</Text>
@@ -241,18 +242,30 @@ export default function menu(props) {
 												<Text>Book a time</Text>
 											</TouchableOpacity>
 										</View>
-									</View>
+									</TouchableOpacity>
 								}
 							/>
 						</>
 					)}
 				</View>
 
-				<View style={{ flexDirection: 'row', height: 40, justifyContent: 'space-around' }}>
-					<TouchableOpacity style={style.cart} onPress={() => setOpencart(true)}>
-						<Entypo name="shopping-cart" size={30}/>
-						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-					</TouchableOpacity>
+				<View style={style.bottomActionsContainer}>
+					<View style={style.bottomActions}>
+						<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomAction} onPress={() => {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 0,
+									routes: [{ name: "main" }]
+								})
+							)
+						}}>
+							<Entypo name="home" size={30}/>
+						</TouchableOpacity>
+					</View>
 				</View>
 			</View>
 
@@ -290,6 +303,9 @@ const style = StyleSheet.create({
 	serviceDetail: { fontSize: 15 },
 	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 
+	bottomActionsContainer: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around' },
+	bottomActions: { flexDirection: 'row', height: '100%', justifyContent: 'space-between', width: 100 },
+	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 })

@@ -16,7 +16,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 const imageSize = (width / 3) - 10
 
 export default function salonprofile(props) {
@@ -60,10 +60,9 @@ export default function salonprofile(props) {
 			})
 	}
 	const getTheLocationProfile = async() => {
-		const userid = await AsyncStorage.getItem("userid")
 		const longitude = await AsyncStorage.getItem("longitude")
 		const latitude = await AsyncStorage.getItem("latitude")
-		const data = { userid, locationid, longitude, latitude }
+		const data = { locationid, longitude, latitude }
 
 		getLocationProfile(data)
 			.then((res) => {
@@ -115,6 +114,8 @@ export default function salonprofile(props) {
 
 						if (row.length == 2 || (data.length - 1 == index && row.length > 0)) {
 							column.push({ key: "r-" + rownum, items: row })
+							row = []
+							rownum++
 						}
 					})
 
@@ -158,19 +159,20 @@ export default function salonprofile(props) {
 				}
 			})
 	}
-
+	
 	useEffect(() => {
 		getTheNumCartItems()
 		getTheLocationProfile()
 	}, [])
 
 	return (
-		<View style={{ paddingTop: offsetPadding }}>
+		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<View style={style.profileInfo}>
 					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
+					
 					{loaded ? 
 						<View style={style.headers}>
 							<View style={style.logoHolder}>
@@ -188,103 +190,104 @@ export default function salonprofile(props) {
 							</View>
 							<Text style={style.header}>{distance}</Text>
 						</View>
+					: null }
+				</View>
+
+				
+				<View style={style.body}>
+					{loaded ? 
+						<>
+							{showMenus && (
+								<>
+									<Text style={style.bodyHeader}>{numMenus} Menu(s)</Text>
+
+									<FlatList
+										showsVerticalScrollIndicator={false}
+										data={menus}
+										style={{ height: height - 386 }}
+										renderItem={({ item, index }) => 
+											<View key={item.key} style={style.row}>
+												{item.items.map(( menu, index ) => (
+													<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id })}>
+														<View style={style.itemPhotoHolder}>
+															<Image source={{ uri: logo_url + menu.image }} style={{ height: (width * 0.5) - 100, width: (width * 0.5) - 100 }}/>
+														</View>
+														<Text style={style.itemHeader}>{menu.name}</Text>
+													</TouchableOpacity>
+												))}
+											</View>
+										}
+									/>
+								</>
+							)}
+
+							{showProducts && (
+								<>
+									<Text style={style.bodyHeader}>{numProducts} Product(s)</Text>
+
+									<FlatList
+										showsVerticalScrollIndicator={false}
+										data={products}
+										style={{ height: height - 386 }}
+										renderItem={({ item, index }) => 
+											<View key={item.key} style={style.row}>
+												{item.row.map(product => (
+													product.name ? 
+														<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
+															<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
+															<Text style={style.productName}>{product.name}</Text>
+															
+															{product.info && <Text style={style.productInfo}>{product.info}</Text>}
+
+															<View style={{ flexDirection: 'row' }}>
+																<Text style={style.productDetail}>{product.price}</Text>
+															</View>
+
+															<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
+																<Text style={style.productBuyHeader}>Buy</Text>
+															</TouchableOpacity>
+														</TouchableOpacity>
+														:
+														<View key={product.key} style={style.product}></View>
+												))}
+											</View>
+										}
+									/>
+								</>
+							)}
+
+							{showServices && (
+								<>
+									<Text style={style.bodyHeader}>{numServices} Service(s)</Text>
+
+									<FlatList
+										showsVerticalScrollIndicator={false}
+										data={services}
+										style={{ height: height - 386 }}
+										renderItem={({ item, index }) => 
+											<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id })}>
+												<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
+												<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
+													<Text style={style.serviceName}>{item.name}</Text>
+													{item.info ? <Text style={style.serviceInfo}>{item.info}</Text> : null}
+
+													<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
+													<Text style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
+
+													<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id })}>
+														<Text>Book a time</Text>
+													</TouchableOpacity>
+												</View>
+											</TouchableOpacity>
+										}
+									/>
+								</>
+							)}
+						</>
 						:
 						<ActivityIndicator size="small"/>
 					}
 				</View>
-
-				{loaded ? 
-					<View style={style.body}>
-						{showMenus && (
-							<>
-								<Text style={style.bodyHeader}>{numMenus} Menu(s)</Text>
-
-								<FlatList
-									showsVerticalScrollIndicator={false}
-									data={menus}
-									style={{ height: height - 386 }}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.row}>
-											{item.items.map(( menu, index ) => (
-												<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id })}>
-													<View style={style.itemPhotoHolder}>
-														<Image source={{ uri: logo_url + menu.image }} style={{ height: (width * 0.5) - 100, width: (width * 0.5) - 100 }}/>
-													</View>
-													<Text style={style.itemHeader}>{menu.name}</Text>
-												</TouchableOpacity>
-											))}
-										</View>
-									}
-								/>
-							</>
-						)}
-
-						{showProducts && (
-							<>
-								<Text style={style.bodyHeader}>{numProducts} Product(s)</Text>
-
-								<FlatList
-									showsVerticalScrollIndicator={false}
-									data={products}
-									style={{ height: height - 386 }}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.row}>
-											{item.row.map(product => (
-												product.name ? 
-													<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: product.id })}>
-														<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
-														<Text style={style.productName}>{product.name}</Text>
-														
-														{product.info && <Text style={style.productInfo}>{product.info}</Text>}
-
-														<View style={{ flexDirection: 'row' }}>
-															<Text style={style.productDetail}>{product.price}</Text>
-														</View>
-
-														<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: product.id })}>
-															<Text style={style.productBuyHeader}>Buy</Text>
-														</TouchableOpacity>
-													</TouchableOpacity>
-													:
-													<View key={product.key} style={style.product}></View>
-											))}
-										</View>
-									}
-								/>
-							</>
-						)}
-
-						{showServices && (
-							<>
-								<Text style={style.bodyHeader}>{numServices} Service(s)</Text>
-
-								<FlatList
-									showsVerticalScrollIndicator={false}
-									data={services}
-									style={{ height: height - 386 }}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.service}>
-											<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
-											<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
-												<Text style={style.serviceName}>{item.name}</Text>
-												{item.info ? <Text style={style.serviceInfo}>{item.info}</Text> : null}
-
-												<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
-												<Text style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
-
-												<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id })}>
-													<Text>Book a time</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									}
-								/>
-							</>
-						)}
-					</View>
-					:
-					<ActivityIndicator size="small"/>
-				}
 
 				<View style={style.bottomActionsContainer}>
 					<View style={style.bottomActions}>
@@ -315,13 +318,13 @@ const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	profileInfo: { height: 180 },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginHorizontal: 20, marginTop: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, marginHorizontal: 20, marginTop: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	header: { fontFamily: 'appFont', fontSize: 15, fontWeight: 'bold', marginVertical: 5, paddingHorizontal: 50, textAlign: 'center' },
 	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 
-	body: { height: screenHeight - 220 },
+	body: { flexDirection: 'column', height: screenHeight - 220, justifyContent: 'space-around' },
 	bodyHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 
@@ -346,7 +349,7 @@ const style = StyleSheet.create({
 	serviceDetail: { fontSize: 15 },
 	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 
-	bottomActionsContainer: { backgroundColor: 'rgba(0, 0, 0, 0.1)', flexDirection: 'row', justifyContent: 'space-around' },
+	bottomActionsContainer: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around' },
 	bottomActions: { flexDirection: 'row', height: 40, justifyContent: 'space-between', width: 100 },
 	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },

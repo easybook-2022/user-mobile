@@ -2,8 +2,12 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { AsyncStorage, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { AsyncStorage, Text, View, Dimensions, StyleSheet, LogBox } from 'react-native';
 import * as Font from 'expo-font';
+
+LogBox.ignoreLogs([
+    'Non-serializable values were found in the navigation state',
+]);
 
 const { height, width } = Dimensions.get('window')
 
@@ -13,23 +17,24 @@ import Register from './src/pages/register'
 import Setup from './src/pages/setup'
 
 import Main from './src/pages/main'
+import Account from './src/pages/account'
+import Recent from './src/pages/recent'
 
 // restaurants
 import Restaurantprofile from './src/pages/restaurants/restaurantprofile'
 import Makereservation from './src/pages/restaurants/makereservation'
+import Order from './src/pages/restaurants/order'
 import Itemprofile from './src/pages/restaurants/itemprofile'
-import Recent from './src/pages/restaurants/recent'
 
 // restaurants' components
 import Cart from './src/components/cart'
 
 // salons
-import Salons from './src/pages/salons'
+//import Salons from './src/pages/salons'
 import Salonprofile from './src/pages/salons/salonprofile'
 import Menu from './src/pages/salons/menu'
 import Booktime from './src/pages/salons/booktime'
 
-import Account from './src/pages/account'
 import Notifications from './src/components/notifications'
 
 const Stack = createStackNavigator();
@@ -50,7 +55,7 @@ export default function App() {
                     setRoute("setup")
                 }
             } else {
-                setRoute("register")
+                setRoute("login")
             }
         }
         
@@ -67,11 +72,11 @@ export default function App() {
                         
                         <Stack.Screen name="restaurantprofile" component={Restaurantprofile} options={{ headerShown: false }}/>
                         <Stack.Screen name="makereservation" component={Makereservation} options={{ headerShown: false }}/>
+                        <Stack.Screen name="order" component={Order} options={{ headerShown: false }}/>
                         <Stack.Screen name="itemprofile" component={Itemprofile} options={{ headerShown: false }}/>
                         <Stack.Screen name="recent" component={Recent} options={{ headerShown: false }}/>
                         <Stack.Screen name="cart" component={Cart} options={{ headerShown: false }}/>
 
-                        <Stack.Screen name="salons" component={Salons} options={{ headerShown: false }}/>
                         <Stack.Screen name="salonprofile" component={Salonprofile} options={{ headerShown: false }}/>
                         <Stack.Screen name="menu" component={Menu} options={{ headerShown: false }}/>
                         <Stack.Screen name="booktime" component={Booktime} options={{ headerShown: false }}/>

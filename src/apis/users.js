@@ -105,6 +105,13 @@ export const searchFriends = data => {
 	)
 }
 
+export const searchDiners = data => {
+	return axios.post(
+		`${WIFI_API_URL}/users/search_diners`,
+		data
+	)
+}
+
 export const cancelRequest = id => {
 	return axios.get(`${WIFI_API_URL}/users/cancel_request/${id}`)
 }

@@ -22,13 +22,13 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
+let updateTrackUser, updateNotifications
+
 export default function main({ navigation }) {
 	const [locationPermission, setLocationpermission] = useState(false)
 	const [geolocation, setGeolocation] = useState({ longitude: null, latitude: null })
-	const [trackUser, setTrackuser] = useState()
 	const [searchLocationname, setSearchlocationname] = useState('')
 	const [locations, setLocations] = useState([])
-	const [updateNotifications, setUpdatenotifications] = useState()
 	const [openNotifications, setOpenNotifications] = useState(false)
 	const [numNotifications, setNumnotifications] = useState(0)
 
@@ -69,10 +69,11 @@ export default function main({ navigation }) {
 				}
 			})
 	}
-
+	
 	const getTheLocations = async(longitude, latitude, locationName) => {
 		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, longitude, latitude, locationName }
+		const d = new Date(), day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+		const data = { userid, longitude, latitude, locationName, day: day[d.getDay()] }
 
 		getLocations(data)
 			.then((res) => {
@@ -94,7 +95,8 @@ export default function main({ navigation }) {
 		const newLocations = [...locations]
 		const location = newLocations[lindex]
 		const { longitude, latitude } = geolocation
-		const data = { userid, longitude, latitude, locationName: searchLocationname, type, index }
+		const d = new Date(), day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+		const data = { userid, longitude, latitude, locationName: searchLocationname, type, index, day: day[d.getDay()] }
 
 		getMoreLocations(data)
 			.then((res) => {
@@ -130,7 +132,7 @@ export default function main({ navigation }) {
 			getTheLocations(longitude, latitude, '')
 		}
 
-		if (info) { // location service is enabled
+		if (info) {
 			const getfore = await Location.getForegroundPermissionsAsync()
 			const getback = await Location.getBackgroundPermissionsAsync()
 
@@ -171,7 +173,8 @@ export default function main({ navigation }) {
 
 			if (longitude && latitude) {
 				getTheLocations(longitude, latitude, '')
-				setTrackuser(setInterval(() => trackUserLocation(), 5000))
+
+				updateTrackUser = setInterval(() => trackUserLocation(), 1000)
 			} else {
 				const longitude = parseFloat(await AsyncStorage.getItem("longitude"))
 				const latitude = parseFloat(await AsyncStorage.getItem("latitude"))
@@ -209,19 +212,35 @@ export default function main({ navigation }) {
 			}			
 		}
 	}
+	const displayLocationStatus = (opentime, closetime) => {
+		let openHour = parseInt(opentime['hour']), openMinute = parseInt(opentime['minute']), openPeriod = opentime['period']
+		let closeHour = parseInt(closetime['hour']), closeMinute = parseInt(closetime['minute']), closePeriod = closetime['period']
+		let currentTime = new Date(Date.now()).toString().split(" "), currTime = Date.now()
+
+		openHour = openPeriod == "PM" ? parseInt(openHour) + 12 : openHour
+		closeHour = closePeriod == "PM" ? parseInt(closeHour) + 12 : closeHour
+
+		let openStr = currentTime[0] + " " + currentTime[1] + " " + currentTime[2] + " " + currentTime[3] + " " + openHour + ":" + openMinute
+		let closeStr = currentTime[0] + " " + currentTime[1] + " " + currentTime[2] + " " + currentTime[3] + " " + closeHour + ":" + closeMinute
+		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr)
+
+		if (currTime < openDateStr && currTime > closeDateStr) {
+			return "Closed"
+		}
+
+		return ""
+	}
 
 	useEffect(() => {
 		getTheNumUpdates()
 		getTheNumCartItems()
 		getLocationPermission()
 
-		setUpdatenotifications(setInterval(() => getTheNumUpdates(), 5000))
+		updateNotifications = setInterval(() => getTheNumUpdates(), 1000)
 
 		return () => {
-			if (locationPermission) {
-				clearInterval(trackUser)
-				clearInterval(updateNotifications)
-			}
+			clearInterval(updateTrackUser)
+			clearInterval(updateNotifications)
 		}
 	}, [])
 
@@ -275,6 +294,8 @@ export default function main({ navigation }) {
 
 													<Text style={style.locationName}>{item.name}</Text>
 													<Text style={style.locationDistance}>{item.distance}</Text>
+
+													{displayLocationStatus(item.opentime, item.closetime) ? <Text style={style.locationHours}>{displayLocationStatus(item.opentime, item.closetime)}</Text> : null}
 												</TouchableOpacity>
 											}
 										/>
@@ -299,10 +320,8 @@ export default function main({ navigation }) {
 						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
 					</TouchableOpacity>
 					<TouchableOpacity style={style.bottomNav} onPress={() => {
-						if (locationPermission) {
-							clearInterval(trackUser)
-							clearInterval(updateNotifications)
-						}
+						clearInterval(updateTrackUser)
+						clearInterval(updateNotifications)
 
 						AsyncStorage.clear()
 
@@ -340,6 +359,7 @@ const style = StyleSheet.create({
 	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 	locationName: { textAlign: 'center' },
 	locationDistance: { fontWeight: 'bold', textAlign: 'center' },
+	locationHours: { fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 50, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },

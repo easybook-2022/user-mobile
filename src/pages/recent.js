@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { AsyncStorage, ActivityIndicator, Dimensions, FlatList, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
-import { logo_url } from '../../../assets/info'
-import { getTransactions } from '../../apis/transactions'
+import { logo_url } from '../../assets/info'
+import { getTransactions } from '../apis/transactions'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -83,8 +83,30 @@ export default function recent({ navigation }) {
 												</View>
 												<View style={style.itemInfos}>
 													<Text style={style.itemName}>{product.name}</Text>
-													{product.options.map((option, infoindex) => (
-														<Text key={infoindex.toString()} style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> {option.selected}</Text>
+
+													{product.options.map(option => (
+														<Text key={option.key} style={style.itemInfo}>
+															<Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> 
+															{option.selected}
+														</Text>
+													))}
+
+													{product.others.map(other => (
+														other.selected ? 
+															<Text key={option.key} style={style.itemInfo}>
+																<Text style={{ fontWeight: 'bold' }}>{option.name}:</Text>
+																<Text>{option.input}</Text>
+															</Text>
+														: null
+													))}
+
+													{product.sizes.map((size, infoindex) => (
+														size.selected ? 
+															<Text key={size.key} style={style.itemInfo}>
+																<Text style={{ fontWeight: 'bold' }}>Size:</Text>
+																<Text>{option.name}</Text>
+															</Text>
+														: null
 													))}
 												</View>
 												<View>

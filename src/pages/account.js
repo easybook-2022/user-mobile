@@ -6,7 +6,7 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { CommonActions } from '@react-navigation/native';
-import { info, logo_url } from '../../assets/info'
+import { userInfo, cardInfo, logo_url } from '../../assets/info'
 import { 
 	getUserInfo, updateUser, addPaymentMethod, getPaymentMethods, 
 	setPaymentmethodDefault, getPaymentmethodInfo, deleteThePaymentMethod
@@ -22,24 +22,35 @@ stripe.setOptions({
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+const amexLogo = require("../../assets/amex.jpg")
+const dinersclubLogo = require("../../assets/dinersclub.png")
+const discoverLogo = require("../../assets/discover.png")
+const jbcLogo = require("../../assets/jbc.png")
+const mastercardLogo = require("../../assets/mastercard.png")
+const unionpayLogo = require("../../assets/unionpay.png")
+const visaLogo = require("../../assets/visa.png")
 
 export default function account({ navigation }) {
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 
-	const [username, setUsername] = useState('')
-	const [phonenumber, setPhonenumber] = useState(info.cellnumber)
-	const [password, setPassword] = useState(info.password)
-	const [confirmpassword, setConfirmpassword] = useState(info.password)
+	const [username, setUsername] = useState(userInfo.username)
+	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
+	const [password, setPassword] = useState(userInfo.password)
+	const [confirmpassword, setConfirmpassword] = useState(userInfo.password)
 	const [profile, setProfile] = useState({ uri: '', name: '', old: '' })
 	const [paymentMethods, setPaymentMethods] = useState([])
 	const [loaded, setLoaded] = useState(false)
 	const [paymentMethodForm, setPaymentmethodform] = useState({
 		show: false,
+		id: '',
 		type: '',
-		number: '', expMonth: '', expYear: '', cvc: ''
+		number: '', expMonth: '', expYear: '', cvc: '',
+
+		loading: false
 	})
+	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const getTheUserInfo = async() => {
@@ -66,7 +77,12 @@ export default function account({ navigation }) {
 		const userid = await AsyncStorage.getItem("userid")
 		const { number, expMonth, expYear, cvc } = paymentMethodForm
 		const data = { userid }
-		const params = { number: '4000000000000077', expMonth: 11, expYear: 23, cvc: '223' }
+		const params = { number, expMonth, expYear, cvc }
+
+		setPaymentmethodform({
+			...paymentMethodForm,
+			loading: true
+		})
 
 		const token = await stripe.createTokenWithCard(params)
 
@@ -83,14 +99,13 @@ export default function account({ navigation }) {
 					setPaymentmethodform({
 						...paymentMethodForm,
 						show: false,
-						number: '', expMonth: '', expYear: '', cvc: ''
+						number: '', expMonth: '', expYear: '', cvc: '',
+
+						loading: false
 					})
 					getThePaymentMethods()
 				}
 			})
-	}
-	const updateThePaymentMethod = async() => {
-
 	}
 
 	const usePaymentMethod = async(cardid) => {
@@ -135,7 +150,7 @@ export default function account({ navigation }) {
 
 					setPaymentmethodform({
 						show: true,
-						index,
+						id: cardid,
 						type: 'edit',
 
 						number: '',
@@ -146,6 +161,9 @@ export default function account({ navigation }) {
 					})
 				}
 			})
+	}
+	const updateThePaymentMethod = async() => {
+
 	}
 	const deletePaymentMethod = async(cardid, index) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -179,7 +197,42 @@ export default function account({ navigation }) {
 			})
 			.then((res) => {
 				if (res) {
-					setPaymentMethods(res.cards)
+					const cards = res.cards
+
+					cards.forEach(function (card) {
+						switch (card['cardname']) {
+							case "American Express":
+								card['logo'] = amexLogo
+
+								break
+							case "Diners Club":
+								card['logo'] = dinersclubLogo
+
+								break
+							case "Discover":
+								card['logo'] = discoverLogo
+
+								break
+							case "JCB":
+								card['logo'] = jbcLogo
+								break
+							case "MasterCard":
+								card['logo'] = mastercardLogo
+
+								break
+							case "UnionPay":
+								card['logo'] = unionpayLogo
+
+								break
+							case "Visa":
+								card['logo'] = visaLogo
+
+								break
+							default:
+						}
+					})
+
+					setPaymentMethods(cards)
 					setLoaded(true)
 				}
 			})
@@ -190,12 +243,15 @@ export default function account({ navigation }) {
 		if (username && phonenumber) {
 			const data = { userid, username, phonenumber, profile }
 
+			setLoading(true)
+
 			updateUser(data)
 				.then((res) => {
 					if (res.status == 200) {
 						if (!res.data.errormsg) {
 							return res.data
 						} else {
+							setLoading(false)
 							setErrormsg(res.data.errormsg)
 						}
 					}
@@ -346,6 +402,8 @@ export default function account({ navigation }) {
 								)}	
 							</View>
 
+							{loading ? <ActivityIndicator size="small"/> : null}
+
 							<View style={{ alignItems: 'center' }}>
 								<TouchableOpacity style={style.updateButton} onPress={() => updateAccount()}>
 									<Text>Done</Text>
@@ -358,9 +416,11 @@ export default function account({ navigation }) {
 
 							<TouchableOpacity style={style.paymentMethodAdd} onPress={() => {
 								setPaymentmethodform({
+									...paymentMethodForm,
 									show: true,
 									type: 'add',
-									number: '', expMonth: '', expYear: '', cvc: ''
+									number: cardInfo.number, expMonth: cardInfo.expMonth,
+									expYear: cardInfo.expYear, cvc: cardInfo.cvc
 								})
 							}}>
 								<Text>Add a card</Text>
@@ -371,7 +431,7 @@ export default function account({ navigation }) {
 									<View style={style.paymentMethodRow}>
 										<Text style={style.paymentMethodHeader}>#{index + 1}:</Text>
 										<View style={style.paymentMethodImageHolder}>
-											<Image style={style.paymentMethodImage} source={require("../../assets/visa.png")}/>
+											<Image style={style.paymentMethodImage} source={info.logo}/>
 										</View>
 										<View style={style.paymentMethodNumberHolder}>
 											<Text style={style.paymentMethodNumberHeader}>{info.number}</Text>
@@ -410,7 +470,7 @@ export default function account({ navigation }) {
 									<TouchableOpacity onPress={() => {
 										setPaymentmethodform({
 											show: false,
-											type: '',
+											id: '', type: '',
 											number: '', expMonth: '', expYear: '', cvc: ''
 										})
 									}}>
@@ -425,34 +485,36 @@ export default function account({ navigation }) {
 										<Text style={style.formInputHeader}>Card number</Text>
 										<TextInput style={style.formInputInput} onChangeText={(number) => setPaymentmethodform({
 											...paymentMethodForm,
-											number: number.toString()
-										})} value={paymentMethodForm.number} placeholder={paymentMethodForm.placeholder} keyboardType="numeric"/>
+											number
+										})} value={paymentMethodForm.number.toString()} placeholder={paymentMethodForm.placeholder} keyboardType="numeric"/>
 									</View>
 									<View style={style.formInputField}>
 										<Text style={style.formInputHeader}>Expiry month</Text>
 										<TextInput style={style.formInputInput} onChangeText={(expMonth) => setPaymentmethodform({
 											...paymentMethodForm,
-											expMonth: expMonth.toString()
-										})} value={paymentMethodForm.expMonth} keyboardType="numeric" placeholder="MM" maxLength={2}/>
+											expMonth
+										})} value={paymentMethodForm.expMonth.toString()} keyboardType="numeric" placeholder="MM" maxLength={2}/>
 									</View>
 									<View style={style.formInputField}>
 										<Text style={style.formInputHeader}>Expiry Year</Text>
 										<TextInput style={style.formInputInput} onChangeText={(expYear) => setPaymentmethodform({
 											...paymentMethodForm,
-											expYear: expYear.toString()
-										})} value={paymentMethodForm.expYear} keyboardType="numeric" placeholder="YYYY" maxLength={4}/>
+											expYear
+										})} value={paymentMethodForm.expYear.toString()} keyboardType="numeric" placeholder="YYYY" maxLength={4}/>
 									</View>
 									<View style={style.formInputField}>
 										<Text style={style.formInputHeader}>Security Code</Text>
 										<TextInput style={style.formInputInput} onChangeText={(cvc) => setPaymentmethodform({
 											...paymentMethodForm,
-											cvc: cvc.toString()
-										})} value={paymentMethodForm.cvc} keyboardType="numeric"/>
+											cvc
+										})} value={paymentMethodForm.cvc.toString()} keyboardType="numeric"/>
 									</View>
 								</View>
 
+								{paymentMethodForm.loading ? <ActivityIndicator size="small"/> : null}
+
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-									<TouchableOpacity style={style.formSubmit} onPress={() => {
+									<TouchableOpacity style={style.formSubmit} disabled={paymentMethodForm.loading} onPress={() => {
 										if (paymentMethodForm.type == 'add') {
 											addNewPaymentMethod()
 										} else {
@@ -477,16 +539,16 @@ const style = StyleSheet.create({
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
 
-	inputsBox: { marginBottom: 100, paddingHorizontal: 50 },
+	inputsBox: { marginBottom: 50, paddingHorizontal: 50 },
 	inputContainer: { marginVertical: 30 },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
-	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
+	cameraContainer: { alignItems: 'center', marginBottom: 10, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
 
-	paymentMethods: { alignItems: 'center', marginHorizontal: 10, marginTop: 50 },
+	paymentMethods: { alignItems: 'center', marginHorizontal: 10, marginTop: 0 },
 	paymentMethodHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	paymentMethodAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
 	paymentMethod: { marginVertical: 30 },

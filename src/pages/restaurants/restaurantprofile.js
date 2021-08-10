@@ -35,35 +35,8 @@ export default function restaurantprofile(props) {
 	const [products, setProducts] = useState([])
 	const [numProducts, setNumproducts] = useState(0)
 
-	const [showSpecials, setShowspecials] = useState(false)
-	const [specials, setSpecials] = useState([
-		{ key: "row-0", row: [
-			{ key: "product-0", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } },
-			{ key: "product-1", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } },
-			{ key: "product-2", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } }
-		]},
-		{ key: "row-1", row: [
-			{ key: "product-3", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } },
-			{ key: "product-4", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } },
-			{ key: "product-5", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } }
-		]},
-		{ key: "row-2", row: [
-			{ key: "product-6", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } },
-			{ key: "product-7", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } },
-			{ key: "product-8", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } }
-		]},
-		{ key: "row-3", row: [
-			{ key: "product-9", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } },
-			{ key: "product-10", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } },
-			{ key: "product-11", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } }
-		]},
-		{ key: "row-4", row: [
-			{ key: "product-12", id: '1v99d-sd9d9s999d9d', name: 'roasted milk tea special', image: { photo: '', width: 0, height: 0 } }
-		]}
-	])
-	const [numSpecials, setNumspecials] = useState(0)
 	const [loaded, setLoaded] = useState(false)
-
+	
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 
@@ -83,10 +56,9 @@ export default function restaurantprofile(props) {
 			})
 	}
 	const getTheLocationProfile = async() => {
-		const userid = await AsyncStorage.getItem("userid")
 		const longitude = await AsyncStorage.getItem("longitude")
 		const latitude = await AsyncStorage.getItem("latitude")
-		const data = { userid, locationid, longitude, latitude }
+		const data = { locationid, longitude, latitude }
 
 		getLocationProfile(data)
 			.then((res) => {
@@ -209,20 +181,15 @@ export default function restaurantprofile(props) {
 									<TouchableOpacity style={style.nav} onPress={() => getAllMenus()}>
 										<Text>menu ({numMenus})</Text>
 									</TouchableOpacity>
-									<TouchableOpacity style={style.nav} onPress={() => {}}>
-										<Text>specials ({numSpecials})</Text>
-									</TouchableOpacity>
 									<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("makereservation", { locationid })}>
 										<Text>Book Table</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
 						</>
-						:
-						<ActivityIndicator size="small"/>
-					}
+					: null }
 				</View>
-				
+
 				<View style={style.body}>
 					{loaded ? 
 						<>
@@ -253,12 +220,12 @@ export default function restaurantprofile(props) {
 								<FlatList
 									showsVerticalScrollIndicator={false}
 									data={products}
-									style={{ height: height - 386 }}
+									style={{ height: height - 320 }}
 									renderItem={({ item, index }) => 
 										<View key={item.key} style={style.row}>
 											{item.row.map(product => (
 												product.name ? 
-													<View key={product.key} style={style.product}>
+													<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
 														<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
 														<Text style={style.productName}>{product.name}</Text>
 														{product.info && <Text style={style.productInfo}>{product.info}</Text>}
@@ -267,35 +234,12 @@ export default function restaurantprofile(props) {
 															<Text style={style.productDetail}>{product.price}</Text>
 														</View>
 
-														<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: product.id })}>
+														<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
 															<Text style={style.productBuyHeader}>Buy</Text>
 														</TouchableOpacity>
-													</View>
-													:
-													<View key={product.key} style={style.product}></View>
-											))}
-										</View>
-									}
-								/>
-							)}
-
-							{showSpecials && (
-								<FlatList
-									showsVerticalScrollIndicator={false}
-									style={{ height: height - 100, margin: 20 }}
-									data={specials}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.row}>
-											{item.row.map(( item, index ) => (
-												item.name ? 
-													<TouchableOpacity key={item.key} style={style.item} onPress={() => props.navigation.navigate("itemprofile", { id: item.id, name: item.name })}>
-														<View style={style.itemImageHolder}>
-															<Image source={require("../../../assets/product-image.png")} style={{ height: imageSize, width: imageSize }}/>
-														</View>
-														<Text style={style.itemName}>{item.name}</Text>
 													</TouchableOpacity>
 													:
-													<View key={item.key} style={style.itemDisabled}></View>
+													<View key={product.key} style={style.product}></View>
 											))}
 										</View>
 									}
@@ -315,7 +259,7 @@ export default function restaurantprofile(props) {
 				</View>
 			</View>
 
-			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
+			{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
 		</View>
 	);
 }
@@ -324,7 +268,7 @@ const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
 	profileInfo: { height: 320 },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	headers: { alignItems: 'center' },
 	logoHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 50, height: 90, overflow: 'hidden', width: 90 },
@@ -343,7 +287,7 @@ const style = StyleSheet.create({
 	itemName: { fontSize: 10, fontWeight: 'bold', textAlign: 'center' },
 
 	// product
-	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10 },
+	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10, width: itemSize },
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
 	productName: { fontSize: 20, fontWeight: 'bold' },
 	productInfo: { fontSize: 15 },
