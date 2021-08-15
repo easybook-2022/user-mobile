@@ -56,17 +56,17 @@ export default function register({ navigation }) {
 				<View style={style.inputsBox}>
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Phone number:</Text>
-						<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric"/>
+						<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
 					</View>
 
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Password:</Text>
-						<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password}/>
+						<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
 					</View>
 
 					<View style={style.inputContainer}>
 						<Text style={style.inputHeader}>Confirm Password:</Text>
-						<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmpassword) => setPassword(confirmpassword)} value={confirmpassword}/>
+						<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmpassword) => setPassword(confirmpassword)} value={confirmpassword} autoCorrect={false}/>
 					</View>
 
 					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
@@ -103,7 +103,7 @@ const style = StyleSheet.create({
 	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { backgroundColor: 'white', paddingHorizontal: 20, width: '80%' },
-	inputContainer: { marginVertical: 20 },
+	inputContainer: { marginVertical: '5%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10 },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },

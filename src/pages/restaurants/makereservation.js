@@ -387,13 +387,13 @@ export default function booktime(props) {
 											{'\n'}
 											for {numSelectedDiners} {numSelectedDiners > 1 ? 'people' : 'person'} {'\n'}
 											at
-											{'\n' + confirm.service + '\n'}
+											<Text style={{ fontFamily: 'appFont' }}>{'\n' + confirm.service + '\n'}</Text>
 											at
-											{'\n' + confirm.timeheader}
+											<Text style={{ fontFamily: 'appFont' }}>{'\n' + confirm.timeheader}</Text>
 										</Text>
 
 										<View style={style.note}>
-											<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} value={confirm.note}/>
+											<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} value={confirm.note} autoCorrect={false}/>
 										</View>
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -417,7 +417,7 @@ export default function booktime(props) {
 												<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
 												<Text style={style.requestedHeaderInfo}>for {numSelectedDiners} {numSelectedDiners > 1 ? 'people' : 'person'}</Text>
 											</Text>
-											<Text>You will get notified by the restaurant in your notification very soon</Text>
+											<Text style={{ textAlign: 'center' }}>You will get notified by the restaurant in your notification very soon</Text>
 											<TouchableOpacity style={style.requestedClose} onPress={() => {
 												setConfirm({ ...confirm, show: false, requested: false })
 												props.navigation.goBack()
@@ -439,7 +439,7 @@ export default function booktime(props) {
 				<Modal>
 					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.dinersList}>
-							<TextInput style={style.dinerNameInput} placeholder="Search diner to add to reservation" onChangeText={(username) => getDinersList(username)}/>
+							<TextInput style={style.dinerNameInput} placeholder="Search diner to add to reservation" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
 
 							<View style={style.dinersListContainer}>
 								<View style={{ height: '50%', overflow: 'hidden' }}>
@@ -511,14 +511,6 @@ export default function booktime(props) {
 
 							<View style={{ alignItems: 'center' }}>
 								<View style={style.actions}>
-									<TouchableOpacity style={style.action} onPress={() => {
-										setOpenlist(false)
-										setSelecteddiners([])
-										setNumselecteddiners(0)
-										setErrormsg('')
-									}}>
-										<Text style={style.actionHeader}>Close</Text>
-									</TouchableOpacity>
 									<TouchableOpacity style={style.action} onPress={() => finish()}>
 										<Text style={style.actionHeader}>Finish</Text>
 									</TouchableOpacity>
@@ -562,7 +554,7 @@ const style = StyleSheet.create({
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', paddingVertical: 10, width: '80%' },
 	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
 	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 80, padding: 5, width: '80%' },

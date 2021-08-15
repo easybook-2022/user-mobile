@@ -1,103 +1,103 @@
 import axios from 'axios'
-import { LOCAL_API_URL, WIFI_API_URL } from "@env"
+import { local_api_url, wifi_api_url } from '../../assets/info'
 
 export const requestAppointment = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/request_appointment`, 
+		`${wifi_api_url}/schedules/request_appointment`, 
 		data
 	)
 }
 
 export const acceptReservation = id => {
-	return axios.get(`${WIFI_API_URL}/schedules/accept_reservation/${id}`)
+	return axios.get(`${wifi_api_url}/schedules/accept_reservation/${id}`)
 }
 
 export const closeRequest = id => {
-	return axios.get(`${WIFI_API_URL}/schedules/close_request/${id}`)
+	return axios.get(`${wifi_api_url}/schedules/close_request/${id}`)
 }
 
 export const cancelReservationJoining = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/cancel_reservation_joining`,
+		`${wifi_api_url}/schedules/cancel_reservation_joining`,
 		data
 	)
 }
 
 export const acceptReservationJoining = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/accept_reservation_joining`,
+		`${wifi_api_url}/schedules/accept_reservation_joining`,
 		data
 	)
 }
 
 export const doneDining = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/done_dining`,
+		`${wifi_api_url}/schedules/done_dining`,
 		data
 	)
 }
 
 export const getReservationInfo = id => {
-	return axios.get(`${WIFI_API_URL}/schedules/get_reservation_info/${id}`)
+	return axios.get(`${wifi_api_url}/schedules/get_reservation_info/${id}`)
 }
 
 export const getScheduleInfo = id => {
-	return axios.get(`${WIFI_API_URL}/schedules/get_schedule_info/${id}`)
+	return axios.get(`${wifi_api_url}/schedules/get_schedule_info/${id}`)
 }
 
 export const addItemtoorder = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/add_item_to_order`,
+		`${wifi_api_url}/schedules/add_item_to_order`,
 		data
 	)
 }
 
 export const seeOrders = id => {
-	return axios.get(`${WIFI_API_URL}/schedules/see_orders/${id}`)
+	return axios.get(`${wifi_api_url}/schedules/see_orders/${id}`)
 }
 
 export const sendOrders = id => {
-	return axios.get(`${WIFI_API_URL}/schedules/send_orders/${id}`)
+	return axios.get(`${wifi_api_url}/schedules/send_orders/${id}`)
 }
 
 export const editOrder = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/edit_order`,
+		`${wifi_api_url}/schedules/edit_order`,
 		data
 	)
 }
 
 export const updateOrder = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/update_order`,
+		`${wifi_api_url}/schedules/update_order`,
 		data
 	)
 }
 
 export const addDiners = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/add_diners`,
+		`${wifi_api_url}/schedules/add_diners`,
 		data
 	)
 }
 
 export const editOrderCallfor = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/edit_order_callfor`,
+		`${wifi_api_url}/schedules/edit_order_callfor`,
 		data
 	)
 }
 
 export const updateOrderCallfor = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/update_order_callfor`,
+		`${wifi_api_url}/schedules/update_order_callfor`,
 		data
 	)
 }
 
 export const removeOrderCallfor = data => {
 	return axios.post(
-		`${WIFI_API_URL}/schedules/remove_order_callfor`,
+		`${wifi_api_url}/schedules/remove_order_callfor`,
 		data
 	)
 }

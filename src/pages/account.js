@@ -1,23 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
-import stripe from 'tipsi-stripe'
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { CommonActions } from '@react-navigation/native';
-import { userInfo, cardInfo, logo_url } from '../../assets/info'
+import { userInfo, cardInfo, stripe_key, logo_url } from '../../assets/info'
 import { 
-	getUserInfo, updateUser, addPaymentMethod, getPaymentMethods, 
+	getUserInfo, updateUser, addPaymentMethod, updatePaymentMethod, getPaymentMethods, 
 	setPaymentmethodDefault, getPaymentmethodInfo, deleteThePaymentMethod
 } from '../apis/users'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
-
-stripe.setOptions({
-	publishableKey: 'pk_test_bWW1YHLx5wgY3rU9fk6cNhBu'
-})
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -77,16 +72,39 @@ export default function account({ navigation }) {
 		const userid = await AsyncStorage.getItem("userid")
 		const { number, expMonth, expYear, cvc } = paymentMethodForm
 		const data = { userid }
-		const params = { number, expMonth, expYear, cvc }
+		const cardDetails = {
+			"card[number]": number,
+			"card[exp_month]": expMonth,
+			"card[exp_year]": expYear,
+			"card[cvc]": cvc,
+		}
 
 		setPaymentmethodform({
 			...paymentMethodForm,
 			loading: true
 		})
 
-		const token = await stripe.createTokenWithCard(params)
+		let formBody = [];
+			
+		for (let property in cardDetails) {
+			let encodedKey = encodeURIComponent(property);
+			let encodedValue = encodeURIComponent(cardDetails[property]);
+			formBody.push(encodedKey + "=" + encodedValue);
+		}
+		formBody = formBody.join("&");
+		
+		const resp = await fetch("https://api.stripe.com/v1/tokens", {
+			method: "post",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/x-www-form-urlencoded",
+				Authorization: "Bearer " + stripe_key,
+			},
+			body: formBody,
+		});
+		const json = await resp.json()
 
-		data['cardtoken'] = token.tokenId
+		data['cardtoken'] = json.id
 
 		addPaymentMethod(data)
 			.then((res) => {
@@ -163,7 +181,62 @@ export default function account({ navigation }) {
 			})
 	}
 	const updateThePaymentMethod = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+		const { id, number, expMonth, expYear, cvc } = paymentMethodForm
+		const data = { oldcardtoken: id, userid }
+		const cardDetails = {
+			"card[number]": number,
+			"card[exp_month]": expMonth,
+			"card[exp_year]": expYear,
+			"card[cvc]": cvc,
+		}
 
+		setPaymentmethodform({
+			...paymentMethodForm,
+			loading: true
+		})
+
+		let formBody = [];
+			
+		for (let property in cardDetails) {
+			let encodedKey = encodeURIComponent(property);
+			let encodedValue = encodeURIComponent(cardDetails[property]);
+			formBody.push(encodedKey + "=" + encodedValue);
+		}
+		formBody = formBody.join("&");
+		
+		const resp = await fetch("https://api.stripe.com/v1/tokens", {
+			method: "post",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/x-www-form-urlencoded",
+				Authorization: "Bearer " + stripe_key,
+			},
+			body: formBody,
+		});
+		const json = await resp.json()
+
+		data['cardtoken'] = json.id
+
+		updatePaymentMethod(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setPaymentmethodform({
+						...paymentMethodForm,
+						show: false,
+						id: '',
+						number: '', expMonth: '', expYear: '', cvc: '',
+
+						loading: false
+					})
+					getThePaymentMethods()
+				}
+			})
 	}
 	const deletePaymentMethod = async(cardid, index) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -363,12 +436,12 @@ export default function account({ navigation }) {
 						<View style={style.inputsBox}>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Username:</Text>
-								<TextInput style={style.input} placeholder="username" onChangeText={(username) => setUsername(username)} value={username}/>
+								<TextInput style={style.input} placeholder="username" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
 							</View>
 
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Cell number:</Text>
-								<TextInput style={style.input} placeholder="cell phone number" onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber}/>
+								<TextInput style={style.input} placeholder="cell phone number" onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} autoCorrect={false}/>
 							</View>
 
 							<View style={style.cameraContainer}>
@@ -486,28 +559,28 @@ export default function account({ navigation }) {
 										<TextInput style={style.formInputInput} onChangeText={(number) => setPaymentmethodform({
 											...paymentMethodForm,
 											number
-										})} value={paymentMethodForm.number.toString()} placeholder={paymentMethodForm.placeholder} keyboardType="numeric"/>
+										})} value={paymentMethodForm.number.toString()} placeholder={paymentMethodForm.placeholder} keyboardType="numeric" autoCorrect={false}/>
 									</View>
 									<View style={style.formInputField}>
 										<Text style={style.formInputHeader}>Expiry month</Text>
 										<TextInput style={style.formInputInput} onChangeText={(expMonth) => setPaymentmethodform({
 											...paymentMethodForm,
 											expMonth
-										})} value={paymentMethodForm.expMonth.toString()} keyboardType="numeric" placeholder="MM" maxLength={2}/>
+										})} value={paymentMethodForm.expMonth.toString()} keyboardType="numeric" placeholder="MM" maxLength={2} autoCorrect={false}/>
 									</View>
 									<View style={style.formInputField}>
 										<Text style={style.formInputHeader}>Expiry Year</Text>
 										<TextInput style={style.formInputInput} onChangeText={(expYear) => setPaymentmethodform({
 											...paymentMethodForm,
 											expYear
-										})} value={paymentMethodForm.expYear.toString()} keyboardType="numeric" placeholder="YYYY" maxLength={4}/>
+										})} value={paymentMethodForm.expYear.toString()} keyboardType="numeric" placeholder="YYYY" maxLength={4} autoCorrect={false}/>
 									</View>
 									<View style={style.formInputField}>
 										<Text style={style.formInputHeader}>Security Code</Text>
 										<TextInput style={style.formInputInput} onChangeText={(cvc) => setPaymentmethodform({
 											...paymentMethodForm,
 											cvc
-										})} value={paymentMethodForm.cvc.toString()} keyboardType="numeric"/>
+										})} value={paymentMethodForm.cvc.toString()} keyboardType="numeric" autoCorrect={false}/>
 									</View>
 								</View>
 

@@ -1,7 +1,5 @@
-import { LOCAL_API_URL, WIFI_API_URL } from "@env"
-
 const users = [
-	{ id: 0, username: "robogram", cellnumber: "9999999999", password: "password" },
+	{ id: 0, username: "robogram", cellnumber: "0000000000", password: "password" },
 	{ id: 1, username: "user1", cellnumber: "1111111111", password: "password" },
 	{ id: 2, username: "user2", cellnumber: "2222222222", password: "password" },
 	{ id: 3, username: "user3", cellnumber: "3333333333", password: "password" },
@@ -21,10 +19,12 @@ const cards = [
 	{ id: 3, number: "4000003720000278", expMonth: 9, expYear: 22, cvc: '869' },
 	{ id: 4, number: "4000000000000077", expMonth: 12, expYear: 45, cvc: '054' },
 ]
-const { username, cellnumber, password } = users[2]
+const { username, cellnumber, password } = users[0]
 const { number, expMonth, expYear, cvc } = cards[0]
 
+export const local_api_url = "http://localhost:5000"
+export const wifi_api_url = "http://192.168.0.16:5000"
 export const userInfo = { username, cellnumber, password, latitude: 43.663631, longitude: -79.351501 }
 export const cardInfo = { number, expMonth, expYear, cvc }
-
-export const logo_url = WIFI_API_URL + "/static/"
+export const stripe_key = "sk_test_lft1B76yZfF2oEtD5rI3y8dz"
+export const logo_url = wifi_api_url + "/static/"

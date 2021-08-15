@@ -243,13 +243,13 @@ export default function main({ navigation }) {
 			clearInterval(updateNotifications)
 		}
 	}, [])
-
+	
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
 				<View style={style.headers}>
 					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-						<TextInput style={style.searchInput} placeholder="Search any locations" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)}/>
+						<TextInput style={style.searchInput} placeholder="Search any locations" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
 						<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
 							<FontAwesome name="bell" size={30}/>
 							{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}
@@ -349,7 +349,7 @@ const style = StyleSheet.create({
 	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 15, margin: 10, padding: 10, width: width - 80 },
 	notification: { flexDirection: 'row', marginRight: 10, marginVertical: 10 },
 
-	body: { flexDirection: 'column', height: screenHeight - 100, justifyContent: 'space-around' },
+	body: { flexDirection: 'column', height: screenHeight - 120, justifyContent: 'space-around' },
 
 	service: { marginBottom: 10, marginHorizontal: 5 },
 	rowHeader: { fontWeight: 'bold', margin: 10 },

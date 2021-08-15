@@ -34,9 +34,11 @@ export default function itemProfile(props) {
 	const [errorMsg, setErrormsg] = useState('')
 
 	// friends list
-	const [openFriendsList, setOpenfriendslist] = useState(false)
+	const [openFriendscart, setOpenfriendscart] = useState(false)
 	const [friends, setFriends] = useState([])
 	const [numFriends, setNumfriends] = useState(0)
+	const [friendUsername, setFriendusername] = useState('')
+	const [openSearchfriendslist, setOpensearchfriendslist] = useState(false)
 	const [selectedFriends, setSelectedFriends] = useState([])
 	const [numSelectedFriends, setNumSelectedFriends] = useState(0)
 	const [orderingItem, setOrderingItem] = useState({ name: "", image: "", options: [], others: [], sizes: [], quantity: 0, cost: 0 })
@@ -150,7 +152,7 @@ export default function itemProfile(props) {
 		let newOthers = JSON.parse(JSON.stringify(others))
 		let newSizes = JSON.parse(JSON.stringify(sizes))
 
-		if (openFriendsList && selectedFriends.length == 0) {
+		if (openFriendscart && selectedFriends.length == 0) {
 			setErrormsg("You didn't select anyone")
 		} else {	
 			selectedFriends.forEach(function (info) {
@@ -187,14 +189,14 @@ export default function itemProfile(props) {
 				})
 				.then((res) => {
 					if (res) {
-						setOpenfriendslist(false)
+						setOpenfriendscart(false)
 						showCart()
 					}
 				})
 		}
 	}
 	const showCart = () => {
-		setOpenfriendslist(false)
+		setOpenfriendscart(false)
 		setSelectedFriends([])
 		setNumSelectedFriends(0)
 		setOpencart(true)
@@ -237,6 +239,11 @@ export default function itemProfile(props) {
 				if (res) {
 					setFriends(res.searchedFriends)
 					setNumfriends(res.numSearchedFriends)
+					setFriendusername(username)
+
+					if (!openSearchfriendslist) {
+						setOpensearchfriendslist(true)
+					}
 				}
 			})
 	}
@@ -372,7 +379,7 @@ export default function itemProfile(props) {
 			newOrderingItem.quantity = quantity
 			newOrderingItem.cost = price.toFixed(2)
 
-			setOpenfriendslist(true)
+			setOpenfriendscart(true)
 			setOrderingItem(newOrderingItem)
 			setErrormsg('')
 		} else {
@@ -472,7 +479,7 @@ export default function itemProfile(props) {
 				)}
 
 				<View style={style.note}>
-					<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setItemnote(note)}/>
+					<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setItemnote(note)} autoCorrect={false}/>
 				</View>
 
 				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -526,39 +533,14 @@ export default function itemProfile(props) {
 			</View>
 
 			{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
-			{openFriendsList && (
+			{openFriendscart && (
 				<Modal>
 					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.friendsList}>
-							<TextInput style={style.friendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)}/>
+							<TextInput style={style.friendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} value={friendUsername}/>
 
 							<View style={style.friendsListContainer}>
-								<View style={{ height: '40%', overflow: 'hidden' }}>
-									<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
-
-									<View>
-										<FlatList
-											data={friends}
-											renderItem={({ item, index }) => 
-												<View key={item.key} style={style.row}>
-													{item.row.map(friend => (
-														friend.username ? 
-															<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
-																<View style={style.friendProfileHolder}>
-																	<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																</View>
-																<Text style={style.friendName}>{friend.username}</Text>
-															</TouchableOpacity>
-															:
-															<View key={friend.key} style={style.friend}></View>
-													))}
-												</View>
-											}
-										/>
-									</View>
-								</View>
-							
-								<View style={{ height: '40%', overflow: 'hidden' }}>
+								<View style={{ overflow: 'hidden' }}>
 									{selectedFriends.length > 0 && (
 										<>
 											<Text style={style.selectedFriendsHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
@@ -591,61 +573,105 @@ export default function itemProfile(props) {
 								</View>
 							</View>
 
-							<View style={style.itemContainer}>
-								<View style={style.itemImageHolder}>
-									<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
-								</View>
-								<View style={style.itemInfos}>
-									<Text style={style.itemName}>{orderingItem.name}</Text>
-									{orderingItem.options.map((info, infoindex) => (
-										<Text key={info.key} style={style.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
-											{info.selected}
-											{info.type == 'percentage' && '%'}
-										</Text>
-									))}
-
-									{orderingItem.others.map((info, infoindex) => (
-										<Text key={info.key} style={style.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>{info.name}: </Text> 
-											<Text>{info.input}</Text>
-										</Text>
-									))}
-
-									{orderingItem.sizes.map((info, infoindex) => (
-										info.selected ? 
+							<View>
+								<View style={style.itemContainer}>
+									<View style={style.orderingItemImageHolder}>
+										<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
+									</View>
+									<View style={style.itemInfos}>
+										<Text style={style.orderingItemName}>{orderingItem.name}</Text>
+										
+										{orderingItem.options.map((info, infoindex) => (
 											<Text key={info.key} style={style.itemInfo}>
-												<Text style={{ fontWeight: 'bold' }}>Size: </Text> 
-												<Text>{info.name}</Text>
+												<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
+												{info.selected}
+												{info.type == 'percentage' && '%'}
 											</Text>
-										: null
-									))}
-								</View>
-								<View>
-									<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
-									<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost}</Text>
-								</View>
-							</View>
+										))}
 
-							<Text style={style.friendErrorMsg}>{errorMsg}</Text>
+										{orderingItem.others.map((info, infoindex) => (
+											<Text key={info.key} style={style.itemInfo}>
+												<Text style={{ fontWeight: 'bold' }}>{info.name}: </Text> 
+												<Text>{info.input}</Text>
+											</Text>
+										))}
 
-							<View style={{ alignItems: 'center' }}>
-								<View style={style.actions}>
-									<TouchableOpacity style={style.action} onPress={() => {
-										setOpenfriendslist(false)
-										setSelectedFriends([])
-										setNumSelectedFriends(0)
-										setErrormsg('')
-									}}>
-										<Text style={style.actionHeader}>Close</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.action} onPress={() => addCart()}>
-										<Text style={style.actionHeader}>Add</Text>
-									</TouchableOpacity>
+										{orderingItem.sizes.map((info, infoindex) => (
+											info.selected ? 
+												<Text key={info.key} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>Size: </Text> 
+													<Text>{info.name}</Text>
+												</Text>
+											: null
+										))}
+									</View>
+									<View>
+										<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
+										<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost}</Text>
+									</View>
+								</View>
+
+								<Text style={style.friendErrorMsg}>{errorMsg}</Text>
+
+								<View style={{ alignItems: 'center' }}>
+									<View style={style.actions}>
+										<TouchableOpacity style={style.action} onPress={() => {
+											setOpenfriendscart(false)
+											setSelectedFriends([])
+											setNumSelectedFriends(0)
+											setErrormsg('')
+										}}>
+											<Text style={style.actionHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.action} onPress={() => addCart()}>
+											<Text style={style.actionHeader}>Add</Text>
+										</TouchableOpacity>
+									</View>
 								</View>
 							</View>
 						</View>
 					</View>
+
+					{openSearchfriendslist && (
+						<Modal transparent={true}>
+							<View style={style.searchFriendsHidden}>
+								<View style={style.searchFriendsBox}>
+									<View style={{ alignItems: 'center', width: '100%' }}>
+										<TouchableOpacity style={style.close} onPress={() => setOpensearchfriendslist(false)}>
+											<AntDesign name="closecircleo" size={30}/>
+										</TouchableOpacity>
+									</View>
+
+									<TextInput style={style.searchFriendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} value={friendUsername}/>
+
+									<View style={{ overflow: 'hidden' }}>
+										<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
+
+										<View>
+											<FlatList
+												data={friends}
+												renderItem={({ item, index }) => 
+													<View key={item.key} style={style.row}>
+														{item.row.map(friend => (
+															friend.username ? 
+																<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
+																	<View style={style.friendProfileHolder}>
+																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+																	</View>
+																	<Text style={style.friendName}>{friend.username}</Text>
+																</TouchableOpacity>
+																:
+																<View key={friend.key} style={style.friend}></View>
+														))}
+													</View>
+												}
+											/>
+										</View>
+									</View>
+								</View>
+							</View>
+						</Modal>
+					)}
 				</Modal>
 			)}
 		</View>
@@ -720,7 +746,7 @@ const style = StyleSheet.create({
 	// friends list
 	friendsList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	friendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
-	friendsListContainer: { flexDirection: 'column', height: '70%', justifyContent: 'space-between' },
+	friendsListContainer: { flexDirection: 'column', height: screenHeight - 270, justifyContent: 'space-between' },
 	friendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
 	friend: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
@@ -730,15 +756,20 @@ const style = StyleSheet.create({
 	selectedFriendsHeader: { fontWeight: 'bold', textAlign: 'center' },
 
 	// ordering item
-	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
-	itemName: { fontWeight: 'bold', marginBottom: 20 },
+	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: 150, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
+	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
+	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
 	itemInfo: { fontSize: 15 },
 	itemHeader: { fontSize: 15 },
 
 	friendErrorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 0, textAlign: 'center' },
 
-	actions: { flexDirection: 'row', justifyContent: 'space-around' },
+	actions: { flexDirection: 'row', height: 30, justifyContent: 'space-around' },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 60 },
 	actionHeader: { textAlign: 'center' },
+
+	// search friends
+	searchFriendsHidden: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.8)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	searchFriendsBox: { backgroundColor: 'white', height: '90%', width: '90%' },
+	searchFriendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, margin: 10, padding: 10 },
 })

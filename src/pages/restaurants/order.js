@@ -933,7 +933,7 @@ export default function order(props) {
 							))}
 
 							<View style={style.note}>
-								<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note}/>
+								<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false}/>
 							</View>
 
 							<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -1094,7 +1094,7 @@ export default function order(props) {
 				<Modal>
 					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.dinersList}>
-							<TextInput style={style.dinerNameInput} placeholder="Search diner to order for" onChangeText={(username) => getDinersList(username)}/>
+							<TextInput style={style.dinerNameInput} placeholder="Search diner to order for" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
 
 							<View style={style.dinersListContainer}>
 								<View style={{ height: '50%', overflow: 'hidden' }}>
@@ -1212,7 +1212,7 @@ export default function order(props) {
 				<Modal>
 					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.friendsList}>
-							<TextInput style={style.friendNameInput} placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)}/>
+							<TextInput style={style.friendNameInput} placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
 
 							<View style={style.friendsListContainer}>
 								<View style={{ height: '50%', overflow: 'hidden' }}>

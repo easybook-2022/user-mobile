@@ -1,24 +1,24 @@
 import axios from 'axios'
-import { LOCAL_API_URL, WIFI_API_URL } from "@env"
+import { local_api_url, wifi_api_url } from '../../assets/info'
 
 export const getProducts = data => {
 	return axios.post(
-		`${WIFI_API_URL}/products/get_products`,
+		`${wifi_api_url}/products/get_products`,
 		data
 	)
 }
 
 export const getProductInfo = id => {
-	return axios.get(`${WIFI_API_URL}/products/get_product_info/${id}`)
+	return axios.get(`${wifi_api_url}/products/get_product_info/${id}`)
 }
 
 export const cancelOrder = id => {
-	return axios.get(`${WIFI_API_URL}/products/cancel_order/${id}`)
+	return axios.get(`${wifi_api_url}/products/cancel_order/${id}`)
 }
 
 export const confirmOrder = data => {
 	return axios.post(
-		`${WIFI_API_URL}/products/confirm_order`,
+		`${wifi_api_url}/products/confirm_order`,
 		data
 	)
 }

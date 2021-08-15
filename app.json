@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "EasyGO (Users)",
-    "slug": "eatsygo-users",
+    "name": "easygo-user",
+    "slug": "easygo-user",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,7 +21,9 @@
       "bundleIdentifier": "com.geottuse.serviceapp.users",
       "buildNumber": "0",
       "infoPlist": {
-        "NSCameraUsageDescription": "EasyGO uses camera to allow you to take a profile picture"
+        "NSCameraUsageDescription": "EasyGO uses camera to allow you to take a profile picture",
+        "NSLocationWhenInUseUsageDescription": "EasyGO uses your location to show you the nearest locations",
+        "NSMicrophoneUsageDescription": ""
       }
     },
     "android": {

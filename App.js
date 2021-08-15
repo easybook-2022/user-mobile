@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AsyncStorage, Text, View, Dimensions, StyleSheet, LogBox } from 'react-native';
 import * as Font from 'expo-font';
 
@@ -37,7 +37,7 @@ import Booktime from './src/pages/salons/booktime'
 
 import Notifications from './src/components/notifications'
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function App() {
     const [loaded] = Font.useFonts({ appFont: require('./assets/Chilanka-Regular.ttf') });
@@ -86,8 +86,7 @@ export default function App() {
                     </Stack.Navigator>
                 </NavigationContainer>
             )
-        }
-            
+        }     
     }
 
     return null

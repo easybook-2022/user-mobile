@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { getServiceInfo } from '../../apis/services'
@@ -18,8 +18,6 @@ const screenHeight = height - (offsetPadding * 2)
 
 export default function booktime(props) {
 	let { locationid, menuid, serviceid } = props.route.params
-
-	console.log(locationid + " : " + menuid + " : " + serviceid)
 
 	const [name, setName] = useState('')
 	const [times, setTimes] = useState([])
@@ -45,7 +43,7 @@ export default function booktime(props) {
 			})
 	}
 	
-	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", note: "", requested: false })
+	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", note: "", requested: false, errormsg: "" })
 
 	const getTheServiceInfo = async() => {
 		getServiceInfo(serviceid)
@@ -122,7 +120,7 @@ export default function booktime(props) {
 	const requestAnAppointment = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const { timeheader, time, note } = confirm
-		const data = { userid, locationid, menuid, serviceid, time, note }
+		const data = { userid, locationid, menuid, serviceid, time, note: note ? note : "" }
 
 		requestAppointment(data)
 			.then((res) => {
@@ -130,7 +128,7 @@ export default function booktime(props) {
 					if (!res.data.errormsg) {
 						return res.data
 					} else {
-
+						setConfirm({ ...confirm, errormsg: res.data.errormsg })
 					}
 				}
 			})
@@ -216,12 +214,16 @@ export default function booktime(props) {
 										</Text>
 
 										<View style={style.note}>
-											<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })}/>
+											<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+												<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} autoCorrect={false}/>
+											</TouchableWithoutFeedback>
 										</View>
+
+										{confirm.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 											<View style={style.confirmOptions}>
-												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, service: "", time: "" })}>
+												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, service: "", time: "", errormsg: "" })}>
 													<Text style={style.confirmOptionHeader}>No</Text>
 												</TouchableOpacity>
 												<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
@@ -282,16 +284,17 @@ const style = StyleSheet.create({
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', justifyContent: 'space-around', paddingVertical: 20, width: '80%' },
+	confirmHeader: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
-	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 100, padding: 5, width: '80%' },
+	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 15, height: 100, padding: 5, width: '80%' },
+	errorMsg: { color: 'red', paddingHorizontal: 10, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row' },
-	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 50 },
 	confirmOptionHeader: { },
-	requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
+	requestedHeaders: { alignItems: 'center', paddingHorizontal: 20 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
 	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: 25 },
+	requestedHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	requestedHeaderInfo: { fontSize: 20, textAlign: 'center' },
 })

@@ -142,7 +142,7 @@ export default function setup({ navigation }) {
 					<View style={style.inputsBox}>
 						<View style={style.inputContainer}>
 							<Text style={style.inputHeader}>Username:</Text>
-							<TextInput style={style.input} placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username}/>
+							<TextInput style={style.input} placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
 						</View>
 
 						<View style={style.cameraContainer}>
