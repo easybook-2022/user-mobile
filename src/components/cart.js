@@ -27,10 +27,8 @@ export default function cart(props) {
 	const [openFriendscart, setOpenfriendscart] = useState(false)
 	const [friends, setFriends] = useState([])
 	const [numFriends, setNumfriends] = useState(0)
-	const [friendUsername, setFriendusername] = useState('')
-	const [openSearchfriendslist, setOpensearchfriendslist] = useState(false)
 	const [selectedFriends, setSelectedFriends] = useState([])
-	const [numSelectedFriends, setNumSelectedFriends] = useState(0)
+	const [numSelectedFriends, setNumselectedfriends] = useState(0)
 	const [orderingItem, setOrderingItem] = useState({ name: "", image: "", options: [], quantity: 0, cost: 0 })
 	const [errorMsg, setErrormsg] = useState('')
 
@@ -231,11 +229,6 @@ export default function cart(props) {
 				if (res) {
 					setFriends(res.searchedFriends)
 					setNumfriends(res.numSearchedFriends)
-					setFriendusername(username)
-
-					if (!openSearchfriendslist) {
-						setOpensearchfriendslist(true)
-					}
 				}
 			})
 	}
@@ -278,7 +271,7 @@ export default function cart(props) {
 
 			if (unfill) {
 				newSelectedFriends[newSelectedFriends.length - 1].row = last_row
-				setNumSelectedFriends(numSelectedFriends + 1)
+				setNumselectedfriends(numSelectedFriends + 1)
 			} else {
 				selected.key = "selected-friend-" + next_key
 				newSelectedFriends.push({
@@ -292,7 +285,7 @@ export default function cart(props) {
 				})
 			}
 
-			setNumSelectedFriends(numSelectedFriends + 1)
+			setNumselectedfriends(numSelectedFriends + 1)
 		} else {
 			selected.key = "selected-friend-0"
 			newSelectedFriends = [{
@@ -304,10 +297,8 @@ export default function cart(props) {
 					{ key: "selected-friend-3" }
 				]
 			}]
-			setNumSelectedFriends(1)
+			setNumselectedfriends(1)
 		}
-
-		setSelectedFriends(newSelectedFriends)
 	}
 	const deselectFriend = (userid) => {
 		let list = [...selectedFriends]
@@ -343,7 +334,7 @@ export default function cart(props) {
 		}
 
 		setSelectedFriends(newList)
-		setNumSelectedFriends(numSelectedFriends - 1)
+		setNumselectedfriends(numSelectedFriends - 1)
 	}
 	const openFriendsCart = async() => {
 		let newOrderingItem = {...orderingItem}
@@ -388,7 +379,7 @@ export default function cart(props) {
 			.then((res) => {
 				if (res) {
 					setSelectedFriends(res.searchedFriends)
-					setNumSelectedFriends(res.numSearchedFriends)
+					setNumselectedfriends(res.numSearchedFriends)
 					setOrderingItem(res.orderingItem)
 					setOpenfriendscart(true)
 					setIteminfo({ ...itemInfo, cartid })
@@ -506,6 +497,7 @@ export default function cart(props) {
 											</View>
 											<View style={style.itemInfos}>
 												<Text style={style.itemName}>{item.name}</Text>
+
 												{item.options.map((option, infoindex) => (
 													<Text key={option.key} style={style.itemInfo}>
 														<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
@@ -533,8 +525,8 @@ export default function cart(props) {
 												))}
 											</View>
 											<View>
-												<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
-												<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>price:</Text> ${item.price}</Text>
+												<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+												<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Cost:</Text> ${item.cost.toFixed(2)}</Text>
 											</View>
 										</View>
 
@@ -758,34 +750,55 @@ export default function cart(props) {
 							<TextInput style={style.friendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
 
 							<View style={style.friendsListContainer}>
-								<View style={{ overflow: 'hidden' }}>
+								<View style={{ height: '50%', overflow: 'hidden' }}>
+									<Text style={style.friendsHeader}>{numDiners} Searched Friend(s)</Text>
+
+									<FlatList
+										data={friends}
+										renderItem={({ item, index }) => 
+											<View key={item.key} style={style.row}>
+												{item.row.map(friend => (
+													friend.username ? 
+														<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
+															<View style={style.friendProfileHolder}>
+																<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+															</View>
+															<Text style={style.friendName}>{friend.username}</Text>
+														</TouchableOpacity>
+														:
+														<View key={friend.key} style={style.friend}></View>
+												))}
+											</View>
+										}
+									/>
+								</View>
+
+								<View style={{ height: '50%', overflow: 'hidden' }}>
 									{selectedFriends.length > 0 && (
 										<>
 											<Text style={style.selectedFriendsHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
 
-											<View>
-												<FlatList
-													data={selectedFriends}
-													renderItem={({ item, index }) => 
-														<View key={item.key} style={style.row}>
-															{item.row.map(friend => (
-																friend.username ? 
-																	<View key={friend.key} style={style.friend}>
-																		<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
-																			<AntDesign name="closecircleo" size={15}/>
-																		</TouchableOpacity>
-																		<View style={style.friendProfileHolder}>
-																			<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																		</View>
-																		<Text style={style.friendName}>{friend.username}</Text>
+											<FlatList
+												data={selectedFriends}
+												renderItem={({ item, index }) => 
+													<View key={item.key} style={style.row}>
+														{item.row.map(friend => (
+															friend.username ? 
+																<View key={friend.key} style={style.friend}>
+																	<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
+																		<AntDesign name="closecircleo" size={15}/>
+																	</TouchableOpacity>
+																	<View style={style.friendProfileHolder}>
+																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
 																	</View>
-																	:
-																	<View key={friend.key} style={style.friend}></View>
-															))}
-														</View>
-													}
-												/>
-											</View>
+																	<Text style={style.friendName}>{friend.username}</Text>
+																</View>
+																:
+																<View key={friend.key} style={style.friend}></View>
+														))}
+													</View>
+												}
+											/>
 										</>
 									)}
 								</View>
@@ -794,7 +807,7 @@ export default function cart(props) {
 							<View>
 								<View style={style.itemContainer}>
 									<View style={style.orderingItemImageHolder}>
-										<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
+										<Image style={{ height: 50, width: 50 }} source={{ uri: logo_url + orderingItem.image }}/>
 									</View>
 									<View style={style.itemInfos}>
 										<Text style={style.orderingItemName}>{orderingItem.name}</Text>
@@ -827,7 +840,7 @@ export default function cart(props) {
 									</View>
 									<View>
 										<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
-										<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost}</Text>
+										<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost.toFixed(2)}</Text>
 									</View>
 								</View>
 
@@ -838,7 +851,7 @@ export default function cart(props) {
 										<TouchableOpacity style={style.action} onPress={() => {
 											setOpenfriendscart(false)
 											setSelectedFriends([])
-											setNumSelectedFriends(0)
+											setNumselectedfriends(0)
 											setErrormsg('')
 										}}>
 											<Text style={style.actionHeader}>Close</Text>
@@ -851,47 +864,6 @@ export default function cart(props) {
 							</View>
 						</View>
 					</View>
-
-					{openSearchfriendslist && (
-						<Modal transparent={true}>
-							<View style={style.searchFriendsHidden}>
-								<View style={style.searchFriendsBox}>
-									<View style={{ alignItems: 'center', width: '100%' }}>
-										<TouchableOpacity style={style.close} onPress={() => setOpensearchfriendslist(false)}>
-											<AntDesign name="closecircleo" size={30}/>
-										</TouchableOpacity>
-									</View>
-
-									<TextInput style={style.searchFriendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} value={friendUsername}/>
-
-									<View style={{ overflow: 'hidden' }}>
-										<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
-
-										<View>
-											<FlatList
-												data={friends}
-												renderItem={({ item, index }) => 
-													<View key={item.key} style={style.row}>
-														{item.row.map(friend => (
-															friend.username ? 
-																<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
-																	<View style={style.friendProfileHolder}>
-																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																	</View>
-																	<Text style={style.friendName}>{friend.username}</Text>
-																</TouchableOpacity>
-																:
-																<View key={friend.key} style={style.friend}></View>
-														))}
-													</View>
-												}
-											/>
-										</View>
-									</View>
-								</View>
-							</View>
-						</Modal>
-					)}
 				</Modal>
 			)}
 		</View>
@@ -1002,21 +974,17 @@ const style = StyleSheet.create({
 	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 
-	
-
 	// friends list
 	friendsList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	friendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
 	friendsListContainer: { flexDirection: 'column', height: screenHeight - 270, justifyContent: 'space-between' },
+	selectedFriendsHeader: { fontWeight: 'bold', textAlign: 'center' },
 	friendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
 	friend: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
 	friendDelete: { marginBottom: -5, marginLeft: 60 },
 	friendProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
 	friendName: { textAlign: 'center' },
-
-	// selected friends list
-	selectedFriendsHeader: { fontWeight: 'bold', textAlign: 'center' },
 
 	// ordering item
 	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: 150, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
@@ -1025,7 +993,7 @@ const style = StyleSheet.create({
 	itemInfo: { fontSize: 15 },
 	itemHeader: { fontSize: 15 },
 
-	friendErrorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 5, textAlign: 'center' },
+	friendErrorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
 
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 70 },

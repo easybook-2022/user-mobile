@@ -56,6 +56,10 @@ export const seeOrders = id => {
 	return axios.get(`${wifi_api_url}/schedules/see_orders/${id}`)
 }
 
+export const editDiners = id => {
+	return axios.get(`${wifi_api_url}/schedules/edit_diners/${id}`)
+}
+
 export const sendOrders = id => {
 	return axios.get(`${wifi_api_url}/schedules/send_orders/${id}`)
 }
@@ -63,6 +67,13 @@ export const sendOrders = id => {
 export const editOrder = data => {
 	return axios.post(
 		`${wifi_api_url}/schedules/edit_order`,
+		data
+	)
+}
+
+export const deleteOrder = data => {
+	return axios.post(
+		`${wifi_api_url}/schedules/delete_order`,
 		data
 	)
 }

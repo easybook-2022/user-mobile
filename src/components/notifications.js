@@ -274,26 +274,26 @@ export default function notifications(props) {
 														item.booker ? 
 															<Text style={style.itemServiceHeader}>
 																You requested a reservation for 
-																{'\n'}
-																<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
-																{'\n'}on{'\n'}
-																<Text style={{ fontFamily: 'appFont' }}>{displayTimeStr(item.time)}</Text>
+																you and other {item.diners - 1} {(item.diners - 1) == 1 ? 'person' : 'people'}
+																{'\n'}at{'\n'}
+																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
+																{'\n'}at{'\n'}
+																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
 															</Text>
 															:
 															<Text style={style.itemServiceHeader}>
-																{item.bookerName} made a reservation for you and {item.diners - 1} other {''}
-																{(item.diners - 1) > 1 ? 'people' : 'person'} at 
-																<Text style={{ fontFamily: 'appFont' }}>{'\n' + item.location}</Text>
+																{item.bookerName} made a reservation for you at 
+																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{'\n' + item.location}</Text>
 																{'\n'}at{'\n'} 
-																<Text style={{ fontFamily: 'appFont' }}>{displayTimeStr(item.time)}</Text>
+																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
 															</Text>
 														:
 														<Text style={style.itemServiceHeader}>You requested an appointment for {' '}
-															<Text style={{ fontFamily: 'appFont' }}>{item.service}</Text>
+															<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.service}</Text>
 															{'\n'}at{'\n'}
-															<Text style={{ fontFamily: 'appFont' }}>{item.location}</Text>
+															<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
 															{'\n'}on{'\n'}
-															<Text style={{ fontFamily: 'appFont' }}>{displayTimeStr(item.time)}</Text>
+															<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
 														</Text>
 													}
 													{item.action == "accepted" && (

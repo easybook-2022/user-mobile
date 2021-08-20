@@ -37,11 +37,9 @@ export default function itemProfile(props) {
 	const [openFriendscart, setOpenfriendscart] = useState(false)
 	const [friends, setFriends] = useState([])
 	const [numFriends, setNumfriends] = useState(0)
-	const [friendUsername, setFriendusername] = useState('')
-	const [openSearchfriendslist, setOpensearchfriendslist] = useState(false)
 	const [selectedFriends, setSelectedFriends] = useState([])
 	const [numSelectedFriends, setNumSelectedFriends] = useState(0)
-	const [orderingItem, setOrderingItem] = useState({ name: "", image: "", options: [], others: [], sizes: [], quantity: 0, cost: 0 })
+	const [orderingItem, setOrderingitem] = useState({ name: "", image: "", options: [], others: [], sizes: [], quantity: 0, cost: 0 })
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(2)
@@ -239,11 +237,6 @@ export default function itemProfile(props) {
 				if (res) {
 					setFriends(res.searchedFriends)
 					setNumfriends(res.numSearchedFriends)
-					setFriendusername(username)
-
-					if (!openSearchfriendslist) {
-						setOpensearchfriendslist(true)
-					}
 				}
 			})
 	}
@@ -380,7 +373,7 @@ export default function itemProfile(props) {
 			newOrderingItem.cost = price.toFixed(2)
 
 			setOpenfriendscart(true)
-			setOrderingItem(newOrderingItem)
+			setOrderingitem(newOrderingItem)
 			setErrormsg('')
 		} else {
 			setErrormsg("Please choose a size")
@@ -536,38 +529,59 @@ export default function itemProfile(props) {
 			{openFriendscart && (
 				<Modal>
 					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.friendsList}>
-							<TextInput style={style.friendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} value={friendUsername}/>
+						<View style={style.usersList}>
+							<TextInput style={style.userNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
 
-							<View style={style.friendsListContainer}>
-								<View style={{ overflow: 'hidden' }}>
+							<View style={style.usersListContainer}>
+								<View style={{ height: '50%', overflow: 'hidden' }}>
+									<Text style={style.usersHeader}>{numFriends} Searched Friend(s)</Text>
+
+									<FlatList
+										data={friends}
+										renderItem={({ item, index }) => 
+											<View key={item.key} style={style.row}>
+												{item.row.map(friend => (
+													friend.username ? 
+														<TouchableOpacity key={friend.key} style={style.user} onPress={() => selectFriend(friend.id)}>
+															<View style={style.userProfileHolder}>
+																<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+															</View>
+															<Text style={style.userName}>{friend.username}</Text>
+														</TouchableOpacity>
+														:
+														<View key={friend.key} style={style.user}></View>
+												))}
+											</View>
+										}
+									/>
+								</View>
+
+								<View style={{ height: '50%', overflow: 'hidden' }}>
 									{selectedFriends.length > 0 && (
 										<>
-											<Text style={style.selectedFriendsHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
+											<Text style={style.selectedUsersHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
 
-											<View>
-												<FlatList
-													data={selectedFriends}
-													renderItem={({ item, index }) => 
-														<View key={item.key} style={style.row}>
-															{item.row.map(friend => (
-																friend.username ? 
-																	<View key={friend.key} style={style.friend}>
-																		<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
-																			<AntDesign name="closecircleo" size={15}/>
-																		</TouchableOpacity>
-																		<View style={style.friendProfileHolder}>
-																			<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																		</View>
-																		<Text style={style.friendName}>{friend.username}</Text>
+											<FlatList
+												data={selectedFriends}
+												renderItem={({ item, index }) => 
+													<View key={item.key} style={style.row}>
+														{item.row.map(friend => (
+															friend.username ? 
+																<View key={friend.key} style={style.user}>
+																	<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
+																		<AntDesign name="closecircleo" size={15}/>
+																	</TouchableOpacity>
+																	<View style={style.userProfileHolder}>
+																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
 																	</View>
-																	:
-																	<View key={friend.key} style={style.friend}></View>
-															))}
-														</View>
-													}
-												/>
-											</View>
+																	<Text style={style.userName}>{friend.username}</Text>
+																</View>
+																:
+																<View key={friend.key} style={style.user}></View>
+														))}
+													</View>
+												}
+											/>
 										</>
 									)}
 								</View>
@@ -631,47 +645,6 @@ export default function itemProfile(props) {
 							</View>
 						</View>
 					</View>
-
-					{openSearchfriendslist && (
-						<Modal transparent={true}>
-							<View style={style.searchFriendsHidden}>
-								<View style={style.searchFriendsBox}>
-									<View style={{ alignItems: 'center', width: '100%' }}>
-										<TouchableOpacity style={style.close} onPress={() => setOpensearchfriendslist(false)}>
-											<AntDesign name="closecircleo" size={30}/>
-										</TouchableOpacity>
-									</View>
-
-									<TextInput style={style.searchFriendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} value={friendUsername}/>
-
-									<View style={{ overflow: 'hidden' }}>
-										<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
-
-										<View>
-											<FlatList
-												data={friends}
-												renderItem={({ item, index }) => 
-													<View key={item.key} style={style.row}>
-														{item.row.map(friend => (
-															friend.username ? 
-																<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
-																	<View style={style.friendProfileHolder}>
-																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																	</View>
-																	<Text style={style.friendName}>{friend.username}</Text>
-																</TouchableOpacity>
-																:
-																<View key={friend.key} style={style.friend}></View>
-														))}
-													</View>
-												}
-											/>
-										</View>
-									</View>
-								</View>
-							</View>
-						</Modal>
-					)}
 				</Modal>
 			)}
 		</View>
@@ -692,7 +665,7 @@ const style = StyleSheet.create({
 	infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
 
 	// amount
-	amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
+	amount: { backgroundColor: 'blue', flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	amountAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
 	amountHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
 
@@ -743,20 +716,20 @@ const style = StyleSheet.create({
 	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 
-	// friends list
-	friendsList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	friendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
-	friendsListContainer: { flexDirection: 'column', height: screenHeight - 270, justifyContent: 'space-between' },
-	friendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	// users list
+	usersList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	userNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
+	usersListContainer: { flexDirection: 'column', height: screenHeight - 230, justifyContent: 'space-between' },
+	usersHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
-	friend: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
-	friendDelete: { marginBottom: -5, marginLeft: 60 },
-	friendProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
-	friendName: { textAlign: 'center' },
-	selectedFriendsHeader: { fontWeight: 'bold', textAlign: 'center' },
+	user: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
+	userDelete: { marginBottom: -5, marginLeft: 60 },
+	userProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
+	userName: { textAlign: 'center' },
+	selectedUsersHeader: { fontWeight: 'bold', textAlign: 'center' },
 
 	// ordering item
-	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: 150, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
+	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: 130, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
 	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
 	itemInfo: { fontSize: 15 },

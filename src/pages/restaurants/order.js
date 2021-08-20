@@ -6,7 +6,7 @@ import { searchFriends, searchDiners } from '../../apis/users'
 import { getLocationProfile, getInfo } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
 import { getProducts, getProductInfo } from '../../apis/products'
-import { getScheduleInfo, addItemtoorder, seeOrders, sendOrders, editOrder, updateOrder, addDiners, editOrderCallfor, updateOrderCallfor } from '../../apis/schedules'
+import { getScheduleInfo, addItemtoorder, seeOrders, editDiners, sendOrders, editOrder, deleteOrder, updateOrder, addDiners, editOrderCallfor, updateOrderCallfor } from '../../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -21,26 +21,31 @@ export default function order(props) {
 	const [locationId, setLocationid] = useState('')
 	const [timeStr, setTimestr] = useState('')
 	const [name, setName] = useState('')
+	const [totalDiners, setTotaldiners] = useState(0)
 	const [menuTrack, setMenutrack] = useState([])
 	const [menuId, setMenuid] = useState('')
 
 	const [itemInfo, setIteminfo] = useState({ 
 		show: false, productid: "", orderid: "", name: "", info: "", note: "", 
-		image: "", price: "", options: [], quantity: 1, 
+		image: "", price: 0, cost: 0, options: [], others: [], sizes: [], quantity: 1, 
 		errorMsg: ""
+	})
+	const [deleteRequestInfo, setDeleterequestinfo] = useState({
+		show: false, orderid: "", name: "", info: "", note: "", 
+		image: "", cost: 0, options: [], others: [], sizes: [], quantity: 1
 	})
 	const [rounds, setRounds] = useState([])
 
 	const [openRounds, setOpenrounds] = useState(false)
 	const [numOrders, setNumorders] = useState(2)
-	const [orderingItem, setOrderingItem] = useState({ name: "", info: "", image: "", note: "", options: [], quantity: 1, price: 0, errorMsg: "" })
+	const [orderingItem, setOrderingitem] = useState({ name: "", info: "", image: "", note: "", options: [], others: [], sizes: [], quantity: 1, cost: 0, errorMsg: "" })
 
 	// diners list to order for
 	const [openDiners, setOpendiners] = useState(false)
 	const [diners, setDiners] = useState([])
 	const [numDiners, setNumdiners] = useState(0)
-	const [selectedDiners, setSelectedDiners] = useState([])
-	const [numSelectedDiners, setNumSelectedDiners] = useState(0)
+	const [selectedDiners, setSelecteddiners] = useState([])
+	const [numSelecteddiners, setNumselecteddiners] = useState(0)
 
 	// friends list to add
 	const [openFriends, setOpenfriends] = useState(false)
@@ -75,6 +80,7 @@ export default function order(props) {
 
 					setLocationid(scheduleInfo.locationId)
 					setName(scheduleInfo.name)
+					setTotaldiners(scheduleInfo.numdiners)
 
 					let date = new Date(unix).toString().split(" ")
 					let time = date[4].split(":")
@@ -84,6 +90,7 @@ export default function order(props) {
 					let period = hour > 12 ? "PM" : "AM"
 
 					hour = hour > 12 ? hour - 12 : hour
+					hour = parseInt(hour)
 
 					setTimestr(hour + ":" + minute + " " + period)
 					getTheLocationProfile(scheduleInfo.locationId)
@@ -209,17 +216,17 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { image, info, name, options, price } = res.productInfo
+					const { image, info, name, options, others, sizes, price, cost } = res.productInfo
 
 					setIteminfo({
 						...itemInfo,
-						show: true, productid, name, info, image, price, options
+						show: true, productid, name, info, image, price, options, others, sizes, cost
 					})
 				}
 			})
 	}
 
-	const seeOrders = async() => {
+	const seeTheOrders = async() => {
 		seeOrders(scheduleid)
 			.then((res) => {
 				if (res.status == 200) {
@@ -230,6 +237,21 @@ export default function order(props) {
 				if (res) {
 					setRounds(res.rounds)
 					setOpenrounds(true)
+				}
+			})
+	}
+	const editTheDiners = async() => {
+		editDiners(scheduleid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setSelecteddiners(res.diners)
+					setNumselecteddiners(res.numdiners)
+					setOpenfriends(true)
 				}
 			})
 	}
@@ -244,34 +266,81 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, info, image, quantity, options, note, price } = res.orderInfo
+					const { name, info, image, quantity, options, others, sizes, note, price, cost } = res.orderInfo
 
 					setIteminfo({
 						...itemInfo,
 						show: true,
 						orderid,
 						name, info, image,
-						quantity, note, options,
-						price
+						quantity, note, 
+						options, others, sizes, 
+						price, cost
 					})
 					setOpenrounds(false)
 				}
 			})
 	}
+	const deleteTheOrder = async(orderid) => {
+		if (!deleteRequestInfo.show) {
+			rounds.forEach(function (round) {
+				round.round.forEach(function (orders) {
+					orders.orders.forEach(function (order) {
+						if (order.id == orderid) {
+							const { cost, image, name, note, options, others, sizes } = order
+
+							setDeleterequestinfo({
+								...deleteRequestInfo,
+								show: true, 
+								orderid, cost, image, name, 
+								note, options, others, sizes
+							})
+						}
+					})
+				}) 
+			})
+		} else {
+			const { orderid } = deleteRequestInfo
+			const data = { scheduleid, orderid }
+
+			console.log(data)
+
+			deleteOrder(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						setDeleterequestinfo({ ...deleteRequestInfo, show: false })
+						seeTheOrders()
+					}
+				})
+		}
+	}
 	const updateTheOrder = async() => {
-		const { orderid, quantity, options, note } = itemInfo
+		const { orderid, quantity, options, others, sizes, note } = itemInfo
 		const newOptions = JSON.parse(JSON.stringify(options))
+		const newOthers = JSON.parse(JSON.stringify(others))
+		const newSizes = JSON.parse(JSON.stringify(sizes))
 		const data = { scheduleid, orderid, quantity, note }
 
 		newOptions.forEach(function (option) {
 			delete option['key']
+		})
 
-			if (option['options']) {
-				delete option['options']
-			}
+		newOthers.forEach(function (other) {
+			delete other['key']
+		})
+
+		newSizes.forEach(function (size) {
+			delete size['key']
 		})
 
 		data['options'] = newOptions
+		data['others'] = newOthers
+		data['sizes'] = newSizes
 
 		updateOrder(data)
 			.then((res) => {
@@ -287,15 +356,7 @@ export default function order(props) {
 			})
 	}
 
-	const changeOption = (index, selected) => {
-		let { options } = itemInfo
-		let newOptions = [...options]
-
-		newOptions[index].selected = selected
-
-		setIteminfo({ ...itemInfo, options: newOptions })
-	}
-	const changeQuantity = (index, action) => {
+	const changeAmount = (index, action) => {
 		let { options } = itemInfo
 		let newOptions = [...options]
 		let { selected } = newOptions[index]
@@ -321,14 +382,85 @@ export default function order(props) {
 			setIteminfo({ ...itemInfo, options: newOptions })
 		}
 	}
+	const selectSize = (index) => {
+		let { sizes, others, quantity } = itemInfo
+		let newSizes = [...sizes]
+		let newCost = 0
+
+		newSizes.forEach(function (size) {
+			if (size.selected) {
+				size.selected = false
+			}
+		})
+
+		newCost = quantity * parseFloat(newSizes[index].price)
+
+		others.forEach(function (other) {
+			if (other.selected) {
+				newCost += parseFloat(other.price)
+			}
+		})
+
+		newSizes[index].selected = true
+		
+		setIteminfo({ ...itemInfo, sizes: newSizes, cost: newCost })
+	}
+	const selectOther = (index) => {
+		let { others, cost } = itemInfo
+		let newOthers = [...others]
+		let newCost = parseFloat(cost)
+
+		newOthers.forEach(function (other, otherindex) {
+			if (otherindex == index) {
+				if (other.selected) {
+					newCost -= parseFloat(other.price)
+				} else {
+					newCost += parseFloat(other.price)
+				}
+
+				other.selected = !other.selected
+			}
+		})
+
+		setIteminfo({ ...itemInfo, others: newOthers, cost: newCost })
+	}
+	const changeQuantity = (action) => {
+		let { quantity, price, sizes, others } = itemInfo
+		let newQuantity = quantity
+		let newCost = 0
+
+		newQuantity = action == "+" ? newQuantity + 1 : newQuantity - 1
+		newQuantity = newQuantity == 0 ? 1 : newQuantity
+
+		if (sizes.length > 0) {
+			sizes.forEach(function (size) {
+				if (size.selected) {
+					newCost = newQuantity * parseFloat(size.price)
+				}
+			})
+		} else {
+			newCost = newQuantity * parseFloat(price)
+		}
+
+		others.forEach(function (other) {
+			if (other.selected) {
+				newCost += parseFloat(other.price)
+			}
+		})
+
+		setIteminfo({ ...itemInfo, quantity: newQuantity, cost: newCost })
+	}
 
 	const addOrder = async() => {
 		const userid = await AsyncStorage.getItem("userid")
-		let { productid, name, info, note, image, price, options, quantity } = itemInfo
-		let callfor = [], newOptions = JSON.parse(JSON.stringify(options))
+		let { productid, name, info, note, image, price, options, others, sizes, quantity } = itemInfo
+		let newOptions = JSON.parse(JSON.stringify(options))
+		let newOthers = JSON.parse(JSON.stringify(others))
+		let newSizes = JSON.parse(JSON.stringify(sizes))
+		let callfor = []
 
 		if (openDiners && selectedDiners.length == 0) {
-			setOrderingItem({ ...orderingItem, errorMsg: "You didn't select anyone" })
+			setOrderingitem({ ...orderingItem, errorMsg: "You didn't select anyone" })
 		} else {
 			selectedDiners.forEach(function (info) {
 				info.row.forEach(function (diner) {
@@ -340,13 +472,17 @@ export default function order(props) {
 
 			newOptions.forEach(function (option) {
 				delete option['key']
-
-				if (option['options']) {
-					delete option['options']
-				}
 			})
 
-			const data = { userid, scheduleid, productid, quantity, callfor, options: newOptions, note }
+			newOthers.forEach(function (other) {
+				delete other['key']
+			})
+
+			newSizes.forEach(function (size) {
+				delete size['key']
+			})
+
+			const data = { userid, scheduleid, productid, quantity, callfor, options: newOptions, others: newOthers, sizes: newSizes, note }
 
 			addItemtoorder(data)
 				.then((res) => {
@@ -354,7 +490,7 @@ export default function order(props) {
 						if (!res.data.errormsg) {
 							return res.data
 						} else {
-							setOrderingItem({ ...orderingItem, errorMsg: res.data.errormsg })
+							setIteminfo({ ...itemInfo, errorMsg: res.data.errormsg })
 						}
 					}
 				})
@@ -362,15 +498,15 @@ export default function order(props) {
 					if (res) {
 						setOpendiners(false)
 						setIteminfo({ ...itemInfo, show: false })
-						seeOrders()
+						seeTheOrders()
 					}
 				})
 		}
 	}
 	const showOrders = () => {
 		setOpendiners(false)
-		setSelectedDiners([])
-		setNumSelectedDiners(0)
+		setSelecteddiners([])
+		setNumselecteddiners(0)
 		setOpenrounds(true)
 		setNumorders(numOrders + 1)
 	}
@@ -430,7 +566,7 @@ export default function order(props) {
 
 			if (unfill) {
 				newSelectedDiners[newSelectedDiners.length - 1].row = last_row
-				setNumSelectedDiners(numSelectedDiners + 1)
+				setNumselecteddiners(numSelecteddiners + 1)
 			} else {
 				selected.key = "selected-diner-" + next_key
 				newSelectedDiners.push({
@@ -444,7 +580,7 @@ export default function order(props) {
 				})
 			}
 
-			setNumSelectedDiners(numSelectedDiners + 1)
+			setNumselecteddiners(numSelecteddiners + 1)
 		} else {
 			selected.key = "selected-diner-0"
 			newSelectedDiners = [{
@@ -456,10 +592,10 @@ export default function order(props) {
 					{ key: "selected-diner-3" }
 				]
 			}]
-			setNumSelectedDiners(1)
+			setNumselecteddiners(1)
 		}
 
-		setSelectedDiners(newSelectedDiners)
+		setSelecteddiners(newSelectedDiners)
 	}
 	const deselectDiner = (userid) => {
 		let list = [...selectedDiners]
@@ -494,8 +630,8 @@ export default function order(props) {
 			newList.push({ key: "selected-diner-row-" + (newList.length), row })
 		}
 
-		setSelectedDiners(newList)
-		setNumSelectedDiners(numSelectedDiners - 1)
+		setSelecteddiners(newList)
+		setNumselecteddiners(numSelecteddiners - 1)
 	}
 
 	const getFriendsList = async(username) => {
@@ -517,11 +653,11 @@ export default function order(props) {
 	}
 	const selectFriend = (userid) => {
 		let newFriends = [...friends]
-		let newSelectedFriends = [...selectedFriends]
-		let selected = { id: "", key: "", profile: "", username: "" }
+		let newSelectedDiners = [...selectedDiners]
+		let selected = { id: "", key: "", profile: "", username: "", status: "new" }
 		let last_row = null, next_key = null, unfill = false
 
-		if (JSON.stringify(newSelectedFriends).includes("\"id\":" + userid + ",")) {
+		if (JSON.stringify(newSelectedDiners).includes("\"id\":" + userid + ",")) {
 			return
 		}
 
@@ -536,15 +672,15 @@ export default function order(props) {
 			})
 		})
 
-		if (newSelectedFriends.length > 0) {
-			last_row = newSelectedFriends[newSelectedFriends.length - 1].row
+		if (newSelectedDiners.length > 0) {
+			last_row = newSelectedDiners[newSelectedDiners.length - 1].row
 
 			for (k in last_row) {
 				if (last_row[k].id) {
 					next_key = parseInt(last_row[k].key.split("-").pop()) + 1
 				} else {
 					unfill = true
-					selected.key = "selected-friend-" + next_key
+					selected.key = "selected-diner-" + next_key
 					last_row[k] = selected
 					next_key += 1
 
@@ -553,40 +689,40 @@ export default function order(props) {
 			}
 
 			if (unfill) {
-				newSelectedFriends[newSelectedFriends.length - 1].row = last_row
-				setNumselectedfriends(numSelectedfriends + 1)
+				newSelectedDiners[newSelectedDiners.length - 1].row = last_row
+				setNumselecteddiners(numSelecteddiners + 1)
 			} else {
-				selected.key = "selected-friend-" + next_key
-				newSelectedFriends.push({
-					key: "selected-friend-row-" + (newSelectedFriends.length),
+				selected.key = "selected-diner-" + next_key
+				newSelectedDiners.push({
+					key: "selected-diner-row-" + (newSelectedDiners.length),
 					row: [
 						selected,
-						{ key: "selected-friend-" + (next_key + 1) },
-						{ key: "selected-friend-" + (next_key + 2) },
-						{ key: "selected-friend-" + (next_key + 3) }
+						{ key: "selected-diner-" + (next_key + 1) },
+						{ key: "selected-diner-" + (next_key + 2) },
+						{ key: "selected-diner-" + (next_key + 3) }
 					]
 				})
 			}
 
-			setNumselectedfriends(numSelectedfriends + 1)
+			setNumselecteddiners(numSelecteddiners + 1)
 		} else {
-			selected.key = "selected-friend-0"
-			newSelectedFriends = [{
-				key: "selected-friend-row-0",
+			selected.key = "selected-diner-0"
+			newSelectedDiners = [{
+				key: "selected-diner-row-0",
 				row: [
 					selected,
-					{ key: "selected-friend-1" },
-					{ key: "selected-friend-2" },
-					{ key: "selected-friend-3" }
+					{ key: "selected-diner-1" },
+					{ key: "selected-diner-2" },
+					{ key: "selected-diner-3" }
 				]
 			}]
-			setNumselectedfriends(1)
+			setNumselecteddiners(1)
 		}
 
-		setSelectedfriends(newSelectedFriends)
+		setSelecteddiners(newSelectedDiners)
 	}
 	const deselectFriend = (userid) => {
-		let list = [...selectedFriends]
+		let list = [...selectedDiners]
 		let last_row = list[list.length - 1].row
 		let newList = [], row = [], info, num = 0
 
@@ -594,15 +730,16 @@ export default function order(props) {
 			listitem.row.forEach(function (info) {
 				if (info.id && info.id != userid) {
 					row.push({
-						key: "selected-friend-" + num,
+						key: "selected-diner-" + num,
 						id: info.id,
 						profile: info.profile,
-						username: info.username
+						username: info.username,
+						status: info.status
 					})
 					num++
 
 					if (row.length == 4) {
-						newList.push({ key: "selected-friend-row-" + (newList.length), row })
+						newList.push({ key: "selected-diner-row-" + (newList.length), row })
 						row = []
 					}
 				}
@@ -611,23 +748,23 @@ export default function order(props) {
 
 		if (row.length > 0) {
 			while (row.length < 4) {
-				row.push({ key: "selected-friend-" + num })
+				row.push({ key: "selected-diner-" + num })
 				num++
 			}
 
-			newList.push({ key: "selected-friend-row-" + (newList.length), row })
+			newList.push({ key: "selected-diner-row-" + (newList.length), row })
 		}
 
-		setSelectedfriends(newList)
-		setNumselectedfriends(numSelectedfriends - 1)
+		setSelecteddiners(newList)
+		setNumselecteddiners(numSelecteddiners - 1)
 	}
 	const addTheDiners = () => {
 		const diners = []
 
-		selectedFriends.forEach(function (info) {
+		selectedDiners.forEach(function (info) {
 			info.row.forEach(function (friend) {
 				if (friend.username) {
-					diners.push({ "userid": friend.id.toString(), "status": "waiting" })
+					diners.push({ "userid": friend.id.toString(), "status": friend.status == "confirm" ? "confirm" : "waiting" })
 				}
 			})
 		})
@@ -642,6 +779,7 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
+					setTotaldiners(diners.length)
 					setOpenfriends(false)
 					setSelectedfriends([])
 					setNumselectedfriends(0)
@@ -661,9 +799,9 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setSelectedDiners(res.searchedDiners)
-					setNumSelectedDiners(res.numSearchedDiners)
-					setOrderingItem(res.orderingItem)
+					setSelecteddiners(res.searchedDiners)
+					setNumselecteddiners(res.numSearchedDiners)
+					setOrderingitem(res.orderingItem)
 					setOpendiners(true)
 					setIteminfo({ ...itemInfo, orderid })
 					setOpenrounds(false)
@@ -721,38 +859,42 @@ export default function order(props) {
 	}
 	const openDinersOrder = async() => {
 		let newOrderingItem = {...orderingItem}
-		let { name, info, note, image, price, quantity, options } = itemInfo
+		let { name, info, note, image, price, quantity, options, others, sizes } = itemInfo
 		let newOptions = JSON.parse(JSON.stringify(options))
-		let empty = false
+		let newOthers = JSON.parse(JSON.stringify(others))
+		let newSizes = JSON.parse(JSON.stringify(sizes))
+		let totalprice = ""
 
-		newOptions.forEach(function (option) {
-			if (option["type"] == "size" && option["selected"] == "") {
-				empty = true
-			}
+		if (sizes.length > 0) {
+			sizes.forEach(function (size) {
+				if (size.selected) {
+					totalprice = parseFloat(size.price) * quantity
+				}
+			})
+		} else {
+			totalprice = price * quantity
+		}
 
-			if (option["options"]) {
-				delete option["options"]
-			}
-		})
-
-		if (!empty) {
+		if (totalprice) {
 			newOrderingItem.name = name
 			newOrderingItem.info = info
 			newOrderingItem.note = note
 			newOrderingItem.image = image
 			newOrderingItem.options = newOptions
+			newOrderingItem.others = newOthers
+			newOrderingItem.sizes = newSizes
 			newOrderingItem.quantity = quantity
-			newOrderingItem.price = (price * quantity).toFixed(2)
+			newOrderingItem.price = totalprice.toFixed(2)
 			newOrderingItem.errorMsg = ""
 
 			setOpendiners(true)
 			setIteminfo({ ...itemInfo, show: false })
-			setOrderingItem(newOrderingItem)
+			setOrderingitem(newOrderingItem)
 		} else {
 			setIteminfo({ ...itemInfo, errorMsg: "Please choose a size" })
 		}
 
-		setOrderingItem(newOrderingItem)
+		setOrderingitem(newOrderingItem)
 	}
 	const sendTheOrders = async() => {
 		sendOrders(scheduleid)
@@ -785,16 +927,16 @@ export default function order(props) {
 					Order your meals {'\n\n'} 
 					for your {''}
 					<Text style={{ fontWeight: 'bold' }}>{timeStr}</Text> 
-					{''} reservation {'\n\n'} at <Text style={{ fontWeight: 'bold' }}>{name}</Text>
+					{''} feast {'\n\n'} at <Text style={{ fontWeight: 'bold' }}>{name}</Text>
 				</Text>
 
 				<View style={{ alignItems: 'center', marginTop: 20 }}>
 					<View style={style.orderActions}>
-						<TouchableOpacity style={style.orderAction} onPress={() => seeOrders()}>
+						<TouchableOpacity style={style.orderAction} onPress={() => seeTheOrders()}>
 							<Text style={style.orderActionHeader}>See Order(s)</Text>
 						</TouchableOpacity>
-						<TouchableOpacity style={style.orderAction} onPress={() => setOpenfriends(true)}>
-							<Text style={style.orderActionHeader}>Add Diner</Text>
+						<TouchableOpacity style={style.orderAction} onPress={() => editTheDiners()}>
+							<Text style={style.orderActionHeader}>{totalDiners == 0 ? 'Add' : 'Edit'} Diner {totalDiners > 0 ? '(' + totalDiners + ')' : ''}</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -872,7 +1014,6 @@ export default function order(props) {
 						<View style={{ alignItems: 'center', marginVertical: 20 }}>
 							<TouchableOpacity style={style.itemClose} onPress={() => {
 								setIteminfo({ ...itemInfo, show: false })
-								setOpenrounds(true)
 							}}>
 								<AntDesign name="close" size={20}/>
 							</TouchableOpacity>
@@ -887,50 +1028,75 @@ export default function order(props) {
 							<Text style={style.boxItemHeaderInfo}>{itemInfo.info}</Text>
 
 							{itemInfo.options.map((option, index) => (
-								<View key={option.key} style={style.info}>
-									<Text style={style.infoHeader}>{option.header}:</Text>
+								<View key={option.key} style={{ alignItems: 'center' }}>
+									<View style={style.info}>
+										<Text style={style.infoHeader}>{option.header}:</Text>
 
-									{option.type == "size" && (
-										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-											<View style={style.options}>
-												{option.options.map((info, optindex) => (
-													<TouchableOpacity key={info.key} style={option.selected == info.header ? style.optionSelected : style.option} onPress={() => changeOption(index, info.header)}>
-														<Text style={option.selected == info.header ? style.optionSelectedHeader : style.optionHeader}>{info.header}</Text>
+										{option.type == "amount" && (
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={style.amount}>
+													<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
+														<Text style={style.amountActionHeader}>-</Text>
 													</TouchableOpacity>
-												))}
+													<Text style={style.amountHeader}>{option.selected}</Text>
+													<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
+														<Text style={style.amountActionHeader}>+</Text>
+													</TouchableOpacity>
+												</View>
 											</View>
-										</View>
-									)}
+										)}
 
-									{option.type == "quantity" && (
-										<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: width - 100 }}>
-											<View style={style.quantity}>
-												<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity(index, "-")}>
-													<Text style={style.quantityActionHeader}>-</Text>
-												</TouchableOpacity>
-												<Text style={style.quantityHeader}>{option.selected}</Text>
-												<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity(index, "+")}>
-													<Text style={style.quantityActionHeader}>+</Text>
-												</TouchableOpacity>
+										{option.type == "percentage" && (
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={style.percentage}>
+													<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
+														<Text style={style.percentageActionHeader}>-</Text>
+													</TouchableOpacity>
+													<Text style={style.percentageHeader}>{option.selected}%</Text>
+													<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
+														<Text style={style.percentageActionHeader}>+</Text>
+													</TouchableOpacity>
+												</View>
 											</View>
-										</View>
-									)}
-
-									{option.type == "percentage" && (
-										<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: width - 100 }}>
-											<View style={style.percentage}>
-												<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
-													<Text style={style.percentageActionHeader}>-</Text>
-												</TouchableOpacity>
-												<Text style={style.percentageHeader}>{option.selected}%</Text>
-												<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
-													<Text style={style.percentageActionHeader}>+</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									)}
+										)}
+									</View>
 								</View>
 							))}
+
+							{itemInfo.others.length > 0 && (
+								<View style={style.othersBox}>
+									<Text style={style.othersHeader}>Other options</Text>
+
+									<View style={style.others}>
+										{itemInfo.others.map((other, index) => (
+											<View key={other.key} style={{ alignItems: 'center' }}>
+												<View style={style.other}>
+													<Text style={style.otherName}># {other.name}:</Text>
+													<Text style={style.otherInput}>{other.input}</Text>
+													<TouchableOpacity style={other.selected ? style.otherTouchDisabled : style.otherTouch} onPress={() => selectOther(index)}></TouchableOpacity>
+												</View>
+											</View>
+										))}
+									</View>
+								</View>
+							)}
+
+							{itemInfo.sizes.length > 0 && (
+								<View style={style.sizesBox}>
+									<Text style={style.sizesHeader}>Select a Size</Text>
+
+									<View style={style.sizes}>
+										{itemInfo.sizes.map((size, index) => (
+											<View key={size.key} style={style.size}>
+												<TouchableOpacity style={size.selected ? style.sizeTouchDisabled : style.sizeTouch} onPress={() => selectSize(index)}>
+													<Text style={size.selected ? style.sizeTouchHeaderDisabled : style.sizeTouchHeader}>{size.name}</Text>
+												</TouchableOpacity>
+												<Text style={style.sizePrice}>$ {size.price}</Text>
+											</View>
+										))}
+									</View>
+								</View>
+							)}
 
 							<View style={style.note}>
 								<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false}/>
@@ -940,20 +1106,19 @@ export default function order(props) {
 								<View style={{ flexDirection: 'row' }}>
 									<Text style={style.quantityHeader}>Quantity</Text>
 									<View style={style.quantity}>
-										<TouchableOpacity style={style.quantityAction} onPress={() => setIteminfo({ ...itemInfo, quantity: itemInfo.quantity > 1 ? itemInfo.quantity - 1 : itemInfo.quantity })}>
+										<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("-")}>
 											<Text style={style.quantityActionHeader}>-</Text>
 										</TouchableOpacity>
 										<Text style={style.quantityHeader}>{itemInfo.quantity}</Text>
-										<TouchableOpacity style={style.quantityAction} onPress={() => setIteminfo({ ...itemInfo, quantity: itemInfo.quantity + 1 })}>
+										<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("+")}>
 											<Text style={style.quantityActionHeader}>+</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
 							</View>
 
-							<Text style={style.price}>Cost: $ {(itemInfo.price * itemInfo.quantity).toFixed(2)}</Text>
-
-							{itemInfo.errorMsg ? <Text style={style.errorMsg}>{itemInfo.errorMsg}</Text> : null}
+							<Text style={style.price}>Cost: $ {(itemInfo.cost).toFixed(2)}</Text>
+							<Text style={style.errorMsg}>{itemInfo.errorMsg}</Text>
 
 							<View style={style.itemActions}>
 								<View style={{ flexDirection: 'row' }}>
@@ -988,219 +1153,305 @@ export default function order(props) {
 							</TouchableOpacity>
 						</View>
 						<Text style={style.boxHeader}>Order(s)</Text>
-
-						<ScrollView style={{ height: screenHeight - 86 }}>
-							{rounds.map(round => (
-								<View style={style.round} key={round.key}>
-									{round.status == "ordering" ? 
-										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-											<View style={{ alignItems: 'center', flexDirection: 'row' }}>
-												<Text>Ready ?</Text>
-												<TouchableOpacity style={style.roundTouch} onPress={() => sendTheOrders()}>
-													<Text>Send to Kitchen</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-										:
-										<Text style={style.roundHeader}>This round is already sent</Text>
-									}
-									{round.round.map(orders => (
-										orders.orders.map(order => (
-											<View style={style.order} key={order.key}>
-												<View style={{ alignItems: 'center' }}>
-													<View style={style.orderItem} key={order.key}>
-														<View style={style.orderItemImageHolder}>
-															<Image source={{ uri: logo_url + order.image }} style={style.orderItemImage}/>
-														</View>
-														<Text style={style.orderItemName}>{order.name}</Text>
-
-														{order.options.map((option, infoindex) => (
-															<Text key={option.key} style={style.itemInfo}>
-																<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-																{option.selected}
-																{option.type == 'percentage' && '%'}
-															</Text>
-														))}
-
-														{order.others.map((other, otherindex) => (
-															other.selected ? 
-																<Text key={other.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-																	<Text>{other.input}</Text>
-																</Text>
-															: null
-														))}
-
-														{order.sizes.map((size, sizeindex) => (
-															size.selected ? 
-																<Text key={size.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-																	<Text>{size.name}</Text>
-																</Text>
-															: null
-														))}
-
-														<Text style={style.orderItemQuantity}>Quantity: {order.quantity}</Text>
-														<Text style={style.orderItemPrice}>Cost: $ {(order.price * order.quantity).toFixed(2)}</Text>
-													</View>
+						{rounds.length > 0 ? 
+							<ScrollView style={{ height: screenHeight - 86 }}>
+								{rounds.map(round => (
+									<View style={style.round} key={round.key}>
+										{round.status == "ordering" ? 
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={{ alignItems: 'center', flexDirection: 'row' }}>
+													<Text>Ready ?</Text>
+													<TouchableOpacity style={style.roundTouch} onPress={() => sendTheOrders()}>
+														<Text>Send to Kitchen</Text>
+													</TouchableOpacity>
 												</View>
-
-												{!round.sent && (
+											</View>
+											:
+											<Text style={style.roundHeader}>This round is already sent</Text>
+										}
+										{round.round.map(orders => (
+											orders.orders.map(order => (
+												<View style={style.order} key={order.key}>
 													<View style={{ alignItems: 'center' }}>
-														<TouchableOpacity style={style.itemChange} onPress={() => editTheOrder(order.id)}>
-															<Text style={style.itemChangeHeader}>Edit Order</Text>
-														</TouchableOpacity>
-													</View>
-												)}
+														<View style={style.orderItem} key={order.key}>
+															<View style={style.orderItemImageHolder}>
+																<Image source={{ uri: logo_url + order.image }} style={style.orderItemImage}/>
+															</View>
+															<Text style={style.orderItemName}>{order.name}</Text>
 
-												<View style={{ alignItems: 'center' }}>
-													<View style={style.orderersEdit}>
-														<Text style={style.orderersEditHeader}>Calling for {order.numorderers} {order.numorderers > 1 ? 'people' : 'person'}</Text>
-														{!round.sent && (
-															<TouchableOpacity style={style.orderersEditTouch} onPress={() => editTheOrderCallfor(order.id)}>
-																<Text style={style.orderersEditTouchHeader}>{order.orderers.length > 0 ? 'Edit' : 'Add'}</Text>
-															</TouchableOpacity>
-														)}
-													</View>
-												</View>
-
-												{order.orderers.length > 0 ? 
-													order.orderers.map(info => (
-														<View style={style.orderCallfor} key={info.key}>
-															{info.row.map(order => (
-																<View style={style.orderer} key={order.key}>
-																	<View style={style.ordererProfile}>
-																		<Image source={{ uri: logo_url + order.profile }} style={{ height: 50, width: 50 }}/>
-																	</View>
-																	<Text style={style.ordererUsername}>{order.username}</Text>
-																</View>
+															{order.options.map((option, infoindex) => (
+																<Text key={option.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+																	{option.selected}
+																	{option.type == 'percentage' && '%'}
+																</Text>
 															))}
+
+															{order.others.map((other, otherindex) => (
+																other.selected ? 
+																	<Text key={other.key} style={style.itemInfo}>
+																		<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+																		<Text>{other.input}</Text>
+																	</Text>
+																: null
+															))}
+
+															{order.sizes.map((size, sizeindex) => (
+																size.selected ? 
+																	<Text key={size.key} style={style.itemInfo}>
+																		<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+																		<Text>{size.name}</Text>
+																	</Text>
+																: null
+															))}
+
+															<Text style={style.orderItemQuantity}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{order.quantity}</Text>
+															<Text style={style.orderItemPrice}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(order.cost).toFixed(2)}</Text>
 														</View>
-													))
-													:
-													<Text style={style.orderCallforHeader}>Your order</Text>
-												}
-											</View>
-										))
-									))}
-								</View>
-							))}
-						</ScrollView>
+													</View>
+
+													{round.status == "ordering" && (
+														<View style={{ alignItems: 'center' }}>
+															<View style={{ flexDirection: 'row' }}>
+																<TouchableOpacity style={style.orderItemAction} onPress={() => editTheOrder(order.id)}>
+																	<Text style={style.orderItemActionHeader}>Edit Order</Text>
+																</TouchableOpacity>
+																<TouchableOpacity style={style.orderItemAction} onPress={() => deleteTheOrder(order.id)}>
+																	<Text style={style.orderItemActionHeader}>Delete Order</Text>
+																</TouchableOpacity>
+															</View>
+														</View>
+													)}
+
+													<View style={{ alignItems: 'center' }}>
+														<View style={style.orderersEdit}>
+															<Text style={style.orderersEditHeader}>Calling for {order.numorderers} {order.numorderers > 1 ? 'people' : 'person'}</Text>
+															{round.status == "ordering" && (
+																<TouchableOpacity style={style.orderersEditTouch} onPress={() => editTheOrderCallfor(order.id)}>
+																	<Text style={style.orderersEditTouchHeader}>{order.orderers.length > 0 ? 'Edit' : 'Add'}</Text>
+																</TouchableOpacity>
+															)}
+														</View>
+													</View>
+
+													{order.orderers.length > 0 ? 
+														order.orderers.map(info => (
+															<View style={style.orderCallfor} key={info.key}>
+																{info.row.map(order => (
+																	<View style={style.orderer} key={order.key}>
+																		<View style={style.ordererProfile}>
+																			<Image source={{ uri: logo_url + order.profile }} style={{ height: 50, width: 50 }}/>
+																		</View>
+																		<Text style={style.ordererUsername}>{order.username}</Text>
+																	</View>
+																))}
+															</View>
+														))
+														:
+														<Text style={style.orderCallforHeader}>Your order</Text>
+													}
+												</View>
+											))
+										))}
+									</View>
+								))}
+							</ScrollView>
+							:
+							<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 86, justifyContent: 'space-around' }}>
+								<Text>No rounds yet</Text>
+							</View>
+						}
 					</View>
+
+					{deleteRequestInfo.show && (
+						<Modal transparent={true}>
+							<View style={style.deleteOrderContainer}>
+								<View style={style.deleteOrderBox}>
+									<Text style={style.deleteOrderBoxHeader}>Delete order confirmation</Text>
+
+									<View style={style.deleteOrderImageHolder}>
+										<Image source={{ uri: logo_url + deleteRequestInfo.image }} style={style.deleteOrderImage}/>
+									</View>
+									<Text style={style.deleteOrderName}>{deleteRequestInfo.name}</Text>
+
+									<View>
+										{deleteRequestInfo.options.map((option, infoindex) => (
+											<Text key={option.key} style={style.itemInfo}>
+												<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+												{option.selected}
+												{option.type == 'percentage' && '%'}
+											</Text>
+										))}
+
+										{deleteRequestInfo.others.map((other, otherindex) => (
+											other.selected ? 
+												<Text key={other.key} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+													<Text>{other.input}</Text>
+												</Text>
+											: null
+										))}
+
+										{deleteRequestInfo.sizes.map((size, sizeindex) => (
+											size.selected ? 
+												<Text key={size.key} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+													<Text>{size.name}</Text>
+												</Text>
+											: null
+										))}
+									</View>
+
+									<View>
+										<Text style={style.deleteOrderQuantity}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{deleteRequestInfo.quantity}</Text>
+										<Text style={style.deleteOrderPrice}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(deleteRequestInfo.cost).toFixed(2)}</Text>
+									</View>
+
+									<Text style={style.deleteOrderHeader}>Are you sure you want to delete this order</Text>
+
+									<View style={style.deleteOrderActions}>
+										<TouchableOpacity style={style.deleteOrderAction} onPress={() => setDeleterequestinfo({ ...deleteRequestInfo, show: false })}>
+											<Text style={style.deleteOrderActionHeader}>Cancel</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.deleteOrderAction} onPress={() => deleteTheOrder()}>
+											<Text style={style.deleteOrderActionHeader}>Yes</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</Modal>
+					)}
 				</Modal>
 			)}
 
 			{openDiners && (
 				<Modal>
 					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.dinersList}>
-							<TextInput style={style.dinerNameInput} placeholder="Search diner to order for" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
+						<View style={style.usersList}>
+							<TextInput style={style.userNameInput} placeholder="Search diner to order for" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
 
-							<View style={style.dinersListContainer}>
+							<View style={style.usersListContainer}>
 								<View style={{ height: '50%', overflow: 'hidden' }}>
-									<Text style={style.dinersHeader}>{numDiners} Searched Diner(s)</Text>
+									<Text style={style.usersHeader}>{numDiners} Searched Diner(s)</Text>
 
-									<View>
-										<FlatList
-											data={diners}
-											renderItem={({ item, index }) => 
-												<View key={item.key} style={style.row}>
-													{item.row.map(diner => (
-														diner.username ? 
-															<TouchableOpacity key={diner.key} style={style.diner} onPress={() => selectDiner(diner.id)}>
-																<View style={style.dinerProfileHolder}>
-																	<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
-																</View>
-																<Text style={style.dinerName}>{diner.username}</Text>
-															</TouchableOpacity>
-															:
-															<View key={diner.key} style={style.diner}></View>
-													))}
-												</View>
-											}
-										/>
-									</View>
+									<FlatList
+										data={diners}
+										renderItem={({ item, index }) => 
+											<View key={item.key} style={style.row}>
+												{item.row.map(diner => (
+													diner.username ? 
+														<TouchableOpacity key={diner.key} style={style.user} onPress={() => selectDiner(diner.id)}>
+															<View style={style.userProfileHolder}>
+																<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
+															</View>
+															<Text style={style.userName}>{diner.username}</Text>
+														</TouchableOpacity>
+														:
+														<View key={diner.key} style={style.user}></View>
+												))}
+											</View>
+										}
+									/>
 								</View>
 							
 								<View style={{ height: '50%', overflow: 'hidden' }}>
 									{selectedDiners.length > 0 && (
 										<>
-											<Text style={style.selectedDinersHeader}>{numSelectedDiners} Selected Diner(s) to order this item</Text>
+											<Text style={style.selectedUsersHeader}>{numSelecteddiners} Selected Diner(s) to order this item</Text>
 
-											<View>
-												<FlatList
-													data={selectedDiners}
-													renderItem={({ item, index }) => 
-														<View key={item.key} style={style.row}>
-															{item.row.map(diner => (
-																diner.username ? 
-																	<View key={diner.key} style={style.diner}>
-																		<TouchableOpacity style={style.dinerDelete} onPress={() => deselectDiner(diner.id)}>
-																			<AntDesign name="closecircleo" size={15}/>
-																		</TouchableOpacity>
-																		<View style={style.dinerProfileHolder}>
-																			<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
-																		</View>
-																		<Text style={style.dinerName}>{diner.username}</Text>
+											<FlatList
+												data={selectedDiners}
+												renderItem={({ item, index }) => 
+													<View key={item.key} style={style.row}>
+														{item.row.map(diner => (
+															diner.username ? 
+																<View key={diner.key} style={style.user}>
+																	<TouchableOpacity style={style.userDelete} onPress={() => deselectDiner(diner.id)}>
+																		<AntDesign name="closecircleo" size={15}/>
+																	</TouchableOpacity>
+																	<View style={style.userProfileHolder}>
+																		<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
 																	</View>
-																	:
-																	<View key={diner.key} style={style.diner}></View>
-															))}
-														</View>
-													}
-												/>
-											</View>
+																	<Text style={style.userName}>{diner.username}</Text>
+																</View>
+																:
+																<View key={diner.key} style={style.user}></View>
+														))}
+													</View>
+												}
+											/>
 										</>
 									)}
 								</View>
 							</View>
 
-							<View style={style.itemContainer}>
-								<View style={style.itemImageHolder}>
-									<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
-								</View>
-								<View style={style.itemInfos}>
-									<Text style={style.itemName}>{orderingItem.name}</Text>
-									{orderingItem.options.map((info, infoindex) => (
-										<Text key={info.key} style={style.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
-											{info.selected}
-											{info.type == 'percentage' && '%'}
-										</Text>
-									))}
-								</View>
-								<View>
-									<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
-									<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.price}</Text>
-								</View>
-							</View>
+							<View>
+								<View style={style.itemContainer}>
+									<View style={style.orderingItemImageHolder}>
+										<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
+									</View>
+									<View style={style.itemInfos}>
+										<Text style={style.orderingItemName}>{orderingItem.name}</Text>
 
-							<Text style={style.errorMsg}>{orderingItem.errorMsg}</Text>
+										{orderingItem.options.map((option, infoindex) => (
+											<Text key={option.key} style={style.itemInfo}>
+												<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+												{option.selected}
+												{option.type == 'percentage' && '%'}
+											</Text>
+										))}
 
-							<View style={{ alignItems: 'center' }}>
-								<View style={style.actions}>
-									<TouchableOpacity style={style.action} onPress={() => {
-										setOpendiners(false)
-										setOpenrounds(true)
-										setDiners([])
-										setSelectedDiners([])
-										setNumdiners(0)
-										setNumSelectedDiners(0)
+										{orderingItem.others.map((other, otherindex) => (
+											other.selected ? 
+												<Text key={other.key} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+													<Text>{other.input}</Text>
+												</Text>
+											: null
+										))}
 
-										setOrderingItem({...orderingItem, errorMsg: '' })
-										setIteminfo({ ...itemInfo, orderid: "" })
-									}}>
-										<Text style={style.actionHeader}>Close</Text>
-									</TouchableOpacity>
-									{!itemInfo.orderid ? 
-										<TouchableOpacity style={style.action} onPress={() => addOrder()}>
-											<Text style={style.actionHeader}>Add to Order</Text>
+										{orderingItem.sizes.map((size, sizeindex) => (
+											size.selected ? 
+												<Text key={size.key} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+													<Text>{size.name}</Text>
+												</Text>
+											: null
+										))}
+									</View>
+									<View>
+										<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {orderingItem.quantity}</Text>
+										<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>Cost:</Text> $ {orderingItem.cost.toFixed(2)}</Text>
+									</View>
+								</View>
+
+								<Text style={style.dinerErrorMsg}>{orderingItem.errorMsg}</Text>
+
+								<View style={{ alignItems: 'center' }}>
+									<View style={style.actions}>
+										<TouchableOpacity style={style.action} onPress={() => {
+											setOpendiners(false)
+											setOpenrounds(true)
+											setDiners([])
+											setSelecteddiners([])
+											setNumdiners(0)
+											setNumselecteddiners(0)
+
+											setOrderingitem({...orderingItem, errorMsg: '' })
+											setIteminfo({ ...itemInfo, orderid: "" })
+										}}>
+											<Text style={style.actionHeader}>Close</Text>
 										</TouchableOpacity>
-										:
-										<TouchableOpacity style={style.action} onPress={() => updateTheOrderCallfor()}>
-											<Text style={style.actionHeader}>Done</Text>
-										</TouchableOpacity>
-									}
+										{!itemInfo.orderid ? 
+											<TouchableOpacity style={style.action} onPress={() => addOrder()}>
+												<Text style={style.actionHeader}>Add to Order</Text>
+											</TouchableOpacity>
+											:
+											<TouchableOpacity style={style.action} onPress={() => updateTheOrderCallfor()}>
+												<Text style={style.actionHeader}>Done</Text>
+											</TouchableOpacity>
+										}
+									</View>
 								</View>
 							</View>
 						</View>
@@ -1211,12 +1462,12 @@ export default function order(props) {
 			{openFriends && (
 				<Modal>
 					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.friendsList}>
-							<TextInput style={style.friendNameInput} placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
+						<View style={style.usersList}>
+							<TextInput style={style.userNameInput} placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
 
-							<View style={style.friendsListContainer}>
+							<View style={style.usersListContainer}>
 								<View style={{ height: '50%', overflow: 'hidden' }}>
-									<Text style={style.friendsHeader}>{numDiners} Searched Friend(s)</Text>
+									<Text style={style.usersHeader}>{numFriends} Searched Friend(s)</Text>
 
 									<FlatList
 										data={friends}
@@ -1224,14 +1475,14 @@ export default function order(props) {
 											<View key={item.key} style={style.row}>
 												{item.row.map(friend => (
 													friend.username ? 
-														<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
-															<View style={style.friendProfileHolder}>
+														<TouchableOpacity key={friend.key} style={style.user} onPress={() => selectFriend(friend.id)}>
+															<View style={style.userProfileHolder}>
 																<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
 															</View>
-															<Text style={style.friendName}>{friend.username}</Text>
+															<Text style={style.userName}>{friend.username}</Text>
 														</TouchableOpacity>
 														:
-														<View key={friend.key} style={style.friend}></View>
+														<View key={friend.key} style={style.user}></View>
 												))}
 											</View>
 										}
@@ -1239,43 +1490,42 @@ export default function order(props) {
 								</View>
 							
 								<View style={{ height: '50%', overflow: 'hidden' }}>
-									{selectedFriends.length > 0 && (
+									{numSelecteddiners > 0 && (
 										<>
-											<Text style={style.selectedFriendsHeader}>{numSelectedfriends} Selected Friend(s)</Text>
+											<Text style={style.selectedUsersHeader}>{numSelecteddiners} Selected Diner(s)</Text>
 
-											<View>
-												<FlatList
-													data={selectedFriends}
-													renderItem={({ item, index }) => 
-														<View key={item.key} style={style.row}>
-															{item.row.map(friend => (
-																friend.username ? 
-																	<View key={friend.key} style={style.friend}>
-																		<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
-																			<AntDesign name="closecircleo" size={15}/>
-																		</TouchableOpacity>
-																		<View style={style.friendProfileHolder}>
-																			<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																		</View>
-																		<Text style={style.friendName}>{friend.username}</Text>
+											<FlatList
+												data={selectedDiners}
+												renderItem={({ item, index }) => 
+													<View key={item.key} style={style.row}>
+														{item.row.map(friend => (
+															friend.username ? 
+																<View key={friend.key} style={style.user}>
+																	<TouchableOpacity style={style.userDelete} onPress={() => deselectFriend(friend.id)}>
+																		<AntDesign name="closecircleo" size={15}/>
+																	</TouchableOpacity>
+																	<View style={style.userProfileHolder}>
+																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
 																	</View>
-																	:
-																	<View key={friend.key} style={style.friend}></View>
-															))}
-														</View>
-													}
-												/>
-											</View>
+																	<Text style={style.userName}>{friend.username}</Text>
+																	{friend.status && <Text style={style.userStatus}>{friend.status}</Text>}
+																</View>
+																:
+																<View key={friend.key} style={style.user}></View>
+														))}
+													</View>
+												}
+											/>
 										</>
 									)}
 								</View>
 							</View>
 
 							<View style={style.itemContainer}>
-								<View style={style.itemImageHolder}>
-									<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + locationInfo.logo }}/>
+								<View style={style.locationImageHolder}>
+									<Image style={{ height: 80, width: 80 }} source={{ uri: logo_url + locationInfo.logo }}/>
 								</View>
-								<Text style={style.itemName}>{locationInfo.name}</Text>
+								<Text style={style.locationName}>{locationInfo.name}</Text>
 							</View>
 
 							<Text style={style.errorMsg}>{errorMsg}</Text>
@@ -1310,7 +1560,7 @@ const style = StyleSheet.create({
 	boxHeader: { fontSize: 15, marginHorizontal: 20, textAlign: 'center' },
 
 	orderActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	orderAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
+	orderAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 130 },
 	orderActionHeader: { textAlign: 'center' },
 
 	body: { flexDirection: 'column', height: screenHeight - 215, justifyContent: 'space-around' },
@@ -1321,7 +1571,7 @@ const style = StyleSheet.create({
 	itemName: { fontSize: 10, fontWeight: 'bold', textAlign: 'center' },
 
 	// product
-	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10 },
+	product: { alignItems: 'center', marginBottom: 50, width: (width / 3) - 20 },
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
 	productName: { fontSize: 20, fontWeight: 'bold' },
 	productInfo: { fontSize: 15 },
@@ -1335,28 +1585,40 @@ const style = StyleSheet.create({
 	image: { height: 200, width: 200 },
 	boxItemHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	boxItemHeaderInfo: {  fontSize: 15, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
-	info: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30, paddingHorizontal: 5, width: '100%' },
-	infoHeader: { fontWeight: 'bold', margin: 5 },
-	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 120 },
-	itemActionHeader: { textAlign: 'center' },
 
-	// options
-	options: { flexDirection: 'row', justifyContent: 'space-between' },
-	optionSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 2, padding: 8 },
-	optionSelectedHeader: { color: 'white', fontSize: 15 },
-	option: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 2, padding: 8 },
-	optionHeader: { color: 'black', fontSize: 15 },
+	info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
+	infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
 
-	// quantity
-	quantity: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
-	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+	// amount
+	amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
+	amountAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
+	amountHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
 
 	// percentage
 	percentage: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	percentageAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
 	percentageHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+
+	// others
+	othersBox: { alignItems: 'center', marginVertical: 20 },
+	othersHeader: { fontWeight: 'bold' },
+	others: { marginVertical: 20, width: '100%' },
+	other: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, width: '100%' },
+	otherName: { fontSize: 20, fontWeight: 'bold' },
+	otherInput: { fontSize: 20 },
+	otherTouch: { backgroundColor: 'white', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
+	otherTouchDisabled: { backgroundColor: 'black', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
+
+	// sizes
+	sizesBox: { alignItems: 'center', marginVertical: 20 },
+	sizesHeader: { fontWeight: 'bold' },
+	sizes: { marginVertical: 20 },
+	size: { flexDirection: 'row', marginVertical: 5 },
+	sizeTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
+	sizeTouchDisabled: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
+	sizeTouchHeader: { textAlign: 'center' },
+	sizeTouchHeaderDisabled: { color: 'white', textAlign: 'center' },
+	sizePrice: { fontWeight: 'bold', margin: 10 },
 
 	// note
 	note: { alignItems: 'center', marginBottom: 20 },
@@ -1368,62 +1630,75 @@ const style = StyleSheet.create({
 	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
 
 	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+
+	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 120 },
+	itemActionHeader: { textAlign: 'center' },
 
 	// rounds list
 	roundTouch: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5, width: 120 },
 	roundTouchHeader: {  },
 	round: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
 	order: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 5, margin: 5 },
-	orderItems: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10, overflow: 'hidden' },
-	orderItem: { alignItems: 'center', marginVertical: 20, width: 100 },
+	orderItem: { alignItems: 'center', marginTop: 20 },
 	orderItemImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 	orderItemImage: { height: 80, width: 80 },
 	orderItemName: { fontWeight: 'bold' },
 	orderItemQuantity: {  },
 	orderItemPrice: {  },
-	itemChange: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5, width: 80 },
-	itemChangeHeader: { fontSize: 13, textAlign: 'center' },
+	orderItemActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	orderItemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 110 },
+	orderItemActionHeader: { fontSize: 13, textAlign: 'center' },
 	orderersEdit: { flexDirection: 'row' },
 	orderersEditHeader: { fontWeight: 'bold', marginRight: 10, marginTop: 7, textAlign: 'center' },
 	orderersEditTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	orderersEditTouchHeader: { },
 	orderCallfor: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
-	orderCallforHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	orderCallforHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 	orderer: { alignItems: 'center', marginHorizontal: 10 },
 	ordererProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	ordererUsername: { textAlign: 'center' },
 
-	// diners list
-	dinersList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	dinerNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
-	dinersListContainer: { flexDirection: 'column', height: '70%', justifyContent: 'space-between' },
-	selectedDinersHeader: { fontWeight: 'bold', textAlign: 'center' },
-	dinersHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
-	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
-	diner: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
-	dinerDelete: { marginBottom: -5, marginLeft: 60 },
-	dinerProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
-	dinerName: { textAlign: 'center' },
+	// delete order
+	deleteOrderContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
+	deleteOrderBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
+	deleteOrderBoxHeader: { fontSize: 20 },
+	deleteOrderImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
+	deleteOrderImage: { height: 80, width: 80 },
+	deleteOrderName: { fontWeight: 'bold' },
+	deleteOrderQuantity: {  },
+	deleteOrderPrice: {  },
+	deleteOrderHeader: { fontSize: 15, paddingHorizontal: 10, textAlign: 'center' },
+	deleteOrderActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	deleteOrderAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
+	deleteOrderActionHeader: { textAlign: 'center' },
 
-	// friends list
-	friendsList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	friendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
-	friendsListContainer: { flexDirection: 'column', height: '70%', justifyContent: 'space-between' },
-	selectedFriendsHeader: { fontWeight: 'bold', textAlign: 'center' },
-	friendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	// users list
+	usersList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	userNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
+	usersListContainer: { flexDirection: 'column', height: screenHeight - 230, justifyContent: 'space-between', overflow: 'hidden' },
+	selectedUsersHeader: { fontWeight: 'bold', textAlign: 'center' },
+	usersHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
-	friend: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
-	friendDelete: { marginBottom: -5, marginLeft: 60 },
-	friendProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
-	friendName: { textAlign: 'center' },
+	user: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
+	userDelete: { marginBottom: -5, marginLeft: 60 },
+	userProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
+	userName: { fontWeight: 'bold', textAlign: 'center' },
+
+	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.1)', borderRadius: 10, flexDirection: 'row', height: 100, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
+	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
+	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
+	itemInfo: { fontSize: 15 },
+	itemHeader: { fontSize: 15 },
 
 	// location info
-	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', marginHorizontal: 10, padding: 10 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
-	itemName: { fontWeight: 'bold', marginVertical: 15, marginLeft: 50, textAlign: 'center' },
+	locationImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
+	locationName: { fontSize: 20, marginVertical: 30, textAlign: 'center' },
+
+	dinerErrorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
 
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
-	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 60 },
+	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
 	actionHeader: { textAlign: 'center' },
 })
