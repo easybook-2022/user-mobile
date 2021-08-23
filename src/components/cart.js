@@ -9,7 +9,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 
 export default function cart(props) {
 	const [items, setItems] = useState([])
@@ -29,7 +29,7 @@ export default function cart(props) {
 	const [numFriends, setNumfriends] = useState(0)
 	const [selectedFriends, setSelectedFriends] = useState([])
 	const [numSelectedFriends, setNumselectedfriends] = useState(0)
-	const [orderingItem, setOrderingItem] = useState({ name: "", image: "", options: [], quantity: 0, cost: 0 })
+	const [orderingItem, setOrderingItem] = useState({ name: "", image: "", options: [], quantity: 0, cost: 0, price: 0 })
 	const [errorMsg, setErrormsg] = useState('')
 
 	const changeOption = (index, selected) => {
@@ -112,9 +112,9 @@ export default function cart(props) {
 		})
 	}
 	const changeQuantity = (action) => {
-		let { sizes, quantity, cost } = itemInfo
+		let { price, others, sizes, quantity } = itemInfo
 		let newQuantity = quantity
-		let newCost = cost
+		let newCost = 0
 
 		newQuantity = action == "+" ? newQuantity + 1 : newQuantity - 1
 
@@ -125,12 +125,18 @@ export default function cart(props) {
 		if (sizes.length > 0) {
 			sizes.forEach(function (size) {
 				if (size.selected) {
-					newCost = newQuantity * parseFloat(size.price)
+					newCost += newQuantity * parseFloat(size.price)
 				}
 			})
 		} else {
-			newCost = newQuantity * parseFloat(itemPrice)
+			newCost += newQuantity * parseFloat(price)
 		}
+
+		others.forEach(function (other) {
+			if (other.selected) {
+				newCost += parseFloat(other.price)
+			}
+		})
 
 		setIteminfo({
 			...itemInfo,
@@ -165,7 +171,7 @@ export default function cart(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, info, image, quantity, options, others, sizes, note, price } = res.cartItem
+					const { name, info, image, quantity, options, others, sizes, note, price, cost } = res.cartItem
 
 					setIteminfo({
 						...itemInfo,
@@ -173,7 +179,7 @@ export default function cart(props) {
 						cartid,
 						name, info, image,
 						quantity, note, options, others, sizes,
-						price, cost: quantity * price
+						price, cost
 					})
 				}
 			})
@@ -337,30 +343,32 @@ export default function cart(props) {
 		setNumselectedfriends(numSelectedFriends - 1)
 	}
 	const openFriendsCart = async() => {
+		const { quantity, price, options, others, sizes } = itemInfo
 		let newOrderingItem = {...orderingItem}
 		let newOptions = JSON.parse(JSON.stringify(options))
 		let newOthers = JSON.parse(JSON.stringify(others))
 		let newSizes = JSON.parse(JSON.stringify(sizes))
-		let empty = false, price = ""
+		let empty = false, cost = 0
 
 		if (newSizes.length > 0) {
 			newSizes.forEach(function (size) {
 				if (size.selected) {
-					price = parseFloat(size.price) * quantity
+					cost += parseFloat(size.price) * quantity
 				}
 			})
 		} else {
-			price = parseFloat(itemPrice) * quantity
+			cost += price * quantity
 		}
 
-		if (!price) {
+		if (!cost) {
 			newOrderingItem.name = itemName
 			newOrderingItem.image = itemImage
 			newOrderingItem.options = newOptions
 			newOrderingItem.others = newOthers
 			newOrderingItem.sizes = newSizes
 			newOrderingItem.quantity = quantity
-			newOrderingItem.cost = price.toFixed(2)
+			newOrderingItem.cost = cost
+			newOrderingItem.price = price
 
 			setOpenfriendscart(true)
 			setOrderingItem(newOrderingItem)
@@ -683,7 +691,16 @@ export default function cart(props) {
 												<View style={style.other}>
 													<Text style={style.otherName}># {other.name}:</Text>
 													<Text style={style.otherInput}>{other.input}</Text>
-													<TouchableOpacity style={other.selected ? style.otherTouchDisabled : style.otherTouch} onPress={() => selectOther(index)}></TouchableOpacity>
+													<Text style={style.otherPrice}>$ {other.price}</Text>
+
+													<View style={style.otherActions}>
+														<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
+															<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+														</TouchableOpacity>
+														<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
+															<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+														</TouchableOpacity>
+													</View>
 												</View>
 											</View>
 										))}
@@ -751,7 +768,7 @@ export default function cart(props) {
 
 							<View style={style.friendsListContainer}>
 								<View style={{ height: '50%', overflow: 'hidden' }}>
-									<Text style={style.friendsHeader}>{numDiners} Searched Friend(s)</Text>
+									<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
 
 									<FlatList
 										data={friends}
@@ -948,8 +965,12 @@ const style = StyleSheet.create({
 	other: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, width: '100%' },
 	otherName: { fontSize: 20, fontWeight: 'bold' },
 	otherInput: { fontSize: 20 },
-	otherTouch: { backgroundColor: 'white', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
-	otherTouchDisabled: { backgroundColor: 'black', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
+	otherPrice: { fontWeight: 'bold', marginTop: 5 },
+	otherActions: { flexDirection: 'row', marginTop: -5 },
+	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
+	otherActionLeftDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
+	otherActionRight: { alignItems: 'center', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
+	otherActionRightDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
 
 	// sizes
 	sizesBox: { alignItems: 'center', marginVertical: 20 },

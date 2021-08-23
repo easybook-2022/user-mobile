@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { AsyncStorage, Dimensions, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { logo_url } from '../../../assets/info'
-import { getInfo } from '../../apis/locations'
-import { getMenus } from '../../apis/menus'
-import { getProducts } from '../../apis/products'
-import { getServices } from '../../apis/services'
-import { getNumCartItems } from '../../apis/carts'
+import { logo_url } from '../../assets/info'
+import { getInfo } from '../apis/locations'
+import { getMenus } from '../apis/menus'
+import { getProducts } from '../apis/products'
+import { getServices } from '../apis/services'
+import { getNumCartItems } from '../apis/carts'
 
-import Cart from '../../components/cart'
+import Cart from '../components/cart'
 
 import Entypo from 'react-native-vector-icons/Entypo'
 
@@ -234,7 +234,7 @@ export default function menu(props) {
 										<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
 											<Text style={style.serviceName}>{item.name}</Text>
 											{item.info ? <Text style={style.serviceInfo}>{item.info}</Text> : null}
-
+											
 											<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
 											<Text style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
 

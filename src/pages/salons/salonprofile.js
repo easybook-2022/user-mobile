@@ -192,7 +192,6 @@ export default function salonprofile(props) {
 						</View>
 					: null }
 				</View>
-
 				
 				<View style={style.body}>
 					{loaded ? 

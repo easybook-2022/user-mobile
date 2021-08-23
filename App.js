@@ -13,6 +13,8 @@ const { height, width } = Dimensions.get('window')
 
 // pages
 import Login from './src/pages/login'
+import Forgotpassword from './src/pages/forgotpassword'
+import Resetpassword from './src/pages/resetpassword'
 import Register from './src/pages/register'
 import Setup from './src/pages/setup'
 
@@ -26,13 +28,12 @@ import Makereservation from './src/pages/restaurants/makereservation'
 import Order from './src/pages/restaurants/order'
 import Itemprofile from './src/pages/restaurants/itemprofile'
 
-// restaurants' components
 import Cart from './src/components/cart'
+import Menu from './src/components/menu'
 
 // salons
 //import Salons from './src/pages/salons'
 import Salonprofile from './src/pages/salons/salonprofile'
-import Menu from './src/pages/salons/menu'
 import Booktime from './src/pages/salons/booktime'
 
 import Notifications from './src/components/notifications'
@@ -66,6 +67,8 @@ export default function App() {
                 <NavigationContainer>
                     <Stack.Navigator initialRouteName={route}>
                         <Stack.Screen name="login" component={Login} options={{ headerShown: false }}/>
+                        <Stack.Screen name="forgotpassword" component={Forgotpassword} options={{ headerShown: false }}/>
+                        <Stack.Screen name="resetpassword" component={Resetpassword} options={{ headerShown: false }}/>
                         <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
                         <Stack.Screen name="setup" component={Setup} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>

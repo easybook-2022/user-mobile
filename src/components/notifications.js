@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getNotifications } from '../apis/users'
 import { cancelOrder, confirmOrder } from '../apis/products'
-import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining, doneDining } from '../apis/schedules'
+import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -16,6 +16,7 @@ export default function notifications(props) {
 	const [items, setItems] = useState([])
 	const [loaded, setLoaded] = useState(false)
 	const [confirm, setConfirm] = useState({ show: false, index: 0, name: "", price: "", quality: "" })
+	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 
 	const displayTimeStr = (unixtime) => {
 		let weekdays = { "Mon": "Monday", "Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday", "Fri": "Friday", "Sat": "Saturday", "Sun": "Sunday" }
@@ -130,7 +131,13 @@ export default function notifications(props) {
 		acceptReservationJoining(data)
 			.then((res) => {
 				if (res.status == 200) {
-					return res.data
+					if (!res.data.errormsg) {
+						return res.data
+					} else {
+						if (res.data.status == "cardrequired") {
+							setShowpaymentrequired(true)
+						}
+					}
 				}
 			})
 			.then((res) => {
@@ -139,19 +146,20 @@ export default function notifications(props) {
 					props.navigation.navigate("order", { scheduleid: scheduleid })
 				}
 			})
-	}
-	const doneTheDining = async(scheduleid) => {
-		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, scheduleid }
+			.catch((err) => {
+				if (err.response.status == 400) {
+					if (err.response.data.status) {
+						const status = err.response.data.status
 
-		doneDining(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
+						switch (status) {
+							case "cardrequired":
+								setShowpaymentrequired(true)
+
+								break;
+							default:
+						}
+					}
 				}
-			})
-			.then((res) => {
-				if (res) props.close()
 			})
 	}
 
@@ -292,7 +300,7 @@ export default function notifications(props) {
 															<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.service}</Text>
 															{'\n'}at{'\n'}
 															<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
-															{'\n'}on{'\n'}
+															{'\n'}at{'\n'}
 															<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
 														</Text>
 													}
@@ -317,9 +325,6 @@ export default function notifications(props) {
 																				props.navigation.navigate("order", { scheduleid: item.id })
 																			}}>
 																				<Text style={style.itemServiceOrderTouchHeader}>Start Ordering your meal(s)</Text>
-																			</TouchableOpacity>
-																			<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => doneTheDining(item.id)}>
-																				<Text style={style.itemServiceOrderTouchHeader}>Done dining</Text>
 																			</TouchableOpacity>
 																		</View>
 																	</View>
@@ -452,6 +457,33 @@ export default function notifications(props) {
 					</View>
 				</Modal>
 			)}
+
+			{showPaymentRequired && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertical: offsetPadding }}>
+						<View style={style.cardRequiredBox}>
+							<View style={style.cardRequiredContainer}>
+								<Text style={style.cardRequiredHeader}>
+									You need to provide a payment method to accept
+									a reservation
+								</Text>
+
+								<View style={style.cardRequiredActions}>
+									<TouchableOpacity style={style.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
+										<Text style={style.cardRequiredActionHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.cardRequiredAction} onPress={() => {
+										props.close()
+										props.navigation.navigate("account", { required: "card" })
+									}}>
+										<Text style={style.cardRequiredActionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
 		</View>
 	);
 }
@@ -501,4 +533,11 @@ const style = StyleSheet.create({
 	confirmOptions: { flexDirection: 'row', justifyContent: 'space-around' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },
+
+	cardRequiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	cardRequiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+	cardRequiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	cardRequiredActionHeader: { }
 })

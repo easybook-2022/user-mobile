@@ -12,7 +12,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 const itemSize = (width * 0.3) - 10
 const imageSize = (width * 0.3) - 50
 
@@ -32,7 +32,8 @@ export default function order(props) {
 	})
 	const [deleteRequestInfo, setDeleterequestinfo] = useState({
 		show: false, orderid: "", name: "", info: "", note: "", 
-		image: "", cost: 0, options: [], others: [], sizes: [], quantity: 1
+		image: "", cost: 0, options: [], others: [], sizes: [], quantity: 1, 
+		numorderers: 0
 	})
 	const [rounds, setRounds] = useState([])
 
@@ -225,7 +226,7 @@ export default function order(props) {
 				}
 			})
 	}
-
+	
 	const seeTheOrders = async() => {
 		seeOrders(scheduleid)
 			.then((res) => {
@@ -287,13 +288,21 @@ export default function order(props) {
 				round.round.forEach(function (orders) {
 					orders.orders.forEach(function (order) {
 						if (order.id == orderid) {
-							const { cost, image, name, note, options, others, sizes } = order
+							const { cost, image, name, note, options, others, sizes, orderers } = order
+							let numorderers = 0
+
+							orderers.forEach(function (info) {
+								info.row.forEach(function (orderer) {
+									numorderers += orderer.username ? 1 : 0
+								})
+							})
 
 							setDeleterequestinfo({
 								...deleteRequestInfo,
 								show: true, 
 								orderid, cost, image, name, 
-								note, options, others, sizes
+								note, options, others, sizes, 
+								numorderers
 							})
 						}
 					})
@@ -302,8 +311,6 @@ export default function order(props) {
 		} else {
 			const { orderid } = deleteRequestInfo
 			const data = { scheduleid, orderid }
-
-			console.log(data)
 
 			deleteOrder(data)
 				.then((res) => {
@@ -906,7 +913,7 @@ export default function order(props) {
 			.then((res) => {
 				const newRounds = [...rounds]
 
-				newRounds[0].status = "sent"
+				newRounds[0].status = "making"
 
 				setRounds(newRounds)
 			})
@@ -1073,7 +1080,10 @@ export default function order(props) {
 												<View style={style.other}>
 													<Text style={style.otherName}># {other.name}:</Text>
 													<Text style={style.otherInput}>{other.input}</Text>
-													<TouchableOpacity style={other.selected ? style.otherTouchDisabled : style.otherTouch} onPress={() => selectOther(index)}></TouchableOpacity>
+													<View style={{ flexDirection: 'row' }}>
+														<TouchableOpacity style={other.selected ? style.otherTouchDisabled : style.otherTouch} onPress={() => selectOther(index)}></TouchableOpacity>
+														<Text style={style.otherPrice}>$ {other.price.toFixed(2)}</Text>
+													</View>
 												</View>
 											</View>
 										))}
@@ -1147,14 +1157,15 @@ export default function order(props) {
 			{openRounds && (
 				<Modal>
 					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={{ alignItems: 'center', marginVertical: 20 }}>
+						<View style={{ alignItems: 'center', height: 75 }}>
 							<TouchableOpacity style={style.itemClose} onPress={() => setOpenrounds(false)}>
 								<AntDesign name="close" size={20}/>
 							</TouchableOpacity>
+
+							<Text style={style.boxHeader}>Order(s)</Text>
 						</View>
-						<Text style={style.boxHeader}>Order(s)</Text>
 						{rounds.length > 0 ? 
-							<ScrollView style={{ height: screenHeight - 86 }}>
+							<ScrollView style={style.roundList}>
 								{rounds.map(round => (
 									<View style={style.round} key={round.key}>
 										{round.status == "ordering" ? 
@@ -1167,7 +1178,7 @@ export default function order(props) {
 												</View>
 											</View>
 											:
-											<Text style={style.roundHeader}>This round is already sent</Text>
+											<Text style={style.roundHeader}>This round {round.status == 'making' ? 'is already sent' : 'has been served'}</Text>
 										}
 										{round.round.map(orders => (
 											orders.orders.map(order => (
@@ -1288,6 +1299,7 @@ export default function order(props) {
 												<Text key={other.key} style={style.itemInfo}>
 													<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
 													<Text>{other.input}</Text>
+													<Text> ($ {other.price.toFixed(2)})</Text>
 												</Text>
 											: null
 										))}
@@ -1306,6 +1318,12 @@ export default function order(props) {
 										<Text style={style.deleteOrderQuantity}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{deleteRequestInfo.quantity}</Text>
 										<Text style={style.deleteOrderPrice}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(deleteRequestInfo.cost).toFixed(2)}</Text>
 									</View>
+
+									{deleteRequestInfo.numorderers > 0 && (
+										<View>
+											<Text style={style.deleteOrderOrderers}>Calling for {deleteRequestInfo.numorderers} {deleteRequestInfo.numorderers == 1 ? 'person' : 'people'}</Text>
+										</View>
+									)}
 
 									<Text style={style.deleteOrderHeader}>Are you sure you want to delete this order</Text>
 
@@ -1534,6 +1552,8 @@ export default function order(props) {
 								<View style={style.actions}>
 									<TouchableOpacity style={style.action} onPress={() => {
 										setOpenfriends(false)
+										setFriends([])
+										setNumfriends(0)
 										setSelectedfriends([])
 										setNumselectedfriends(0)
 										setErrormsg('')
@@ -1557,7 +1577,7 @@ const style = StyleSheet.create({
 	box: { height: '100%', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	boxHeader: { fontSize: 15, marginHorizontal: 20, textAlign: 'center' },
+	boxHeader: { fontSize: 15, margin: 10, textAlign: 'center' },
 
 	orderActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	orderAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 130 },
@@ -1580,7 +1600,7 @@ const style = StyleSheet.create({
 	productBuyHeader: { textAlign: 'center' },
 
 	// item info
-	itemClose: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', justifyContent: 'space-around', padding: 2 },
+	itemClose: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: 28, justifyContent: 'space-around', marginTop: 10, padding: 2 },
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	image: { height: 200, width: 200 },
 	boxItemHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
@@ -1608,6 +1628,7 @@ const style = StyleSheet.create({
 	otherInput: { fontSize: 20 },
 	otherTouch: { backgroundColor: 'white', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
 	otherTouchDisabled: { backgroundColor: 'black', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
+	otherPrice: { margin: 5 },
 
 	// sizes
 	sizesBox: { alignItems: 'center', marginVertical: 20 },
@@ -1637,9 +1658,11 @@ const style = StyleSheet.create({
 	itemActionHeader: { textAlign: 'center' },
 
 	// rounds list
+	roundList: { height: screenHeight - 75 },
 	roundTouch: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5, width: 120 },
 	roundTouchHeader: {  },
 	round: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
+	roundHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	order: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 5, margin: 5 },
 	orderItem: { alignItems: 'center', marginTop: 20 },
 	orderItemImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
@@ -1669,6 +1692,7 @@ const style = StyleSheet.create({
 	deleteOrderName: { fontWeight: 'bold' },
 	deleteOrderQuantity: {  },
 	deleteOrderPrice: {  },
+	deleteOrderOrderers: { fontWeight: 'bold' },
 	deleteOrderHeader: { fontSize: 15, paddingHorizontal: 10, textAlign: 'center' },
 	deleteOrderActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	deleteOrderAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
@@ -1689,7 +1713,7 @@ const style = StyleSheet.create({
 	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.1)', borderRadius: 10, flexDirection: 'row', height: 100, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
 	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
-	itemInfo: { fontSize: 15 },
+	itemInfo: { fontSize: 15, flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 	itemHeader: { fontSize: 15 },
 
 	// location info

@@ -122,7 +122,7 @@ export default function itemProfile(props) {
 	}
 	const changeQuantity = (action) => {
 		let newQuantity = quantity
-		let newCost = cost
+		let newCost = 0
 
 		newQuantity = action == "+" ? newQuantity + 1 : newQuantity - 1
 
@@ -133,12 +133,18 @@ export default function itemProfile(props) {
 		if (sizes.length > 0) {
 			sizes.forEach(function (size) {
 				if (size.selected) {
-					newCost = newQuantity * parseFloat(size.price)
+					newCost += newQuantity * parseFloat(size.price)
 				}
 			})
 		} else {
-			newCost = newQuantity * parseFloat(itemPrice)
+			newCost += newQuantity * parseFloat(itemPrice)
 		}
+
+		others.forEach(function (other) {
+			if (other.selected) {
+				newCost += parseFloat(other.price)
+			}
+		})
 
 		setQuantity(newQuantity)
 		setCost(newCost)
@@ -386,274 +392,286 @@ export default function itemProfile(props) {
 	}, [])
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<ScrollView style={style.box}>
+		<View style={style.itemprofile}>
+			<View style={{ paddingVertical: offsetPadding }}>
 				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
-				
-				<View style={{ alignItems: 'center', marginVertical: 20 }}>
-					<View style={style.imageHolder}>
-						<Image source={{ uri: logo_url + itemImage }} style={style.image}/>
+
+				<ScrollView style={style.box}>
+					<View style={{ alignItems: 'center', marginVertical: 20 }}>
+						<View style={style.imageHolder}>
+							<Image source={{ uri: logo_url + itemImage }} style={style.image}/>
+						</View>
 					</View>
-				</View>
-				<Text style={style.boxHeader}>{itemName}</Text>
-				<Text style={style.boxHeaderInfo}>{itemInfo}</Text>
+					<Text style={style.boxHeader}>{itemName}</Text>
+					<Text style={style.boxHeaderInfo}>{itemInfo}</Text>
 
-				{options.map((option, index) => (
-					<View key={option.key} style={{ alignItems: 'center' }}>
-						<View style={style.info}>
-							<Text style={style.infoHeader}>{option.header}:</Text>
+					{options.map((option, index) => (
+						<View key={option.key} style={{ alignItems: 'center' }}>
+							<View style={style.info}>
+								<Text style={style.infoHeader}>{option.header}:</Text>
 
-							{option.type == "amount" && (
-								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-									<View style={style.amount}>
-										<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
-											<Text style={style.amountActionHeader}>-</Text>
-										</TouchableOpacity>
-										<Text style={style.amountHeader}>{option.selected}</Text>
-										<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
-											<Text style={style.amountActionHeader}>+</Text>
-										</TouchableOpacity>
+								{option.type == "amount" && (
+									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+										<View style={style.amount}>
+											<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
+												<Text style={style.amountActionHeader}>-</Text>
+											</TouchableOpacity>
+											<Text style={style.amountHeader}>{option.selected}</Text>
+											<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
+												<Text style={style.amountActionHeader}>+</Text>
+											</TouchableOpacity>
+										</View>
 									</View>
-								</View>
-							)}
+								)}
 
-							{option.type == "percentage" && (
-								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-									<View style={style.percentage}>
-										<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
-											<Text style={style.percentageActionHeader}>-</Text>
-										</TouchableOpacity>
-										<Text style={style.percentageHeader}>{option.selected}%</Text>
-										<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
-											<Text style={style.percentageActionHeader}>+</Text>
-										</TouchableOpacity>
+								{option.type == "percentage" && (
+									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+										<View style={style.percentage}>
+											<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
+												<Text style={style.percentageActionHeader}>-</Text>
+											</TouchableOpacity>
+											<Text style={style.percentageHeader}>{option.selected}%</Text>
+											<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
+												<Text style={style.percentageActionHeader}>+</Text>
+											</TouchableOpacity>
+										</View>
 									</View>
-								</View>
-							)}
+								)}
+							</View>
 						</View>
-					</View>
-				))}
+					))}
 
-				{others.length > 0 && (
-					<View style={style.othersBox}>
-						<Text style={style.othersHeader}>Other options</Text>
+					{others.length > 0 && (
+						<View style={style.othersBox}>
+							<Text style={style.othersHeader}>Other options</Text>
 
-						<View style={style.others}>
-							{others.map((other, index) => (
-								<View key={other.key} style={{ alignItems: 'center' }}>
-									<View style={style.other}>
-										<Text style={style.otherName}># {other.name}:</Text>
-										<Text style={style.otherInput}>{other.input}</Text>
-										<TouchableOpacity style={other.selected ? style.otherTouchDisabled : style.otherTouch} onPress={() => selectOther(index)}></TouchableOpacity>
-									</View>
-								</View>
-							))}
-						</View>
-					</View>
-				)}
+							<View style={style.others}>
+								{others.map((other, index) => (
+									<View key={other.key} style={{ alignItems: 'center' }}>
+										<View style={style.other}>
+											<Text style={style.otherName}># {other.name}:</Text>
+											<Text style={style.otherInput}>{other.input}</Text>
+											<Text style={style.otherPrice}>$ {other.price}</Text>
 
-				{sizes.length > 0 && (
-					<View style={style.sizesBox}>
-						<Text style={style.sizesHeader}>Select a Size</Text>
-
-						<View style={style.sizes}>
-							{sizes.map((size, index) => (
-								<View key={size.key} style={style.size}>
-									<TouchableOpacity style={size.selected ? style.sizeTouchDisabled : style.sizeTouch} onPress={() => selectSize(index)}>
-										<Text style={size.selected ? style.sizeTouchHeaderDisabled : style.sizeTouchHeader}>{size.name}</Text>
-									</TouchableOpacity>
-									<Text style={style.sizePrice}>$ {size.price}</Text>
-								</View>
-							))}
-						</View>
-					</View>
-				)}
-
-				<View style={style.note}>
-					<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setItemnote(note)} autoCorrect={false}/>
-				</View>
-
-				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-					<View style={{ flexDirection: 'row' }}>
-						<Text style={style.quantityHeader}>Quantity:</Text>
-						<View style={style.quantity}>
-							<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("-")}>
-								<Text style={style.quantityActionHeader}>-</Text>
-							</TouchableOpacity>
-							<Text style={style.quantityHeader}>{quantity}</Text>
-							<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("+")}>
-								<Text style={style.quantityActionHeader}>+</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-				</View>
-
-				<Text style={style.price}>Cost: $ {cost.toFixed(2)}</Text>
-
-				{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
-
-				<View style={style.itemActions}>
-					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.itemAction} onPress={() => addCart()}>
-							<Text style={style.itemActionHeader}>Add to your cart</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.itemAction} onPress={() => openFriendsCart()}>
-							<Text style={style.itemActionHeader}>Add to a friend's cart</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</ScrollView>
-
-			<View style={style.bottomActionsContainer}>
-				<View style={style.bottomActions}>
-					<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
-						<Entypo name="shopping-cart" size={30}/>
-						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-					</TouchableOpacity>
-					<TouchableOpacity style={style.bottomAction} onPress={() => {
-						props.navigation.dispatch(
-							CommonActions.reset({
-								index: 0,
-								routes: [{ name: "main" }]
-							})
-						)
-					}}>
-						<Entypo name="home" size={30}/>
-					</TouchableOpacity>
-				</View>
-			</View>
-
-			{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
-			{openFriendscart && (
-				<Modal>
-					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.usersList}>
-							<TextInput style={style.userNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
-
-							<View style={style.usersListContainer}>
-								<View style={{ height: '50%', overflow: 'hidden' }}>
-									<Text style={style.usersHeader}>{numFriends} Searched Friend(s)</Text>
-
-									<FlatList
-										data={friends}
-										renderItem={({ item, index }) => 
-											<View key={item.key} style={style.row}>
-												{item.row.map(friend => (
-													friend.username ? 
-														<TouchableOpacity key={friend.key} style={style.user} onPress={() => selectFriend(friend.id)}>
-															<View style={style.userProfileHolder}>
-																<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-															</View>
-															<Text style={style.userName}>{friend.username}</Text>
-														</TouchableOpacity>
-														:
-														<View key={friend.key} style={style.user}></View>
-												))}
+											<View style={style.otherActions}>
+												<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
+													<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
+													<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+												</TouchableOpacity>
 											</View>
-										}
-									/>
-								</View>
-
-								<View style={{ height: '50%', overflow: 'hidden' }}>
-									{selectedFriends.length > 0 && (
-										<>
-											<Text style={style.selectedUsersHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
-
-											<FlatList
-												data={selectedFriends}
-												renderItem={({ item, index }) => 
-													<View key={item.key} style={style.row}>
-														{item.row.map(friend => (
-															friend.username ? 
-																<View key={friend.key} style={style.user}>
-																	<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
-																		<AntDesign name="closecircleo" size={15}/>
-																	</TouchableOpacity>
-																	<View style={style.userProfileHolder}>
-																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																	</View>
-																	<Text style={style.userName}>{friend.username}</Text>
-																</View>
-																:
-																<View key={friend.key} style={style.user}></View>
-														))}
-													</View>
-												}
-											/>
-										</>
-									)}
-								</View>
+										</View>
+									</View>
+								))}
 							</View>
+						</View>
+					)}
 
-							<View>
-								<View style={style.itemContainer}>
-									<View style={style.orderingItemImageHolder}>
-										<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
+					{sizes.length > 0 && (
+						<View style={style.sizesBox}>
+							<Text style={style.sizesHeader}>Select a Size</Text>
+
+							<View style={style.sizes}>
+								{sizes.map((size, index) => (
+									<View key={size.key} style={style.size}>
+										<TouchableOpacity style={size.selected ? style.sizeTouchDisabled : style.sizeTouch} onPress={() => selectSize(index)}>
+											<Text style={size.selected ? style.sizeTouchHeaderDisabled : style.sizeTouchHeader}>{size.name}</Text>
+										</TouchableOpacity>
+										<Text style={style.sizePrice}>$ {size.price}</Text>
 									</View>
-									<View style={style.itemInfos}>
-										<Text style={style.orderingItemName}>{orderingItem.name}</Text>
-										
-										{orderingItem.options.map((info, infoindex) => (
-											<Text key={info.key} style={style.itemInfo}>
-												<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
-												{info.selected}
-												{info.type == 'percentage' && '%'}
-											</Text>
-										))}
+								))}
+							</View>
+						</View>
+					)}
 
-										{orderingItem.others.map((info, infoindex) => (
-											<Text key={info.key} style={style.itemInfo}>
-												<Text style={{ fontWeight: 'bold' }}>{info.name}: </Text> 
-												<Text>{info.input}</Text>
-											</Text>
-										))}
+					<View style={style.note}>
+						<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setItemnote(note)} autoCorrect={false}/>
+					</View>
 
-										{orderingItem.sizes.map((info, infoindex) => (
-											info.selected ? 
-												<Text key={info.key} style={style.itemInfo}>
-													<Text style={{ fontWeight: 'bold' }}>Size: </Text> 
-													<Text>{info.name}</Text>
-												</Text>
-											: null
-										))}
+					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+						<View style={{ flexDirection: 'row' }}>
+							<Text style={style.quantityHeader}>Quantity:</Text>
+							<View style={style.quantity}>
+								<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("-")}>
+									<Text style={style.quantityActionHeader}>-</Text>
+								</TouchableOpacity>
+								<Text style={style.quantityHeader}>{quantity}</Text>
+								<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("+")}>
+									<Text style={style.quantityActionHeader}>+</Text>
+								</TouchableOpacity>
+							</View>
+						</View>
+					</View>
+
+					<Text style={style.price}>Cost: $ {cost.toFixed(2)}</Text>
+
+					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
+
+					<View style={style.itemActions}>
+						<View style={{ flexDirection: 'row' }}>
+							<TouchableOpacity style={style.itemAction} onPress={() => addCart()}>
+								<Text style={style.itemActionHeader}>Add to your cart</Text>
+							</TouchableOpacity>
+							<TouchableOpacity style={style.itemAction} onPress={() => openFriendsCart()}>
+								<Text style={style.itemActionHeader}>Add to a friend's cart</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</ScrollView>
+
+				<View style={style.bottomActionsContainer}>
+					<View style={style.bottomActions}>
+						<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomAction} onPress={() => {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 0,
+									routes: [{ name: "main" }]
+								})
+							)
+						}}>
+							<Entypo name="home" size={30}/>
+						</TouchableOpacity>
+					</View>
+				</View>
+
+				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
+				{openFriendscart && (
+					<Modal>
+						<View style={{ paddingVertical: offsetPadding }}>
+							<View style={style.usersList}>
+								<TextInput style={style.userNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
+
+								<View style={style.usersListContainer}>
+									<View style={{ height: '50%', overflow: 'hidden' }}>
+										<Text style={style.usersHeader}>{numFriends} Searched Friend(s)</Text>
+
+										<FlatList
+											data={friends}
+											renderItem={({ item, index }) => 
+												<View key={item.key} style={style.row}>
+													{item.row.map(friend => (
+														friend.username ? 
+															<TouchableOpacity key={friend.key} style={style.user} onPress={() => selectFriend(friend.id)}>
+																<View style={style.userProfileHolder}>
+																	<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+																</View>
+																<Text style={style.userName}>{friend.username}</Text>
+															</TouchableOpacity>
+															:
+															<View key={friend.key} style={style.user}></View>
+													))}
+												</View>
+											}
+										/>
 									</View>
-									<View>
-										<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
-										<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost}</Text>
+
+									<View style={{ height: '50%', overflow: 'hidden' }}>
+										{selectedFriends.length > 0 && (
+											<>
+												<Text style={style.selectedUsersHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
+
+												<FlatList
+													data={selectedFriends}
+													renderItem={({ item, index }) => 
+														<View key={item.key} style={style.row}>
+															{item.row.map(friend => (
+																friend.username ? 
+																	<View key={friend.key} style={style.user}>
+																		<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
+																			<AntDesign name="closecircleo" size={15}/>
+																		</TouchableOpacity>
+																		<View style={style.userProfileHolder}>
+																			<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+																		</View>
+																		<Text style={style.userName}>{friend.username}</Text>
+																	</View>
+																	:
+																	<View key={friend.key} style={style.user}></View>
+															))}
+														</View>
+													}
+												/>
+											</>
+										)}
 									</View>
 								</View>
 
-								<Text style={style.friendErrorMsg}>{errorMsg}</Text>
+								<View>
+									<View style={style.itemContainer}>
+										<View style={style.orderingItemImageHolder}>
+											<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
+										</View>
+										<View style={style.itemInfos}>
+											<Text style={style.orderingItemName}>{orderingItem.name}</Text>
+											
+											{orderingItem.options.map((info, infoindex) => (
+												<Text key={info.key} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
+													{info.selected}
+													{info.type == 'percentage' && '%'}
+												</Text>
+											))}
 
-								<View style={{ alignItems: 'center' }}>
-									<View style={style.actions}>
-										<TouchableOpacity style={style.action} onPress={() => {
-											setOpenfriendscart(false)
-											setSelectedFriends([])
-											setNumSelectedFriends(0)
-											setErrormsg('')
-										}}>
-											<Text style={style.actionHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.action} onPress={() => addCart()}>
-											<Text style={style.actionHeader}>Add</Text>
-										</TouchableOpacity>
+											{orderingItem.others.map((info, infoindex) => (
+												<Text key={info.key} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>{info.name}: </Text> 
+													<Text>{info.input}</Text>
+												</Text>
+											))}
+
+											{orderingItem.sizes.map((info, infoindex) => (
+												info.selected ? 
+													<Text key={info.key} style={style.itemInfo}>
+														<Text style={{ fontWeight: 'bold' }}>Size: </Text> 
+														<Text>{info.name}</Text>
+													</Text>
+												: null
+											))}
+										</View>
+										<View>
+											<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
+											<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost}</Text>
+										</View>
+									</View>
+
+									<Text style={style.friendErrorMsg}>{errorMsg}</Text>
+
+									<View style={{ alignItems: 'center' }}>
+										<View style={style.actions}>
+											<TouchableOpacity style={style.action} onPress={() => {
+												setOpenfriendscart(false)
+												setSelectedFriends([])
+												setNumSelectedFriends(0)
+												setErrormsg('')
+											}}>
+												<Text style={style.actionHeader}>Close</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.action} onPress={() => addCart()}>
+												<Text style={style.actionHeader}>Add</Text>
+											</TouchableOpacity>
+										</View>
 									</View>
 								</View>
 							</View>
 						</View>
-					</View>
-				</Modal>
-			)}
+					</Modal>
+				)}
+			</View>
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
-	box: { backgroundColor: '#EAEAEA', height: screenHeight, width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
+	itemprofile: { backgroundColor: 'white' },
+	box: { backgroundColor: '#EAEAEA', height: screenHeight - 114, width: '100%' },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
@@ -665,7 +683,7 @@ const style = StyleSheet.create({
 	infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
 
 	// amount
-	amount: { backgroundColor: 'blue', flexDirection: 'row', justifyContent: 'space-between', width: 100 },
+	amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	amountAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
 	amountHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
 
@@ -681,8 +699,12 @@ const style = StyleSheet.create({
 	other: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, width: '100%' },
 	otherName: { fontSize: 20, fontWeight: 'bold' },
 	otherInput: { fontSize: 20 },
-	otherTouch: { backgroundColor: 'white', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
-	otherTouchDisabled: { backgroundColor: 'black', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
+	otherPrice: { fontWeight: 'bold', marginTop: 5 },
+	otherActions: { flexDirection: 'row', marginTop: -5 },
+	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
+	otherActionLeftDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
+	otherActionRight: { alignItems: 'center', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
+	otherActionRightDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
 
 	// sizes
 	sizesBox: { alignItems: 'center', marginVertical: 20 },
@@ -711,7 +733,7 @@ const style = StyleSheet.create({
 	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
 	itemActionHeader: { textAlign: 'center' },
 
-	bottomActionsContainer: { backgroundColor: 'white', bottom: 0, flexDirection: 'row', height: 40, justifyContent: 'space-around', position: 'absolute', width: '100%' },
+	bottomActionsContainer: { backgroundColor: 'white', bottom: 0, flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomActions: { flexDirection: 'row', height: '100%', justifyContent: 'space-between', width: 100 },
 	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },

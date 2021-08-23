@@ -14,9 +14,9 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
+const screenHeight = height - (offsetPadding * 2)
 const itemSize = (width * 0.3) - 10
-const imageSize = (width * 0.3) - 50
+const imageSize = (width * 0.3) - 70
 
 export default function restaurantprofile(props) {
 	let { locationid } = props.route.params
@@ -151,135 +151,140 @@ export default function restaurantprofile(props) {
 	}, [])
 
 	return (
-		<View style={{ paddingTop: offsetPadding }}>
-			<View style={style.box}>
-				<View style={style.profileInfo}>
-					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
-						<Text style={style.backHeader}>Back</Text>
-					</TouchableOpacity>
+		<View style={style.restaurantprofile}>
+			<View style={{ paddingVertical: offsetPadding }}>
+				<View style={style.box}>
+					<View style={style.profileInfo}>
+						<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+							<Text style={style.backHeader}>Back</Text>
+						</TouchableOpacity>
 
-					{loaded ? 
-						<>
-							<View style={style.headers}>
-								<View style={style.logoHolder}>
-									<Image style={style.logo} source={{ uri: logo_url + logo }}/>
+						{loaded ? 
+							<>
+								<View style={style.headers}>
+									<View style={style.logoHolder}>
+										<Image style={style.logo} source={{ uri: logo_url + logo }}/>
+									</View>
+									<Text style={style.header}>{name}</Text>
+									<Text style={style.header}>{address}</Text>
+									<View style={{ alignItems: 'center' }}>
+										<View style={{ flexDirection: 'row' }}>
+											<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
+												<AntDesign name="phone" size={20}/>
+											</TouchableOpacity>
+											<Text style={style.phonenumber}>{phonenumber}</Text>
+										</View>
+									</View>
+									<Text style={style.header}>{distance}</Text>
 								</View>
-								<Text style={style.header}>{name}</Text>
-								<Text style={style.header}>{address}</Text>
-								<View style={{ alignItems: 'center' }}>
+								<View style={style.navs}>
 									<View style={{ flexDirection: 'row' }}>
-										<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
-											<AntDesign name="phone" size={30}/>
+										<TouchableOpacity style={style.nav} onPress={() => getAllMenus()}>
+											<Text>menu ({numMenus})</Text>
 										</TouchableOpacity>
-										<Text style={style.phonenumber}>{phonenumber}</Text>
+										<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("makereservation", { locationid })}>
+											<Text>Book Table</Text>
+										</TouchableOpacity>
 									</View>
 								</View>
-								<Text style={style.header}>{distance}</Text>
-							</View>
-							<View style={style.navs}>
-								<View style={{ flexDirection: 'row' }}>
-									<TouchableOpacity style={style.nav} onPress={() => getAllMenus()}>
-										<Text>menu ({numMenus})</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("makereservation", { locationid })}>
-										<Text>Book Table</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</>
-					: null }
-				</View>
-
-				<View style={style.body}>
-					{loaded ? 
-						<>
-							{showMenus && (
-								<FlatList
-									showsVerticalScrollIndicator={false}
-									style={{ marginHorizontal: 20, marginTop: 20 }}
-									data={menus}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.row}>
-											{item.row.map(( menu, index ) => (
-												menu.name ? 
-													<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id })}>
-														<View style={style.itemImageHolder}>
-															<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
-														</View>
-														<Text style={style.itemName}>{menu.name}</Text>
-													</TouchableOpacity>
-													:
-													<View key={menu.key} style={style.itemDisabled}></View>
-											))}
-										</View>
-									}i
-								/>
-							)}
-
-							{showProducts && (
-								<FlatList
-									showsVerticalScrollIndicator={false}
-									data={products}
-									style={{ height: height - 320 }}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.row}>
-											{item.row.map(product => (
-												product.name ? 
-													<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
-														<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
-														<Text style={style.productName}>{product.name}</Text>
-														{product.info && <Text style={style.productInfo}>{product.info}</Text>}
-
-														<View style={{ flexDirection: 'row' }}>
-															<Text style={style.productDetail}>{product.price}</Text>
-														</View>
-
-														<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
-															<Text style={style.productBuyHeader}>Buy</Text>
+							</>
+						: null }
+					</View>
+					
+					<View style={style.body}>
+						{loaded ? 
+							<>
+								{showMenus && (
+									<FlatList
+										showsVerticalScrollIndicator={false}
+										style={{ marginHorizontal: 20, marginTop: 20 }}
+										data={menus}
+										renderItem={({ item, index }) => 
+											<View key={item.key} style={style.row}>
+												{item.row.map(( menu, index ) => (
+													menu.name ? 
+														<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id })}>
+															<View style={style.itemImageHolder}>
+																<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
+															</View>
+															<Text style={style.itemName}>{menu.name}</Text>
 														</TouchableOpacity>
-													</TouchableOpacity>
-													:
-													<View key={product.key} style={style.product}></View>
-											))}
-										</View>
-									}
-								/>
-							)}
-						</>
-						:
-						<ActivityIndicator size="small"/>
-					}
+														:
+														<View key={menu.key} style={style.itemDisabled}></View>
+												))}
+											</View>
+										}i
+									/>
+								)}
+
+								{showProducts && (
+									<FlatList
+										showsVerticalScrollIndicator={false}
+										data={products}
+										style={{ height: height - 320 }}
+										renderItem={({ item, index }) => 
+											<View key={item.key} style={style.row}>
+												{item.row.map(product => (
+													product.name ? 
+														<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
+															<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
+															<Text style={style.productName}>{product.name}</Text>
+															{product.info && <Text style={style.productInfo}>{product.info}</Text>}
+
+															{product.price != "" && (
+																<View style={{ flexDirection: 'row' }}>
+																	<Text style={style.productDetail}>$ {product.price}</Text>
+																</View>
+															)}
+
+															<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
+																<Text style={style.productBuyHeader}>Buy</Text>
+															</TouchableOpacity>
+														</TouchableOpacity>
+														:
+														<View key={product.key} style={style.product}></View>
+												))}
+											</View>
+										}
+									/>
+								)}
+							</>
+							:
+							<ActivityIndicator size="small"/>
+						}
+					</View>
+
+					<View style={style.bottomNavs}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+						</TouchableOpacity>
+					</View>
 				</View>
 
-				<View style={style.bottomNavs}>
-					<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-						<Entypo name="shopping-cart" size={30}/>
-						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-					</TouchableOpacity>
-				</View>
+				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
 			</View>
-
-			{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
+	restaurantprofile: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
-	profileInfo: { height: 320 },
+	profileInfo: { height: 260 },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	headers: { alignItems: 'center' },
-	logoHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 50, height: 90, overflow: 'hidden', width: 90 },
-	logo: { height: 90, width: 90 },
-	header: { fontFamily: 'appFont', fontSize: 15, fontWeight: 'bold', marginVertical: 5 },
-	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8 },
+	logoHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
+	logo: { height: 50, width: 50 },
+	header: { fontFamily: 'appFont', fontSize: 13, fontWeight: 'bold', marginVertical: 5 },
+	phonenumber: { fontFamily: 'appFont', fontSize: 13, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8 },
 
 	navs: { flexDirection: 'row', justifyContent: 'space-around' },
 	nav: { alignItems: 'center', backgroundColor: 'white', borderRadius: 8, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 5, width: 100 },
 
-	body: { flexDirection: 'column', height: screenHeight - 260, justifyContent: 'space-around' },
+	body: { flexDirection: 'column', height: screenHeight - 300, justifyContent: 'space-around' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
 	item: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, flexDirection: 'column', height: itemSize, justifyContent: 'space-between', padding: 2, width: itemSize },
 	itemDisabled: { height: itemSize, width: itemSize },
@@ -289,9 +294,9 @@ const style = StyleSheet.create({
 	// product
 	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10, width: itemSize },
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
-	productName: { fontSize: 20, fontWeight: 'bold' },
+	productName: { fontSize: 15, fontWeight: 'bold' },
 	productInfo: { fontSize: 15 },
-	productDetail: { fontSize: 15, marginHorizontal: 10, marginVertical: 5 },
+	productDetail: { fontSize: 15, margin: 5 },
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
 	productBuyHeader: { textAlign: 'center' },
 

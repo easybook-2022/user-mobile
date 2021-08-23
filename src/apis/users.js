@@ -122,3 +122,14 @@ export const searchDiners = data => {
 export const cancelRequest = id => {
 	return axios.get(`${wifi_api_url}/users/cancel_request/${id}`)
 }
+
+export const getCode = phonenumber => {
+	return axios.get(`${wifi_api_url}/users/get_reset_code/${phonenumber}`)
+}
+
+export const resetPassword = data => {
+	return axios.post(
+		`${wifi_api_url}/users/reset_password`,
+		data
+	)
+}

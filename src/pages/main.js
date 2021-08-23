@@ -245,105 +245,108 @@ export default function main({ navigation }) {
 	}, [])
 	
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<View style={style.box}>
-				<View style={style.headers}>
-					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-						<TextInput style={style.searchInput} placeholder="Search any locations" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
-						<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
-							<FontAwesome name="bell" size={30}/>
-							{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}
+		<View style={style.main}>
+			<View style={{ paddingVertical: offsetPadding }}>
+				<View style={style.box}>
+					<View style={style.headers}>
+						<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+							<TextInput style={style.searchInput} placeholder="Search any locations" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
+							<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
+								<FontAwesome name="bell" size={30}/>
+								{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}
+							</TouchableOpacity>
+						</View>
+					</View>
+
+					<View style={style.body}>
+						{geolocation.longitude && geolocation.latitude ? 
+							<FlatList
+								showsVerticalScrollIndicator={false}
+								data={locations}
+								renderItem={({ item, index }) => 
+									<View key={item.key} style={style.service}>
+										<Text style={style.rowHeader}>{item.locations.length} {item.header} near you</Text>
+
+										{item.index < item.max && (
+											<TouchableOpacity style={style.seeMore} onPress={() => navigation.navigate(item.service)}>
+												<Text style={style.seeMoreHeader}>See More</Text>
+											</TouchableOpacity>
+										)}
+
+										<View style={style.row}>
+											<FlatList
+												ListFooterComponent={() => {
+													if (item.loading && item.index < item.max) {
+														return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
+													}
+
+													return null
+												}}
+												horizontal
+												onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
+												onEndReachedThreshold={0}
+												showsHorizontalScrollIndicator={false}
+												data={item.locations}
+												renderItem={({ item }) => 
+													<TouchableOpacity style={style.location} onPress={() => navigation.navigate(item.nav, { locationid: item.id })}>
+														<View style={style.locationPhotoHolder}>
+															<Image source={{ uri: logo_url + item.logo }} style={{ height: 80, width: 80 }}/>
+														</View>
+
+														<Text style={style.locationName}>{item.name}</Text>
+														<Text style={style.locationDistance}>{item.distance}</Text>
+
+														{displayLocationStatus(item.opentime, item.closetime) ? <Text style={style.locationHours}>{displayLocationStatus(item.opentime, item.closetime)}</Text> : null}
+													</TouchableOpacity>
+												}
+											/>
+										</View>
+									</View>
+								}
+							/>
+							:
+							<ActivityIndicator size="large"/>
+						}
+					</View>
+
+					<View style={style.bottomNavs}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("account")}>
+							<FontAwesome5 name="user-circle" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("recent")}>
+							<FontAwesome name="history" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							clearInterval(updateTrackUser)
+							clearInterval(updateNotifications)
+
+							AsyncStorage.clear()
+
+							navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'login' }]
+								})
+							);
+						}}>
+							<Text style={style.bottomNavHeader}>Log-Out</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
 
-				<View style={style.body}>
-					{geolocation.longitude && geolocation.latitude ? 
-						<FlatList
-							showsVerticalScrollIndicator={false}
-							data={locations}
-							renderItem={({ item, index }) => 
-								<View key={item.key} style={style.service}>
-									<Text style={style.rowHeader}>{item.locations.length} {item.header} near you</Text>
-
-									{item.index < item.max && (
-										<TouchableOpacity style={style.seeMore} onPress={() => navigation.navigate(item.service)}>
-											<Text style={style.seeMoreHeader}>See More</Text>
-										</TouchableOpacity>
-									)}
-
-									<View style={style.row}>
-										<FlatList
-											ListFooterComponent={() => {
-												if (item.loading && item.index < item.max) {
-													return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
-												}
-
-												return null
-											}}
-											horizontal
-											onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
-											onEndReachedThreshold={0}
-											showsHorizontalScrollIndicator={false}
-											data={item.locations}
-											renderItem={({ item }) => 
-												<TouchableOpacity style={style.location} onPress={() => navigation.navigate(item.nav, { locationid: item.id })}>
-													<View style={style.locationPhotoHolder}>
-														<Image source={{ uri: logo_url + item.logo }} style={{ height: 80, width: 80 }}/>
-													</View>
-
-													<Text style={style.locationName}>{item.name}</Text>
-													<Text style={style.locationDistance}>{item.distance}</Text>
-
-													{displayLocationStatus(item.opentime, item.closetime) ? <Text style={style.locationHours}>{displayLocationStatus(item.opentime, item.closetime)}</Text> : null}
-												</TouchableOpacity>
-											}
-										/>
-									</View>
-								</View>
-							}
-						/>
-						:
-						<ActivityIndicator size="large"/>
-					}
-				</View>
-
-				<View style={style.bottomNavs}>
-					<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("account")}>
-						<FontAwesome5 name="user-circle" size={30}/>
-					</TouchableOpacity>
-					<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("recent")}>
-						<FontAwesome name="history" size={30}/>
-					</TouchableOpacity>
-					<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-						<Entypo name="shopping-cart" size={30}/>
-						{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-					</TouchableOpacity>
-					<TouchableOpacity style={style.bottomNav} onPress={() => {
-						clearInterval(updateTrackUser)
-						clearInterval(updateNotifications)
-
-						AsyncStorage.clear()
-
-						navigation.dispatch(
-							CommonActions.reset({
-								index: 1,
-								routes: [{ name: 'login' }]
-							})
-						);
-					}}>
-						<Text style={style.bottomNavHeader}>Log-Out</Text>
-					</TouchableOpacity>
-				</View>
+				<Modal visible={openNotifications}><Notifications navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>
+				<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
 			</View>
-
-			<Modal visible={openNotifications}><Notifications navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>
-			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
 		</View>
 	)
 }
 
 const style = StyleSheet.create({
+	main: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	headers: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: 70, justifyContent: 'space-between', padding: 5, width: '100%' },
 	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 15, margin: 10, padding: 10, width: width - 80 },

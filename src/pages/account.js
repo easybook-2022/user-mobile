@@ -25,7 +25,9 @@ const mastercardLogo = require("../../assets/mastercard.png")
 const unionpayLogo = require("../../assets/unionpay.png")
 const visaLogo = require("../../assets/visa.png")
 
-export default function account({ navigation }) {
+export default function account(props) {
+	const required = props.route.params ? props.route.params.required : ""
+
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
@@ -68,6 +70,15 @@ export default function account({ navigation }) {
 			})
 	}
 
+	const openPaymentMethodForm = () => {
+		setPaymentmethodform({
+			...paymentMethodForm,
+			show: true,
+			type: 'add',
+			number: cardInfo.number, expMonth: cardInfo.expMonth,
+			expYear: cardInfo.expYear, cvc: cardInfo.cvc
+		})
+	}
 	const addNewPaymentMethod = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const { number, expMonth, expYear, cvc } = paymentMethodForm
@@ -331,7 +342,7 @@ export default function account({ navigation }) {
 				})
 				.then((res) => {
 					if (res) {
-						navigation.dispatch(
+						props.navigation.dispatch(
 							CommonActions.reset({
 								index: 0,
 								routes: [{ name: "main" }]
@@ -420,12 +431,16 @@ export default function account({ navigation }) {
 		getThePaymentMethods()
 
 		openCamera()
+
+		if (required == "card") {
+			openPaymentMethodForm()
+		}
 	}, [])
 
 	return (
 		<View style={{ paddingVertical: offsetPadding }}>
 			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
 					<Text style={style.backHeader}>Back</Text>
 				</TouchableOpacity>
 
@@ -487,15 +502,7 @@ export default function account({ navigation }) {
 						<View style={style.paymentMethods}>
 							<Text style={style.paymentMethodHeader}>Payment Method(s)</Text>
 
-							<TouchableOpacity style={style.paymentMethodAdd} onPress={() => {
-								setPaymentmethodform({
-									...paymentMethodForm,
-									show: true,
-									type: 'add',
-									number: cardInfo.number, expMonth: cardInfo.expMonth,
-									expYear: cardInfo.expYear, cvc: cardInfo.cvc
-								})
-							}}>
+							<TouchableOpacity style={style.paymentMethodAdd} onPress={() => openPaymentMethodForm()}>
 								<Text>Add a card</Text>
 							</TouchableOpacity>
 
@@ -512,13 +519,13 @@ export default function account({ navigation }) {
 									</View>
 									<View style={style.paymentMethodActions}>
 										<TouchableOpacity style={info.default ? style.paymentMethodActionDisabled : style.paymentMethodAction} disabled={info.default} onPress={() => usePaymentMethod(info.cardid)}>
-											<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Use as default</Text>
+											<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Set default</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.paymentMethodAction} onPress={() => editPaymentMethod(info.cardid, index)}>
-											<Text style={style.paymentMethodActionHeader}>Change info</Text>
+											<Text style={style.paymentMethodActionHeader}>Edit</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={info.default ? style.paymentMethodActionDisabled : style.paymentMethodAction} disabled={info.default} onPress={() => deletePaymentMethod(info.cardid, index)}>
-											<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Delete</Text>
+											<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Remove</Text>
 										</TouchableOpacity>
 									</View>
 								</View>

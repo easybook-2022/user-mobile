@@ -110,7 +110,7 @@ export default function recent({ navigation }) {
 													))}
 												</View>
 												<View>
-													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>price:</Text> ${product.price}</Text>
+													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>cost:</Text> ${product.cost}</Text>
 												</View>
 											</View>
 										</View>
