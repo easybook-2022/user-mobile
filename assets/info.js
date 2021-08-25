@@ -11,6 +11,9 @@ const users = [
 	{ id: 9, username: "user9", cellnumber: "9999999999", password: "password" },
 	{ id: 10, username: "user10", cellnumber: "1010101010", password: "password" },
 	{ id: 11, username: "user11", cellnumber: "0101010101", password: "password" },
+	{ id: 12, username: "user12", cellnumber: "1231231234", password: "password" },
+	{ id: 13, username: "user13", cellnumber: "2342342345", password: "password" },
+	{ id: 14, username: "user14", cellnumber: "3453453456", password: "password" }
 ]
 const cards = [
 	{ id: 0, number: "4000000000000077", expMonth: 2, expYear: 34, cvc: '232' },
@@ -19,7 +22,7 @@ const cards = [
 	{ id: 3, number: "4000003720000278", expMonth: 9, expYear: 22, cvc: '869' },
 	{ id: 4, number: "4000000000000077", expMonth: 12, expYear: 45, cvc: '054' },
 ]
-const { username, cellnumber, password } = users[0]
+const { username, cellnumber, password } = users[1]
 const { number, expMonth, expYear, cvc } = cards[0]
 
 export const local_api_url = "http://localhost:5000"

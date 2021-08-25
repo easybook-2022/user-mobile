@@ -250,7 +250,7 @@ export default function main({ navigation }) {
 				<View style={style.box}>
 					<View style={style.headers}>
 						<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-							<TextInput style={style.searchInput} placeholder="Search any locations" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
+							<TextInput style={style.searchInput} placeholder="Search anything" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
 							<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
 								<FontAwesome name="bell" size={30}/>
 								{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}
@@ -364,7 +364,7 @@ const style = StyleSheet.create({
 	locationDistance: { fontWeight: 'bold', textAlign: 'center' },
 	locationHours: { fontWeight: 'bold', textAlign: 'center' },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 50, justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },

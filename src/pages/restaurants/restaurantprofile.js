@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
+import { CommonActions } from '@react-navigation/native';
 import { logo_url } from '../../../assets/info'
 import { getLocationProfile } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
@@ -207,7 +208,7 @@ export default function restaurantprofile(props) {
 															<View style={style.itemImageHolder}>
 																<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
 															</View>
-															<Text style={style.itemName}>{menu.name}</Text>
+															<Text style={style.itemName}>{menu.numCategories} {menu.name}</Text>
 														</TouchableOpacity>
 														:
 														<View key={menu.key} style={style.itemDisabled}></View>
@@ -254,11 +255,25 @@ export default function restaurantprofile(props) {
 						}
 					</View>
 
-					<View style={style.bottomNavs}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-							<Entypo name="shopping-cart" size={30}/>
-							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-						</TouchableOpacity>
+					<View style={{ alignItems: 'center', backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+						<View style={style.bottomNavs}>
+							<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+								<Entypo name="shopping-cart" size={30}/>
+								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+							</TouchableOpacity>
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								AsyncStorage.clear()
+
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: 'login' }]
+									})
+								);
+							}}>
+								<Text style={style.bottomNavHeader}>Log-Out</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</View>
 
@@ -273,7 +288,7 @@ const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
 	profileInfo: { height: 260 },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	headers: { alignItems: 'center' },
 	logoHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
@@ -300,7 +315,8 @@ const style = StyleSheet.create({
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
 	productBuyHeader: { textAlign: 'center' },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavs: { flexDirection: 'row', height: 40 },
+	bottomNav: { flexDirection: 'row', height: 30, marginHorizontal: 20, marginVertical: 5 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 })

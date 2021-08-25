@@ -134,64 +134,66 @@ export default function setup({ navigation }) {
 	if (permission === null) return <View/>
 		
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<ScrollView style={{ height: screenHeight - 40, width: '100%' }}>
-				<View style={style.box}>
-					<Text style={style.boxHeader}>Setup</Text>
+		<View style={style.setup}>
+			<View style={{ paddingVertical: offsetPadding, opacity: loading ? 0.5 : 1 }}>
+				<ScrollView style={{ backgroundColor: '#EAEAEA', height: screenHeight - 40, width: '100%' }}>
+					<View style={style.box}>
+						<Text style={style.boxHeader}>Setup</Text>
 
-					<View style={style.inputsBox}>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Username:</Text>
-							<TextInput style={style.input} placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
+						<View style={style.inputsBox}>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Username:</Text>
+								<TextInput style={style.input} placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
+							</View>
+
+							<View style={style.cameraContainer}>
+								<Text style={style.cameraHeader}>Profile Picture</Text>
+
+								{profile.uri ? (
+									<>
+										<Image style={style.camera} source={{ uri: profile.uri }}/>
+
+										<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
+											<AntDesign name="closecircleo" size={30}/>
+										</TouchableOpacity>
+									</>
+								) : (
+									<>
+										<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+
+										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+											<Entypo name="camera" size={30}/>
+										</TouchableOpacity>
+									</>
+								)}	
+							</View>
 						</View>
 
-						<View style={style.cameraContainer}>
-							<Text style={style.cameraHeader}>Profile Picture</Text>
+						{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
 
-							{profile.uri ? (
-								<>
-									<Image style={style.camera} source={{ uri: profile.uri }}/>
+						{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
-									<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
-										<AntDesign name="closecircleo" size={30}/>
-									</TouchableOpacity>
-								</>
-							) : (
-								<>
-									<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
-
-									<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-										<Entypo name="camera" size={30}/>
-									</TouchableOpacity>
-								</>
-							)}	
-						</View>
+						<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupAccount()}>
+							<Text>Done</Text>
+						</TouchableOpacity>
 					</View>
+				</ScrollView>
 
-					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
+				<View style={style.bottomNavs}>
+					<View style={{ flexDirection: 'row' }}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							AsyncStorage.clear()
 
-					{loading ? <ActivityIndicator size="small"/> : null}
-
-					<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupAccount()}>
-						<Text>Done</Text>
-					</TouchableOpacity>
-				</View>
-			</ScrollView>
-
-			<View style={style.bottomNavs}>
-				<View style={{ flexDirection: 'row' }}>
-					<TouchableOpacity style={style.bottomNav} onPress={() => {
-						AsyncStorage.clear()
-
-						navigation.dispatch(
-							CommonActions.reset({
-								index: 1,
-								routes: [{ name: 'login' }]
-							})
-						);
-					}}>
-						<Text style={style.bottomNavHeader}>Log-Out</Text>
-					</TouchableOpacity>
+							navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'login' }]
+								})
+							);
+						}}>
+							<Text style={style.bottomNavHeader}>Log-Out</Text>
+						</TouchableOpacity>
+					</View>
 				</View>
 			</View>
 		</View>
@@ -199,6 +201,7 @@ export default function setup({ navigation }) {
 }
 
 const style = StyleSheet.create({
+	setup: { backgroundColor: 'white' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 
@@ -210,7 +213,7 @@ const style = StyleSheet.create({
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+	errorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },

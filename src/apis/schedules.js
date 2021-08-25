@@ -9,7 +9,7 @@ export const requestAppointment = data => {
 }
 
 export const acceptReservation = id => {
-	return axios.get(`${wifi_api_url}/schedules/accept_reservation/${id}`)
+	return axios.get(`${wifi_api_url}/schedules/accept_request/${id}`)
 }
 
 export const closeRequest = id => {

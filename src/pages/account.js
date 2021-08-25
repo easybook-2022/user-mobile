@@ -438,184 +438,187 @@ export default function account(props) {
 	}, [])
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
-					<Text style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
+		<View style={style.account}>
+			<View style={{ paddingVertical: offsetPadding }}>
+				<View style={style.box}>
+					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+						<Text style={style.backHeader}>Back</Text>
+					</TouchableOpacity>
 
-				<Text style={style.boxHeader}>Account</Text>
+					<Text style={style.boxHeader}>Account</Text>
 
-				{loaded ? 
-					<ScrollView>
-						<View style={style.inputsBox}>
-							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Username:</Text>
-								<TextInput style={style.input} placeholder="username" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
-							</View>
+					{loaded ? 
+						<ScrollView>
+							<View style={style.inputsBox}>
+								<View style={style.inputContainer}>
+									<Text style={style.inputHeader}>Username:</Text>
+									<TextInput style={style.input} placeholder="username" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
+								</View>
 
-							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Cell number:</Text>
-								<TextInput style={style.input} placeholder="cell phone number" onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} autoCorrect={false}/>
-							</View>
+								<View style={style.inputContainer}>
+									<Text style={style.inputHeader}>Cell number:</Text>
+									<TextInput style={style.input} placeholder="cell phone number" onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} autoCorrect={false}/>
+								</View>
 
-							<View style={style.cameraContainer}>
-								<Text style={style.cameraHeader}>Profile Picture</Text>
+								<View style={style.cameraContainer}>
+									<Text style={style.cameraHeader}>Profile Picture</Text>
 
-								{profile.uri ? (
-									<>
-										<Image style={style.camera} source={{ uri: profile.uri }}/>
-
-										<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ ...profile, uri: '', name: '' })}>
-											<AntDesign name="closecircleo" size={30}/>
-										</TouchableOpacity>
-									</>
-								) : (
-									profile.old ? 
+									{profile.uri ? (
 										<>
-											<Image style={style.camera} source={{ uri: logo_url + profile.old }}/>
+											<Image style={style.camera} source={{ uri: profile.uri }}/>
 
-											<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '', old: '' })}>
+											<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ ...profile, uri: '', name: '' })}>
 												<AntDesign name="closecircleo" size={30}/>
 											</TouchableOpacity>
 										</>
-										:
-										<>
-											<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+									) : (
+										profile.old ? 
+											<>
+												<Image style={style.camera} source={{ uri: logo_url + profile.old }}/>
 
-											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-												<Entypo name="camera" size={30}/>
-											</TouchableOpacity>
-										</>
-								)}	
+												<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '', old: '' })}>
+													<AntDesign name="closecircleo" size={30}/>
+												</TouchableOpacity>
+											</>
+											:
+											<>
+												<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+
+												<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+													<Entypo name="camera" size={30}/>
+												</TouchableOpacity>
+											</>
+									)}	
+								</View>
+
+								{loading ? <ActivityIndicator size="small"/> : null}
+
+								<View style={{ alignItems: 'center' }}>
+									<TouchableOpacity style={style.updateButton} onPress={() => updateAccount()}>
+										<Text>Done</Text>
+									</TouchableOpacity>
+								</View>
 							</View>
 
-							{loading ? <ActivityIndicator size="small"/> : null}
+							<View style={style.paymentMethods}>
+								<Text style={style.paymentMethodHeader}>Payment Method(s)</Text>
 
-							<View style={{ alignItems: 'center' }}>
-								<TouchableOpacity style={style.updateButton} onPress={() => updateAccount()}>
-									<Text>Done</Text>
+								<TouchableOpacity style={style.paymentMethodAdd} onPress={() => openPaymentMethodForm()}>
+									<Text>Add a card</Text>
 								</TouchableOpacity>
-							</View>
-						</View>
 
-						<View style={style.paymentMethods}>
-							<Text style={style.paymentMethodHeader}>Payment Method(s)</Text>
-
-							<TouchableOpacity style={style.paymentMethodAdd} onPress={() => openPaymentMethodForm()}>
-								<Text>Add a card</Text>
-							</TouchableOpacity>
-
-							{paymentMethods.map((info, index) => (
-								<View key={info.key} style={style.paymentMethod}>
-									<View style={style.paymentMethodRow}>
-										<Text style={style.paymentMethodHeader}>#{index + 1}:</Text>
-										<View style={style.paymentMethodImageHolder}>
-											<Image style={style.paymentMethodImage} source={info.logo}/>
+								{paymentMethods.map((info, index) => (
+									<View key={info.key} style={style.paymentMethod}>
+										<View style={style.paymentMethodRow}>
+											<Text style={style.paymentMethodHeader}>#{index + 1}:</Text>
+											<View style={style.paymentMethodImageHolder}>
+												<Image style={style.paymentMethodImage} source={info.logo}/>
+											</View>
+											<View style={style.paymentMethodNumberHolder}>
+												<Text style={style.paymentMethodNumberHeader}>{info.number}</Text>
+											</View>
 										</View>
-										<View style={style.paymentMethodNumberHolder}>
-											<Text style={style.paymentMethodNumberHeader}>{info.number}</Text>
+										<View style={style.paymentMethodActions}>
+											<TouchableOpacity style={info.default ? style.paymentMethodActionDisabled : style.paymentMethodAction} disabled={info.default} onPress={() => usePaymentMethod(info.cardid)}>
+												<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Set default</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.paymentMethodAction} onPress={() => editPaymentMethod(info.cardid, index)}>
+												<Text style={style.paymentMethodActionHeader}>Edit</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={info.default ? style.paymentMethodActionDisabled : style.paymentMethodAction} disabled={info.default} onPress={() => deletePaymentMethod(info.cardid, index)}>
+												<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Remove</Text>
+											</TouchableOpacity>
 										</View>
 									</View>
-									<View style={style.paymentMethodActions}>
-										<TouchableOpacity style={info.default ? style.paymentMethodActionDisabled : style.paymentMethodAction} disabled={info.default} onPress={() => usePaymentMethod(info.cardid)}>
-											<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Set default</Text>
+								))}
+							</View>
+
+							{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
+						</ScrollView>
+						:
+						<View style={{ flexDirection: 'column', height: screenHeight - 87, justifyContent: 'space-around' }}>
+							<ActivityIndicator size="small"/>
+						</View>
+					}
+				</View>
+
+				{paymentMethodForm.show && (
+					<Modal transparent={true}>
+						<View style={{ paddingVertical: offsetPadding }}>
+							<View style={style.form}>
+								<View style={style.formContainer}>
+									<View style={{ alignItems: 'center', marginVertical: 5 }}>
+										<TouchableOpacity onPress={() => {
+											setPaymentmethodform({
+												show: false,
+												id: '', type: '',
+												number: '', expMonth: '', expYear: '', cvc: ''
+											})
+										}}>
+											<AntDesign name="closecircleo" size={30}/>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.paymentMethodAction} onPress={() => editPaymentMethod(info.cardid, index)}>
-											<Text style={style.paymentMethodActionHeader}>Edit</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={info.default ? style.paymentMethodActionDisabled : style.paymentMethodAction} disabled={info.default} onPress={() => deletePaymentMethod(info.cardid, index)}>
-											<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Remove</Text>
+									</View>
+
+									<Text style={style.formHeader}>Enter card information</Text>
+
+									<View style={style.formInputBox}>
+										<View style={style.formInputField}>
+											<Text style={style.formInputHeader}>Card number</Text>
+											<TextInput style={style.formInputInput} onChangeText={(number) => setPaymentmethodform({
+												...paymentMethodForm,
+												number
+											})} value={paymentMethodForm.number.toString()} placeholder={paymentMethodForm.placeholder} keyboardType="numeric" autoCorrect={false}/>
+										</View>
+										<View style={style.formInputField}>
+											<Text style={style.formInputHeader}>Expiry month</Text>
+											<TextInput style={style.formInputInput} onChangeText={(expMonth) => setPaymentmethodform({
+												...paymentMethodForm,
+												expMonth
+											})} value={paymentMethodForm.expMonth.toString()} keyboardType="numeric" placeholder="MM" maxLength={2} autoCorrect={false}/>
+										</View>
+										<View style={style.formInputField}>
+											<Text style={style.formInputHeader}>Expiry Year</Text>
+											<TextInput style={style.formInputInput} onChangeText={(expYear) => setPaymentmethodform({
+												...paymentMethodForm,
+												expYear
+											})} value={paymentMethodForm.expYear.toString()} keyboardType="numeric" placeholder="YYYY" maxLength={4} autoCorrect={false}/>
+										</View>
+										<View style={style.formInputField}>
+											<Text style={style.formInputHeader}>Security Code</Text>
+											<TextInput style={style.formInputInput} onChangeText={(cvc) => setPaymentmethodform({
+												...paymentMethodForm,
+												cvc
+											})} value={paymentMethodForm.cvc.toString()} keyboardType="numeric" autoCorrect={false}/>
+										</View>
+									</View>
+
+									{paymentMethodForm.loading ? <ActivityIndicator size="small"/> : null}
+
+									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+										<TouchableOpacity style={style.formSubmit} disabled={paymentMethodForm.loading} onPress={() => {
+											if (paymentMethodForm.type == 'add') {
+												addNewPaymentMethod()
+											} else {
+												updateThePaymentMethod()
+											}
+										}}>
+											<Text style={style.formSubmitHeader}>{paymentMethodForm.type == 'add' ? 'Add' : 'Save'} Payment Method</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
-							))}
+							</View>
 						</View>
-
-						{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
-					</ScrollView>
-					:
-					<View style={{ flexDirection: 'column', height: screenHeight - 87, justifyContent: 'space-around' }}>
-						<ActivityIndicator size="small"/>
-					</View>
-				}
+					</Modal>
+				)}
 			</View>
-
-			{paymentMethodForm.show && (
-				<Modal transparent={true}>
-					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.form}>
-							<View style={style.formContainer}>
-								<View style={{ alignItems: 'center', marginVertical: 5 }}>
-									<TouchableOpacity onPress={() => {
-										setPaymentmethodform({
-											show: false,
-											id: '', type: '',
-											number: '', expMonth: '', expYear: '', cvc: ''
-										})
-									}}>
-										<AntDesign name="closecircleo" size={30}/>
-									</TouchableOpacity>
-								</View>
-
-								<Text style={style.formHeader}>Enter card information</Text>
-
-								<View style={style.formInputBox}>
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Card number</Text>
-										<TextInput style={style.formInputInput} onChangeText={(number) => setPaymentmethodform({
-											...paymentMethodForm,
-											number
-										})} value={paymentMethodForm.number.toString()} placeholder={paymentMethodForm.placeholder} keyboardType="numeric" autoCorrect={false}/>
-									</View>
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Expiry month</Text>
-										<TextInput style={style.formInputInput} onChangeText={(expMonth) => setPaymentmethodform({
-											...paymentMethodForm,
-											expMonth
-										})} value={paymentMethodForm.expMonth.toString()} keyboardType="numeric" placeholder="MM" maxLength={2} autoCorrect={false}/>
-									</View>
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Expiry Year</Text>
-										<TextInput style={style.formInputInput} onChangeText={(expYear) => setPaymentmethodform({
-											...paymentMethodForm,
-											expYear
-										})} value={paymentMethodForm.expYear.toString()} keyboardType="numeric" placeholder="YYYY" maxLength={4} autoCorrect={false}/>
-									</View>
-									<View style={style.formInputField}>
-										<Text style={style.formInputHeader}>Security Code</Text>
-										<TextInput style={style.formInputInput} onChangeText={(cvc) => setPaymentmethodform({
-											...paymentMethodForm,
-											cvc
-										})} value={paymentMethodForm.cvc.toString()} keyboardType="numeric" autoCorrect={false}/>
-									</View>
-								</View>
-
-								{paymentMethodForm.loading ? <ActivityIndicator size="small"/> : null}
-
-								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-									<TouchableOpacity style={style.formSubmit} disabled={paymentMethodForm.loading} onPress={() => {
-										if (paymentMethodForm.type == 'add') {
-											addNewPaymentMethod()
-										} else {
-											updateThePaymentMethod()
-										}
-									}}>
-										<Text style={style.formSubmitHeader}>{paymentMethodForm.type == 'add' ? 'Add' : 'Save'} Payment Method</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					</View>
-				</Modal>
-			)}
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
-	box: { height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
+	account: { backgroundColor: 'white' },
+	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
 

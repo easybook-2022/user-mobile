@@ -72,7 +72,7 @@ export default function login({ navigation }) {
 						{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
 					</View>
 
-					{loading ? <ActivityIndicator color="white" size="small"/> : null }
+					{loading ? <ActivityIndicator color="black" size="small"/> : null }
 
 					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 						<View style={style.options}>

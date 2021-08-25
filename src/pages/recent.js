@@ -59,82 +59,85 @@ export default function recent({ navigation }) {
 	}, [])
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
-					<Text style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
-				<Text style={style.boxHeader}>Recent(s)</Text>
+		<View style={style.recent}>
+			<View style={{ paddingVertical: offsetPadding }}>
+				<View style={style.box}>
+					<TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+						<Text style={style.backHeader}>Back</Text>
+					</TouchableOpacity>
+					<Text style={style.boxHeader}>Recent(s)</Text>
 
-				{loaded ? 
-					items.length > 0 ?
-						<FlatList
-							showsVerticalScrollIndicator={false}
-							data={items}
-							renderItem={({ item, index }) => 
-								<View key={item.key} style={style.group}>
-									<Text style={style.dateHeader}><Text style={{ fontWeight: 'bold' }}>Purchased:</Text> {displayDateStr(item.time)}</Text>
+					{loaded ? 
+						items.length > 0 ?
+							<FlatList
+								showsVerticalScrollIndicator={false}
+								data={items}
+								renderItem={({ item, index }) => 
+									<View key={item.key} style={style.group}>
+										<Text style={style.dateHeader}><Text style={{ fontWeight: 'bold' }}>Purchased:</Text> {displayDateStr(item.time)}</Text>
 
-									{item.items.map(product => (
-										<View style={style.item} key={product.key}>
-											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-												<View style={style.itemImageHolder}>
-													<Image source={{ uri: logo_url + product.image }} style={{ height: 100, width: 100 }}/>
-												</View>
-												<View style={style.itemInfos}>
-													<Text style={style.itemName}>{product.name}</Text>
+										{item.items.map(product => (
+											<View style={style.item} key={product.key}>
+												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+													<View style={style.itemImageHolder}>
+														<Image source={{ uri: logo_url + product.image }} style={{ height: 100, width: 100 }}/>
+													</View>
+													<View style={style.itemInfos}>
+														<Text style={style.itemName}>{product.name}</Text>
 
-													{product.options.map(option => (
-														<Text key={option.key} style={style.itemInfo}>
-															<Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> 
-															{option.selected}
-														</Text>
-													))}
-
-													{product.others.map(other => (
-														other.selected ? 
+														{product.options.map(option => (
 															<Text key={option.key} style={style.itemInfo}>
-																<Text style={{ fontWeight: 'bold' }}>{option.name}:</Text>
-																<Text>{option.input}</Text>
+																<Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> 
+																{option.selected}
 															</Text>
-														: null
-													))}
+														))}
 
-													{product.sizes.map((size, infoindex) => (
-														size.selected ? 
-															<Text key={size.key} style={style.itemInfo}>
-																<Text style={{ fontWeight: 'bold' }}>Size:</Text>
-																<Text>{option.name}</Text>
-															</Text>
-														: null
-													))}
-												</View>
-												<View>
-													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>cost:</Text> ${product.cost}</Text>
+														{product.others.map(other => (
+															other.selected ? 
+																<Text key={option.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>{option.name}:</Text>
+																	<Text>{option.input}</Text>
+																</Text>
+															: null
+														))}
+
+														{product.sizes.map((size, infoindex) => (
+															size.selected ? 
+																<Text key={size.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>Size:</Text>
+																	<Text>{option.name}</Text>
+																</Text>
+															: null
+														))}
+													</View>
+													<View>
+														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>cost:</Text> ${product.cost}</Text>
+													</View>
 												</View>
 											</View>
-										</View>
-									))}
-								</View>
-							}
-						/>
+										))}
+									</View>
+								}
+							/>
+							:
+							<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
+								<Text>You don't have any recents</Text>
+							</View>
 						:
-						<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
-							<Text>You don't have any recents</Text>
+						<View style={{ flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
+							<ActivityIndicator size="small"/>
 						</View>
-					:
-					<View style={{ flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
-						<ActivityIndicator size="small"/>
-					</View>
-				}
+					}
+				</View>
 			</View>
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
-	box: { height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
+	recent: { backgroundColor: 'white' },
+	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 

@@ -311,222 +311,223 @@ export default function booktime(props) {
 	}, [])
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
-					<Text style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
+		<View style={style.makereservation}>
+			<View style={{ paddingVertical: offsetPadding }}>
+				<View style={style.box}>
+					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+						<Text style={style.backHeader}>Back</Text>
+					</TouchableOpacity>
 
-				<View style={style.headers}>
-					<Text style={style.boxHeader}>Make a reservation for</Text>
-					<Text style={style.serviceHeader}>{name}</Text>
-				</View>
+					<View style={style.headers}>
+						<Text style={style.boxHeader}>Make a reservation for</Text>
+						<Text style={style.serviceHeader}>{name}</Text>
+					</View>
 
-				{!loaded ? 
-					<ActivityIndicator size="small"/>
-					:
-					times.length > 0 ?
-						<ScrollView style={{ height: screenHeight - 191 }}>
-							<View style={{ alignItems: 'center' }}>
-								<View style={style.dinersBox}>
-									<TouchableOpacity style={style.dinersAdd} onPress={() => openDinersList()}>
-										<Text style={style.dinersAddHeader}>{numSelectedDiners > 0 ? 'Edit' : 'Add Other'} Diner(s)</Text>
-									</TouchableOpacity>
-									<Text style={style.dinersHeader}>{numSelectedDiners} Diner(s) Selected</Text>
-								</View>
-							</View>
-
-							<Text style={style.timesHeader}>Availabilities</Text>
-							<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
-								<View style={style.times}>
-									{times.map(info => (
-										<TouchableOpacity style={!info.available ? style.selected : style.unselect} disabled={!info.available} key={info.key} onPress={() => {
-											if (info.available) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
-										}}>
-											<Text style={{ color: !info.available ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>										
-										</TouchableOpacity>
-									))}
-								</View>
-							</View>
-						</ScrollView>
+					{!loaded ? 
+						<ActivityIndicator size="small"/>
 						:
-						<View style={style.noTime}>
-							<Text style={style.noTimeHeader}>Currently closed</Text>
-						</View>
-				}
-
-				<View style={style.bottomActionsContainer}>
-					<View style={style.bottomActions}>
-						<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
-							<Entypo name="shopping-cart" size={30}/>
-							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomAction} onPress={() => {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 0,
-									routes: [{ name: "main" }]
-								})
-							)
-						}}>
-							<Entypo name="home" size={30}/>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</View>
-
-			{confirm.show && (
-				<Modal transparent={true}>
-					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.confirmBox}>
-							<View style={style.confirmContainer}>
-								{!confirm.requested ? 
-									<>
-										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request a reservation</Text>
-											{'\n'}
-											for {numSelectedDiners} {numSelectedDiners > 1 ? 'people' : 'person'} {'\n'}
-											at
-											<Text style={{ fontFamily: 'appFont' }}>{'\n' + confirm.service + '\n'}</Text>
-											at
-											<Text style={{ fontFamily: 'appFont' }}>{'\n' + confirm.timeheader}</Text>
-										</Text>
-
-										<View style={style.note}>
-											<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} value={confirm.note} autoCorrect={false}/>
-										</View>
-
-										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-											<View style={style.confirmOptions}>
-												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, service: "", time: "" })}>
-													<Text style={style.confirmOptionHeader}>No</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.confirmOption} onPress={() => makeTheReservation()}>
-													<Text style={style.confirmOptionHeader}>Yes</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									</>
-									:
-									<>
-										<View style={style.requestedHeaders}>
-											<Text style={style.requestedHeader}>Reservation requested</Text>
-											<Text style={style.requestedHeader}>at</Text>
-											<Text style={style.requestedHeaderInfos}>
-												<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
-												<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
-												<Text style={style.requestedHeaderInfo}>for {numSelectedDiners} {numSelectedDiners > 1 ? 'people' : 'person'}</Text>
-											</Text>
-											<Text style={{ textAlign: 'center' }}>You will get notified by the restaurant in your notification very soon</Text>
-											<TouchableOpacity style={style.requestedClose} onPress={() => {
-												setConfirm({ ...confirm, show: false, requested: false })
-												props.navigation.goBack()
-											}}>
-												<Text style={style.requestedCloseHeader}>Ok</Text>
-											</TouchableOpacity>
-										</View>
-									</>
-								}
-							</View>
-						</View>
-					</View>
-				</Modal>
-			)}
-
-			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
-
-			{openList && (
-				<Modal>
-					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.dinersList}>
-							<TextInput style={style.dinerNameInput} placeholder="Search diner to add to reservation" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
-
-							<View style={style.dinersListContainer}>
-								<View style={{ height: '50%', overflow: 'hidden' }}>
-									<Text style={style.dinersHeader}>{numDiners} Searched Diner(s)</Text>
-
-									<View>
-										<FlatList
-											data={diners}
-											renderItem={({ item, index }) => 
-												<View key={item.key} style={style.row}>
-													{item.row.map(diner => (
-														diner.username ? 
-															<TouchableOpacity key={diner.key} style={style.diner} onPress={() => selectDiner(diner.id)}>
-																<View style={style.dinerProfileHolder}>
-																	<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
-																</View>
-																<Text style={style.dinerName}>{diner.username}</Text>
-															</TouchableOpacity>
-															:
-															<View key={diner.key} style={style.diner}></View>
-													))}
-												</View>
-											}
-										/>
+						times.length > 0 ?
+							<ScrollView style={{ height: screenHeight - 191 }}>
+								<View style={{ alignItems: 'center' }}>
+									<View style={style.dinersBox}>
+										<TouchableOpacity style={style.dinersAdd} onPress={() => openDinersList()}>
+											<Text style={style.dinersAddHeader}>{numSelectedDiners > 0 ? 'Edit' : 'Add Other'} Diner(s)</Text>
+										</TouchableOpacity>
+										<Text style={style.dinersHeader}>{numSelectedDiners} Diner(s) Selected</Text>
 									</View>
 								</View>
-							
-								<View style={{ height: '50%', overflow: 'hidden' }}>
-									{selectedDiners.length > 0 && (
-										<>
-											<Text style={style.selectedDinersHeader}>{numSelectedDiners} Selected Diner(s) to this reservation</Text>
 
-											<View>
-												<FlatList
-													data={selectedDiners}
-													renderItem={({ item, index }) => 
-														<View key={item.key} style={style.row}>
-															{item.row.map(diner => (
-																diner.username ? 
-																	<View key={diner.key} style={style.diner}>
-																		<TouchableOpacity style={style.dinerDelete} onPress={() => deselectDiner(diner.id)}>
-																			<AntDesign name="closecircleo" size={15}/>
-																		</TouchableOpacity>
-																		<View style={style.dinerProfileHolder}>
-																			<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
-																		</View>
-																		<Text style={style.dinerName}>{diner.username}</Text>
-																	</View>
-																	:
-																	<View key={diner.key} style={style.diner}></View>
-															))}
-														</View>
-													}
-												/>
+								<Text style={style.timesHeader}>Availabilities</Text>
+								<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+									<View style={style.times}>
+										{times.map(info => (
+											<TouchableOpacity style={!info.available ? style.selected : style.unselect} disabled={!info.available} key={info.key} onPress={() => {
+												if (info.available) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
+											}}>
+												<Text style={{ color: !info.available ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>										
+											</TouchableOpacity>
+										))}
+									</View>
+								</View>
+							</ScrollView>
+							:
+							<View style={style.noTime}>
+								<Text style={style.noTimeHeader}>Currently closed</Text>
+							</View>
+					}
+
+					<View style={style.bottomActionsContainer}>
+						<View style={style.bottomActions}>
+							<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
+								<Entypo name="shopping-cart" size={30}/>
+								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+							</TouchableOpacity>
+							<TouchableOpacity style={style.bottomAction} onPress={() => {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 0,
+										routes: [{ name: "main" }]
+									})
+								)
+							}}>
+								<Entypo name="home" size={30}/>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+
+				{confirm.show && (
+					<Modal transparent={true}>
+						<View style={{ paddingVertical: offsetPadding }}>
+							<View style={style.confirmBox}>
+								<View style={style.confirmContainer}>
+									{!confirm.requested ? 
+										<>
+											<Text style={style.confirmHeader}>
+												<Text style={{ fontFamily: 'appFont' }}>Request a reservation</Text>
+												{'\n'}
+												for {numSelectedDiners} {numSelectedDiners > 1 ? 'people' : 'person'} {'\n'}
+												at
+												<Text style={{ fontFamily: 'appFont' }}>{'\n' + confirm.service + '\n'}</Text>
+												at
+												<Text style={{ fontFamily: 'appFont' }}>{'\n' + confirm.timeheader}</Text>
+											</Text>
+
+											<View style={style.note}>
+												<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} value={confirm.note} autoCorrect={false}/>
+											</View>
+
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={style.confirmOptions}>
+													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, service: "", time: "" })}>
+														<Text style={style.confirmOptionHeader}>No</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.confirmOption} onPress={() => makeTheReservation()}>
+														<Text style={style.confirmOptionHeader}>Yes</Text>
+													</TouchableOpacity>
+												</View>
 											</View>
 										</>
-									)}
-								</View>
-							</View>
-
-							<View style={style.itemContainer}>
-								<View style={style.itemImageHolder}>
-									<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + locationInfo.logo }}/>
-								</View>
-								<Text style={style.itemName}>{locationInfo.name}</Text>
-							</View>
-
-							<Text style={style.errorMsg}>{errorMsg}</Text>
-
-							<View style={{ alignItems: 'center' }}>
-								<View style={style.actions}>
-									<TouchableOpacity style={style.action} onPress={() => finish()}>
-										<Text style={style.actionHeader}>Finish</Text>
-									</TouchableOpacity>
+										:
+										<>
+											<View style={style.requestedHeaders}>
+												<Text style={style.requestedHeader}>Reservation requested</Text>
+												<Text style={style.requestedHeader}>at</Text>
+												<Text style={style.requestedHeaderInfos}>
+													<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
+													<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
+													<Text style={style.requestedHeaderInfo}>for {numSelectedDiners} {numSelectedDiners > 1 ? 'people' : 'person'}</Text>
+												</Text>
+												<Text style={{ textAlign: 'center' }}>You will get notified by the restaurant in your notification very soon</Text>
+												<TouchableOpacity style={style.requestedClose} onPress={() => {
+													setConfirm({ ...confirm, show: false, requested: false })
+													props.navigation.goBack()
+												}}>
+													<Text style={style.requestedCloseHeader}>Ok</Text>
+												</TouchableOpacity>
+											</View>
+										</>
+									}
 								</View>
 							</View>
 						</View>
-					</View>
-				</Modal>
-			)}
+					</Modal>
+				)}
+
+				<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
+
+				{openList && (
+					<Modal>
+						<View style={style.dinersListBox}>
+							<View style={{ paddingVertical: offsetPadding }}>
+								<View style={style.dinersList}>
+									<TextInput style={style.dinerNameInput} placeholder="Search diner to add to reservation" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
+
+									<View style={style.dinersListContainer}>
+										<View style={style.dinersListSearched}>
+											<Text style={style.dinersHeader}>{numDiners} Searched Diner(s)</Text>
+
+											<FlatList
+												data={diners}
+												renderItem={({ item, index }) => 
+													<View key={item.key} style={style.row}>
+														{item.row.map(diner => (
+															diner.username ? 
+																<TouchableOpacity key={diner.key} style={style.diner} onPress={() => selectDiner(diner.id)}>
+																	<View style={style.dinerProfileHolder}>
+																		<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
+																	</View>
+																	<Text style={style.dinerName}>{diner.username}</Text>
+																</TouchableOpacity>
+																:
+																<View key={diner.key} style={style.diner}></View>
+														))}
+													</View>
+												}
+											/>
+										</View>
+									
+										<View style={style.dinersListSelected}>
+											{selectedDiners.length > 0 && (
+												<>
+													<Text style={style.selectedDinersHeader}>{numSelectedDiners} Selected Diner(s) to this reservation</Text>
+
+													<FlatList
+														data={selectedDiners}
+														renderItem={({ item, index }) => 
+															<View key={item.key} style={style.row}>
+																{item.row.map(diner => (
+																	diner.username ? 
+																		<View key={diner.key} style={style.diner}>
+																			<TouchableOpacity style={style.dinerDelete} onPress={() => deselectDiner(diner.id)}>
+																				<AntDesign name="closecircleo" size={15}/>
+																			</TouchableOpacity>
+																			<View style={style.dinerProfileHolder}>
+																				<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
+																			</View>
+																			<Text style={style.dinerName}>{diner.username}</Text>
+																		</View>
+																		:
+																		<View key={diner.key} style={style.diner}></View>
+																))}
+															</View>
+														}
+													/>
+												</>
+											)}
+										</View>
+									</View>
+
+									<View style={style.itemContainer}>
+										<View style={style.itemImageHolder}>
+											<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + locationInfo.logo }}/>
+										</View>
+										<Text style={style.itemName}>{locationInfo.name}</Text>
+									</View>
+
+									<Text style={style.errorMsg}>{errorMsg}</Text>
+
+									<View style={{ alignItems: 'center' }}>
+										<View style={style.actions}>
+											<TouchableOpacity style={style.action} onPress={() => finish()}>
+												<Text style={style.actionHeader}>Finish</Text>
+											</TouchableOpacity>
+										</View>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+			</View>
 		</View>
 	)
 }
 
 const style = StyleSheet.create({
+	makereservation: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	headers: { height: 47, marginBottom: 50 },
@@ -569,25 +570,27 @@ const style = StyleSheet.create({
 	requestedHeaderInfo: { fontSize: 18, paddingVertical: 5, textAlign: 'center' },
 
 	// friends list
-	dinersList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	dinerNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
-	dinersListContainer: { flexDirection: 'column', height: '70%', justifyContent: 'space-between' },
-	dinersHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	dinersListBox: { backgroundColor: 'white' },
+	dinersList: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: screenHeight, justifyContent: 'space-between', width: '100%' },
+	dinerNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, margin: 10, padding: 10 },
+	dinersListContainer: { flexDirection: 'column', height: screenHeight - 180, justifyContent: 'space-between' },
+	dinersListSearched: { height: '50%', overflow: 'hidden' },
+	dinersHeader: { fontWeight: 'bold', textAlign: 'center' },
+	dinersListSelected: { height: '50%', overflow: 'hidden' },
+	selectedDinersHeader: { fontWeight: 'bold', textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
 	diner: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
 	dinerDelete: { marginBottom: -5, marginLeft: 60 },
 	dinerProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
 	dinerName: { textAlign: 'center' },
 
-	// selected friends list
-	selectedDinersHeader: { fontWeight: 'bold', textAlign: 'center' },
-
 	// location info
 	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', marginHorizontal: 10, padding: 10 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	itemName: { fontWeight: 'bold', marginVertical: 15, marginLeft: 50, textAlign: 'center' },
+	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 0, textAlign: 'center' },
 
-	actions: { flexDirection: 'row', justifyContent: 'space-around' },
+	actions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5 },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 60 },
 	actionHeader: { textAlign: 'center' },
 })

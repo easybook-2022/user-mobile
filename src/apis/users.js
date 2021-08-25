@@ -119,6 +119,14 @@ export const searchDiners = data => {
 	)
 }
 
+export const selectUser = id => {
+	return axios.get(`${wifi_api_url}/users/select_user/${id}`)
+}
+
+export const requestUserPaymentMethod = id => {
+	return axios.get(`${wifi_api_url}/users/request_user_payment_method/${id}`)
+}
+
 export const cancelRequest = id => {
 	return axios.get(`${wifi_api_url}/users/cancel_request/${id}`)
 }
