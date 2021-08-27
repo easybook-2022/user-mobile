@@ -6,7 +6,7 @@ import { searchFriends, searchDiners } from '../../apis/users'
 import { getLocationProfile, getInfo } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
 import { getProducts, getProductInfo } from '../../apis/products'
-import { getScheduleInfo, addItemtoorder, seeOrders, editDiners, sendOrders, editOrder, deleteOrder, updateOrder, addDiners, editOrderCallfor, updateOrderCallfor } from '../../apis/schedules'
+import { getScheduleInfo, addItemtoorder, seeDiningOrders, editDiners, sendOrders, editOrder, deleteOrder, updateOrder, addDiners, editOrderCallfor, updateOrderCallfor } from '../../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -227,8 +227,8 @@ export default function order(props) {
 			})
 	}
 	
-	const seeTheOrders = async() => {
-		seeOrders(scheduleid)
+	const seeTheDiningOrders = async() => {
+		seeDiningOrders(scheduleid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -321,7 +321,7 @@ export default function order(props) {
 				.then((res) => {
 					if (res) {
 						setDeleterequestinfo({ ...deleteRequestInfo, show: false })
-						seeTheOrders()
+						seeTheDiningOrders()
 					}
 				})
 		}
@@ -358,7 +358,7 @@ export default function order(props) {
 			.then((res) => {
 				if (res) {
 					setIteminfo({ ...itemInfo, show: false })
-					seeOrders()
+					seeTheDiningOrders()
 				}
 			})
 	}
@@ -505,7 +505,7 @@ export default function order(props) {
 					if (res) {
 						setOpendiners(false)
 						setIteminfo({ ...itemInfo, show: false })
-						seeTheOrders()
+						seeTheDiningOrders()
 					}
 				})
 		}
@@ -844,7 +844,7 @@ export default function order(props) {
 				})
 				.then((res) => {
 					if (res) {
-						seeOrders()
+						seeTheDiningOrders()
 						setOpendiners(false)
 						setIteminfo({ ...itemInfo, orderid: "" })
 					}
@@ -939,7 +939,7 @@ export default function order(props) {
 
 				<View style={{ alignItems: 'center', marginTop: 20 }}>
 					<View style={style.orderActions}>
-						<TouchableOpacity style={style.orderAction} onPress={() => seeTheOrders()}>
+						<TouchableOpacity style={style.orderAction} onPress={() => seeTheDiningOrders()}>
 							<Text style={style.orderActionHeader}>See Order(s)</Text>
 						</TouchableOpacity>
 						<TouchableOpacity style={style.orderAction} onPress={() => editTheDiners()}>
@@ -1078,11 +1078,21 @@ export default function order(props) {
 										{itemInfo.others.map((other, index) => (
 											<View key={other.key} style={{ alignItems: 'center' }}>
 												<View style={style.other}>
-													<Text style={style.otherName}># {other.name}:</Text>
-													<Text style={style.otherInput}>{other.input}</Text>
 													<View style={{ flexDirection: 'row' }}>
-														<TouchableOpacity style={other.selected ? style.otherTouchDisabled : style.otherTouch} onPress={() => selectOther(index)}></TouchableOpacity>
-														<Text style={style.otherPrice}>$ {other.price.toFixed(2)}</Text>
+														<Text style={style.otherName}># {other.name}:</Text>
+														<Text style={style.otherInput}>{other.input}</Text>
+													</View>
+													<View style={{ flexDirection: 'row', marginTop: 10 }}>
+														<Text style={style.otherPrice}>$ {other.price}</Text>
+
+														<View style={style.otherActions}>
+															<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
+																<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+															</TouchableOpacity>
+															<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
+																<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+															</TouchableOpacity>
+														</View>
 													</View>
 												</View>
 											</View>
@@ -1626,9 +1636,12 @@ const style = StyleSheet.create({
 	other: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, width: '100%' },
 	otherName: { fontSize: 20, fontWeight: 'bold' },
 	otherInput: { fontSize: 20 },
-	otherTouch: { backgroundColor: 'white', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
-	otherTouchDisabled: { backgroundColor: 'black', borderRadius: 10, borderStyle: 'solid', borderWidth: 5, height: 20, marginTop: 4, width: 20 },
 	otherPrice: { margin: 5 },
+	otherActions: { flexDirection: 'row', marginTop: -5 },
+	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
+	otherActionLeftDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
+	otherActionRight: { alignItems: 'center', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
+	otherActionRightDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
 
 	// sizes
 	sizesBox: { alignItems: 'center', marginVertical: 20 },

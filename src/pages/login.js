@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, ScrollView, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { loginUser } from '../apis/users'
@@ -54,7 +54,7 @@ export default function login({ navigation }) {
 
 	return (
 		<View style={style.login}>
-			<View style={{ paddingVertical: offsetPadding }}>
+			<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 				<View style={style.box}>
 					<Text style={style.boxHeader}>Log-In</Text>
 
@@ -103,7 +103,7 @@ export default function login({ navigation }) {
 						<Text style={style.submitHeader}>Sign-In</Text>
 					</TouchableOpacity>
 				</View>
-			</View>
+			</TouchableWithoutFeedback>
 		</View>
 	);
 }

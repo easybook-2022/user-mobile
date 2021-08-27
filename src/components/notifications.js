@@ -44,8 +44,11 @@ export default function notifications(props) {
 		return timestr
 	}
 
-	const cancelTheOrder = (cartid, index) => {
-		cancelOrder(cartid)
+	const cancelTheOrder = async(cartid, index) => {
+		const userid = await AsyncStorage.getItem("userid")
+		const data = { userid, cartid }
+
+		cancelOrder(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data

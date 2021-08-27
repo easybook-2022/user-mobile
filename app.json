@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "EasyGO(User)",
+    "name": "easygo-user",
     "slug": "easygo-user",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -23,7 +23,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO uses camera to allow you to take a profile picture",
         "NSLocationWhenInUseUsageDescription": "EasyGO uses your location to show you the nearest locations",
-        "NSMicrophoneUsageDescription": ""
+        "NSLocationUsageDescription": "EasyGO uses your location to show you the nearest locations"
       }
     },
     "android": {

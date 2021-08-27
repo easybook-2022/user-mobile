@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, TouchableWithoutFeedback, Keyboard, TouchableOpacity, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { registerUser } from '../apis/users'
@@ -49,7 +49,7 @@ export default function register({ navigation }) {
 
 	return (
 		<View style={style.register}>
-			<View style={{ paddingVertical: offsetPadding }}>
+			<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 				<View style={style.box}>
 					<Text style={style.boxHeader}>Sign-Up</Text>
 
@@ -103,7 +103,7 @@ export default function register({ navigation }) {
 						<Text style={style.submitHeader}>Register</Text>
 					</TouchableOpacity>
 				</View>
-			</View>
+			</TouchableWithoutFeedback>
 		</View>
 	);
 }

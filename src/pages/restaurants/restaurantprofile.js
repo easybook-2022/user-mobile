@@ -12,6 +12,8 @@ import Cart from '../../components/cart'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -255,25 +257,39 @@ export default function restaurantprofile(props) {
 						}
 					</View>
 
-					<View style={{ alignItems: 'center', backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
-						<View style={style.bottomNavs}>
-							<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-								<Entypo name="shopping-cart" size={30}/>
-								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-							</TouchableOpacity>
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
-								AsyncStorage.clear()
+					<View style={style.bottomNavs}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+							<FontAwesome5 name="user-circle" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
+							<FontAwesome name="history" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 0,
+									routes: [{ name: "main" }]
+								})
+							)
+						}}>
+							<Entypo name="home" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							AsyncStorage.clear()
 
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'login' }]
-									})
-								);
-							}}>
-								<Text style={style.bottomNavHeader}>Log-Out</Text>
-							</TouchableOpacity>
-						</View>
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'login' }]
+								})
+							);
+						}}>
+							<Text style={style.bottomNavHeader}>Log-Out</Text>
+						</TouchableOpacity>
 					</View>
 				</View>
 
@@ -315,7 +331,7 @@ const style = StyleSheet.create({
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
 	productBuyHeader: { textAlign: 'center' },
 
-	bottomNavs: { flexDirection: 'row', height: 40 },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginHorizontal: 20, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },

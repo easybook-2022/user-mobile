@@ -523,7 +523,7 @@ export default function cart(props) {
 									renderItem={({ item, index }) => 
 										<View style={style.item} key={item.key}>
 											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-												<TouchableOpacity style={style.itemRemove} onPress={async() => {
+												<TouchableOpacity onPress={async() => {
 													removeFromCart(item.id)
 														.then((res) => {
 															if (res.status == 200) {
@@ -649,7 +649,7 @@ export default function cart(props) {
 							<View style={{ paddingVertical: offsetPadding }}>
 								<View style={style.confirmBox}>
 									<View style={style.confirmContainer}>
-										<Text style={style.confirmHeader}>Checkout and purchases completed</Text>
+										<Text style={style.confirmHeader}>Orders sent</Text>
 
 										<View style={style.confirmOptions}>
 											<TouchableOpacity style={style.confirmOption} onPress={() => {
@@ -729,17 +729,21 @@ export default function cart(props) {
 													{itemInfo.others.map((other, index) => (
 														<View key={other.key} style={{ alignItems: 'center' }}>
 															<View style={style.other}>
-																<Text style={style.otherName}># {other.name}:</Text>
-																<Text style={style.otherInput}>{other.input}</Text>
-																<Text style={style.otherPrice}>$ {other.price}</Text>
+																<View style={{ flexDirection: 'row' }}>
+																	<Text style={style.otherName}># {other.name}:</Text>
+																	<Text style={style.otherInput}>{other.input}</Text>
+																</View>
+																<View style={{ flexDirection: 'row', marginTop: 10 }}>
+																	<Text style={style.otherPrice}>$ {other.price}</Text>
 
-																<View style={style.otherActions}>
-																	<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
-																		<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
-																	</TouchableOpacity>
-																	<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
-																		<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
-																	</TouchableOpacity>
+																	<View style={style.otherActions}>
+																		<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
+																			<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+																		</TouchableOpacity>
+																		<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
+																			<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+																		</TouchableOpacity>
+																	</View>
 																</View>
 															</View>
 														</View>
@@ -1062,10 +1066,10 @@ const style = StyleSheet.create({
 	othersBox: { alignItems: 'center', marginVertical: 20 },
 	othersHeader: { fontWeight: 'bold' },
 	others: { marginVertical: 20, width: '100%' },
-	other: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, width: '100%' },
+	other: { alignItems: 'center', marginVertical: 5, width: '100%' },
 	otherName: { fontSize: 20, fontWeight: 'bold' },
 	otherInput: { fontSize: 20 },
-	otherPrice: { fontWeight: 'bold', marginTop: 5 },
+	otherPrice: { fontWeight: 'bold', marginRight: 10, marginTop: 5 },
 	otherActions: { flexDirection: 'row', marginTop: -5 },
 	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
 	otherActionLeftDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },

@@ -144,122 +144,123 @@ export default function booktime(props) {
 	}, [])
 
 	return (
-		<View style={{ paddingVertical: offsetPadding }}>
-			<View style={style.box}>
-				<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
-					<Text style={style.backHeader}>Back</Text>
-				</TouchableOpacity>
+		<View style={style.booktime}>
+			<View style={{ paddingVertical: offsetPadding }}>
+				<View style={style.box}>
+					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+						<Text style={style.backHeader}>Back</Text>
+					</TouchableOpacity>
 
-				<View style={style.headers}>
-					<Text style={style.boxHeader}>Book a time for</Text>
-					<Text style={style.serviceHeader}>{name}</Text>
-				</View>
+					<View style={style.headers}>
+						<Text style={style.boxHeader}>Book a time for</Text>
+						<Text style={style.serviceHeader}>{name}</Text>
+					</View>
 
-				{!loaded ? 
-					<ActivityIndicator size="small"/>
-					:
-					times.length > 0 ? 
-						<ScrollView style={{ height: screenHeight - 191 }}>
-							<Text style={style.timesHeader}>Availabilities</Text>
-							<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
-								<View style={style.times}>
-									{times.map(info => (
-										<TouchableOpacity style={!info.available ? style.selected : style.unselect} disabled={!info.available} key={info.key} onPress={() => {
-											if (info.available) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
-										}}>
-											<Text style={{ color: !info.available ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>
-										</TouchableOpacity>
-									))}
-								</View>
-							</View>
-						</ScrollView>
+					{!loaded ? 
+						<ActivityIndicator size="small"/>
 						:
-						<View style={style.noTime}>
-							<Text style={style.noTimeHeader}>Currently closed</Text>
-						</View>
-				}
+						times.length > 0 ? 
+							<ScrollView style={{ height: screenHeight - 191 }}>
+								<Text style={style.timesHeader}>Availabilities</Text>
+								<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
+									<View style={style.times}>
+										{times.map(info => (
+											<TouchableOpacity style={!info.available ? style.selected : style.unselect} disabled={!info.available} key={info.key} onPress={() => {
+												if (info.available) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
+											}}>
+												<Text style={{ color: !info.available ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>
+											</TouchableOpacity>
+										))}
+									</View>
+								</View>
+							</ScrollView>
+							:
+							<View style={style.noTime}>
+								<Text style={style.noTimeHeader}>Currently closed</Text>
+							</View>
+					}
 
-				<View style={style.bottomActionsContainer}>
-					<View style={style.bottomActions}>
-						<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
-							<Entypo name="shopping-cart" size={30}/>
-							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomAction} onPress={() => {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 0,
-									routes: [{ name: "main" }]
-								})
-							)
-						}}>
-							<Entypo name="home" size={30}/>
-						</TouchableOpacity>
+					<View style={style.bottomNavsContainer}>
+						<View style={style.bottomNavs}>
+							<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+								<Entypo name="shopping-cart" size={30}/>
+								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+							</TouchableOpacity>
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 0,
+										routes: [{ name: "main" }]
+									})
+								)
+							}}>
+								<Entypo name="home" size={30}/>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</View>
-			</View>
 
-			{confirm.show && (
-				<Modal transparent={true}>
-					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.confirmBox}>
-							<View style={style.confirmContainer}>
-								{!confirm.requested ? 
-									<>
-										<Text style={style.confirmHeader}>
-											<Text style={{ fontFamily: 'appFont' }}>Request an appointment for </Text>
-											{confirm.service + '\n'}
-											at
-											{'\n' + confirm.timeheader}
-										</Text>
+				{confirm.show && (
+					<Modal transparent={true}>
+						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
+							<View style={style.confirmBox}>
+								<View style={style.confirmContainer}>
+									{!confirm.requested ? 
+										<>
+											<Text style={style.confirmHeader}>
+												<Text style={{ fontFamily: 'appFont' }}>Request an appointment for </Text>
+												{confirm.service + '\n'}
+												at
+												{'\n' + confirm.timeheader}
+											</Text>
 
-										<View style={style.note}>
-											<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+											<View style={style.note}>
 												<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} autoCorrect={false}/>
-											</TouchableWithoutFeedback>
-										</View>
+											</View>
 
-										{confirm.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
+											{confirm.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
 
-										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-											<View style={style.confirmOptions}>
-												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, service: "", time: "", errormsg: "" })}>
-													<Text style={style.confirmOptionHeader}>No</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
-													<Text style={style.confirmOptionHeader}>Yes</Text>
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={style.confirmOptions}>
+													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, service: "", time: "", errormsg: "" })}>
+														<Text style={style.confirmOptionHeader}>No</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
+														<Text style={style.confirmOptionHeader}>Yes</Text>
+													</TouchableOpacity>
+												</View>
+											</View>
+										</>
+										:
+										<>
+											<View style={style.requestedHeaders}>
+												<Text style={style.requestedHeader}>Appointment requested {'\n'}</Text>
+												<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
+												<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
+												<Text style={style.requestedHeaderInfo}>You will get notified by the salon in your notification very soon</Text>
+												<TouchableOpacity style={style.requestedClose} onPress={() => {
+													setConfirm({ ...confirm, show: false, requested: false })
+													props.navigation.goBack()
+												}}>
+													<Text style={style.requestedCloseHeader}>Ok</Text>
 												</TouchableOpacity>
 											</View>
-										</View>
-									</>
-									:
-									<>
-										<View style={style.requestedHeaders}>
-											<Text style={style.requestedHeader}>Appointment requested {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>You will get notified by the salon in your notification very soon</Text>
-											<TouchableOpacity style={style.requestedClose} onPress={() => {
-												setConfirm({ ...confirm, show: false, requested: false })
-												props.navigation.goBack()
-											}}>
-												<Text style={style.requestedCloseHeader}>Ok</Text>
-											</TouchableOpacity>
-										</View>
-									</>
-								}
+										</>
+									}
+								</View>
 							</View>
-						</View>
-					</View>
-				</Modal>
-			)}
+						</TouchableWithoutFeedback>
+					</Modal>
+				)}
 
-			<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
+				<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
+			</View>
 		</View>
 	)
 }
 
 const style = StyleSheet.create({
+	booktime: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
@@ -276,9 +277,9 @@ const style = StyleSheet.create({
 	noTime: { flexDirection: 'column', height: screenHeight - 191, justifyContent: 'space-around', width: '100%' },
 	noTimeHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 
-	bottomActionsContainer: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around' },
-	bottomActions: { flexDirection: 'row', height: '100%', justifyContent: 'space-between', width: 100 },
-	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavsContainer: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around' },
+	bottomNavs: { flexDirection: 'row', height: '100%', justifyContent: 'space-between', width: 100 },
+	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 

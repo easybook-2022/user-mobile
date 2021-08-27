@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { AsyncStorage, Dimensions, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { getCode } from '../apis/users'
@@ -49,7 +49,7 @@ export default function forgotpassword({ navigation }) {
 
 	return (
 		<View style={style.forgotpassword}>
-			<View style={{ paddingVertical: offsetPadding }}>
+			<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 				<View style={style.box}>
 					<Text style={style.boxHeader}>Forgot Password</Text>
 
@@ -114,7 +114,7 @@ export default function forgotpassword({ navigation }) {
 						</TouchableOpacity>
 					}
 				</View>
-			</View>
+			</TouchableWithoutFeedback>
 		</View>
 	);
 }

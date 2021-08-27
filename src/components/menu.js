@@ -11,7 +11,12 @@ import { getNumCartItems } from '../apis/carts'
 
 import Cart from '../components/cart'
 
+import Ionicons from 'react-native-vector-icons/Ionicons'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
+import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -161,7 +166,7 @@ export default function menu(props) {
 					<View style={style.body}>
 						<View style={style.headers}>
 							<Text style={[style.header, { fontFamily: 'appFont' }]}>{menuName}</Text>
-							<Text style={style.header}>djfkldsjflksdjf{menuInfo}</Text>
+							<Text style={style.header}>{menuInfo}</Text>
 						</View>
 
 						{showMenus && (
@@ -248,23 +253,39 @@ export default function menu(props) {
 						)}
 					</View>
 
-					<View style={style.bottomActionsContainer}>
-						<View style={style.bottomActions}>
-							<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
-								<Entypo name="shopping-cart" size={30}/>
-								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-							</TouchableOpacity>
-							<TouchableOpacity style={style.bottomAction} onPress={() => {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 0,
-										routes: [{ name: "main" }]
-									})
-								)
-							}}>
-								<Entypo name="home" size={30}/>
-							</TouchableOpacity>
-						</View>
+					<View style={style.bottomNavs}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+							<FontAwesome5 name="user-circle" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
+							<FontAwesome name="history" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 0,
+									routes: [{ name: "main" }]
+								})
+							)
+						}}>
+							<Entypo name="home" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							AsyncStorage.clear()
+
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'login' }]
+								})
+							);
+						}}>
+							<Text style={style.bottomNavHeader}>Log-Out</Text>
+						</TouchableOpacity>
 					</View>
 				</View>
 
@@ -281,7 +302,7 @@ const style = StyleSheet.create({
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	body: { height: screenHeight - 110 },
-	headers: { height: 106 },
+	headers: { height: 56 },
 	header: { fontSize: 20, textAlign: 'center' },
 	bodyHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
 
@@ -304,9 +325,8 @@ const style = StyleSheet.create({
 	serviceDetail: { fontSize: 15 },
 	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 
-	bottomActionsContainer: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around' },
-	bottomActions: { flexDirection: 'row', height: '100%', justifyContent: 'space-between', width: 100 },
-	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
-	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 })

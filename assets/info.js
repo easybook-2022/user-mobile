@@ -22,7 +22,7 @@ const cards = [
 	{ id: 3, number: "4000003720000278", expMonth: 9, expYear: 22, cvc: '869' },
 	{ id: 4, number: "4000000000000077", expMonth: 12, expYear: 45, cvc: '054' },
 ]
-const { username, cellnumber, password } = users[1]
+const { username, cellnumber, password } = users[0]
 const { number, expMonth, expYear, cvc } = cards[0]
 
 export const local_api_url = "http://localhost:5000"

@@ -94,14 +94,14 @@ export default function recent({ navigation }) {
 
 														{product.others.map(other => (
 															other.selected ? 
-																<Text key={option.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>{option.name}:</Text>
-																	<Text>{option.input}</Text>
+																<Text key={other.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>{other.name}:</Text>
+																	<Text>{other.input}</Text>
 																</Text>
 															: null
 														))}
 
-														{product.sizes.map((size, infoindex) => (
+														{product.sizes.map(size => (
 															size.selected ? 
 																<Text key={size.key} style={style.itemInfo}>
 																	<Text style={{ fontWeight: 'bold' }}>Size:</Text>

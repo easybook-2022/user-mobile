@@ -52,8 +52,8 @@ export const addItemtoorder = data => {
 	)
 }
 
-export const seeOrders = id => {
-	return axios.get(`${wifi_api_url}/schedules/see_orders/${id}`)
+export const seeDiningOrders = id => {
+	return axios.get(`${wifi_api_url}/schedules/see_dining_orders/${id}`)
 }
 
 export const editDiners = id => {

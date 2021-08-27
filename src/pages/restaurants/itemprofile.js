@@ -9,8 +9,10 @@ import { getNumCartItems, addItemtocart } from '../../apis/carts'
 
 import Cart from '../../components/cart'
 
-import Entypo from 'react-native-vector-icons/Entypo'
 import AntDesign from 'react-native-vector-icons/AntDesign'
+import Entypo from 'react-native-vector-icons/Entypo'
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -502,17 +504,21 @@ export default function itemProfile(props) {
 									{others.map((other, index) => (
 										<View key={other.key} style={{ alignItems: 'center' }}>
 											<View style={style.other}>
-												<Text style={style.otherName}># {other.name}:</Text>
-												<Text style={style.otherInput}>{other.input}</Text>
-												<Text style={style.otherPrice}>$ {other.price}</Text>
+												<View style={{ flexDirection: 'row' }}>
+													<Text style={style.otherName}># {other.name}:</Text>
+													<Text style={style.otherInput}>{other.input}</Text>
+												</View>
+												<View style={{ flexDirection: 'row', marginTop: 10 }}>
+													<Text style={style.otherPrice}>$ {other.price}</Text>
 
-												<View style={style.otherActions}>
-													<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
-														<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
-														<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
-													</TouchableOpacity>
+													<View style={style.otherActions}>
+														<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
+															<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+														</TouchableOpacity>
+														<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
+															<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+														</TouchableOpacity>
+													</View>
 												</View>
 											</View>
 										</View>
@@ -573,23 +579,39 @@ export default function itemProfile(props) {
 						</View>
 					</ScrollView>
 
-					<View style={style.bottomActionsContainer}>
-						<View style={style.bottomActions}>
-							<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
-								<Entypo name="shopping-cart" size={30}/>
-								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-							</TouchableOpacity>
-							<TouchableOpacity style={style.bottomAction} onPress={() => {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 0,
-										routes: [{ name: "main" }]
-									})
-								)
-							}}>
-								<Entypo name="home" size={30}/>
-							</TouchableOpacity>
-						</View>
+					<View style={style.bottomNavs}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+							<FontAwesome5 name="user-circle" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
+							<FontAwesome name="history" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 0,
+									routes: [{ name: "main" }]
+								})
+							)
+						}}>
+							<Entypo name="home" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							AsyncStorage.clear()
+
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'login' }]
+								})
+							);
+						}}>
+							<Text style={style.bottomNavHeader}>Log-Out</Text>
+						</TouchableOpacity>
 					</View>
 
 					{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
@@ -773,7 +795,7 @@ export default function itemProfile(props) {
 const style = StyleSheet.create({
 	itemprofile: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 34, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
@@ -798,10 +820,10 @@ const style = StyleSheet.create({
 	othersBox: { alignItems: 'center', marginVertical: 20 },
 	othersHeader: { fontWeight: 'bold' },
 	others: { marginVertical: 20, width: '100%' },
-	other: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, width: '100%' },
+	other: {  },
 	otherName: { fontSize: 20, fontWeight: 'bold' },
 	otherInput: { fontSize: 20 },
-	otherPrice: { fontWeight: 'bold', marginTop: 5 },
+	otherPrice: { fontWeight: 'bold', marginRight: 10, marginTop: 5 },
 	otherActions: { flexDirection: 'row', marginTop: -5 },
 	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
 	otherActionLeftDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
@@ -835,9 +857,9 @@ const style = StyleSheet.create({
 	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
 	itemActionHeader: { textAlign: 'center' },
 
-	bottomActionsContainer: { backgroundColor: 'white', bottom: 0, flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomActions: { flexDirection: 'row', height: '100%', justifyContent: 'space-between', width: 100 },
-	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 
 	// users list

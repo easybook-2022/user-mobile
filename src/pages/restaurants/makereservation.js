@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { logo_url } from '../../../assets/info'
@@ -13,6 +13,8 @@ import Cart from '../../components/cart'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons'
 import Entypo from 'react-native-vector-icons/Entypo'
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -52,7 +54,7 @@ export default function booktime(props) {
 			})
 	}
 	
-	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", note: "", requested: false })
+	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", note: "", requested: false, errormsg: "" })
 
 	const getTheLocationProfile = async() => {
 		const longitude = await AsyncStorage.getItem("longitude")
@@ -151,13 +153,15 @@ export default function booktime(props) {
 				if (res.status == 200) {
 					if (!res.data.errormsg) {
 						return res.data
+					} else {
+						setConfirm({ ...confirm, errormsg: res.data.errormsg })
 					}
 				}
 			})
 			.then((res) => {
 				if (res) setConfirm({ ...confirm, requested: true })
 			})
-			.catch((error) => console.log(error.message))
+			.catch((error) => alert(error.message))
 	}
 	const finish = async() => {
 		setOpenlist(false)
@@ -338,7 +342,7 @@ export default function booktime(props) {
 								</View>
 
 								<Text style={style.timesHeader}>Availabilities</Text>
-								<View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+								<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 									<View style={style.times}>
 										{times.map(info => (
 											<TouchableOpacity style={!info.available ? style.selected : style.unselect} disabled={!info.available} key={info.key} onPress={() => {
@@ -356,29 +360,35 @@ export default function booktime(props) {
 							</View>
 					}
 
-					<View style={style.bottomActionsContainer}>
-						<View style={style.bottomActions}>
-							<TouchableOpacity style={style.bottomAction} onPress={() => setOpencart(true)}>
-								<Entypo name="shopping-cart" size={30}/>
-								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-							</TouchableOpacity>
-							<TouchableOpacity style={style.bottomAction} onPress={() => {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 0,
-										routes: [{ name: "main" }]
-									})
-								)
-							}}>
-								<Entypo name="home" size={30}/>
-							</TouchableOpacity>
-						</View>
+					<View style={style.bottomNavs}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+							<FontAwesome5 name="user-circle" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
+							<FontAwesome name="history" size={30}/>
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+							<Entypo name="shopping-cart" size={30}/>
+							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+						</TouchableOpacity>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							AsyncStorage.clear()
+
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'login' }]
+								})
+							);
+						}}>
+							<Text style={style.bottomNavHeader}>Log-Out</Text>
+						</TouchableOpacity>
 					</View>
 				</View>
 
 				{confirm.show && (
 					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
+						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
 									{!confirm.requested ? 
@@ -396,6 +406,8 @@ export default function booktime(props) {
 											<View style={style.note}>
 												<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} value={confirm.note} autoCorrect={false}/>
 											</View>
+
+											{confirm.errormsg ? <Text style={style.errorMsg}>You already requested a reservation for this restaurant</Text> : null}
 
 											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 												<View style={style.confirmOptions}>
@@ -430,7 +442,7 @@ export default function booktime(props) {
 									}
 								</View>
 							</View>
-						</View>
+						</TouchableWithoutFeedback>
 					</Modal>
 				)}
 
@@ -547,9 +559,9 @@ const style = StyleSheet.create({
 	noTime: { flexDirection: 'column', height: screenHeight - 191, justifyContent: 'space-around', width: '100%' },
 	noTimeHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 
-	bottomActionsContainer: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around' },
-	bottomActions: { flexDirection: 'row', height: '100%', justifyContent: 'space-between', width: 100 },
-	bottomAction: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, marginHorizontal: 20, marginVertical: 5 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 
@@ -559,6 +571,7 @@ const style = StyleSheet.create({
 	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
 	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 80, padding: 5, width: '80%' },
+	errorMsg: { color: 'red', paddingHorizontal: 10, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },
