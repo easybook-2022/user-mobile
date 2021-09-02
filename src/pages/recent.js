@@ -66,7 +66,7 @@ export default function recent({ navigation }) {
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 					<Text style={style.boxHeader}>Recent(s)</Text>
-
+					
 					{loaded ? 
 						items.length > 0 ?
 							<FlatList
@@ -137,7 +137,7 @@ export default function recent({ navigation }) {
 const style = StyleSheet.create({
 	recent: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 

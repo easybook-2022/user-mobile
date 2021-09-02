@@ -127,7 +127,7 @@ export default function notifications(props) {
 				if (res) getTheNotifications()
 			})
 	}
-	const acceptTheReservationJoining = async(scheduleid) => {
+	const acceptTheReservationJoining = async(locationid, scheduleid) => {
 		const userid = await AsyncStorage.getItem("userid")
 		const data = { userid, scheduleid }
 
@@ -146,7 +146,7 @@ export default function notifications(props) {
 			.then((res) => {
 				if (res) {
 					props.close()
-					props.navigation.navigate("order", { scheduleid: scheduleid })
+					props.navigation.navigate("order", { locationid, scheduleid: scheduleid })
 				}
 			})
 			.catch((err) => {
@@ -299,14 +299,14 @@ export default function notifications(props) {
 																<Text style={style.itemServiceHeader}>
 																	You requested a reservation
 
-																	{item.diners > 0 ? 
-																		'for you and ' + (item.diners) + ' other ' + (item.diners == 1 ? 'person' : 'people')
-																	: null }
+																	{item.diners > 0 ? 'for you and ' + (item.diners) + ' other ' + (item.diners == 1 ? 'person' : 'people') : null }
 
 																	{'\n'}at{'\n'}
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
 																	{'\n'}at{'\n'}
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
+																	{'\n'}
+																	<Text style={{ fontWeight: '100' }}>waiting for the restaurant's response</Text>
 																</Text>
 																:
 																<Text style={style.itemServiceHeader}>
@@ -342,7 +342,7 @@ export default function notifications(props) {
 																			<View style={style.itemServiceOrder}>
 																				<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
 																					props.close()
-																					props.navigation.navigate("order", { scheduleid: item.id })
+																					props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
 																				}}>
 																					<Text style={style.itemServiceOrderTouchHeader}>Start Ordering your meal(s)</Text>
 																				</TouchableOpacity>
@@ -366,7 +366,7 @@ export default function notifications(props) {
 																					<TouchableOpacity style={style.action} onPress={() => cancelTheReservationJoining(item.id)}>
 																						<Text style={style.actionHeader}>Not Coming</Text>
 																					</TouchableOpacity>
-																					<TouchableOpacity style={style.action} onPress={() => acceptTheReservationJoining(item.id)}>
+																					<TouchableOpacity style={style.action} onPress={() => acceptTheReservationJoining(item.locationid, item.id)}>
 																						<Text style={style.actionHeader}>Accept</Text>
 																					</TouchableOpacity>
 																				</View>
@@ -509,7 +509,7 @@ export default function notifications(props) {
 const style = StyleSheet.create({
 	notifications: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: screenHeight, width: '100%' },
-	close: { margin: 20 },
+	close: { marginTop: 20, marginHorizontal: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	body: { flexDirection: 'column', height: screenHeight - 112, justifyContent: 'space-around' },

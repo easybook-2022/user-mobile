@@ -185,11 +185,11 @@ export default function main({ navigation }) {
 	}
 	const trackUserLocation = async() => {
 		let longitude, latitude
-
+		
 		if (locationPermission) {
 			const last = await Location.getLastKnownPositionAsync()
 
-			if (last.coords.longitude && last.coords.latitude) {
+			if (last) {
 				longitude = last.coords.longitude
 				latitude = last.coords.latitude
 

@@ -33,7 +33,7 @@ export default function cart(props) {
 	const [errorMsg, setErrormsg] = useState('')
 	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 	const [showNotifyUser, setShownotifyuser] = useState({ show: false, userid: 0, username: "" })
-
+	
 	const changeOption = (index, selected) => {
 		let { options } = itemInfo
 		let newOptions = [...options]
@@ -990,7 +990,7 @@ export default function cart(props) {
 const style = StyleSheet.create({
 	cart: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: screenHeight, width: '100%' },
-	close: { margin: 20 },
+	close: { marginTop: 20, marginHorizontal: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },

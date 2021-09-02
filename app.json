@@ -2,7 +2,7 @@
   "expo": {
     "name": "easygo-user",
     "slug": "easygo-user",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -18,12 +18,14 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.geottuse.serviceapp.users",
+      "bundleIdentifier": "com.geottuse.serviceapp.user",
       "buildNumber": "0",
       "infoPlist": {
-        "NSCameraUsageDescription": "EasyGO uses camera to allow you to take a profile picture",
-        "NSLocationWhenInUseUsageDescription": "EasyGO uses your location to show you the nearest locations",
-        "NSLocationUsageDescription": "EasyGO uses your location to show you the nearest locations"
+        "NSCameraUsageDescription": "EasyGO (User) uses camera to allow you to take a profile picture",
+        "NSMicrophoneUsageDescription": "",
+        "NSLocationWhenInUseUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants, hair/nail salons",
+        "NSLocationUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants, hair/nail salons",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants, hair/nail salons"
       }
     },
     "android": {

@@ -48,12 +48,14 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>EasyGO uses camera to allow you to take a profile picture</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string></string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>EasyGO uses your location to show you the nearest restaurants, hair/nail salons</string>
 	<key>NSLocationUsageDescription</key>
-	<string>EasyGO uses your location to show you the nearest locations</string>
+	<string>EasyGO uses your location to show you the nearest restaurants, hair/nail salons</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>EasyGO uses your location to show you the nearest locations</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string></string>
+	<string>EasyGO uses your location to show you the nearest restaurants, hair/nail salons</string>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

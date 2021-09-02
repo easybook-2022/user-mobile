@@ -396,7 +396,15 @@ export default function booktime(props) {
 											<Text style={style.confirmHeader}>
 												<Text style={{ fontFamily: 'appFont' }}>Request a reservation</Text>
 												{'\n'}
-												for {numSelectedDiners} {numSelectedDiners > 1 ? 'people' : 'person'} {'\n'}
+												for 
+
+												{numSelectedDiners > 0 ? 
+													numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
+													: 
+													" yourself"
+												}
+
+												{'\n'}
 												at
 												<Text style={{ fontFamily: 'appFont' }}>{'\n' + confirm.service + '\n'}</Text>
 												at
@@ -428,7 +436,15 @@ export default function booktime(props) {
 												<Text style={style.requestedHeaderInfos}>
 													<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
 													<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
-													<Text style={style.requestedHeaderInfo}>for {numSelectedDiners} {numSelectedDiners > 1 ? 'people' : 'person'}</Text>
+													<Text style={style.requestedHeaderInfo}>
+														for 
+
+														{numSelectedDiners > 0 ? 
+															numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
+															: 
+															" yourself"
+														}
+													</Text>
 												</Text>
 												<Text style={{ textAlign: 'center' }}>You will get notified by the restaurant in your notification very soon</Text>
 												<TouchableOpacity style={style.requestedClose} onPress={() => {
@@ -539,10 +555,10 @@ export default function booktime(props) {
 const style = StyleSheet.create({
 	makereservation: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
-	headers: { height: 47, marginBottom: 50 },
+	headers: { height: 47, marginVertical: 10 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center' },
 
@@ -579,7 +595,7 @@ const style = StyleSheet.create({
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
 	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	requestedHeader: { fontFamily: 'appFont', fontSize: 25 },
-	requestedHeaderInfos: { marginVertical: 30 },
+	requestedHeaderInfos: { marginBottom: 30 },
 	requestedHeaderInfo: { fontSize: 18, paddingVertical: 5, textAlign: 'center' },
 
 	// friends list

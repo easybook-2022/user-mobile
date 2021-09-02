@@ -1,16 +1,16 @@
 import axios from 'axios'
-import { local_api_url, wifi_api_url } from '../../assets/info'
+import { url } from '../../assets/info'
 
 export const loginUser = data => {
 	return axios.post(
-		`${wifi_api_url}/users/login`, 
+		`${url}/users/login`, 
 		data
 	)
 }
 
 export const registerUser = data => {
 	return axios.post(
-		`${wifi_api_url}/users/register`,
+		`${url}/users/register`,
 		data
 	)
 }
@@ -23,7 +23,7 @@ export const setupUser = data => {
 	form.append("profile", { uri: data.profile.uri, name: data.profile.name })
 
 	return axios.post(
-		`${wifi_api_url}/users/setup`,
+		`${url}/users/setup`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -43,7 +43,7 @@ export const updateUser = data => {
 	}
 
 	return axios.post(
-		`${wifi_api_url}/users/update`,
+		`${url}/users/update`,
 		form,
 		{ headers: {
 			'Content-Type': 'multipart/form-data'
@@ -53,91 +53,91 @@ export const updateUser = data => {
 
 export const addPaymentMethod = data => {
 	return axios.post(
-		`${wifi_api_url}/users/add_paymentmethod`,
+		`${url}/users/add_paymentmethod`,
 		data
 	)
 }
 
 export const updatePaymentMethod = data => {
 	return axios.post(
-		`${wifi_api_url}/users/update_paymentmethod`,
+		`${url}/users/update_paymentmethod`,
 		data
 	)
 }
 
 export const getPaymentMethods = id => {
-	return axios.get(`${wifi_api_url}/users/get_payment_methods/${id}`)
+	return axios.get(`${url}/users/get_payment_methods/${id}`)
 }
 
 export const setPaymentmethodDefault = data => {
 	return axios.post(
-		`${wifi_api_url}/users/set_paymentmethoddefault`,
+		`${url}/users/set_paymentmethoddefault`,
 		data
 	)
 }
 
 export const getPaymentmethodInfo = data => {
 	return axios.post(
-		`${wifi_api_url}/users/get_paymentmethod_info`,
+		`${url}/users/get_paymentmethod_info`,
 		data
 	)
 }
 
 export const deleteThePaymentMethod = data => {
 	return axios.post(
-		`${wifi_api_url}/users/delete_paymentmethod`,
+		`${url}/users/delete_paymentmethod`,
 		data
 	)
 }
 
 export const getUserInfo = id => {
-	return axios.get(`${wifi_api_url}/users/get_user_info/${id}`)
+	return axios.get(`${url}/users/get_user_info/${id}`)
 }
 
 export const getNotifications = id => {
-	return axios.get(`${wifi_api_url}/users/get_notifications/${id}`)
+	return axios.get(`${url}/users/get_notifications/${id}`)
 }
 
 export const getNumUpdates = data => {
 	return axios.post(
-		`${wifi_api_url}/users/get_num_updates`,
+		`${url}/users/get_num_updates`,
 		data
 	)
 }
 
 export const searchFriends = data => {
 	return axios.post(
-		`${wifi_api_url}/users/search_friends`,
+		`${url}/users/search_friends`,
 		data
 	)
 }
 
 export const searchDiners = data => {
 	return axios.post(
-		`${wifi_api_url}/users/search_diners`,
+		`${url}/users/search_diners`,
 		data
 	)
 }
 
 export const selectUser = id => {
-	return axios.get(`${wifi_api_url}/users/select_user/${id}`)
+	return axios.get(`${url}/users/select_user/${id}`)
 }
 
 export const requestUserPaymentMethod = id => {
-	return axios.get(`${wifi_api_url}/users/request_user_payment_method/${id}`)
+	return axios.get(`${url}/users/request_user_payment_method/${id}`)
 }
 
 export const cancelRequest = id => {
-	return axios.get(`${wifi_api_url}/users/cancel_request/${id}`)
+	return axios.get(`${url}/users/cancel_request/${id}`)
 }
 
 export const getCode = phonenumber => {
-	return axios.get(`${wifi_api_url}/users/get_reset_code/${phonenumber}`)
+	return axios.get(`${url}/users/get_reset_code/${phonenumber}`)
 }
 
 export const resetPassword = data => {
 	return axios.post(
-		`${wifi_api_url}/users/reset_password`,
+		`${url}/users/reset_password`,
 		data
 	)
 }

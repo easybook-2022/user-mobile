@@ -446,7 +446,7 @@ export default function account(props) {
 					</TouchableOpacity>
 
 					<Text style={style.boxHeader}>Account</Text>
-
+					
 					{loaded ? 
 						<ScrollView>
 							<View style={style.inputsBox}>
@@ -618,7 +618,7 @@ export default function account(props) {
 const style = StyleSheet.create({
 	account: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
 

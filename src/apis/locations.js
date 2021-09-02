@@ -1,44 +1,44 @@
 import axios from 'axios'
-import { local_api_url, wifi_api_url } from '../../assets/info'
+import { url } from '../../assets/info'
 
 export const getLocations = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/get_locations`,
+		`${url}/locations/get_locations`,
 		data
 	)
 }
 
 export const getMoreLocations = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/get_more_locations`,
+		`${url}/locations/get_more_locations`,
 		data
 	)
 }
 
 export const getLocationProfile = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/get_location_profile`,
+		`${url}/locations/get_location_profile`,
 		data
 	)
 }
 
 export const makeReservation = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/make_reservation`,
+		`${url}/locations/make_reservation`,
 		data
 	)
 }
 
 export const getInfo = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/get_info`,
+		`${url}/locations/get_info`,
 		data
 	)
 }
 
 export const getLocationHours = data => {
 	return axios.post(
-		`${wifi_api_url}/locations/get_hours`,
+		`${url}/locations/get_hours`,
 		data
 	)
 }

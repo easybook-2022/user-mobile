@@ -451,7 +451,7 @@ export default function itemProfile(props) {
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 
-					<ScrollView style={{ height: screenHeight - 114 }}>
+					<ScrollView style={{ height: screenHeight - 90 }}>
 						<View style={{ alignItems: 'center', marginVertical: 20 }}>
 							<View style={style.imageHolder}>
 								<Image source={{ uri: logo_url + itemImage }} style={style.image}/>
@@ -795,7 +795,7 @@ export default function itemProfile(props) {
 const style = StyleSheet.create({
 	itemprofile: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },

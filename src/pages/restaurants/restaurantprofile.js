@@ -18,8 +18,8 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const itemSize = (width * 0.3) - 10
-const imageSize = (width * 0.3) - 70
+const itemSize = (width / 3) - 20
+const imageSize = itemSize - 30
 
 export default function restaurantprofile(props) {
 	let { locationid } = props.route.params
@@ -206,14 +206,14 @@ export default function restaurantprofile(props) {
 											<View key={item.key} style={style.row}>
 												{item.row.map(( menu, index ) => (
 													menu.name ? 
-														<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id })}>
-															<View style={style.itemImageHolder}>
+														<TouchableOpacity key={menu.key} style={style.menu} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id })}>
+															<View style={style.menuImageHolder}>
 																<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
 															</View>
-															<Text style={style.itemName}>{menu.numCategories} {menu.name}</Text>
+															<Text style={style.menuName}>({menu.numCategories}) {menu.name}</Text>
 														</TouchableOpacity>
 														:
-														<View key={menu.key} style={style.itemDisabled}></View>
+														<View key={menu.key} style={style.menuDisabled}></View>
 												))}
 											</View>
 										}i
@@ -304,7 +304,7 @@ const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
 	profileInfo: { height: 260 },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	headers: { alignItems: 'center' },
 	logoHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
@@ -317,10 +317,10 @@ const style = StyleSheet.create({
 
 	body: { flexDirection: 'column', height: screenHeight - 300, justifyContent: 'space-around' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
-	item: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, flexDirection: 'column', height: itemSize, justifyContent: 'space-between', padding: 2, width: itemSize },
-	itemDisabled: { height: itemSize, width: itemSize },
-	itemImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
-	itemName: { fontSize: 10, fontWeight: 'bold', textAlign: 'center' },
+	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, flexDirection: 'column', height: itemSize, justifyContent: 'space-between', padding: 2, width: itemSize },
+	menuDisabled: { height: itemSize, width: itemSize },
+	menuImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
+	menuName: { fontSize: 10, fontWeight: 'bold', textAlign: 'center' },
 
 	// product
 	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10, width: itemSize },
