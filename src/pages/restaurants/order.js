@@ -19,6 +19,7 @@ const imageSize = itemSize - 30
 export default function order(props) {
 	const { locationid, scheduleid } = props.route.params
 
+	const [userId, setUserid] = useState(0)
 	const [timeStr, setTimestr] = useState('')
 	const [name, setName] = useState('')
 	const [totalDiners, setTotaldiners] = useState(0)
@@ -37,25 +38,7 @@ export default function order(props) {
 		image: "", cost: 0, options: [], others: [], sizes: [], quantity: 1, 
 		numorderers: 0
 	})
-	const [rounds, setRounds] = useState([])
 
-	const [openRounds, setOpenrounds] = useState(false)
-	const [numOrders, setNumorders] = useState(2)
-	const [orderingItem, setOrderingitem] = useState({ name: "", info: "", image: "", note: "", options: [], others: [], sizes: [], quantity: 1, cost: 0, errorMsg: "" })
-
-	// diners list to order for
-	const [openDiners, setOpendiners] = useState(false)
-	const [diners, setDiners] = useState([])
-	const [numDiners, setNumdiners] = useState(0)
-	const [selectedDiners, setSelecteddiners] = useState([])
-	const [numSelecteddiners, setNumselecteddiners] = useState(0)
-
-	// friends list to add
-	const [openFriends, setOpenfriends] = useState(false)
-	const [friends, setFriends] = useState([])
-	const [numFriends, setNumfriends] = useState(0)
-	const [selectedFriends, setSelectedfriends] = useState([])
-	const [numSelectedfriends, setNumselectedfriends] = useState(0)
 	const [locationInfo, setLocationinfo] = useState({ name: "", logo: "" })
 	const [errorMsg, setErrormsg] = useState('')
 
@@ -70,7 +53,26 @@ export default function order(props) {
 	const [viewType, setViewtype] = useState('')
 	const [loaded, setLoaded] = useState(false)
 
+	const [openRounds, setOpenrounds] = useState(false)
+	const [rounds, setRounds] = useState([])
+
+	const [openEditdiners, setOpeneditdiners] = useState(false)
+	const [searchedFriends, setSearchedfriends] = useState([])
+	const [numSearchedfriends, setNumsearchedfriends] = useState(0)
+	const [selectedDiners, setSelecteddiners] = useState([])
+	const [numSelecteddiners, setNumselecteddiners] = useState([])
+	const [dinersErrormsg, setDinerserrormsg] = useState('')
+
+	const [openEditcallfor, setOpeneditcallfor] = useState(false)
+	const [diners, setDiners] = useState([])
+	const [numDiners, setNumdiners] = useState(0)
+	const [selectedCallfor, setSelectedcallfor] = useState([])
+	const [numSelectedcallfor, setNumselectedcallfor] = useState(0)
+	const [orderingItem, setOrderingitem] = useState({ name: "", info: "", image: "", note: "", options: [], others: [], sizes: [], quantity: 1, cost: 0, errorMsg: "" })
+
 	const getTheScheduleInfo = async() => {
+		const userId = await AsyncStorage.getItem("userid")
+
 		getScheduleInfo(scheduleid)
 			.then((res) => {
 				if (res.status == 200) {
@@ -95,6 +97,7 @@ export default function order(props) {
 					hour = hour > 12 ? hour - 12 : hour
 					hour = parseInt(hour)
 
+					setUserid(userId)
 					setTimestr(hour + ":" + minute + " " + period)
 					getTheLocationProfile()
 				}
@@ -135,6 +138,7 @@ export default function order(props) {
 		const data = { locationid, menuid }
 
 		setLoaded(false)
+		setViewtype('')
 
 		getInfo(data)
 			.then((res) => {
@@ -267,19 +271,19 @@ export default function order(props) {
 				}
 			})
 	}
-	const editTheDiners = async() => {
-		editDiners(scheduleid)
+	const sendTheOrders = async() => {
+		sendOrders(scheduleid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
 				}
 			})
 			.then((res) => {
-				if (res) {
-					setSelecteddiners(res.diners)
-					setNumselecteddiners(res.numdiners)
-					setOpenfriends(true)
-				}
+				const newRounds = [...rounds]
+
+				newRounds[0].status = "making"
+
+				setRounds(newRounds)
 			})
 	}
 	const editTheOrder = async(orderid) => {
@@ -483,7 +487,6 @@ export default function order(props) {
 
 		setIteminfo({ ...itemInfo, quantity: newQuantity, cost: newCost })
 	}
-
 	const addOrder = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		let { productid, name, info, note, image, price, options, others, sizes, quantity } = itemInfo
@@ -492,10 +495,10 @@ export default function order(props) {
 		let newSizes = JSON.parse(JSON.stringify(sizes))
 		let callfor = []
 
-		if (openDiners && selectedDiners.length == 0) {
+		if (openEditcallfor && selectedCallfor.length == 0) {
 			setOrderingitem({ ...orderingItem, errorMsg: "You didn't select anyone" })
 		} else {
-			selectedDiners.forEach(function (info) {
+			selectedCallfor.forEach(function (info) {
 				info.row.forEach(function (diner) {
 					if (diner.username) {
 						callfor.push(diner.id.toString())
@@ -529,26 +532,64 @@ export default function order(props) {
 				})
 				.then((res) => {
 					if (res) {
-						setOpendiners(false)
-						setIteminfo({ ...itemInfo, show: false })
+						setOpeneditcallfor(false)
+						setIteminfo({ ...itemInfo, show: false, errorMsg: "" })
+						closeEditTheDiners()
+						closeEditTheCallfor()
 						seeTheDiningOrders()
 					}
 				})
 		}
 	}
-	const showOrders = () => {
-		setOpendiners(false)
-		setSelecteddiners([])
-		setNumselecteddiners(0)
-		setOpenrounds(true)
-		setNumorders(numOrders + 1)
+	const addToDinersOrder = async() => {
+		let newOrderingItem = {...orderingItem}
+		let { name, info, note, image, price, quantity, options, others, sizes } = itemInfo
+		let newOptions = JSON.parse(JSON.stringify(options))
+		let newOthers = JSON.parse(JSON.stringify(others))
+		let newSizes = JSON.parse(JSON.stringify(sizes))
+		let totalprice = 0
+
+		if (sizes.length > 0) {
+			sizes.forEach(function (size) {
+				if (size.selected) {
+					totalprice += parseFloat(size.price) * quantity
+				}
+			})
+		} else {
+			totalprice += price * quantity
+		}
+
+		others.forEach(function (other) {
+			if (other.selected) {
+				totalprice += parseFloat(other.price)
+			}
+		})
+
+		if (totalprice) {
+			newOrderingItem.name = name
+			newOrderingItem.info = info
+			newOrderingItem.note = note
+			newOrderingItem.image = image
+			newOrderingItem.options = newOptions
+			newOrderingItem.others = newOthers
+			newOrderingItem.sizes = newSizes
+			newOrderingItem.quantity = quantity
+			newOrderingItem.cost = totalprice.toFixed(2)
+			newOrderingItem.errorMsg = ""
+
+			setOpeneditcallfor(true)
+			setIteminfo({ ...itemInfo, show: false, errorMsg: "" })
+			setOrderingitem(newOrderingItem)
+		} else {
+			setIteminfo({ ...itemInfo, errorMsg: "Please choose a size" })
+		}
+
+		setOrderingitem(newOrderingItem)
 	}
 
-	const getDinersList = async(username) => {
-		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, scheduleid, username }
-
-		searchDiners(data)
+	// edit diners
+	const editTheDiners = async() => {
+		editDiners(scheduleid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -556,118 +597,14 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setDiners(res.searchedDiners)
-					setNumdiners(res.numSearchedDiners)
+					setSearchedfriends([])
+					setNumsearchedfriends(0)
+					setSelecteddiners(res.diners)
+					setNumselecteddiners(res.numdiners)
+					setOpeneditdiners(true)
 				}
 			})
 	}
-	const selectDiner = (userid) => {
-		let newDiners = [...diners]
-		let newSelectedDiners = [...selectedDiners]
-		let selected = { id: "", key: "", profile: "", username: "" }
-		let last_row = null, next_key = null, unfill = false
-
-		if (JSON.stringify(newSelectedDiners).includes("\"id\":" + userid + ",")) {
-			return
-		}
-
-		// get last selected diner
-		newDiners.forEach(function (info) {
-			info.row.forEach(function (diner) {
-				if (diner.id == userid) {
-					selected.id = userid
-					selected.profile = diner.profile
-					selected.username = diner.username
-				}
-			})
-		})
-
-		if (newSelectedDiners.length > 0) {
-			last_row = newSelectedDiners[newSelectedDiners.length - 1].row
-
-			for (k in last_row) {
-				if (last_row[k].id) {
-					next_key = parseInt(last_row[k].key.split("-").pop()) + 1
-				} else {
-					unfill = true
-					selected.key = "selected-diner-" + next_key
-					last_row[k] = selected
-					next_key += 1
-
-					break
-				}
-			}
-
-			if (unfill) {
-				newSelectedDiners[newSelectedDiners.length - 1].row = last_row
-				setNumselecteddiners(numSelecteddiners + 1)
-			} else {
-				selected.key = "selected-diner-" + next_key
-				newSelectedDiners.push({
-					key: "selected-diner-row-" + (newSelectedDiners.length),
-					row: [
-						selected,
-						{ key: "selected-diner-" + (next_key + 1) },
-						{ key: "selected-diner-" + (next_key + 2) },
-						{ key: "selected-diner-" + (next_key + 3) }
-					]
-				})
-			}
-
-			setNumselecteddiners(numSelecteddiners + 1)
-		} else {
-			selected.key = "selected-diner-0"
-			newSelectedDiners = [{
-				key: "selected-diner-row-0",
-				row: [
-					selected,
-					{ key: "selected-diner-1" },
-					{ key: "selected-diner-2" },
-					{ key: "selected-diner-3" }
-				]
-			}]
-			setNumselecteddiners(1)
-		}
-
-		setSelecteddiners(newSelectedDiners)
-	}
-	const deselectDiner = (userid) => {
-		let list = [...selectedDiners]
-		let last_row = list[list.length - 1].row
-		let newList = [], row = [], info, num = 0
-
-		list.forEach(function (listitem) {
-			listitem.row.forEach(function (info) {
-				if (info.id && info.id != userid) {
-					row.push({
-						key: "selected-diner-" + num,
-						id: info.id,
-						profile: info.profile,
-						username: info.username
-					})
-					num++
-
-					if (row.length == 4) {
-						newList.push({ key: "selected-diner-row-" + (newList.length), row })
-						row = []
-					}
-				}
-			})
-		})
-
-		if (row.length > 0) {
-			while (row.length < 4) {
-				row.push({ key: "selected-diner-" + num })
-				num++
-			}
-
-			newList.push({ key: "selected-diner-row-" + (newList.length), row })
-		}
-
-		setSelecteddiners(newList)
-		setNumselecteddiners(numSelecteddiners - 1)
-	}
-
 	const getFriendsList = async(username) => {
 		const userid = await AsyncStorage.getItem("userid")
 		const data = { userid, username }
@@ -680,13 +617,12 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setFriends(res.searchedFriends)
-					setNumfriends(res.numSearchedFriends)
+					setSearchedfriends(res.searchedFriends)
+					setNumsearchedfriends(res.numSearchedFriends)
 				}
 			})
 	}
 	const selectFriend = (userid) => {
-		let newFriends = [...friends]
 		let newSelectedDiners = [...selectedDiners]
 		let selected = { id: "", key: "", profile: "", username: "", status: "new" }
 		let last_row = null, next_key = null, unfill = false
@@ -696,7 +632,7 @@ export default function order(props) {
 		}
 
 		// get last selected friend
-		newFriends.forEach(function (info) {
+		searchedFriends.forEach(function (info) {
 			info.row.forEach(function (friend) {
 				if (friend.id == userid) {
 					selected.id = userid
@@ -792,12 +728,19 @@ export default function order(props) {
 		setSelecteddiners(newList)
 		setNumselecteddiners(numSelecteddiners - 1)
 	}
-	const addTheDiners = () => {
+	const closeEditTheDiners = () => {
+		setOpeneditdiners(false)
+		setSearchedfriends([])
+		setNumsearchedfriends(0)
+		setSelecteddiners([])
+		setNumselecteddiners(0)
+	}
+	const addFriendsToDining = () => {
 		const diners = []
 
 		selectedDiners.forEach(function (info) {
 			info.row.forEach(function (friend) {
-				if (friend.username) {
+				if (friend.username && friend.id != userId) {
 					diners.push({ "userid": friend.id.toString(), "status": friend.status == "confirm" ? "confirm" : "waiting" })
 				}
 			})
@@ -814,10 +757,7 @@ export default function order(props) {
 			.then((res) => {
 				if (res) {
 					setTotaldiners(diners.length)
-					setOpenfriends(false)
-					setSelectedfriends([])
-					setNumselectedfriends(0)
-					setErrormsg('')
+					closeEditTheDiners()
 				}
 			})
 	}
@@ -833,10 +773,10 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setSelecteddiners(res.searchedDiners)
-					setNumselecteddiners(res.numSearchedDiners)
+					setSelectedcallfor(res.searchedDiners)
+					setNumselectedcallfor(res.numSearchedDiners)
 					setOrderingitem(res.orderingItem)
-					setOpendiners(true)
+					setOpeneditcallfor(true)
 					setIteminfo({ ...itemInfo, orderid })
 					setOpenrounds(false)
 				}
@@ -846,104 +786,165 @@ export default function order(props) {
 		let { orderid } = itemInfo
 		let callfor = []
 
-		if (openDiners && selectedDiners.length == 0) {
-			setErrormsg("You didn't select anyone")
-		} else {	
-			selectedDiners.forEach(function (info) {
-				info.row.forEach(function (diner) {
-					if (diner.username) {
-						callfor.push(diner.id.toString())
-					}
-				})
+		selectedCallfor.forEach(function (info) {
+			info.row.forEach(function (diner) {
+				if (diner.username) {
+					callfor.push(diner.id.toString())
+				}
 			})
+		})
 
-			const data = { scheduleid, orderid, callfor }
+		const data = { scheduleid, orderid, callfor }
 
-			updateOrderCallfor(data)
-				.then((res) => {
-					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setErrormsg(res.data.errormsg)
-						}
+		updateOrderCallfor(data)
+			.then((res) => {
+				if (res.status == 200) {
+					if (!res.data.errormsg) {
+						return res.data
+					} else {
+						setOrderingitem({ ...orderingItem, errorMsg: res.data.errormsg })
 					}
-				})
-				.then((res) => {
-					if (res) {
-						seeTheDiningOrders()
-						setOpendiners(false)
-						setIteminfo({ ...itemInfo, orderid: "" })
-					}
-				})
-		}
+				}
+			})
+			.then((res) => {
+				if (res) {
+					seeTheDiningOrders()
+					setOpeneditcallfor(false)
+					closeEditTheDiners()
+					closeEditTheCallfor()
+					setIteminfo({ ...itemInfo, orderid: "" })
+				}
+			})
 	}
-	const removeTheOrderCallfor = async(cartid, callforid) => {
-		const data = { cartid, callforid }
+	const getDinersList = async(username) => {
+		const userid = await AsyncStorage.getItem("userid")
+		const data = { userid, scheduleid, username }
 
-		removeOrderCallfor(data)
+		searchDiners(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
 				}
 			})
 			.then((res) => {
-				if (res) getTheCartItems()
-			})
-	}
-	const openDinersOrder = async() => {
-		let newOrderingItem = {...orderingItem}
-		let { name, info, note, image, price, quantity, options, others, sizes } = itemInfo
-		let newOptions = JSON.parse(JSON.stringify(options))
-		let newOthers = JSON.parse(JSON.stringify(others))
-		let newSizes = JSON.parse(JSON.stringify(sizes))
-		let totalprice = ""
-
-		if (sizes.length > 0) {
-			sizes.forEach(function (size) {
-				if (size.selected) {
-					totalprice = parseFloat(size.price) * quantity
+				if (res) {
+					setDiners(res.searchedDiners)
+					setNumdiners(res.numSearchedDiners)
 				}
 			})
-		} else {
-			totalprice = price * quantity
-		}
-
-		if (totalprice) {
-			newOrderingItem.name = name
-			newOrderingItem.info = info
-			newOrderingItem.note = note
-			newOrderingItem.image = image
-			newOrderingItem.options = newOptions
-			newOrderingItem.others = newOthers
-			newOrderingItem.sizes = newSizes
-			newOrderingItem.quantity = quantity
-			newOrderingItem.price = totalprice.toFixed(2)
-			newOrderingItem.errorMsg = ""
-
-			setOpendiners(true)
-			setIteminfo({ ...itemInfo, show: false })
-			setOrderingitem(newOrderingItem)
-		} else {
-			setIteminfo({ ...itemInfo, errorMsg: "Please choose a size" })
-		}
-
-		setOrderingitem(newOrderingItem)
 	}
-	const sendTheOrders = async() => {
-		sendOrders(scheduleid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
+	const selectDiner = (userid) => {
+		let newDiners = [...diners]
+		let newSelectedcallfor = [...selectedCallfor]
+		let selected = { id: "", key: "", profile: "", username: "" }
+		let last_row = null, next_key = null, unfill = false
+
+		if (JSON.stringify(newSelectedcallfor).includes("\"id\":" + userid + ",")) {
+			return
+		}
+
+		// get last selected diner
+		newDiners.forEach(function (info) {
+			info.row.forEach(function (diner) {
+				if (diner.id == userid) {
+					selected.id = userid
+					selected.profile = diner.profile
+					selected.username = diner.username
 				}
 			})
-			.then((res) => {
-				const newRounds = [...rounds]
+		})
 
-				newRounds[0].status = "making"
+		if (newSelectedcallfor.length > 0) {
+			last_row = newSelectedcallfor[newSelectedcallfor.length - 1].row
 
-				setRounds(newRounds)
+			for (k in last_row) {
+				if (last_row[k].id) {
+					next_key = parseInt(last_row[k].key.split("-").pop()) + 1
+				} else {
+					unfill = true
+					selected.key = "selected-callfor-" + next_key
+					last_row[k] = selected
+					next_key += 1
+
+					break
+				}
+			}
+
+			if (unfill) {
+				newSelectedcallfor[newSelectedcallfor.length - 1].row = last_row
+				setNumselectedcallfor(numSelectedcallfor + 1)
+			} else {
+				selected.key = "selected-callfor-" + next_key
+				newSelectedcallfor.push({
+					key: "selected-callfor-row-" + (newSelectedcallfor.length),
+					row: [
+						selected,
+						{ key: "selected-callfor-" + (next_key + 1) },
+						{ key: "selected-callfor-" + (next_key + 2) },
+						{ key: "selected-callfor-" + (next_key + 3) }
+					]
+				})
+			}
+
+			setNumselectedcallfor(numSelectedcallfor + 1)
+		} else {
+			selected.key = "selected-callfor-0"
+			newSelectedcallfor = [{
+				key: "selected-callfor-row-0",
+				row: [
+					selected,
+					{ key: "selected-callfor-1" },
+					{ key: "selected-callfor-2" },
+					{ key: "selected-callfor-3" }
+				]
+			}]
+			setNumselectedcallfor(1)
+		}
+
+		setSelectedcallfor(newSelectedcallfor)
+	}
+	const deselectDiner = (userid) => {
+		let list = [...selectedCallfor]
+		let last_row = list[list.length - 1].row
+		let newList = [], row = [], info, num = 0
+
+		list.forEach(function (listitem) {
+			listitem.row.forEach(function (info) {
+				if (info.id && info.id != userid) {
+					row.push({
+						key: "callfor-" + num,
+						id: info.id,
+						profile: info.profile,
+						username: info.username
+					})
+					num++
+
+					if (row.length == 4) {
+						newList.push({ key: "callfor-row-" + (newList.length), row })
+						row = []
+					}
+				}
 			})
+		})
+
+		if (row.length > 0) {
+			while (row.length < 4) {
+				row.push({ key: "callfor-" + num })
+				num++
+			}
+
+			newList.push({ key: "callfor-row-" + (newList.length), row })
+		}
+
+		setSelectedcallfor(newList)
+		setNumselectedcallfor(numSelectedcallfor - 1)
+	}
+	const closeEditTheCallfor = () => {
+		setOpeneditcallfor(false)
+		setDiners([])
+		setNumdiners(0)
+		setSelectedcallfor([])
+		setNumselectedcallfor(0)
 	}
 
 	useEffect(() => {
@@ -971,7 +972,7 @@ export default function order(props) {
 								<Text style={style.orderActionHeader}>See Order(s)</Text>
 							</TouchableOpacity>
 							<TouchableOpacity style={style.orderAction} onPress={() => editTheDiners()}>
-								<Text style={style.orderActionHeader}>{totalDiners == 0 ? 'Add' : 'Edit'} Diner {totalDiners > 0 ? '(' + totalDiners + ')' : ''}</Text>
+								<Text style={style.orderActionHeader}>{(totalDiners + 1) == 0 ? 'Add' : 'Edit'} Diner {(totalDiners + 1) > 0 ? '(' + (totalDiners + 1) + ')' : ''}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -1184,7 +1185,7 @@ export default function order(props) {
 										}
 
 										{(!itemInfo.orderid && totalDiners > 0) && (
-											<TouchableOpacity style={style.itemAction} onPress={() => openDinersOrder()}>
+											<TouchableOpacity style={style.itemAction} onPress={() => addToDinersOrder()}>
 												<Text style={style.itemActionHeader}>Add to a diner's order</Text>
 											</TouchableOpacity>
 										)}
@@ -1199,7 +1200,7 @@ export default function order(props) {
 					<Modal>
 						<View style={{ paddingVertical: offsetPadding }}>
 							<View style={{ alignItems: 'center', height: 75 }}>
-								<TouchableOpacity style={style.itemClose} onPress={() => setOpenrounds(false)}>
+								<TouchableOpacity style={style.closeRounds} onPress={() => setOpenrounds(false)}>
 									<AntDesign name="close" size={20}/>
 								</TouchableOpacity>
 
@@ -1360,11 +1361,7 @@ export default function order(props) {
 											<Text style={style.deleteOrderPrice}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(deleteRequestInfo.cost).toFixed(2)}</Text>
 										</View>
 
-										{deleteRequestInfo.numorderers > 0 && (
-											<View>
-												<Text style={style.deleteOrderOrderers}>Calling for {deleteRequestInfo.numorderers} {deleteRequestInfo.numorderers == 1 ? 'person' : 'people'}</Text>
-											</View>
-										)}
+										{deleteRequestInfo.numorderers > 0 && <Text style={style.deleteOrderOrderers}>Calling for {deleteRequestInfo.numorderers} {deleteRequestInfo.numorderers == 1 ? 'person' : 'people'}</Text>}
 
 										<Text style={style.deleteOrderHeader}>Are you sure you want to delete this order</Text>
 
@@ -1383,7 +1380,94 @@ export default function order(props) {
 					</Modal>
 				)}
 
-				{(openDiners && totalDiners > 0) && (
+				{openEditdiners && (
+					<Modal>
+						<View style={{ paddingVertical: offsetPadding }}>
+							<View style={style.usersList}>
+								<TextInput style={style.userNameInput} placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
+
+								<View style={style.usersListContainer}>
+									<View style={{ height: '50%', overflow: 'hidden' }}>
+										<Text style={style.usersHeader}>{numSearchedfriends} Searched Friend(s)</Text>
+
+										<FlatList
+											data={searchedFriends}
+											renderItem={({ item, index }) => 
+												<View key={item.key} style={style.userRow}>
+													{item.row.map(friend => (
+														friend.username ? 
+															<TouchableOpacity key={friend.key} style={style.user} onPress={() => selectFriend(friend.id)}>
+																<View style={style.userProfileHolder}>
+																	<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+																</View>
+																<Text style={style.userName}>{friend.username}</Text>
+															</TouchableOpacity>
+															:
+															<View key={friend.key} style={style.user}></View>
+													))}
+												</View>
+											}
+										/>
+									</View>
+								
+									<View style={{ height: '50%', overflow: 'hidden' }}>
+										{numSelecteddiners > 0 && (
+											<>
+												<Text style={style.selectedUsersHeader}>{numSelecteddiners} Selected Diner(s)</Text>
+
+												<FlatList
+													data={selectedDiners}
+													renderItem={({ item, index }) => 
+														<View key={item.key} style={style.userRow}>
+															{item.row.map(friend => (
+																friend.username ? 
+																	<View key={friend.key} style={style.user}>
+																		<TouchableOpacity style={style.userDelete} onPress={() => deselectFriend(friend.id)}>
+																			<AntDesign name="closecircleo" size={15}/>
+																		</TouchableOpacity>
+																		<View style={style.userProfileHolder}>
+																			<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+																		</View>
+																		<Text style={style.userName}>{friend.username}</Text>
+																		{friend.status && <Text style={style.userStatus}>{friend.status}</Text>}
+																		{(userId == friend.id) && <Text style={style.userStatus}>(you)</Text>}
+																	</View>
+																	:
+																	<View key={friend.key} style={style.user}></View>
+															))}
+														</View>
+													}
+												/>
+											</>
+										)}
+									</View>
+								</View>
+
+								<View style={style.itemContainer}>
+									<View style={style.locationImageHolder}>
+										<Image style={{ height: 80, width: 80 }} source={{ uri: logo_url + locationInfo.logo }}/>
+									</View>
+									<Text style={style.locationName}>{locationInfo.name}</Text>
+								</View>
+
+								<Text style={style.errorMsg}>{dinersErrormsg}</Text>
+
+								<View style={{ alignItems: 'center' }}>
+									<View style={style.actions}>
+										<TouchableOpacity style={style.action} onPress={() => closeEditTheDiners()}>
+											<Text style={style.actionHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.action} onPress={() => addFriendsToDining()}>
+											<Text style={style.actionHeader}>Add</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+
+				{openEditcallfor && (
 					<Modal>
 						<View style={{ paddingVertical: offsetPadding }}>
 							<View style={style.usersList}>
@@ -1412,14 +1496,14 @@ export default function order(props) {
 											}
 										/>
 									</View>
-								
+
 									<View style={{ height: '50%', overflow: 'hidden' }}>
-										{selectedDiners.length > 0 && (
+										{selectedCallfor.length > 0 && (
 											<>
-												<Text style={style.selectedUsersHeader}>{numSelecteddiners} Selected Diner(s) to order this item</Text>
+												<Text style={style.selectedUsersHeader}>{numSelectedcallfor} Selected Diner(s) to order this item</Text>
 
 												<FlatList
-													data={selectedDiners}
+													data={selectedCallfor}
 													renderItem={({ item, index }) => 
 														<View key={item.key} style={style.userRow}>
 															{item.row.map(diner => (
@@ -1480,130 +1564,27 @@ export default function order(props) {
 										</View>
 										<View>
 											<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {orderingItem.quantity}</Text>
-											<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>Cost:</Text> $ {orderingItem.cost.toFixed(2)}</Text>
+											<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>Cost:</Text> $ {orderingItem.cost}</Text>
 										</View>
 									</View>
 
-									<Text style={style.dinerErrorMsg}>{orderingItem.errorMsg}</Text>
+									<Text style={style.errorMsg}>{orderingItem.errorMsg}</Text>
 
 									<View style={{ alignItems: 'center' }}>
 										<View style={style.actions}>
-											<TouchableOpacity style={style.action} onPress={() => {
-												setOpendiners(false)
-												setOpenrounds(true)
-												setDiners([])
-												setSelecteddiners([])
-												setNumdiners(0)
-												setNumselecteddiners(0)
-
-												setOrderingitem({...orderingItem, errorMsg: '' })
-												setIteminfo({ ...itemInfo, orderid: "" })
-											}}>
+											<TouchableOpacity style={style.action} onPress={() => closeEditTheCallfor()}>
 												<Text style={style.actionHeader}>Close</Text>
 											</TouchableOpacity>
-											{!itemInfo.orderid ? 
+											{itemInfo.orderid ? 
+												<TouchableOpacity style={style.action} onPress={() => updateTheOrderCallfor()}>
+													<Text style={style.actionHeader}>Update</Text>
+												</TouchableOpacity>
+												:
 												<TouchableOpacity style={style.action} onPress={() => addOrder()}>
 													<Text style={style.actionHeader}>Add to Order</Text>
 												</TouchableOpacity>
-												:
-												<TouchableOpacity style={style.action} onPress={() => updateTheOrderCallfor()}>
-													<Text style={style.actionHeader}>Done</Text>
-												</TouchableOpacity>
 											}
 										</View>
-									</View>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{openFriends && (
-					<Modal>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.usersList}>
-								<TextInput style={style.userNameInput} placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
-
-								<View style={style.usersListContainer}>
-									<View style={{ height: '50%', overflow: 'hidden' }}>
-										<Text style={style.usersHeader}>{numFriends} Searched Friend(s)</Text>
-
-										<FlatList
-											data={friends}
-											renderItem={({ item, index }) => 
-												<View key={item.key} style={style.userRow}>
-													{item.row.map(friend => (
-														friend.username ? 
-															<TouchableOpacity key={friend.key} style={style.user} onPress={() => selectFriend(friend.id)}>
-																<View style={style.userProfileHolder}>
-																	<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																</View>
-																<Text style={style.userName}>{friend.username}</Text>
-															</TouchableOpacity>
-															:
-															<View key={friend.key} style={style.user}></View>
-													))}
-												</View>
-											}
-										/>
-									</View>
-								
-									<View style={{ height: '50%', overflow: 'hidden' }}>
-										{numSelecteddiners > 0 && (
-											<>
-												<Text style={style.selectedUsersHeader}>{numSelecteddiners} Selected Diner(s)</Text>
-
-												<FlatList
-													data={selectedDiners}
-													renderItem={({ item, index }) => 
-														<View key={item.key} style={style.userRow}>
-															{item.row.map(friend => (
-																friend.username ? 
-																	<View key={friend.key} style={style.user}>
-																		<TouchableOpacity style={style.userDelete} onPress={() => deselectFriend(friend.id)}>
-																			<AntDesign name="closecircleo" size={15}/>
-																		</TouchableOpacity>
-																		<View style={style.userProfileHolder}>
-																			<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																		</View>
-																		<Text style={style.userName}>{friend.username}</Text>
-																		{friend.status && <Text style={style.userStatus}>{friend.status}</Text>}
-																	</View>
-																	:
-																	<View key={friend.key} style={style.user}></View>
-															))}
-														</View>
-													}
-												/>
-											</>
-										)}
-									</View>
-								</View>
-
-								<View style={style.itemContainer}>
-									<View style={style.locationImageHolder}>
-										<Image style={{ height: 80, width: 80 }} source={{ uri: logo_url + locationInfo.logo }}/>
-									</View>
-									<Text style={style.locationName}>{locationInfo.name}</Text>
-								</View>
-
-								<Text style={style.errorMsg}>{errorMsg}</Text>
-
-								<View style={{ alignItems: 'center' }}>
-									<View style={style.actions}>
-										<TouchableOpacity style={style.action} onPress={() => {
-											setOpenfriends(false)
-											setFriends([])
-											setNumfriends(0)
-											setSelectedfriends([])
-											setNumselectedfriends(0)
-											setErrormsg('')
-										}}>
-											<Text style={style.actionHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.action} onPress={() => addTheDiners()}>
-											<Text style={style.actionHeader}>Add</Text>
-										</TouchableOpacity>
 									</View>
 								</View>
 							</View>
@@ -1645,6 +1626,7 @@ const style = StyleSheet.create({
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
 	productBuyHeader: { textAlign: 'center' },
 
+	// hidden boxes
 	// item info
 	itemClose: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: 28, justifyContent: 'space-around', marginVertical: 10, padding: 2 },
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
@@ -1700,13 +1682,13 @@ const style = StyleSheet.create({
 	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
 
 	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 120 },
 	itemActionHeader: { textAlign: 'center' },
 
-	// rounds list
+	// rounds
+	closeRounds: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: 28, justifyContent: 'space-around', marginVertical: 10, padding: 2 },
 	roundList: { height: screenHeight - 75 },
 	roundTouch: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5, width: 120 },
 	roundTouchHeader: {  },
@@ -1754,7 +1736,7 @@ const style = StyleSheet.create({
 	selectedUsersHeader: { fontWeight: 'bold', textAlign: 'center' },
 	usersHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	userRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
-	user: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
+	user: { alignItems: 'center', marginHorizontal: 5, width: width * 0.2 },
 	userDelete: { marginBottom: -5, marginLeft: 60 },
 	userProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
 	userName: { fontWeight: 'bold', textAlign: 'center' },
@@ -1764,12 +1746,10 @@ const style = StyleSheet.create({
 	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
 	itemInfo: { fontSize: 15, flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 	itemHeader: { fontSize: 15 },
-
-	// location info
 	locationImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 	locationName: { fontSize: 20, marginVertical: 30, textAlign: 'center' },
 
-	dinerErrorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
+	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },

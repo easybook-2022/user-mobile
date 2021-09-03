@@ -22,6 +22,7 @@ const screenHeight = height - (offsetPadding * 2)
 
 export default function booktime(props) {
 	let { locationid } = props.route.params
+	let scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
 	const [name, setName] = useState(name)
 
@@ -32,6 +33,7 @@ export default function booktime(props) {
 	const [numSelectedDiners, setNumselecteddiners] = useState(0)
 	const [locationInfo, setLocationinfo] = useState({ name: "", logo: "" })
 	const [errorMsg, setErrormsg] = useState('')
+	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 
 	const [times, setTimes] = useState([])
 	const [loaded, setLoaded] = useState(false)
@@ -75,6 +77,20 @@ export default function booktime(props) {
 
 					setName(name)
 					getTheLocationHours()
+				}
+			})
+	}
+	const getTheReservationInfo = async() => {
+		getReservationInfo(scheduleid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setNumselecteddiners(res.reservationInfo.diners)
+					setConfirm({ ...confirm, note: res.reservationInfo.note })
 				}
 			})
 	}
@@ -146,7 +162,7 @@ export default function booktime(props) {
 			})
 		})
 
-		const data = { userid, locationid, time, diners, note: note ? note : "" }
+		const data = { userid, locationid, scheduleid, time, diners, note: note ? note : "" }
 
 		makeReservation(data)
 			.then((res) => {
@@ -161,7 +177,21 @@ export default function booktime(props) {
 			.then((res) => {
 				if (res) setConfirm({ ...confirm, requested: true })
 			})
-			.catch((error) => alert(error.message))
+			.catch((err) => {
+				if (err.response.status == 400) {
+					if (err.response.data.status) {
+						const status = err.response.data.status
+
+						switch (status) {
+							case "cardrequired":
+								setShowpaymentrequired(true)
+
+								break;
+							default:
+						}
+					}
+				}
+			})
 	}
 	const finish = async() => {
 		setOpenlist(false)
@@ -312,6 +342,10 @@ export default function booktime(props) {
 
 	useEffect(() => {
 		getTheLocationProfile()
+
+		if (scheduleid) {
+			getTheReservationInfo()
+		}
 	}, [])
 
 	return (
@@ -323,7 +357,11 @@ export default function booktime(props) {
 					</TouchableOpacity>
 
 					<View style={style.headers}>
-						<Text style={style.boxHeader}>Make a reservation for</Text>
+						<Text style={style.boxHeader}>{!scheduleid ? 'Make a' : 'Remake a' } reservation {scheduleid ? 'for ' : 'at '}</Text>
+
+						{scheduleid && <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>{(numSelectedDiners + 1)} {(numSelectedDiners + 1) == 1 ? 'person' : 'people'}</Text>}
+						{scheduleid && <Text style={style.boxHeader}>at</Text>}
+
 						<Text style={style.serviceHeader}>{name}</Text>
 					</View>
 
@@ -331,13 +369,17 @@ export default function booktime(props) {
 						<ActivityIndicator size="small"/>
 						:
 						times.length > 0 ?
-							<ScrollView style={{ height: screenHeight - 191 }}>
-								<View style={{ alignItems: 'center' }}>
+							<ScrollView>
+								<View style={{ alignItems: 'center', marginVertical: 30 }}>
 									<View style={style.dinersBox}>
-										<TouchableOpacity style={style.dinersAdd} onPress={() => openDinersList()}>
-											<Text style={style.dinersAddHeader}>{numSelectedDiners > 0 ? 'Edit' : 'Add Other'} Diner(s)</Text>
-										</TouchableOpacity>
-										<Text style={style.dinersHeader}>{numSelectedDiners} Diner(s) Selected</Text>
+										{!scheduleid && (
+											<>
+												<TouchableOpacity style={style.dinersAdd} onPress={() => openDinersList()}>
+													<Text style={style.dinersAddHeader}>{numSelectedDiners > 0 ? 'Edit' : 'Add Other'} Diner(s)</Text>
+												</TouchableOpacity>
+												<Text style={style.dinersHeader}>{numSelectedDiners} Diner(s) Selected</Text>
+											</>
+										)}	
 									</View>
 								</View>
 
@@ -394,12 +436,12 @@ export default function booktime(props) {
 									{!confirm.requested ? 
 										<>
 											<Text style={style.confirmHeader}>
-												<Text style={{ fontFamily: 'appFont' }}>Request a reservation</Text>
+												<Text style={{ fontFamily: 'appFont' }}>{!scheduleid ? 'Request' : 'Re-request'} a reservation</Text>
 												{'\n'}
 												for 
 
 												{numSelectedDiners > 0 ? 
-													numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
+													" " + (numSelectedDiners + 1) + " " + ((numSelectedDiners + 1) > 1 ? 'people' : 'person') 
 													: 
 													" yourself"
 												}
@@ -440,7 +482,7 @@ export default function booktime(props) {
 														for 
 
 														{numSelectedDiners > 0 ? 
-															numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
+															" " + (numSelectedDiners + 1) + " " + ((numSelectedDiners + 1) > 1 ? 'people' : 'person') 
 															: 
 															" yourself"
 														}
@@ -547,6 +589,30 @@ export default function booktime(props) {
 						</View>
 					</Modal>
 				)}
+
+				{showPaymentRequired && (
+					<Modal transparent={true}>
+						<View style={{ paddingVertical: offsetPadding }}>
+							<View style={style.cardRequiredBox}>
+								<View style={style.cardRequiredContainer}>
+									<Text style={style.cardRequiredHeader}>
+										You need to provide a payment method to accept
+										a reservation
+									</Text>
+
+									<View style={style.cardRequiredActions}>
+										<TouchableOpacity style={style.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
+											<Text style={style.cardRequiredActionHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.cardRequiredAction} onPress={() => props.navigation.navigate("account", { required: "card" })}>
+											<Text style={style.cardRequiredActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
 			</View>
 		</View>
 	)
@@ -558,11 +624,11 @@ const style = StyleSheet.create({
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
-	headers: { height: 47, marginVertical: 10 },
+	headers: { height: 75, marginVertical: 10 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center' },
 
-	dinersBox: { marginBottom: 20 },
+	dinersBox: { marginBottom: 0 },
 	dinersAdd: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	dinersAddHeader: { textAlign: 'center' },
 	dinersHeader: { marginVertical: 5, textAlign: 'center' },
@@ -622,4 +688,11 @@ const style = StyleSheet.create({
 	actions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5 },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 60 },
 	actionHeader: { textAlign: 'center' },
+
+	cardRequiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	cardRequiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+	cardRequiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	cardRequiredActionHeader: { }
 })

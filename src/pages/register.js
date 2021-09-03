@@ -49,61 +49,63 @@ export default function register({ navigation }) {
 
 	return (
 		<View style={style.register}>
-			<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
-				<View style={style.box}>
-					<Text style={style.boxHeader}>Sign-Up</Text>
+			<View style={{ paddingVertical: offsetPadding }}>
+				<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+					<View style={style.box}>
+						<Text style={style.boxHeader}>Sign-Up</Text>
 
-					<View style={style.inputsBox}>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Phone number:</Text>
-							<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+						<View style={style.inputsBox}>
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Phone number:</Text>
+								<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Password:</Text>
+								<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
+							</View>
+
+							<View style={style.inputContainer}>
+								<Text style={style.inputHeader}>Confirm Password:</Text>
+								<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmpassword) => setPassword(confirmpassword)} value={confirmpassword} autoCorrect={false}/>
+							</View>
+
+							{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
 						</View>
 
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Password:</Text>
-							<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
+						{loading ? <ActivityIndicator color="black" size="small"/> : null}
+
+						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+							<View style={style.options}>
+								<TouchableOpacity style={style.option} onPress={() => {
+									navigation.dispatch(
+										CommonActions.reset({
+											index: 1,
+											routes: [{ name: 'login' }]
+										})
+									);
+								}}>
+									<Text style={style.optionHeader}>Already a member ? Log in</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.option} onPress={() => {
+									navigation.dispatch(
+										CommonActions.reset({
+											index: 1,
+											routes: [{ name: 'forgotpassword' }]
+										})
+									)
+								}}>
+									<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
 
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Confirm Password:</Text>
-							<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmpassword) => setPassword(confirmpassword)} value={confirmpassword} autoCorrect={false}/>
-						</View>
-
-						{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
+						<TouchableOpacity style={style.submit} onPress={register}>
+							<Text style={style.submitHeader}>Register</Text>
+						</TouchableOpacity>
 					</View>
-
-					{loading ? <ActivityIndicator color="black" size="small"/> : null}
-
-					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-						<View style={style.options}>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'login' }]
-									})
-								);
-							}}>
-								<Text style={style.optionHeader}>Already a member ? Log in</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => {
-								navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: 'forgotpassword' }]
-									})
-								)
-							}}>
-								<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-
-					<TouchableOpacity style={style.submit} onPress={register}>
-						<Text style={style.submitHeader}>Register</Text>
-					</TouchableOpacity>
-				</View>
-			</TouchableWithoutFeedback>
+				</TouchableWithoutFeedback>
+			</View>
 		</View>
 	);
 }
@@ -111,7 +113,7 @@ export default function register({ navigation }) {
 const style = StyleSheet.create({
 	register: { backgroundColor: '#0288FF', height: '100%', width: '100%' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: '5%' },

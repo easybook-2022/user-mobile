@@ -299,18 +299,21 @@ export default function notifications(props) {
 																<Text style={style.itemServiceHeader}>
 																	You requested a reservation
 
-																	{item.diners > 0 ? 'for you and ' + (item.diners) + ' other ' + (item.diners == 1 ? 'person' : 'people') : null }
+																	{(item.diners + 1) > 0 ? ' for ' + (item.diners + 1) + ' ' + ((item.diners + 1) == 1 ? 'person' : 'people') : null }
 
 																	{'\n'}at{'\n'}
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
 																	{'\n'}at{'\n'}
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
 																	{'\n'}
-																	<Text style={{ fontWeight: '100' }}>waiting for the restaurant's response</Text>
+
+																	{item.action == "requested" && <Text style={{ fontWeight: '100' }}>waiting for the restaurant's response</Text>}
 																</Text>
 																:
 																<Text style={style.itemServiceHeader}>
-																	{item.bookerName} made a reservation for you at 
+																	{item.bookerName} {item.action == "accepted" ? "made" : "requested"} a reservation for you
+																	{item.diners > 0 ? " and " + item.diners + " other " + (item.diners == 1 ? "person" : "people") + " " : ""}
+																	 at 
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{'\n' + item.location}</Text>
 																	{'\n'}at{'\n'} 
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
@@ -324,7 +327,7 @@ export default function notifications(props) {
 																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
 															</Text>
 														}
-														{item.action == "accepted" && (
+														{item.action == "accepted" ?
 															<>
 																<Text style={style.itemServiceResponseHeader}>
 																	{item.locationtype == 'restaurant' ? 
@@ -373,7 +376,11 @@ export default function notifications(props) {
 																			</View>
 																)}
 															</>
-														)}
+															:
+															<>
+																<Text style={{ fontWeight: '100' }}>waiting for the restaurant's response</Text>
+															</>
+														}
 														{item.action == "cancel" || item.action == "rebook" ? 
 															<View style={style.storeRequested}>
 																<Text style={style.itemServiceResponseHeader}>
@@ -413,7 +420,7 @@ export default function notifications(props) {
 																				props.close()
 																				
 																				if (item.locationtype == "restaurant") {
-																					props.navigation.navigate("makereservation", { locationid: item.locationid })
+																					props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
 																				} else {
 																					props.navigation.navigate("booktime", { locationid: item.locationid, menuid: item.menuid, serviceid: item.serviceid })
 																				}

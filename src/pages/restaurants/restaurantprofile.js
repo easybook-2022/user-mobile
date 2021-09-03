@@ -183,7 +183,7 @@ export default function restaurantprofile(props) {
 								<View style={style.navs}>
 									<View style={{ flexDirection: 'row' }}>
 										<TouchableOpacity style={style.nav} onPress={() => getAllMenus()}>
-											<Text>menu ({numMenus})</Text>
+											<Text>Menu ({numMenus})</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("makereservation", { locationid })}>
 											<Text>Book Table</Text>

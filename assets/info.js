@@ -17,13 +17,13 @@ const users = [
 ]
 const cards = [
 	{ id: 0, number: "4000000000000077", expMonth: 2, expYear: 34, cvc: '232' },
-	{ id: 1, number: "4000003720000278", expMonth: 1, expYear: 23, cvc: '121' },
+	{ id: 1, number: "5555555555554444", expMonth: 1, expYear: 23, cvc: '121' },
 	{ id: 2, number: "4000000000000077", expMonth: 5, expYear: 29, cvc: '243' },
 	{ id: 3, number: "4000003720000278", expMonth: 9, expYear: 22, cvc: '869' },
 	{ id: 4, number: "4000000000000077", expMonth: 12, expYear: 45, cvc: '054' },
 ]
 const { username, cellnumber, password } = users[0]
-const { number, expMonth, expYear, cvc } = cards[0]
+const { number, expMonth, expYear, cvc } = cards[1]
 
 export const local_api_url = "http://localhost:5000"
 export const wifi_api_url = "http://192.168.0.16:5000"
