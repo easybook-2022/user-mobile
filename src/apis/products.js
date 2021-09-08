@@ -12,16 +12,16 @@ export const getProductInfo = id => {
 	return axios.get(`${url}/products/get_product_info/${id}`)
 }
 
-export const cancelOrder = data => {
+export const cancelCartOrder = data => {
 	return axios.post(
-		`${url}/products/cancel_order`,
+		`${url}/products/cancel_cart_order`,
 		data
 	)
 }
 
-export const confirmOrder = data => {
+export const confirmCartOrder = data => {
 	return axios.post(
-		`${url}/products/confirm_order`,
+		`${url}/products/confirm_cart_order`,
 		data
 	)
 }

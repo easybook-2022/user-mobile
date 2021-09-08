@@ -16,20 +16,21 @@ const users = [
 	{ id: 14, username: "user14", cellnumber: "3453453456", password: "password" }
 ]
 const cards = [
-	{ id: 0, number: "4000000000000077", expMonth: 2, expYear: 34, cvc: '232' },
-	{ id: 1, number: "5555555555554444", expMonth: 1, expYear: 23, cvc: '121' },
-	{ id: 2, number: "4000000000000077", expMonth: 5, expYear: 29, cvc: '243' },
-	{ id: 3, number: "4000003720000278", expMonth: 9, expYear: 22, cvc: '869' },
-	{ id: 4, number: "4000000000000077", expMonth: 12, expYear: 45, cvc: '054' },
+	{ id: 0, number: "4000000000000077", expMonth: 2, expYear: 34, cvc: '232' }, // visa
+	{ id: 1, number: "5555555555554444", expMonth: 1, expYear: 23, cvc: '121' }, // mastercard
+	{ id: 2, number: "378282246310005", expMonth: 5, expYear: 29, cvc: '243' }, // amex
+	{ id: 3, number: "6011111111111117", expMonth: 9, expYear: 22, cvc: '869' }, // discover
+	{ id: 4, number: "30569309025904", expMonth: 12, expYear: 45, cvc: '054' }, // diners club
+	{ id: 5, number: "3530111333300000", expMonth: 12, expYear: 23, cvc: '056' }, // jcb
 ]
-const { username, cellnumber, password } = users[0]
-const { number, expMonth, expYear, cvc } = cards[1]
+let user = users[8]
+const { number, expMonth, expYear, cvc } = cards[Math.floor(Math.random() * 5) + 0]
+export const userInfo = { username: user.username, cellnumber: user.cellnumber, password: user.password, latitude: 43.663631, longitude: -79.351501 }
 
 export const local_api_url = "http://localhost:5000"
-export const wifi_api_url = "http://192.168.0.16:5000"
+export const wifi_api_url = "http://192.168.0.14:5000"
 export const server_api_url = "https://www.easygo.tk"
 export const url = wifi_api_url
-export const userInfo = { username, cellnumber, password, latitude: 43.663631, longitude: -79.351501 }
 export const cardInfo = { number, expMonth, expYear, cvc }
 export const stripe_key = "sk_test_lft1B76yZfF2oEtD5rI3y8dz"
 export const logo_url = url + "/static/"

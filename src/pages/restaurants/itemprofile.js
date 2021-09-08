@@ -166,7 +166,7 @@ export default function itemProfile(props) {
 			selectedFriends.forEach(function (info) {
 				info.row.forEach(function (friend) {
 					if (friend.username) {
-						callfor.push({ userid: friend.id, status: friend.paymentrequested ? 'payment' : 'waiting' })
+						callfor.push({ userid: friend.id.toString(), status: friend.paymentrequested ? 'payment' : 'waiting' })
 					}
 				})
 			})
@@ -714,7 +714,7 @@ export default function itemProfile(props) {
 											</View>
 										</View>
 
-										<Text style={style.friendErrorMsg}>{errorMsg}</Text>
+										<Text style={style.errorMsg}>{errorMsg}</Text>
 
 										<View style={{ alignItems: 'center' }}>
 											<View style={style.actions}>
@@ -851,7 +851,6 @@ const style = StyleSheet.create({
 	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
 
 	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
@@ -881,8 +880,6 @@ const style = StyleSheet.create({
 	itemInfo: { fontSize: 15 },
 	itemHeader: { fontSize: 15 },
 
-	friendErrorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 0, textAlign: 'center' },
-
 	actions: { flexDirection: 'row', height: 30, justifyContent: 'space-around' },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 60 },
 	actionHeader: { textAlign: 'center' },
@@ -904,5 +901,7 @@ const style = StyleSheet.create({
 	notifyUserHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	notifyUserActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	notifyUserAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	notifyUserActionHeader: { }
+	notifyUserActionHeader: { },
+
+	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 })

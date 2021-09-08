@@ -210,7 +210,7 @@ export default function restaurantprofile(props) {
 															<View style={style.menuImageHolder}>
 																<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
 															</View>
-															<Text style={style.menuName}>({menu.numCategories}) {menu.name}</Text>
+															<Text style={style.menuName}>{menu.name} ({menu.numCategories})</Text>
 														</TouchableOpacity>
 														:
 														<View key={menu.key} style={style.menuDisabled}></View>

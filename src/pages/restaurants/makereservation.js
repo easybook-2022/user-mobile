@@ -33,10 +33,10 @@ export default function booktime(props) {
 	const [numSelectedDiners, setNumselecteddiners] = useState(0)
 	const [locationInfo, setLocationinfo] = useState({ name: "", logo: "" })
 	const [errorMsg, setErrormsg] = useState('')
-	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 
 	const [times, setTimes] = useState([])
 	const [loaded, setLoaded] = useState(false)
+	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
@@ -108,6 +108,7 @@ export default function booktime(props) {
 			.then((res) => {
 				if (res) {
 					const { openTime, closeTime, scheduled } = res
+
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
 
@@ -184,7 +185,12 @@ export default function booktime(props) {
 
 						switch (status) {
 							case "cardrequired":
+								setConfirm({ ...confirm, show: false })
 								setShowpaymentrequired(true)
+
+								break;
+							case "existed":
+								setConfirm({ ...confirm, errormsg: err.response.data.errormsg })
 
 								break;
 							default:
@@ -488,7 +494,7 @@ export default function booktime(props) {
 														}
 													</Text>
 												</Text>
-												<Text style={{ textAlign: 'center' }}>You will get notified by the restaurant in your notification very soon</Text>
+												<Text style={{ textAlign: 'center' }}>You will get notify by the restaurant in your notification very soon</Text>
 												<TouchableOpacity style={style.requestedClose} onPress={() => {
 													setConfirm({ ...confirm, show: false, requested: false })
 													props.navigation.goBack()
@@ -596,7 +602,7 @@ export default function booktime(props) {
 							<View style={style.cardRequiredBox}>
 								<View style={style.cardRequiredContainer}>
 									<Text style={style.cardRequiredHeader}>
-										You need to provide a payment method to accept
+										You need to provide a payment method to request
 										a reservation
 									</Text>
 
@@ -604,7 +610,10 @@ export default function booktime(props) {
 										<TouchableOpacity style={style.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
 											<Text style={style.cardRequiredActionHeader}>Close</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.cardRequiredAction} onPress={() => props.navigation.navigate("account", { required: "card" })}>
+										<TouchableOpacity style={style.cardRequiredAction} onPress={() => {
+											setShowpaymentrequired(false)
+											props.navigation.navigate("account", { required: "card" })
+										}}>
 											<Text style={style.cardRequiredActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
@@ -653,7 +662,6 @@ const style = StyleSheet.create({
 	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
 	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 80, padding: 5, width: '80%' },
-	errorMsg: { color: 'red', paddingHorizontal: 10, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },
@@ -683,7 +691,6 @@ const style = StyleSheet.create({
 	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', marginHorizontal: 10, padding: 10 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	itemName: { fontWeight: 'bold', marginVertical: 15, marginLeft: 50, textAlign: 'center' },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 0, textAlign: 'center' },
 
 	actions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5 },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 60 },
@@ -694,5 +701,7 @@ const style = StyleSheet.create({
 	cardRequiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	cardRequiredActionHeader: { }
+	cardRequiredActionHeader: { },
+
+	errorMsg: { color: 'darkred', marginVertical: 0, textAlign: 'center' },
 })

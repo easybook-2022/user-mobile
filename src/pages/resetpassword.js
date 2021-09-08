@@ -95,7 +95,7 @@ export default function resetpassword(props) {
 							</View>
 						</View>
 					</View>
-
+					
 					<TouchableOpacity style={style.submit} onPress={() => reset()}>
 						<Text style={style.submitHeader}>Done</Text>
 					</TouchableOpacity>

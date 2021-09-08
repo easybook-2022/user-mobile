@@ -214,7 +214,7 @@ const style = StyleSheet.create({
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
 	errorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
-	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 10, padding: 10 },
+	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 10 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

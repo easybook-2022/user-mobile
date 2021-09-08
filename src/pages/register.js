@@ -10,9 +10,9 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - offsetPadding
 
 export default function register({ navigation }) {
-	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
-	const [password, setPassword] = useState(userInfo.password)
-	const [confirmpassword, setConfirmpassword] = useState(userInfo.password)
+	const [phonenumber, setPhonenumber] = useState('')
+	const [password, setPassword] = useState('')
+	const [confirmpassword, setConfirmpassword] = useState('')
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
@@ -67,7 +67,7 @@ export default function register({ navigation }) {
 
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Confirm Password:</Text>
-								<TextInput style={style.input} secureTextEntry={true} onChangeText={(confirmpassword) => setPassword(confirmpassword)} value={confirmpassword} autoCorrect={false}/>
+								<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmpassword} autoCorrect={false}/>
 							</View>
 
 							{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
@@ -119,7 +119,7 @@ const style = StyleSheet.create({
 	inputContainer: { marginVertical: '5%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10 },
-	errorMsg: { color: 'darkred', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 
 	options: {  },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },

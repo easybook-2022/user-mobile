@@ -3,8 +3,8 @@ import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, Imag
 import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getNotifications } from '../apis/users'
-import { cancelOrder, confirmOrder } from '../apis/products'
-import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining } from '../apis/schedules'
+import { cancelCartOrder, confirmCartOrder } from '../apis/products'
+import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -15,7 +15,7 @@ const screenHeight = height - (offsetPadding * 2)
 export default function notifications(props) {
 	const [items, setItems] = useState([])
 	const [loaded, setLoaded] = useState(false)
-	const [confirm, setConfirm] = useState({ show: false, index: 0, name: "", price: "", quality: "" })
+	const [confirm, setConfirm] = useState({ show: false, type: "", index: 0, name: "", price: "", quality: "" })
 	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 
 	const displayTimeStr = (unixtime) => {
@@ -44,11 +44,11 @@ export default function notifications(props) {
 		return timestr
 	}
 
-	const cancelTheOrder = async(cartid, index) => {
+	const cancelTheCartOrder = async(cartid, index) => {
 		const userid = await AsyncStorage.getItem("userid")
 		const data = { userid, cartid }
 
-		cancelOrder(data)
+		cancelCartOrder(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -64,19 +64,54 @@ export default function notifications(props) {
 				}
 			})
 	}
-	const confirmTheOrder = async(info, index) => {
+	const cancelTheDiningOrder = async(orderid, index) => {
 		const userid = await AsyncStorage.getItem("userid")
-		const { id, name, quantity, price } = info
-		const data = { userid, id }
+		const data = { orderid, ordererid: userid }
 
-		confirmOrder(data)
+		cancelDiningOrder(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
 				}
 			})
 			.then((res) => {
-				if (res) setConfirm({ ...confirm, show: true, index: index, name: name, quantity: quantity, price: price })
+				if (res) {
+					const newItems = [...items]
+
+					newItems.splice(index, 1)
+
+					setItems(newItems)
+				}
+			})
+	}
+	const confirmTheCartOrder = async(info, index) => {
+		const userid = await AsyncStorage.getItem("userid")
+		const { id, name, quantity, price } = info
+		const data = { userid, id }
+
+		confirmCartOrder(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) setConfirm({ ...confirm, show: true, type: "cart", index: index, name: name, quantity: quantity, price: price })
+			})
+	}
+	const confirmTheDiningOrder = async(info, index) => {
+		const userid = await AsyncStorage.getItem("userid")
+		const { orderid, name, quantity, price } = info
+		const data = { orderid, ordererid: userid }
+
+		confirmDiningOrder(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) setConfirm({ ...confirm, show: true, type: "dining", index: index, name: name, quantity: quantity, price: price })
 			})
 	}
 	const deleteTheRequest = (appointmentid, index) => {
@@ -206,7 +241,7 @@ export default function notifications(props) {
 									data={items}
 									renderItem={({ item, index }) => 
 										<View style={style.item} key={item.key}>
-											{(item.type == "order" || item.type == "paymentrequested") && (
+											{(item.type == "cart-order" || item.type == "dining-order" || item.type == "paymentrequested") && (
 												<>
 													<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 														<View style={style.itemImageHolder}>
@@ -251,24 +286,32 @@ export default function notifications(props) {
 																</View>
 																<Text style={style.adderInfoUsername}>{item.adder.username}</Text>
 															</View>
-															<Text style={style.adderInfoHeader}> added this item to your cart.</Text>
+															<Text style={style.adderInfoHeader}> added this item to your {item.type.includes("dining") ? "dining order" : "cart"}.</Text>
 														</View>
 													</View>
 													<Text style={style.itemHeader}>
-														{item.type == "order" ? 
-															'Want to purchase this?'
-															:
-															'Please provide a payment method to purchase this'
-														}
+														{item.type == "cart-order" && 'Want to purchase this?'}
+														{item.type == "dining-order" && 'Want to order this?'}
+														{item.type == "paymentrequested" && 'Please provide a payment method to purchase this'}
 													</Text>
 													<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 														<View style={style.actions}>
-															<TouchableOpacity style={style.action} onPress={() => cancelTheOrder(item.id, index)}>
+															<TouchableOpacity style={style.action} onPress={() => {
+																if (item.type.includes("cart")) {
+																	cancelTheCartOrder(item.id, index)
+																} else {
+																	cancelTheDiningOrder(item.orderid, index)
+																}
+															}}>
 																<Text style={style.actionHeader}>No</Text>
 															</TouchableOpacity>
 															<TouchableOpacity style={style.action} onPress={() => {
-																if (item.type == "order") {
-																	confirmTheOrder(item, index)
+																if (item.type.includes("order")) {
+																	if (item.type.includes("cart")) {
+																		confirmTheCartOrder(item, index)
+																	} else {
+																		confirmTheDiningOrder(item, index)
+																	}
 																} else {
 																	props.close()
 																	props.navigation.navigate("account", { required: "card" })
@@ -298,22 +341,22 @@ export default function notifications(props) {
 															item.booker ? 
 																<Text style={style.itemServiceHeader}>
 																	You requested a reservation
-
 																	{(item.diners + 1) > 0 ? ' for ' + (item.diners + 1) + ' ' + ((item.diners + 1) == 1 ? 'person' : 'people') : null }
-
 																	{'\n'}at{'\n'}
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
 																	{'\n'}at{'\n'}
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
 																	{'\n'}
-
-																	{item.action == "requested" && <Text style={{ fontWeight: '100' }}>waiting for the restaurant's response</Text>}
 																</Text>
 																:
 																<Text style={style.itemServiceHeader}>
 																	{item.bookerName} {item.action == "accepted" ? "made" : "requested"} a reservation for you
-																	{item.diners > 0 ? " and " + item.diners + " other " + (item.diners == 1 ? "person" : "people") + " " : ""}
-																	 at 
+																	{item.diners > 0 ? 
+																		" and " + (item.diners - 1) + " other " + ((item.diners - 1) == 1 ? "person" : "people") + " " 
+																		: 
+																		""
+																	}
+																	{'\n'}at
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{'\n' + item.location}</Text>
 																	{'\n'}at{'\n'} 
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
@@ -327,7 +370,8 @@ export default function notifications(props) {
 																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
 															</Text>
 														}
-														{item.action == "accepted" ?
+														{item.action == "requested" && <Text style={{ fontWeight: '100' }}>waiting for the {item.locationtype == 'restaurant' ? 'restaurant' : 'salon'}'s response</Text>}
+														{item.action == "accepted" && (
 															<>
 																<Text style={style.itemServiceResponseHeader}>
 																	{item.locationtype == 'restaurant' ? 
@@ -376,11 +420,7 @@ export default function notifications(props) {
 																			</View>
 																)}
 															</>
-															:
-															<>
-																<Text style={{ fontWeight: '100' }}>waiting for the restaurant's response</Text>
-															</>
-														}
+														)}
 														{item.action == "cancel" || item.action == "rebook" ? 
 															<View style={style.storeRequested}>
 																<Text style={style.itemServiceResponseHeader}>
@@ -422,7 +462,7 @@ export default function notifications(props) {
 																				if (item.locationtype == "restaurant") {
 																					props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
 																				} else {
-																					props.navigation.navigate("booktime", { locationid: item.locationid, menuid: item.menuid, serviceid: item.serviceid })
+																					props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid })
 																				}
 																			}}>
 																				<Text style={style.actionHeader}>Reschedule</Text>
@@ -459,7 +499,7 @@ export default function notifications(props) {
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
 									<Text style={style.confirmHeader}>
-										Confirmed Order: 
+										Confirmed {confirm.type == "cart" ? "Cart" : "Dining"} Order: 
 										{'\n\n Quantity: ' + confirm.quantity + '\n\n'} {confirm.name + '\n\n'} at ${confirm.price}
 									</Text>
 
@@ -471,7 +511,7 @@ export default function notifications(props) {
 
 											setItems(newItems)
 
-											setConfirm({ ...confirm, show: false, index: 0, name: "", quantity: "", price: "" })
+											setConfirm({ ...confirm, show: false, type: "", index: 0, name: "", quantity: "", price: "" })
 										}}>
 											<Text style={style.confirmOptionHeader}>Ok</Text>
 										</TouchableOpacity>
@@ -545,7 +585,7 @@ const style = StyleSheet.create({
 	quantity: { fontSize: 15 },
 	adderInfo: { alignItems: 'center' },
 	adderInfoProfile: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
-	adderInfoHeader: { paddingVertical: 20 },
+	adderInfoHeader: { padding: 10 },
 
 	itemHeader: { textAlign: 'center' },
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },

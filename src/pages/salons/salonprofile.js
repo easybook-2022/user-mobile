@@ -214,7 +214,7 @@ export default function salonprofile(props) {
 															<View style={style.itemPhotoHolder}>
 																<Image source={{ uri: logo_url + menu.image }} style={{ height: (width * 0.5) - 100, width: (width * 0.5) - 100 }}/>
 															</View>
-															<Text style={style.itemHeader}>{menu.name}</Text>
+															<Text style={style.itemHeader}>{menu.name} ({menu.numCategories})</Text>
 														</TouchableOpacity>
 													))}
 												</View>

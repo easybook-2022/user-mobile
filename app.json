@@ -29,7 +29,7 @@
       }
     },
     "android": {
-      "package": "com.geottuse.serviceapp.users"
+      "package": "com.geottuse.serviceapp.user"
     },
     "notification": {
       "icon": "./assets/notification.png"

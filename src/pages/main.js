@@ -250,7 +250,7 @@ export default function main({ navigation }) {
 				<View style={style.box}>
 					<View style={style.headers}>
 						<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-							<TextInput style={style.searchInput} placeholder="Search anything" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
+							<TextInput style={style.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.2)" placeholder="Search anything" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
 							<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
 								<FontAwesome name="bell" size={30}/>
 								{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}
@@ -357,7 +357,7 @@ const style = StyleSheet.create({
 	service: { marginBottom: 10, marginHorizontal: 5 },
 	rowHeader: { fontWeight: 'bold', margin: 10 },
 	seeMore: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	row: { flexDirection: 'row', marginBottom: 50 },
+	row: { flexDirection: 'row', marginBottom: 20 },
 	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: 100 },
 	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 	locationName: { textAlign: 'center' },

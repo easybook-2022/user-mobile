@@ -72,7 +72,7 @@ export default function login({ navigation }) {
 
 							{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
 						</View>
-
+						
 						{loading ? <ActivityIndicator color="black" size="small"/> : null }
 
 						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -119,7 +119,7 @@ const style = StyleSheet.create({
 	inputContainer: { marginVertical: '5%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10 },
-	errorMsg: { color: 'darkred', fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 
 	options: {  },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },

@@ -908,7 +908,7 @@ export default function cart(props) {
 											</View>
 										</View>
 
-										<Text style={style.friendErrorMsg}>{errorMsg}</Text>
+										<Text style={style.errorMsg}>{errorMsg}</Text>
 
 										<View style={{ alignItems: 'center' }}>
 											<View style={style.actions}>
@@ -1097,7 +1097,6 @@ const style = StyleSheet.create({
 	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
 
 	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 
 	// friends list
 	friendsCart: { backgroundColor: 'white' },
@@ -1118,7 +1117,6 @@ const style = StyleSheet.create({
 	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
 	itemInfo: { fontSize: 15 },
 	itemHeader: { fontSize: 15 },
-	friendErrorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
 	actions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 70 },
 	actionHeader: { textAlign: 'center' },
@@ -1135,5 +1133,7 @@ const style = StyleSheet.create({
 	notifyUserHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	notifyUserActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	notifyUserAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	notifyUserActionHeader: { }
+	notifyUserActionHeader: { },
+
+	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 })

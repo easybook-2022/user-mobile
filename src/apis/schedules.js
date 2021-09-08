@@ -99,6 +99,27 @@ export const editOrderCallfor = data => {
 	)
 }
 
+export const dinerIsRemovable = data => {
+	return axios.post(
+		`${url}/schedules/diner_is_removable`,
+		data
+	)
+}
+
+export const cancelDiningOrder = data => {
+	return axios.post(
+		`${url}/schedules/cancel_dining_order`,
+		data
+	)
+}
+
+export const confirmDiningOrder = data => {
+	return axios.post(
+		`${url}/schedules/confirm_dining_order`,
+		data
+	)
+}
+
 export const updateOrderCallfor = data => {
 	return axios.post(
 		`${url}/schedules/update_order_callfor`,

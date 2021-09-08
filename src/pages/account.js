@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
@@ -182,11 +182,11 @@ export default function account(props) {
 						id: cardid,
 						type: 'edit',
 
-						number: '',
+						number: cardInfo.number,
 						placeholder: "****" + last4,
 						expMonth: exp_month.toString(),
 						expYear: exp_year.toString(),
-						cvc: ''
+						cvc: cardInfo.cvc
 					})
 				}
 			})
@@ -461,7 +461,7 @@ export default function account(props) {
 								</View>
 
 								<View style={style.cameraContainer}>
-									<Text style={style.cameraHeader}>Profile Picture</Text>
+									<Text style={style.inputHeader}>Profile Picture</Text>
 
 									{profile.uri ? (
 										<>
@@ -544,7 +544,7 @@ export default function account(props) {
 
 				{paymentMethodForm.show && (
 					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
+						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 							<View style={style.form}>
 								<View style={style.formContainer}>
 									<View style={{ alignItems: 'center', marginVertical: 5 }}>
@@ -607,7 +607,7 @@ export default function account(props) {
 									</View>
 								</View>
 							</View>
-						</View>
+						</TouchableWithoutFeedback>
 					</Modal>
 				)}
 			</View>
@@ -627,11 +627,10 @@ const style = StyleSheet.create({
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
 	cameraContainer: { alignItems: 'center', marginBottom: 10, width: '100%' },
-	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
 
-	paymentMethods: { alignItems: 'center', marginHorizontal: 10, marginTop: 0 },
+	paymentMethods: { alignItems: 'center', margin: 10 },
 	paymentMethodHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	paymentMethodAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
 	paymentMethod: { marginVertical: 30 },
@@ -647,8 +646,6 @@ const style = StyleSheet.create({
 	paymentMethodActionDisabled: { backgroundColor: 'black', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 100 },
 	paymentMethodActionHeaderDisabled: { color: 'white', fontSize: 12, textAlign: 'center' },
 
-	errorMsg: { color: 'red', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-
 	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10, width: 100 },
 
 	// form
@@ -660,4 +657,6 @@ const style = StyleSheet.create({
 	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, padding: 5, width: '100%' },
 	formSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
 	formSubmitHeader: {  },
+
+	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 })

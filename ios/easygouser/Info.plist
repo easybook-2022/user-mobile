@@ -17,7 +17,7 @@
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
@@ -48,14 +48,14 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>EasyGO uses camera to allow you to take a profile picture</string>
-  <key>NSMicrophoneUsageDescription</key>
-  <string></string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>EasyGO uses your location to show you the nearest restaurants, hair/nail salons</string>
 	<key>NSLocationUsageDescription</key>
 	<string>EasyGO uses your location to show you the nearest restaurants, hair/nail salons</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>EasyGO uses your location to show you the nearest restaurants, hair/nail salons</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string></string>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
