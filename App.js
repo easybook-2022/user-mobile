@@ -15,6 +15,7 @@ const { height, width } = Dimensions.get('window')
 import Login from './src/pages/login'
 import Forgotpassword from './src/pages/forgotpassword'
 import Resetpassword from './src/pages/resetpassword'
+import Verifyuser from './src/pages/verifyuser'
 import Register from './src/pages/register'
 import Setup from './src/pages/setup'
 
@@ -69,6 +70,7 @@ export default function App() {
                         <Stack.Screen name="login" component={Login} options={{ headerShown: false }}/>
                         <Stack.Screen name="forgotpassword" component={Forgotpassword} options={{ headerShown: false }}/>
                         <Stack.Screen name="resetpassword" component={Resetpassword} options={{ headerShown: false }}/>
+                        <Stack.Screen name="verifyuser" component={Verifyuser} options={{ headerShown: false }}/>
                         <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
                         <Stack.Screen name="setup" component={Setup} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>

@@ -555,6 +555,7 @@ export default function cart(props) {
 															<Text key={other.key} style={style.itemInfo}>
 																<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
 																<Text>{other.input}</Text>
+																<Text>($ {other.price})</Text>
 															</Text>
 														: null
 													))}
@@ -570,7 +571,7 @@ export default function cart(props) {
 												</View>
 												<View>
 													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Cost:</Text> ${item.cost.toFixed(2)}</Text>
+													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.cost.toFixed(2)}</Text>
 												</View>
 											</View>
 
@@ -642,7 +643,7 @@ export default function cart(props) {
 						</View>
 					}
 				</View>
-
+				
 				{showConfirm && (
 					<Modal transparent={true}>
 						<View style={style.confirm}>
@@ -770,7 +771,7 @@ export default function cart(props) {
 										)}
 
 										<View style={style.note}>
-											<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false}/>
+											<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false}/>
 										</View>
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -811,7 +812,7 @@ export default function cart(props) {
 						<View style={style.friendsCart}>
 							<View style={{ paddingVertical: offsetPadding }}>
 								<View style={style.friendsList}>
-									<TextInput style={style.friendNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
+									<TextInput style={style.friendNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
 
 									<View style={style.friendsListContainer}>
 										<View style={style.friendsListSearched}>
@@ -889,6 +890,7 @@ export default function cart(props) {
 														<Text key={other.key} style={style.itemInfo}>
 															<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
 															<Text>{other.input}</Text>
+															<Text>($ {other.price})</Text>
 														</Text>
 													: null
 												))}
@@ -904,7 +906,7 @@ export default function cart(props) {
 											</View>
 											<View>
 												<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
-												<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost.toFixed(2)}</Text>
+												<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>total cost:</Text> $ {orderingItem.cost.toFixed(2)}</Text>
 											</View>
 										</View>
 
@@ -1135,5 +1137,5 @@ const style = StyleSheet.create({
 	notifyUserAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	notifyUserActionHeader: { },
 
-	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 5, textAlign: 'center' },
 })

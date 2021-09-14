@@ -23,12 +23,12 @@ const cards = [
 	{ id: 4, number: "30569309025904", expMonth: 12, expYear: 45, cvc: '054' }, // diners club
 	{ id: 5, number: "3530111333300000", expMonth: 12, expYear: 23, cvc: '056' }, // jcb
 ]
-let user = users[8]
+let user = users[0]
 const { number, expMonth, expYear, cvc } = cards[Math.floor(Math.random() * 5) + 0]
 export const userInfo = { username: user.username, cellnumber: user.cellnumber, password: user.password, latitude: 43.663631, longitude: -79.351501 }
 
 export const local_api_url = "http://localhost:5000"
-export const wifi_api_url = "http://192.168.0.14:5000"
+export const wifi_api_url = "http://192.168.0.172:5000"
 export const server_api_url = "https://www.easygo.tk"
 export const url = wifi_api_url
 export const cardInfo = { number, expMonth, expYear, cvc }

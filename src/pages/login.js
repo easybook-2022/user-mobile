@@ -81,7 +81,7 @@ export default function login({ navigation }) {
 									navigation.dispatch(
 										CommonActions.reset({
 											index: 1,
-											routes: [{ name: 'register' }]
+											routes: [{ name: 'verifyuser' }]
 										})
 									);
 								}}>

@@ -174,7 +174,7 @@ export default function main({ navigation }) {
 			if (longitude && latitude) {
 				getTheLocations(longitude, latitude, '')
 
-				updateTrackUser = setInterval(() => trackUserLocation(), 1000)
+				updateTrackUser = setInterval(() => trackUserLocation(), 5000)
 			} else {
 				const longitude = parseFloat(await AsyncStorage.getItem("longitude"))
 				const latitude = parseFloat(await AsyncStorage.getItem("latitude"))
@@ -236,7 +236,7 @@ export default function main({ navigation }) {
 		getTheNumCartItems()
 		getLocationPermission()
 
-		updateNotifications = setInterval(() => getTheNumUpdates(), 1000)
+		updateNotifications = setInterval(() => getTheNumUpdates(), 5000)
 
 		return () => {
 			clearInterval(updateTrackUser)
@@ -250,7 +250,7 @@ export default function main({ navigation }) {
 				<View style={style.box}>
 					<View style={style.headers}>
 						<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-							<TextInput style={style.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.2)" placeholder="Search anything" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
+							<TextInput style={style.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search name" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
 							<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
 								<FontAwesome name="bell" size={30}/>
 								{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}

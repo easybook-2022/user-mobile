@@ -1214,7 +1214,7 @@ export default function order(props) {
 								)}
 
 								<View style={style.note}>
-									<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false}/>
+									<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false}/>
 								</View>
 
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -1494,7 +1494,7 @@ export default function order(props) {
 					<Modal>
 						<View style={{ paddingVertical: offsetPadding }}>
 							<View style={style.usersList}>
-								<TextInput style={style.userNameInput} placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
+								<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
 
 								<View style={style.usersListContainer}>
 									<View style={style.usersListSearched}>
@@ -1603,7 +1603,7 @@ export default function order(props) {
 					<Modal>
 						<View style={{ paddingVertical: offsetPadding }}>
 							<View style={style.usersList}>
-								<TextInput style={style.userNameInput} placeholder="Search diner to order for" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
+								<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner to order for" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
 
 								<View style={style.usersListContainer}>
 									<View style={style.usersListSearched}>

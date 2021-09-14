@@ -126,13 +126,13 @@ export default function setup({ navigation }) {
 			setPermission(status === 'granted')
 		}
 	}
-
+	
 	useEffect(() => {
 		(async() => openCamera())()
 	}, [])
 
 	if (permission === null) return <View/>
-		
+
 	return (
 		<View style={style.setup}>
 			<View style={{ paddingVertical: offsetPadding, opacity: loading ? 0.5 : 1 }}>
@@ -143,7 +143,7 @@ export default function setup({ navigation }) {
 						<View style={style.inputsBox}>
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Username:</Text>
-								<TextInput style={style.input} placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
+								<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
 							</View>
 
 							<View style={style.cameraContainer}>

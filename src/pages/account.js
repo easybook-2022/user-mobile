@@ -129,7 +129,6 @@ export default function account(props) {
 						...paymentMethodForm,
 						show: false,
 						number: '', expMonth: '', expYear: '', cvc: '',
-
 						loading: false
 					})
 					getThePaymentMethods()
@@ -242,7 +241,6 @@ export default function account(props) {
 						show: false,
 						id: '',
 						number: '', expMonth: '', expYear: '', cvc: '',
-
 						loading: false
 					})
 					getThePaymentMethods()
@@ -452,12 +450,12 @@ export default function account(props) {
 							<View style={style.inputsBox}>
 								<View style={style.inputContainer}>
 									<Text style={style.inputHeader}>Username:</Text>
-									<TextInput style={style.input} placeholder="username" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
+									<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="username" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
 								</View>
 
 								<View style={style.inputContainer}>
 									<Text style={style.inputHeader}>Cell number:</Text>
-									<TextInput style={style.input} placeholder="cell phone number" onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} autoCorrect={false}/>
+									<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="cell phone number" onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} autoCorrect={false}/>
 								</View>
 
 								<View style={style.cameraContainer}>
@@ -574,14 +572,14 @@ export default function account(props) {
 											<TextInput style={style.formInputInput} onChangeText={(expMonth) => setPaymentmethodform({
 												...paymentMethodForm,
 												expMonth
-											})} value={paymentMethodForm.expMonth.toString()} keyboardType="numeric" placeholder="MM" maxLength={2} autoCorrect={false}/>
+											})} value={paymentMethodForm.expMonth.toString()} keyboardType="numeric" placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="MM" maxLength={2} autoCorrect={false}/>
 										</View>
 										<View style={style.formInputField}>
 											<Text style={style.formInputHeader}>Expiry Year</Text>
 											<TextInput style={style.formInputInput} onChangeText={(expYear) => setPaymentmethodform({
 												...paymentMethodForm,
 												expYear
-											})} value={paymentMethodForm.expYear.toString()} keyboardType="numeric" placeholder="YYYY" maxLength={4} autoCorrect={false}/>
+											})} value={paymentMethodForm.expYear.toString()} keyboardType="numeric" placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="YYYY" maxLength={4} autoCorrect={false}/>
 										</View>
 										<View style={style.formInputField}>
 											<Text style={style.formInputHeader}>Security Code</Text>

@@ -234,7 +234,7 @@ export default function booktime(props) {
 											</Text>
 
 											<View style={style.note}>
-												<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} autoCorrect={false}/>
+												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} autoCorrect={false}/>
 											</View>
 
 											{confirm.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
@@ -253,7 +253,7 @@ export default function booktime(props) {
 										:
 										<>
 											<View style={style.requestedHeaders}>
-												<Text style={style.requestedHeader}>Appointment requested {'\n'}</Text>
+												<Text style={style.requestedHeader}>Appointment requested for{'\n'}</Text>
 												<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
 												<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
 												<Text style={style.requestedHeaderInfo}>You will get notify by the salon in your notification very soon</Text>

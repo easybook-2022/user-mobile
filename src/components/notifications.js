@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getNotifications } from '../apis/users'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
-import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
+import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining, cancelService, sendPayment, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -200,6 +200,44 @@ export default function notifications(props) {
 				}
 			})
 	}
+	const cancelTheService = (scheduleid, index) => {
+		const data = { scheduleid, type: "customer" }
+
+		cancelService(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					if (res.delete) {
+						const newItems = [...items]
+
+						newItems.splice(index, 1)
+
+						setItems(newItems)
+					}
+				}
+			})
+	}
+	const sendThePayment = (scheduleid, index) => {
+		sendPayment(scheduleid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const newItems = [...items]
+
+					newItems[index].paymentSent = true
+
+					setItems(newItems)
+				}
+			})
+	}
 
 	const getTheNotifications = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -241,7 +279,7 @@ export default function notifications(props) {
 									data={items}
 									renderItem={({ item, index }) => 
 										<View style={style.item} key={item.key}>
-											{(item.type == "cart-order" || item.type == "dining-order" || item.type == "paymentrequested") && (
+											{(item.type == "cart-order-other" || item.type == "dining-order" || item.type == "paymentrequested") && (
 												<>
 													<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 														<View style={style.itemImageHolder}>
@@ -278,7 +316,7 @@ export default function notifications(props) {
 														</View>
 														<Text style={style.quantity}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
 													</View>
-													<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 }}>
+													<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }}>
 														<View style={{ flexDirection: 'row' }}>
 															<View style={style.adderInfo}>
 																<View style={style.adderInfoProfile}>
@@ -321,6 +359,54 @@ export default function notifications(props) {
 															</TouchableOpacity>
 														</View>
 													</View>
+												</>
+											)}
+
+											{item.type == "cart-order-self" && (
+												<>
+													<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+														<View style={style.itemImageHolder}>
+															<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
+														</View>
+														<View style={style.itemInfos}>
+															<Text style={style.itemName}>{item.name}</Text>
+
+															{item.options.map((option, infoindex) => (
+																<Text key={option.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+																	{option.selected}
+																	{option.type == 'percentage' && '%'}
+																</Text>
+															))}
+
+															{item.others.map((other, otherindex) => (
+																other.selected ? 
+																	<Text key={other.key} style={style.itemInfo}>
+																		<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+																		<Text>{other.input}</Text>
+																	</Text>
+																: null
+															))}
+
+															{item.sizes.map((size, sizeindex) => (
+																size.selected ? 
+																	<Text key={size.key} style={style.itemInfo}>
+																		<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+																		<Text>{size.name}</Text>
+																	</Text>
+																: null
+															))}
+														</View>
+														<Text style={style.quantity}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
+													</View>
+													<Text style={style.itemOrderNumber}>Your order#: {item.orderNumber}</Text>
+													<Text style={style.itemHeader}>
+														{item.status == 'checkout' ? 
+															'Your order will be ready soon'
+															:
+															'Your order is ready. You can pick up now'
+														}
+													</Text>
 												</>
 											)}
 
@@ -383,7 +469,7 @@ export default function notifications(props) {
 																	{item.locationtype == 'restaurant' && "Your table is #" + item.table}
 																</Text>
 
-																{item.locationtype == 'restaurant' && (
+																{item.locationtype == 'restaurant' ?
 																	item.confirm ? 
 																		<View style={{ alignItems: 'center' }}>
 																			<View style={style.itemServiceOrder}>
@@ -418,7 +504,18 @@ export default function notifications(props) {
 																					</TouchableOpacity>
 																				</View>
 																			</View>
-																)}
+																	:
+																	<View style={{ alignItems: 'center' }}>
+																		<View style={style.actions}>
+																			<TouchableOpacity style={style.action} onPress={() => cancelTheService(item.id, index)}>
+																				<Text style={style.actionHeader}>Cancel Service</Text>
+																			</TouchableOpacity>
+																			<TouchableOpacity style={style.action} onPress={() => sendThePayment(item.id, index)}>
+																				<Text style={style.actionHeader}>Send Payment{item.paymentSent ? ' Again' : ''}</Text>
+																			</TouchableOpacity>
+																		</View>
+																	</View>
+																}
 															</>
 														)}
 														{item.action == "cancel" || item.action == "rebook" ? 
@@ -433,20 +530,18 @@ export default function notifications(props) {
 																		"Unfortunately, this time has been taken."
 																	}								
 																</Text>
-																{item.reason != "" ? 
-																	<>
-																		<Text style={style.itemServiceResponseHeader}>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>
-																		<View style={{ alignItems: 'center' }}>
-																			<TouchableOpacity style={style.itemServiceResponseTouch} onPress={() => deleteTheRequest(item.id, index)}>
-																				<Text style={style.itemServiceResponseTouchHeader}>Ok</Text>
-																			</TouchableOpacity>
-																		</View>
-																	</>
-																: null }
+																{item.reason != "" && <Text style={style.itemServiceResponseHeader}>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>}
+																{item.action == "cancel" && (
+																	<View style={{ alignItems: 'center' }}>
+																		<TouchableOpacity style={style.itemServiceResponseTouch} onPress={() => deleteTheRequest(item.id, index)}>
+																			<Text style={style.itemServiceResponseTouchHeader}>Ok</Text>
+																		</TouchableOpacity>
+																	</View>
+																)}
 																{item.nextTime > 0 && (
 																	<>
 																		<Text style={style.itemHeader}>
-																			<Text>The store requested this time for you.</Text>
+																			<Text>The {item.locationtype == "restaurant" ? "restaurant" : "salon"} requested this time for you.</Text>
 																			{'\n'}
 																			<Text style={style.itemServiceResponseHeader}>{displayTimeStr(item.nextTime)}</Text>
 																			{'\n\n'}
@@ -586,8 +681,8 @@ const style = StyleSheet.create({
 	adderInfo: { alignItems: 'center' },
 	adderInfoProfile: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 	adderInfoHeader: { padding: 10 },
-
-	itemHeader: { textAlign: 'center' },
+	itemOrderNumber: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	itemHeader: { marginTop: 20, textAlign: 'center' },
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: 75 },
 	actionHeader: { fontSize: 10, textAlign: 'center' },

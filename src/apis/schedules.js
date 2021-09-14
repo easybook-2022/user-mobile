@@ -30,6 +30,17 @@ export const acceptReservationJoining = data => {
 	)
 }
 
+export const cancelService = data => {
+	return axios.post(
+		`${url}/schedules/cancel_service`,
+		data
+	)
+}
+
+export const sendPayment = id => {
+	return axios.get(`${url}/schedules/send_payment/${id}`)
+}
+
 export const doneDining = data => {
 	return axios.post(
 		`${url}/schedules/done_dining`,

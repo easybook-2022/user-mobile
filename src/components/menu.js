@@ -60,7 +60,7 @@ export default function menu(props) {
 				}
 			})
 	}
-
+	
 	const getTheInfo = async() => {
 		const data = { locationid, menuid }
 

@@ -1,6 +1,10 @@
 import axios from 'axios'
 import { url } from '../../assets/info'
 
+export const verifyUser = cellnumber => {
+	return axios.get(`${url}/users/verify/${cellnumber}`)
+}
+
 export const loginUser = data => {
 	return axios.post(
 		`${url}/users/login`, 

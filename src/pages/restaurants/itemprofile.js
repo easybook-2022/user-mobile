@@ -545,7 +545,7 @@ export default function itemProfile(props) {
 						)}
 
 						<View style={style.note}>
-							<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setItemnote(note)} autoCorrect={false}/>
+							<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setItemnote(note)} autoCorrect={false}/>
 						</View>
 
 						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -619,7 +619,7 @@ export default function itemProfile(props) {
 						<Modal>
 							<View style={{ paddingVertical: offsetPadding }}>
 								<View style={style.usersList}>
-									<TextInput style={style.userNameInput} placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
+									<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
 
 									<View style={style.usersListContainer}>
 										<View style={{ height: '50%', overflow: 'hidden' }}>

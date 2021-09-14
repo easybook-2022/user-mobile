@@ -46,7 +46,7 @@ export default function forgotpassword({ navigation }) {
 			setErrormsg("Reset code is wrong")
 		}
 	}
-
+	
 	return (
 		<View style={style.forgotpassword}>
 			<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>

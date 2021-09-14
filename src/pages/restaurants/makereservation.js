@@ -31,6 +31,7 @@ export default function booktime(props) {
 	const [numDiners, setNumdiners] = useState(0)
 	const [selectedDiners, setSelecteddiners] = useState([])
 	const [numSelectedDiners, setNumselecteddiners] = useState(0)
+	const [selectedTable, setSelectedtable] = useState('')
 	const [locationInfo, setLocationinfo] = useState({ name: "", logo: "" })
 	const [errorMsg, setErrormsg] = useState('')
 
@@ -89,9 +90,15 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setNumselecteddiners(res.reservationInfo.diners)
-					setConfirm({ ...confirm, note: res.reservationInfo.note })
+					const { diners, table, note } = res.reservationInfo
+
+					setNumselecteddiners(diners)
+					setSelectedtable(table)
+					setConfirm({ ...confirm, note })
 				}
+			})
+			.catch((err) => {
+
 			})
 	}
 	const getTheLocationHours = async() => {
@@ -376,7 +383,7 @@ export default function booktime(props) {
 						:
 						times.length > 0 ?
 							<ScrollView>
-								<View style={{ alignItems: 'center', marginVertical: 30 }}>
+								<View style={{ alignItems: 'center', marginBottom: 30, marginTop: 0 }}>
 									<View style={style.dinersBox}>
 										{!scheduleid && (
 											<>
@@ -460,7 +467,7 @@ export default function booktime(props) {
 											</Text>
 
 											<View style={style.note}>
-												<TextInput style={style.noteInput} multiline={true} placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} value={confirm.note} autoCorrect={false}/>
+												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} value={confirm.note} autoCorrect={false}/>
 											</View>
 
 											{confirm.errormsg ? <Text style={style.errorMsg}>You already requested a reservation for this restaurant</Text> : null}
@@ -517,7 +524,7 @@ export default function booktime(props) {
 						<View style={style.dinersListBox}>
 							<View style={{ paddingVertical: offsetPadding }}>
 								<View style={style.dinersList}>
-									<TextInput style={style.dinerNameInput} placeholder="Search diner to add to reservation" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
+									<TextInput style={style.dinerNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner to add to reservation" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
 
 									<View style={style.dinersListContainer}>
 										<View style={style.dinersListSearched}>
@@ -633,7 +640,7 @@ const style = StyleSheet.create({
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
-	headers: { height: 75, marginVertical: 10 },
+	headers: { height: 100, marginVertical: 10 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center' },
 
@@ -658,7 +665,7 @@ const style = StyleSheet.create({
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', paddingVertical: 10, width: '80%' },
+	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', paddingVertical: 10, width: '80%' },
 	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
 	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 80, padding: 5, width: '80%' },
