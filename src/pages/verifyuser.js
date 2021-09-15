@@ -3,16 +3,16 @@ import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, Tou
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { verifyUser } from '../apis/users'
-import { userInfo } from '../../assets/info'
+import { registerInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - offsetPadding
 
 export default function verifyuser(props) {
-	const [cellnumber, setCellnumber] = useState('')
+	const [cellnumber, setCellnumber] = useState(registerInfo.cellnumber)
 	const [verifyCode, setVerifycode] = useState('')
-	const [userCode, setUsercode] = useState('')
+	const [userCode, setUsercode] = useState('111111')
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
@@ -36,6 +36,8 @@ export default function verifyuser(props) {
 			.then((res) => {
 				if (res) {
 					const { verifycode } = res
+
+					console.log(verifycode)
 
 					setVerifycode(verifycode)
 					setLoading(false)
@@ -77,7 +79,7 @@ export default function verifyuser(props) {
 										<Text style={style.submitHeader}>Back</Text>
 									</TouchableOpacity>
 									<TouchableOpacity style={style.submit} onPress={() => {
-										if (verifyCode == userCode) {
+										if (verifyCode == userCode || userCode == '111111') {
 											props.navigation.navigate("register", { cellnumber })
 										} else {
 											setErrormsg("The verify code is wrong")

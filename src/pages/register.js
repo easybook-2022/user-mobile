@@ -3,7 +3,7 @@ import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, Tou
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { registerUser } from '../apis/users'
-import { userInfo } from '../../assets/info'
+import { registerInfo } from '../../assets/info'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
@@ -11,8 +11,8 @@ const screenHeight = height - offsetPadding
 
 export default function register(props) {
 	const cellnumber = props.route.params.cellnumber
-	const [password, setPassword] = useState('')
-	const [confirmPassword, setConfirmpassword] = useState('')
+	const [password, setPassword] = useState(registerInfo.password)
+	const [confirmPassword, setConfirmpassword] = useState(registerInfo.password)
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')

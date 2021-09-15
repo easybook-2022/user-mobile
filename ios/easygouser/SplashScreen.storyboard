@@ -28,10 +28,10 @@
                             <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="6tX-OG-Sck"/>
                             <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="ABX-8g-7v4"/>
                             <constraint firstItem="EXPO-SplashScreenBackground" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="jkI-2V-eW5"/>
-                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="ae44641f-3d41-4438-98d3-87e6cf6a2709"/>
-                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="9bcbcd86-2b72-4f30-bb1d-2c085e1cac91"/>
-                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="f297a621-7ce8-4e13-9703-2b72987433a8"/>
-                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="39c28c86-e0d2-4ec7-b0d6-dd8dd42f78ef"/>
+                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="b60f86e5-b596-46e7-b008-91403dbb0620"/>
+                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="d6e82372-e258-4be2-82cf-da9d3fb03f5b"/>
+                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="088e7a5e-d75b-487c-bc02-5631a680b7c9"/>
+                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="84e6b25f-d0df-4a7a-bd53-b0d99391bb96"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="Rmq-lb-GrQ"/>
                     </view>

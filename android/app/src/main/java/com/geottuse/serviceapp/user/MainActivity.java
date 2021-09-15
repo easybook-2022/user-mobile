@@ -1,4 +1,4 @@
-package com.geottuse.serviceapp.users;
+package com.geottuse.serviceapp.user;
 import android.content.res.Configuration;
 import android.content.Intent;
 

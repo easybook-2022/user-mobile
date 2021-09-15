@@ -258,6 +258,16 @@ export default function main({ navigation }) {
 						</View>
 					</View>
 
+					<View style={style.refresh}>
+						<TouchableOpacity style={style.refreshTouch} onPress={() => {
+							getTheNumUpdates()
+							getTheNumCartItems()
+							getLocationPermission()
+						}}>
+							<Text style={style.refreshTouchHeader}>Refresh</Text>
+						</TouchableOpacity>
+					</View>
+
 					<View style={style.body}>
 						{geolocation.longitude && geolocation.latitude ? 
 							<FlatList
@@ -352,7 +362,10 @@ const style = StyleSheet.create({
 	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 15, margin: 10, padding: 10, width: width - 80 },
 	notification: { flexDirection: 'row', marginRight: 10, marginVertical: 10 },
 
-	body: { flexDirection: 'column', height: screenHeight - 120, justifyContent: 'space-around' },
+	refresh: { alignItems: 'center' },
+	refreshTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, marginVertical: 10, padding: 5, width: 100 },
+	refreshTouchHeader: { textAlign: 'center' },
+	body: { flexDirection: 'column', height: screenHeight - 143, justifyContent: 'space-around' },
 
 	service: { marginBottom: 10, marginHorizontal: 5 },
 	rowHeader: { fontWeight: 'bold', margin: 10 },
