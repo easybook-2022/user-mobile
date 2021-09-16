@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getNotifications } from '../apis/users'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
-import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining, cancelService, sendPayment, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
+import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining, cancelService, sendServicePayment, sendDiningPayment, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -131,8 +131,12 @@ export default function notifications(props) {
 				}
 			})
 	}
-	const acceptTheReservation = (id, index) => {
-		acceptReservation(id)
+	const acceptTheReservation = (index) => {
+		const newItems = [...items]
+		const { id, table } = newItems[index]
+		const data = { requestid: id, tablenum: table }
+
+		acceptReservation(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -142,7 +146,9 @@ export default function notifications(props) {
 				if (res) {
 					const newItems = [...items]
 
-					newItems.splice(index, 1)
+					newItems[index].action = "accepted"
+					newItems[index].nextTime = 0
+					newItems[index].confirm = true
 
 					setItems(newItems)
 				}
@@ -221,8 +227,28 @@ export default function notifications(props) {
 				}
 			})
 	}
-	const sendThePayment = (scheduleid, index) => {
-		sendPayment(scheduleid)
+	const sendTheServicePayment = (scheduleid, index) => {
+		sendServicePayment(scheduleid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const newItems = [...items]
+
+					newItems[index].paymentSent = true
+
+					setItems(newItems)
+				}
+			})
+	}
+	const sendTheDiningPayment = async(scheduleid, index) => {
+		const userid = await AsyncStorage.getItem("userid")
+		const data = { scheduleid, userid }
+
+		sendDiningPayment(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -479,6 +505,9 @@ export default function notifications(props) {
 																				}}>
 																					<Text style={style.itemServiceOrderTouchHeader}>Start Ordering your meal(s)</Text>
 																				</TouchableOpacity>
+																				<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => sendTheDiningPayment(item.id, index)}>
+																					<Text style={style.itemServiceOrderTouchHeader}>Send payment{item.paymentSent ? " again" : ""}</Text>
+																				</TouchableOpacity>
 																			</View>
 																		</View>
 																		:
@@ -510,7 +539,7 @@ export default function notifications(props) {
 																			<TouchableOpacity style={style.action} onPress={() => cancelTheService(item.id, index)}>
 																				<Text style={style.actionHeader}>Cancel Service</Text>
 																			</TouchableOpacity>
-																			<TouchableOpacity style={style.action} onPress={() => sendThePayment(item.id, index)}>
+																			<TouchableOpacity style={style.action} onPress={() => sendTheServicePayment(item.id, index)}>
 																				<Text style={style.actionHeader}>Send Payment{item.paymentSent ? ' Again' : ''}</Text>
 																			</TouchableOpacity>
 																		</View>
@@ -562,7 +591,7 @@ export default function notifications(props) {
 																			}}>
 																				<Text style={style.actionHeader}>Reschedule</Text>
 																			</TouchableOpacity>
-																			<TouchableOpacity style={style.action} onPress={() => acceptTheReservation(item.id, index)}>
+																			<TouchableOpacity style={style.action} onPress={() => acceptTheReservation(index)}>
 																				<Text style={style.actionHeader}>Yes</Text>
 																			</TouchableOpacity>
 																		</View>
@@ -665,6 +694,7 @@ const style = StyleSheet.create({
 	itemServiceResponseHeader: { fontWeight: 'bold', margin: 10 },
 	itemServiceResponseTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 60 },
 	itemServiceResponseTouchHeader: { fontWeight: 'bold', textAlign: 'center' },
+	itemServiceOrder: { flexDirection: 'row', justifyContent: 'space-between', width: 250 },
 	itemServiceOrderTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 2, padding: 5, width: 120 },
 	itemServiceOrderTouchHeader: { fontSize: 13, textAlign: 'center' },
 	storeRequested: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 3, padding: 5 },

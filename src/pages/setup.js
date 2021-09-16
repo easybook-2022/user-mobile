@@ -7,7 +7,7 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import * as Location from 'expo-location';
 import { CommonActions } from '@react-navigation/native';
 import { setupUser } from '../apis/users'
-import { userInfo } from '../../assets/info'
+import { registerInfo } from '../../assets/info'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -21,7 +21,7 @@ export default function setup({ navigation }) {
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 	const [profile, setProfile] = useState({ uri: '', name: '' })
-	const [username, setUsername] = useState(userInfo.username)
+	const [username, setUsername] = useState(registerInfo.username)
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')

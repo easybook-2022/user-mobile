@@ -5,7 +5,7 @@ import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
 import { CommonActions } from '@react-navigation/native';
-import { userInfo, cardInfo, stripe_key, logo_url } from '../../assets/info'
+import { cardInfo, stripe_key, logo_url } from '../../assets/info'
 import { 
 	getUserInfo, updateUser, addPaymentMethod, updatePaymentMethod, getPaymentMethods, 
 	setPaymentmethodDefault, getPaymentmethodInfo, deleteThePaymentMethod
@@ -32,10 +32,10 @@ export default function account(props) {
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 
-	const [username, setUsername] = useState(userInfo.username)
-	const [phonenumber, setPhonenumber] = useState(userInfo.cellnumber)
-	const [password, setPassword] = useState(userInfo.password)
-	const [confirmpassword, setConfirmpassword] = useState(userInfo.password)
+	const [username, setUsername] = useState('')
+	const [cellnumber, setCellnumber] = useState('')
+	const [password, setPassword] = useState('')
+	const [confirmpassword, setConfirmpassword] = useState('')
 	const [profile, setProfile] = useState({ uri: '', name: '', old: '' })
 	const [paymentMethods, setPaymentMethods] = useState([])
 	const [loaded, setLoaded] = useState(false)
@@ -64,7 +64,7 @@ export default function account(props) {
 					const { username, cellnumber, profile } = res.userInfo
 
 					setUsername(username)
-					setPhonenumber(cellnumber)
+					setCellnumber(cellnumber)
 					setProfile({ uri: '', name: '', old: profile })
 				}
 			})
@@ -322,8 +322,8 @@ export default function account(props) {
 	const updateAccount = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		if (username && phonenumber) {
-			const data = { userid, username, phonenumber, profile }
+		if (username && cellnumber) {
+			const data = { userid, username, cellnumber, profile }
 
 			setLoading(true)
 
@@ -355,7 +355,7 @@ export default function account(props) {
 				return
 			}
 
-			if (!phonenumber) {
+			if (!cellnumber) {
 				setErrormsg("Please enter your cell phone number")
 
 				return
@@ -455,7 +455,7 @@ export default function account(props) {
 
 								<View style={style.inputContainer}>
 									<Text style={style.inputHeader}>Cell number:</Text>
-									<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="cell phone number" onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} autoCorrect={false}/>
+									<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="cell phone number" onChangeText={(cellnumber) => setCellnumber(cellnumber)} value={cellnumber} autoCorrect={false}/>
 								</View>
 
 								<View style={style.cameraContainer}>

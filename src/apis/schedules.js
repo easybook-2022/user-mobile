@@ -8,8 +8,11 @@ export const requestAppointment = data => {
 	)
 }
 
-export const acceptReservation = id => {
-	return axios.get(`${url}/schedules/accept_request/${id}`)
+export const acceptReservation = data => {
+	return axios.post(
+		`${url}/schedules/accept_request`,
+		data
+	)
 }
 
 export const closeRequest = id => {
@@ -37,8 +40,15 @@ export const cancelService = data => {
 	)
 }
 
-export const sendPayment = id => {
-	return axios.get(`${url}/schedules/send_payment/${id}`)
+export const sendServicePayment = id => {
+	return axios.get(`${url}/schedules/send_service_payment/${id}`)
+}
+
+export const sendDiningPayment = data => {
+	return axios.post(
+		`${url}/schedules/send_dining_payment`,
+		data
+	)
 }
 
 export const doneDining = data => {
@@ -113,6 +123,13 @@ export const editOrderCallfor = data => {
 export const dinerIsRemovable = data => {
 	return axios.post(
 		`${url}/schedules/diner_is_removable`,
+		data
+	)
+}
+
+export const dinerIsSelectable = data => {
+	return axios.post(
+		`${url}/schedules/diner_is_selectable`,
 		data
 	)
 }

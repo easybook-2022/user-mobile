@@ -70,7 +70,11 @@ export default function login({ navigation }) {
 								<TextInput style={style.input} secureTextEntry={true} onChangeText={(password) => setPassword(password)} secureTextEntry={true} value={password} autoCorrect={false}/>
 							</View>
 
-							{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
+							<Text style={style.errorMsg}>{errorMsg}</Text>
+
+							<TouchableOpacity style={style.submit} onPress={() => login()}>
+								<Text style={style.submitHeader}>Sign-In</Text>
+							</TouchableOpacity>
 						</View>
 						
 						{loading ? <ActivityIndicator color="black" size="small"/> : null }
@@ -99,10 +103,6 @@ export default function login({ navigation }) {
 								</TouchableOpacity>
 							</View>
 						</View>
-
-						<TouchableOpacity style={style.submit} onPress={() => login()}>
-							<Text style={style.submitHeader}>Sign-In</Text>
-						</TouchableOpacity>
 					</View>
 				</TouchableWithoutFeedback>
 			</View>
@@ -115,15 +115,15 @@ const style = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { color: 'white', fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 
-	inputsBox: { backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
+	inputsBox: { alignItems: 'center', backgroundColor: 'rgba(2, 136, 255, 0.1)', paddingHorizontal: 20, width: '80%' },
 	inputContainer: { marginVertical: '5%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10 },
+	input: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10, width: width - 100 },
 	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
+	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
 
 	options: {  },
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },
+	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 10, padding: 5 },
 	optionHeader: {  },
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10 },
-	submitHeader: { fontWeight: 'bold' },
 })

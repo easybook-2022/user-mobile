@@ -28,7 +28,7 @@ const { number, expMonth, expYear, cvc } = cards[Math.floor(Math.random() * 5) +
 let login = users[0]
 export const loginInfo = { username: login.username, cellnumber: login.cellnumber, password: login.password, latitude: 43.663631, longitude: -79.351501 }
 
-let register = users[1]
+let register = users[6]
 export const registerInfo = { username: register.username, cellnumber: register.cellnumber, password: register.password, latitude: 43.663631, longitude: -79.351501 }
 
 export const local_api_url = "http://localhost:5000"

@@ -40,7 +40,7 @@ export const updateUser = data => {
 
 	form.append("userid", data.userid)
 	form.append("username", data.username)
-	form.append("cellnumber", data.phonenumber)
+	form.append("cellnumber", data.cellnumber)
 
 	if (data.profile.uri) {
 		form.append("profile", { uri: data.profile.uri, name: data.profile.name })

@@ -6,7 +6,7 @@ import { searchFriends, searchDiners } from '../../apis/users'
 import { getLocationProfile, getInfo } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
 import { getProducts, getProductInfo } from '../../apis/products'
-import { getScheduleInfo, addItemtoorder, seeDiningOrders, editDiners, sendOrders, editOrder, deleteOrder, updateOrder, addDiners, editOrderCallfor, dinerIsRemovable, confirmDiningOrder, updateOrderCallfor } from '../../apis/schedules'
+import { getScheduleInfo, addItemtoorder, seeDiningOrders, editDiners, sendOrders, editOrder, deleteOrder, updateOrder, addDiners, editOrderCallfor, dinerIsRemovable, dinerIsSelectable, confirmDiningOrder, updateOrderCallfor } from '../../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -53,6 +53,7 @@ export default function order(props) {
 	const [viewType, setViewtype] = useState('')
 	const [loaded, setLoaded] = useState(false)
 	const [showPaymentRequired, setShowpaymentrequired] = useState({ show: false, username: "" })
+	const [showUnconfirmeddiner, setShowunconfirmeddiner] = useState({ show: false, username: "" })
 	const [showUnconfirmedorders, setShowunconfirmedorders] = useState(false)
 	const [showActiveDiner, setShowactivediner] = useState({ show: false, username: "" })
 
@@ -891,7 +892,7 @@ export default function order(props) {
 				}
 			})
 	}
-	const selectDiner = (userid, status) => {
+	const selectDiner = (userid) => {
 		let newDiners = [...diners]
 		let newSelectedcallfor = [...selectedCallfor]
 		let selected = { id: "", key: "", profile: "", username: "" }
@@ -901,70 +902,86 @@ export default function order(props) {
 			return
 		}
 
-		newDiners.forEach(function (info) {
-			info.row.forEach(function (diner) {
-				if (diner.id == userid) {
-					selected.id = userid
-					selected.profile = diner.profile
-					selected.username = diner.username
+		const data = { scheduleid, userid }
+
+		dinerIsSelectable(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
 				}
 			})
-		})
+			.then((res) => {
+				if (res) {
+					const { selectable } = res
 
-		if (status == "filled") {
-			// get last selected diner
+					if (selectable) {
+						newDiners.forEach(function (info) {
+							info.row.forEach(function (diner) {
+								if (diner.id == userid) {
+									selected.id = userid
+									selected.profile = diner.profile
+									selected.username = diner.username
+								}
+							})
+						})
 
-			if (newSelectedcallfor.length > 0) {
-				last_row = newSelectedcallfor[newSelectedcallfor.length - 1].row
+						if (newSelectedcallfor.length > 0) {
+							last_row = newSelectedcallfor[newSelectedcallfor.length - 1].row
 
-				for (k in last_row) {
-					if (last_row[k].id) {
-						next_key = parseInt(last_row[k].key.split("-").pop()) + 1
+							for (k in last_row) {
+								if (last_row[k].id) {
+									next_key = parseInt(last_row[k].key.split("-").pop()) + 1
+								} else {
+									unfill = true
+									selected.key = "selected-callfor-" + next_key
+									last_row[k] = selected
+									next_key += 1
+
+									break
+								}
+							}
+
+							if (unfill) {
+								newSelectedcallfor[newSelectedcallfor.length - 1].row = last_row
+								setNumselectedcallfor(numSelectedcallfor + 1)
+							} else {
+								selected.key = "selected-callfor-" + next_key
+								newSelectedcallfor.push({
+									key: "selected-callfor-row-" + (newSelectedcallfor.length),
+									row: [
+										selected,
+										{ key: "selected-callfor-" + (next_key + 1) },
+										{ key: "selected-callfor-" + (next_key + 2) },
+										{ key: "selected-callfor-" + (next_key + 3) }
+									]
+								})
+							}
+
+							setNumselectedcallfor(numSelectedcallfor + 1)
+						} else {
+							selected.key = "selected-callfor-0"
+							newSelectedcallfor = [{
+								key: "selected-callfor-row-0",
+								row: [
+									selected,
+									{ key: "selected-callfor-1" },
+									{ key: "selected-callfor-2" },
+									{ key: "selected-callfor-3" }
+								]
+							}]
+							setNumselectedcallfor(1)
+						}
+
+						setSelectedcallfor(newSelectedcallfor)
 					} else {
-						unfill = true
-						selected.key = "selected-callfor-" + next_key
-						last_row[k] = selected
-						next_key += 1
-
-						break
+						if (res.msg == "paymentrequired") {
+							setShowpaymentrequired({ show: true, username: res.username })
+						} else {
+							setShowunconfirmeddiner({ show: true, username: res.username })
+						}
 					}
 				}
-
-				if (unfill) {
-					newSelectedcallfor[newSelectedcallfor.length - 1].row = last_row
-					setNumselectedcallfor(numSelectedcallfor + 1)
-				} else {
-					selected.key = "selected-callfor-" + next_key
-					newSelectedcallfor.push({
-						key: "selected-callfor-row-" + (newSelectedcallfor.length),
-						row: [
-							selected,
-							{ key: "selected-callfor-" + (next_key + 1) },
-							{ key: "selected-callfor-" + (next_key + 2) },
-							{ key: "selected-callfor-" + (next_key + 3) }
-						]
-					})
-				}
-
-				setNumselectedcallfor(numSelectedcallfor + 1)
-			} else {
-				selected.key = "selected-callfor-0"
-				newSelectedcallfor = [{
-					key: "selected-callfor-row-0",
-					row: [
-						selected,
-						{ key: "selected-callfor-1" },
-						{ key: "selected-callfor-2" },
-						{ key: "selected-callfor-3" }
-					]
-				}]
-				setNumselectedcallfor(1)
-			}
-
-			setSelectedcallfor(newSelectedcallfor)
-		} else {
-			setShowpaymentrequired({ show: true, username: selected.username })
-		}
+			})
 	}
 	const deselectDiner = (userid) => {
 		let list = [...selectedCallfor]
@@ -1035,7 +1052,7 @@ export default function order(props) {
 								<Text style={style.orderActionHeader}>See Order(s)</Text>
 							</TouchableOpacity>
 							<TouchableOpacity style={style.orderAction} onPress={() => editTheDiners()}>
-								<Text style={style.orderActionHeader}>{(totalDiners + 1) == 0 ? 'Add' : 'Edit'} Diner {(totalDiners + 1) > 0 ? '(' + (totalDiners + 1) + ')' : ''}</Text>
+								<Text style={style.orderActionHeader}>{totalDiners == 0 ? 'Add' : 'Edit'} Diner {totalDiners > 0 ? '(' + totalDiners + ')' : ''}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -1615,7 +1632,7 @@ export default function order(props) {
 												<View key={item.key} style={style.userRow}>
 													{item.row.map(diner => (
 														diner.username ? 
-															<TouchableOpacity key={diner.key} style={style.user} onPress={() => selectDiner(diner.id, diner.status)}>
+															<TouchableOpacity key={diner.key} style={style.user} onPress={() => selectDiner(diner.id)}>
 																<View style={style.userProfileHolder}>
 																	<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
 																</View>
@@ -1733,6 +1750,29 @@ export default function order(props) {
 
 											<View style={style.errorActions}>
 												<TouchableOpacity style={style.errorAction} onPress={() => setShowpaymentrequired({ show: false, username: "" })}>
+													<Text style={style.errorActionHeader}>Close</Text>
+												</TouchableOpacity>
+											</View>
+										</View>
+									</View>
+								</View>
+							</Modal>
+						)}
+
+						{showUnconfirmeddiner.show && (
+							<Modal transparent={true}>
+								<View style={{ paddingVertical: offsetPadding }}>
+									<View style={style.errorBox}>
+										<View style={style.errorContainer}>
+											<Text style={style.errorHeader}>
+												{showUnconfirmeddiner.username} hasn't accepted the reservation.
+												{'\n\n'}
+												Please tell {showUnconfirmeddiner.username} to accept it so that you
+												can continue your order
+											</Text>
+
+											<View style={style.errorActions}>
+												<TouchableOpacity style={style.errorAction} onPress={() => setShowunconfirmeddiner({ show: false, username: "" })}>
 													<Text style={style.errorActionHeader}>Close</Text>
 												</TouchableOpacity>
 											</View>

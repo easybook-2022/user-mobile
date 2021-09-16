@@ -19,6 +19,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+const imageSize = 50
 
 export default function booktime(props) {
 	let { locationid } = props.route.params
@@ -171,6 +172,8 @@ export default function booktime(props) {
 		})
 
 		const data = { userid, locationid, scheduleid, time, diners, note: note ? note : "" }
+
+		console.log(data)
 
 		makeReservation(data)
 			.then((res) => {
@@ -583,7 +586,7 @@ export default function booktime(props) {
 
 									<View style={style.itemContainer}>
 										<View style={style.itemImageHolder}>
-											<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + locationInfo.logo }}/>
+											<Image style={{ height: imageSize, width: imageSize }} source={{ uri: logo_url + locationInfo.logo }}/>
 										</View>
 										<Text style={style.itemName}>{locationInfo.name}</Text>
 									</View>
@@ -696,7 +699,7 @@ const style = StyleSheet.create({
 
 	// location info
 	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', marginHorizontal: 10, padding: 10 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
+	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: imageSize / 2, height: imageSize, overflow: 'hidden', width: imageSize },
 	itemName: { fontWeight: 'bold', marginVertical: 15, marginLeft: 50, textAlign: 'center' },
 
 	actions: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5 },
