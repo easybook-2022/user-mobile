@@ -22,7 +22,7 @@ const screenHeight = height - (offsetPadding * 2)
 const imageSize = (width / 3) - 10
 
 export default function salonprofile(props) {
-	let { locationid } = props.route.params
+	let { locationid, refetch } = props.route.params
 
 	const [logo, setLogo] = useState('')
 	const [name, setName] = useState('')
@@ -172,7 +172,10 @@ export default function salonprofile(props) {
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<View style={style.profileInfo}>
-						<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+						<TouchableOpacity style={style.back} onPress={() => {
+							refetch()
+							props.navigation.goBack()
+						}}>
 							<Text style={style.backHeader}>Back</Text>
 						</TouchableOpacity>
 						

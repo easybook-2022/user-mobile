@@ -174,7 +174,7 @@ export default function main({ navigation }) {
 			if (longitude && latitude) {
 				getTheLocations(longitude, latitude, '')
 
-				updateTrackUser = setInterval(() => trackUserLocation(), 5000)
+				updateTrackUser = setInterval(() => trackUserLocation(), 2000)
 			} else {
 				const longitude = parseFloat(await AsyncStorage.getItem("longitude"))
 				const latitude = parseFloat(await AsyncStorage.getItem("latitude"))
@@ -230,18 +230,21 @@ export default function main({ navigation }) {
 
 		return ""
 	}
+	const startAllInterval = () => {
+		getLocationPermission()
+		updateNotifications = setInterval(() => getTheNumUpdates(), 2000)
+	}
+	const clearAllInterval = () => {
+		clearInterval(updateTrackUser)
+		clearInterval(updateNotifications)
+	}
 
 	useEffect(() => {
 		getTheNumUpdates()
 		getTheNumCartItems()
 		getLocationPermission()
 
-		updateNotifications = setInterval(() => getTheNumUpdates(), 5000)
-
-		return () => {
-			clearInterval(updateTrackUser)
-			clearInterval(updateNotifications)
-		}
+		updateNotifications = setInterval(() => getTheNumUpdates(), 2000)
 	}, [])
 	
 	return (
@@ -278,7 +281,10 @@ export default function main({ navigation }) {
 										<Text style={style.rowHeader}>{item.locations.length} {item.header} near you</Text>
 
 										{item.index < item.max && (
-											<TouchableOpacity style={style.seeMore} onPress={() => navigation.navigate(item.service)}>
+											<TouchableOpacity style={style.seeMore} onPress={() => {
+												clearAllInterval()
+												navigation.navigate(item.service)
+											}}>
 												<Text style={style.seeMoreHeader}>See More</Text>
 											</TouchableOpacity>
 										)}
@@ -298,7 +304,10 @@ export default function main({ navigation }) {
 												showsHorizontalScrollIndicator={false}
 												data={item.locations}
 												renderItem={({ item }) => 
-													<TouchableOpacity style={style.location} onPress={() => navigation.navigate(item.nav, { locationid: item.id })}>
+													<TouchableOpacity style={style.location} onPress={() => {
+														clearAllInterval()
+														navigation.navigate(item.nav, { locationid: item.id, refetch: () => startAllInterval() })
+													}}>
 														<View style={style.locationPhotoHolder}>
 															<Image source={{ uri: logo_url + item.logo }} style={{ height: 80, width: 80 }}/>
 														</View>
@@ -320,10 +329,16 @@ export default function main({ navigation }) {
 					</View>
 
 					<View style={style.bottomNavs}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("account")}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							clearAllInterval()
+							navigation.navigate("account", { refetch: () => startAllInterval() })
+						}}>
 							<FontAwesome5 name="user-circle" size={30}/>
 						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => navigation.navigate("recent")}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							clearAllInterval()
+							navigation.navigate("recent", { refetch: () => startAllInterval() })
+						}}>
 							<FontAwesome name="history" size={30}/>
 						</TouchableOpacity>
 						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
@@ -331,8 +346,7 @@ export default function main({ navigation }) {
 							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
 						</TouchableOpacity>
 						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							clearInterval(updateTrackUser)
-							clearInterval(updateNotifications)
+							clearAllInterval()
 
 							AsyncStorage.clear()
 

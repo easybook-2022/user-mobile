@@ -26,6 +26,7 @@ const unionpayLogo = require("../../assets/unionpay.png")
 const visaLogo = require("../../assets/visa.png")
 
 export default function account(props) {
+	const { refetch } = props.route.params
 	const required = props.route.params ? props.route.params.required : ""
 
 	const [permission, setPermission] = useState(null);
@@ -439,12 +440,15 @@ export default function account(props) {
 		<View style={style.account}>
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
-					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+					<TouchableOpacity style={style.back} onPress={() => {
+						refetch()
+						props.navigation.goBack()
+					}}>
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 
 					<Text style={style.boxHeader}>Account</Text>
-					
+
 					{loaded ? 
 						<ScrollView>
 							<View style={style.inputsBox}>

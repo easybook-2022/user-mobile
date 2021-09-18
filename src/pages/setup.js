@@ -22,7 +22,7 @@ export default function setup({ navigation }) {
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
 	const [profile, setProfile] = useState({ uri: '', name: '' })
 	const [username, setUsername] = useState(registerInfo.username)
-
+	
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 	

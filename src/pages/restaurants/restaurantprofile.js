@@ -22,7 +22,7 @@ const itemSize = (width / 3) - 20
 const imageSize = itemSize - 30
 
 export default function restaurantprofile(props) {
-	let { locationid } = props.route.params
+	let { locationid, refetch } = props.route.params
 
 	const [logo, setLogo] = useState('')
 	const [name, setName] = useState('')
@@ -158,7 +158,10 @@ export default function restaurantprofile(props) {
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<View style={style.profileInfo}>
-						<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+						<TouchableOpacity style={style.back} onPress={() => {
+							refetch()
+							props.navigation.goBack()
+						}}>
 							<Text style={style.backHeader}>Back</Text>
 						</TouchableOpacity>
 

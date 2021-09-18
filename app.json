@@ -17,15 +17,15 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.geottuse.serviceapp.user",
-      "buildNumber": "0",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (User) uses camera to allow you to take a profile picture",
         "NSMicrophoneUsageDescription": "",
-        "NSLocationWhenInUseUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants, hair/nail salons",
-        "NSLocationUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants, hair/nail salons",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants, hair/nail salons"
+        "NSLocationWhenInUseUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants and salons",
+        "NSLocationUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants and salons",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants and salons"
       }
     },
     "android": {

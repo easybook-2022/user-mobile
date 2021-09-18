@@ -8,7 +8,8 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - offsetPadding
 
-export default function recent({ navigation }) {
+export default function recent(props) {
+	const { refetch } = props.route.params
 	const [items, setItems] = useState([])
 	const [cartIndex, setCartindex] = useState(0)
 	const [loaded, setLoaded] = useState(false)
@@ -62,7 +63,10 @@ export default function recent({ navigation }) {
 		<View style={style.recent}>
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
-					<TouchableOpacity style={style.back} onPress={() => navigation.goBack()}>
+					<TouchableOpacity style={style.back} onPress={() => {
+						refetch()
+						props.navigation.goBack()
+					}}>
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 					<Text style={style.boxHeader}>Recent(s)</Text>
@@ -76,42 +80,46 @@ export default function recent({ navigation }) {
 									<View key={item.key} style={style.group}>
 										<Text style={style.dateHeader}><Text style={{ fontWeight: 'bold' }}>Purchased:</Text> {displayDateStr(item.time)}</Text>
 
-										{item.items.map(product => (
-											<View style={style.item} key={product.key}>
+										{item.items.map(recent => (
+											<View style={style.item} key={recent.key}>
 												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 													<View style={style.itemImageHolder}>
-														<Image source={{ uri: logo_url + product.image }} style={{ height: 100, width: 100 }}/>
+														<Image source={{ uri: logo_url + recent.image }} style={style.itemImage}/>
 													</View>
 													<View style={style.itemInfos}>
-														<Text style={style.itemName}>{product.name}</Text>
+														<Text style={style.itemName}>{recent.name}</Text>
 
-														{product.options.map(option => (
-															<Text key={option.key} style={style.itemInfo}>
-																<Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> 
-																{option.selected}
-															</Text>
-														))}
+														{recent.type == "product" && (
+															<>
+																{recent.options.map(option => (
+																	<Text key={option.key} style={style.itemInfo}>
+																		<Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> 
+																		{option.selected}
+																	</Text>
+																))}
 
-														{product.others.map(other => (
-															other.selected ? 
-																<Text key={other.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>{other.name}:</Text>
-																	<Text>{other.input}</Text>
-																</Text>
-															: null
-														))}
+																{recent.others.map(other => (
+																	other.selected ? 
+																		<Text key={other.key} style={style.itemInfo}>
+																			<Text style={{ fontWeight: 'bold' }}>{other.name}:</Text>
+																			<Text>{other.input}</Text>
+																		</Text>
+																	: null
+																))}
 
-														{product.sizes.map(size => (
-															size.selected ? 
-																<Text key={size.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>Size:</Text>
-																	<Text>{option.name}</Text>
-																</Text>
-															: null
-														))}
+																{recent.sizes.map(size => (
+																	size.selected ? 
+																		<Text key={size.key} style={style.itemInfo}>
+																			<Text style={{ fontWeight: 'bold' }}>Size:</Text>
+																			<Text>{size.name}</Text>
+																		</Text>
+																	: null
+																))}
+															</>
+														)}	
 													</View>
 													<View>
-														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>cost:</Text> ${product.cost}</Text>
+														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>cost:</Text> ${recent.cost}</Text>
 													</View>
 												</View>
 											</View>
@@ -144,7 +152,8 @@ const style = StyleSheet.create({
 	group: { borderRadius: 10, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
 	dateHeader: { fontSize: 15, marginVertical: 10 },
 	item: { marginBottom: 5 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', height: 100, overflow: 'hidden', width: 100 },
+	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
+	itemImage: { height: 100, width: 100 },
 	itemInfos: {  },
 	itemName: { fontSize: 20, marginBottom: 10 },
 	itemInfo: { fontSize: 15 },
