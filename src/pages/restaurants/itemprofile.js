@@ -8,6 +8,7 @@ import { getProductInfo } from '../../apis/products'
 import { getNumCartItems, addItemtocart } from '../../apis/carts'
 
 import Cart from '../../components/cart'
+import Userauth from '../../components/userauth'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -22,6 +23,7 @@ const imageSize = (width * 0.3) - 50
 
 export default function itemProfile(props) {
 	const { productid } = props.route.params
+	const func = props.route.params
 
 	const [itemName, setItemname] = useState('')
 	const [itemInfo, setIteminfo] = useState('')
@@ -36,6 +38,8 @@ export default function itemProfile(props) {
 	const [errorMsg, setErrormsg] = useState('')
 	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 	const [showNotifyUser, setShownotifyuser] = useState({ show: false, userid: 0, username: "" })
+	const [showAuth, setShowauth] = useState({ show: false, action: "" })
+	const [userId, setUserid] = useState(null)
 
 	// friends list
 	const [openFriendscart, setOpenfriendscart] = useState(false)
@@ -51,17 +55,21 @@ export default function itemProfile(props) {
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		getNumCartItems(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setNumcartitems(res.numCartItems)
-				}
-			})
+		setUserid(userid)
+
+		if (userid != null) {
+			getNumCartItems(userid)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						setNumcartitems(res.numCartItems)
+					}
+				})
+		}
 	}
 	const changeAmount = (index, action) => {
 		let newOptions = [...options]
@@ -155,69 +163,74 @@ export default function itemProfile(props) {
 	}
 	const addCart = async() => {
 		const userid = await AsyncStorage.getItem("userid")
-		let callfor = [], size = ""
-		let newOptions = JSON.parse(JSON.stringify(options))
-		let newOthers = JSON.parse(JSON.stringify(others))
-		let newSizes = JSON.parse(JSON.stringify(sizes))
 
-		if (openFriendscart && selectedFriends.length == 0) {
-			setErrormsg("You didn't select anyone")
-		} else {	
-			selectedFriends.forEach(function (info) {
-				info.row.forEach(function (friend) {
-					if (friend.username) {
-						callfor.push({ userid: friend.id.toString(), status: friend.paymentrequested ? 'payment' : 'waiting' })
-					}
-				})
-			})
+		if (userid != null) {
+			let callfor = [], size = ""
+			let newOptions = JSON.parse(JSON.stringify(options))
+			let newOthers = JSON.parse(JSON.stringify(others))
+			let newSizes = JSON.parse(JSON.stringify(sizes))
 
-			newSizes.forEach(function (info) {
-				delete info['key']
-			})
-
-			newOptions.forEach(function (option) {
-				delete option['key']
-			})
-
-			newOthers.forEach(function (other) {
-				delete other['key']
-			})
-
-			const data = { userid, productid, quantity, callfor, options: newOptions, others: newOthers, sizes: newSizes, note: itemNote }
-
-			addItemtocart(data)
-				.then((res) => {
-					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							if (res.data.status == "cardrequired") {
-								setShowpaymentrequired(true)
-							}
+			if (openFriendscart && selectedFriends.length == 0) {
+				setErrormsg("You didn't select anyone")
+			} else {	
+				selectedFriends.forEach(function (info) {
+					info.row.forEach(function (friend) {
+						if (friend.username) {
+							callfor.push({ userid: friend.id.toString(), status: friend.paymentrequested ? 'payment' : 'waiting' })
 						}
-					}
+					})
 				})
-				.then((res) => {
-					if (res) {
-						setOpenfriendscart(false)
-						showCart()
-					}
-				})
-				.catch((err) => {
-					if (err.response.status == 400) {
-						if (err.response.data.status) {
-							const status = err.response.data.status
 
-							switch (status) {
-								case "cardrequired":
+				newSizes.forEach(function (info) {
+					delete info['key']
+				})
+
+				newOptions.forEach(function (option) {
+					delete option['key']
+				})
+
+				newOthers.forEach(function (other) {
+					delete other['key']
+				})
+
+				const data = { userid, productid, quantity, callfor, options: newOptions, others: newOthers, sizes: newSizes, note: itemNote }
+
+				addItemtocart(data)
+					.then((res) => {
+						if (res.status == 200) {
+							if (!res.data.errormsg) {
+								return res.data
+							} else {
+								if (res.data.status == "cardrequired") {
 									setShowpaymentrequired(true)
-
-									break;
-								default:
+								}
 							}
 						}
-					}
-				})
+					})
+					.then((res) => {
+						if (res) {
+							setOpenfriendscart(false)
+							showCart()
+						}
+					})
+					.catch((err) => {
+						if (err.response.status == 400) {
+							if (err.response.data.status) {
+								const status = err.response.data.status
+
+								switch (status) {
+									case "cardrequired":
+										setShowpaymentrequired(true)
+
+										break;
+									default:
+								}
+							}
+						}
+					})
+			}
+		} else {
+			setShowauth({ show: true, action: "addcart" })
 		}
 	}
 	const showCart = () => {
@@ -405,49 +418,61 @@ export default function itemProfile(props) {
 		setNumSelectedFriends(numSelectedFriends - 1)
 	}
 	const openFriendsCart = async() => {
-		let newOrderingItem = {...orderingItem}
-		let newOptions = JSON.parse(JSON.stringify(options))
-		let newOthers = JSON.parse(JSON.stringify(others))
-		let newSizes = JSON.parse(JSON.stringify(sizes))
-		let price = ""
+		const userid = await AsyncStorage.getItem("userid")
 
-		if (sizes.length > 0) {
-			sizes.forEach(function (size) {
-				if (size.selected) {
-					price = parseFloat(size.price) * quantity
-				}
-			})
+		if (userid != null) {
+			let newOrderingItem = {...orderingItem}
+			let newOptions = JSON.parse(JSON.stringify(options))
+			let newOthers = JSON.parse(JSON.stringify(others))
+			let newSizes = JSON.parse(JSON.stringify(sizes))
+			let price = ""
+
+			if (sizes.length > 0) {
+				sizes.forEach(function (size) {
+					if (size.selected) {
+						price = parseFloat(size.price) * quantity
+					}
+				})
+			} else {
+				price = itemPrice * quantity
+			}
+
+			if (price) {
+				newOrderingItem.name = itemName
+				newOrderingItem.image = itemImage
+				newOrderingItem.options = options
+				newOrderingItem.others = others
+				newOrderingItem.sizes = sizes
+				newOrderingItem.quantity = quantity
+				newOrderingItem.cost = price.toFixed(2)
+
+				setOpenfriendscart(true)
+				setOrderingitem(newOrderingItem)
+				setErrormsg('')
+			} else {
+				setErrormsg("Please choose a size")
+			}
 		} else {
-			price = itemPrice * quantity
+			setShowauth({ show: true, action: "openfriendscart" })
 		}
-
-		if (price) {
-			newOrderingItem.name = itemName
-			newOrderingItem.image = itemImage
-			newOrderingItem.options = options
-			newOrderingItem.others = others
-			newOrderingItem.sizes = sizes
-			newOrderingItem.quantity = quantity
-			newOrderingItem.cost = price.toFixed(2)
-
-			setOpenfriendscart(true)
-			setOrderingitem(newOrderingItem)
-			setErrormsg('')
-		} else {
-			setErrormsg("Please choose a size")
-		}
+	}
+	const initialize = () => {
+		getTheNumCartItems()
+		getTheProductInfo()
 	}
 
 	useEffect(() => {
-		getTheNumCartItems()
-		getTheProductInfo()
+		initialize()
 	}, [])
 
 	return (
 		<View style={style.itemprofile}>
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
-					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+					<TouchableOpacity style={style.back} onPress={() => {
+						func.initialize()
+						props.navigation.goBack()
+					}}>
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 
@@ -580,38 +605,49 @@ export default function itemProfile(props) {
 					</ScrollView>
 
 					<View style={style.bottomNavs}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
-							<FontAwesome5 name="user-circle" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
-							<FontAwesome name="history" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-							<Entypo name="shopping-cart" size={30}/>
-							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 0,
-									routes: [{ name: "main" }]
-								})
-							)
-						}}>
-							<Entypo name="home" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							AsyncStorage.clear()
+						<View style={style.bottomNavsRow}>
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+									<FontAwesome5 name="user-circle" size={30}/>
+								</TouchableOpacity>
+							)}
 
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'login' }]
-								})
-							);
-						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
-						</TouchableOpacity>
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
+									<FontAwesome name="history" size={30}/>
+								</TouchableOpacity>
+							)}
+
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+									<Entypo name="shopping-cart" size={30}/>
+									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+								</TouchableOpacity>
+							)}
+
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 0,
+										routes: [{ name: "main" }]
+									})
+								)
+							}}>
+								<Entypo name="home" size={30}/>
+							</TouchableOpacity>
+
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								if (userId) {
+									AsyncStorage.clear()
+
+									setUserid(null)
+								} else {
+									setShowauth({ show: true, action: false })
+								}
+							}}>
+								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 
 					{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
@@ -786,6 +822,30 @@ export default function itemProfile(props) {
 							</View>
 						</Modal>
 					)}
+					{showAuth.show && (
+						<Modal transparent={true}>
+							<Userauth close={() => setShowauth({ show: false, action: "" })} done={(id, msg) => {
+								if (msg == "setup") {
+									props.navigation.dispatch(
+										CommonActions.reset({
+											index: 1,
+											routes: [{ name: "setup" }]
+										})
+									);
+								} else {
+									setUserid(id)
+
+									if (showAuth.action == "addcart") {
+										addCart()
+									} else if (showAuth.action == "openfriendscart") {
+										openFriendsCart()
+									}
+								}
+
+								setShowauth({ show: false, action: false })
+							}} navigate={props.navigation.navigate}/>
+						</Modal>
+					)}
 				</View>
 			</View>
 		</View>
@@ -857,7 +917,8 @@ const style = StyleSheet.create({
 	itemActionHeader: { textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavsRow: { flexDirection: 'row' },
+	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 

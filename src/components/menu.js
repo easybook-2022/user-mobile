@@ -10,6 +10,7 @@ import { getServices } from '../apis/services'
 import { getNumCartItems } from '../apis/carts'
 
 import Cart from '../components/cart'
+import Userauth from '../components/userauth'
 
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -25,10 +26,13 @@ const itemSize = (width / 3) - 20
 const imageSize = itemSize - 30
 
 export default function menu(props) {
-	let { locationid, menuid } = props.route.params
+	const { locationid, menuid } = props.route.params
+	const func = props.route.params
 
 	const [menuName, setMenuname] = useState('')
 	const [menuInfo, setMenuinfo] = useState('')
+	const [showAuth, setShowauth] = useState(false)
+	const [userId, setUserid] = useState(null)
 
 	const [showMenus, setShowmenus] = useState(false)
 	const [menus, setMenus] = useState([])
@@ -48,17 +52,21 @@ export default function menu(props) {
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		getNumCartItems(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setNumcartitems(res.numCartItems)
-				}
-			})
+		setUserid(userid)
+
+		if (userid != null) {
+			getNumCartItems(userid)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						setNumcartitems(res.numCartItems)
+					}
+				})
+		}
 	}
 	
 	const getTheInfo = async() => {
@@ -153,17 +161,23 @@ export default function menu(props) {
 				}
 			})
 	}
-
-	useEffect(() => {
+	const initialize = () => {
 		getTheNumCartItems()
 		getTheInfo()
+	}
+
+	useEffect(() => {
+		initialize()
 	}, [])
 
 	return (
 		<View style={style.boxContainer}>
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
-					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+					<TouchableOpacity style={style.back} onPress={() => {
+						func.initialize()
+						props.navigation.goBack()
+					}}>
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 
@@ -212,7 +226,7 @@ export default function menu(props) {
 												<View style={style.row}>
 													{item.row.map(product => (
 														product.name ? 
-															<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid, productid: product.id })}>
+															<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid, productid: product.id, initialize: () => initialize() })}>
 																<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
 																<Text style={style.productName}>{product.name}</Text>
 																{product.info && <Text style={style.productInfo}>{product.info}</Text>}
@@ -221,7 +235,7 @@ export default function menu(props) {
 																	<Text style={style.productDetail}>{product.price}</Text>
 																</View>
 
-																<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid, productid: product.id })}>
+																<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid, productid: product.id, initialize: () => initialize() })}>
 																	<Text style={style.productBuyHeader}>Buy</Text>
 																</TouchableOpacity>
 															</TouchableOpacity>
@@ -242,7 +256,7 @@ export default function menu(props) {
 											showsVerticalScrollIndicator={false}
 											data={services}
 											renderItem={({ item, index }) => 
-												<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { locationid, serviceid: item.id })}>
+												<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { locationid, serviceid: item.id, initialize: () => initialize() })}>
 													<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
 													<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
 														<Text style={style.serviceName}>{item.name}</Text>
@@ -250,7 +264,7 @@ export default function menu(props) {
 														
 														<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
 
-														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, serviceid: item.id })}>
+														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, serviceid: item.id, initialize: () => initialize() })}>
 															<Text>Book a time</Text>
 														</TouchableOpacity>
 													</View>
@@ -270,42 +284,70 @@ export default function menu(props) {
 					</View>
 
 					<View style={style.bottomNavs}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
-							<FontAwesome5 name="user-circle" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
-							<FontAwesome name="history" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-							<Entypo name="shopping-cart" size={30}/>
-							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 0,
-									routes: [{ name: "main" }]
-								})
-							)
-						}}>
-							<Entypo name="home" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							AsyncStorage.clear()
+						<View style={style.bottomNavsRow}>
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+									<FontAwesome5 name="user-circle" size={30}/>
+								</TouchableOpacity>
+							)}
 
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'login' }]
-								})
-							);
-						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
-						</TouchableOpacity>
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
+									<FontAwesome name="history" size={30}/>
+								</TouchableOpacity>
+							)}
+
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+									<Entypo name="shopping-cart" size={30}/>
+									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+								</TouchableOpacity>
+							)}
+
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 0,
+										routes: [{ name: "main" }]
+									})
+								)
+							}}>
+								<Entypo name="home" size={30}/>
+							</TouchableOpacity>
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								if (userId) {
+									AsyncStorage.clear()
+
+									setUserid(null)
+								} else {
+									setShowauth(true)
+								}
+							}}>
+								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</View>
 
-				<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
+				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
+				{showAuth && (
+					<Modal transparent={true}>
+						<Userauth close={() => setShowauth(false)} done={(id, msg) => {
+							if (msg == "setup") {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: "setup" }]
+									})
+								);
+							} else {
+								setUserid(id)
+							}
+
+							setShowauth(false)
+						}} navigate={props.navigation.navigate}/>
+					</Modal>
+				)}
 			</View>
 		</View>
 	)
@@ -350,7 +392,8 @@ const style = StyleSheet.create({
 	noResults: { fontWeight: '100', marginVertical: 100, textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavsRow: { flexDirection: 'row' },
+	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 })

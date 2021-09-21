@@ -13,7 +13,7 @@ export default function register(props) {
 	const cellnumber = props.route.params.cellnumber
 	const [password, setPassword] = useState(registerInfo.password)
 	const [confirmPassword, setConfirmpassword] = useState(registerInfo.password)
-
+	
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 

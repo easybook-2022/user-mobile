@@ -10,6 +10,7 @@ import { getServices } from '../../apis/services'
 import { getNumCartItems } from '../../apis/carts'
 
 import Cart from '../../components/cart'
+import Userauth from '../../components/userauth'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -22,13 +23,16 @@ const screenHeight = height - (offsetPadding * 2)
 const imageSize = (width / 3) - 10
 
 export default function salonprofile(props) {
-	let { locationid, refetch } = props.route.params
+	const { locationid, refetch } = props.route.params
+	const func = props.route.params
 
 	const [logo, setLogo] = useState('')
 	const [name, setName] = useState('')
 	const [address, setAddress] = useState('')
 	const [phonenumber, setPhonenumber] = useState('')
 	const [distance, setDistance] = useState(0)
+	const [showAuth, setShowauth] = useState(false)
+	const [userId, setUserid] = useState(null)
 
 	const [showMenus, setShowmenus] = useState(false)
 	const [menus, setMenus] = useState([])
@@ -49,17 +53,21 @@ export default function salonprofile(props) {
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		getNumCartItems(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setNumcartitems(res.numCartItems)
-				}
-			})
+		setUserid(userid)
+
+		if (userid != null) {
+			getNumCartItems(userid)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						setNumcartitems(res.numCartItems)
+					}
+				})
+		}
 	}
 	const getTheLocationProfile = async() => {
 		const longitude = await AsyncStorage.getItem("longitude")
@@ -161,10 +169,13 @@ export default function salonprofile(props) {
 				}
 			})
 	}
-	
-	useEffect(() => {
+	const initialize = () => {
 		getTheNumCartItems()
 		getTheLocationProfile()
+	}
+	
+	useEffect(() => {
+		initialize()
 	}, [])
 
 	return (
@@ -174,6 +185,7 @@ export default function salonprofile(props) {
 					<View style={style.profileInfo}>
 						<TouchableOpacity style={style.back} onPress={() => {
 							refetch()
+							func.initialize()
 							props.navigation.goBack()
 						}}>
 							<Text style={style.backHeader}>Back</Text>
@@ -213,7 +225,7 @@ export default function salonprofile(props) {
 											renderItem={({ item, index }) => 
 												<View key={item.key} style={style.row}>
 													{item.items.map(( menu, index ) => (
-														<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id })}>
+														<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id, initialize: () => initialize() })}>
 															<View style={style.itemPhotoHolder}>
 																<Image source={{ uri: logo_url + menu.image }} style={{ height: (width * 0.5) - 100, width: (width * 0.5) - 100 }}/>
 															</View>
@@ -238,7 +250,7 @@ export default function salonprofile(props) {
 												<View key={item.key} style={style.row}>
 													{item.row.map(product => (
 														product.name ? 
-															<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
+															<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id, initialize: () => initialize() })}>
 																<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
 																<Text style={style.productName}>{product.name}</Text>
 																
@@ -248,7 +260,7 @@ export default function salonprofile(props) {
 																	<Text style={style.productDetail}>{product.price}</Text>
 																</View>
 
-																<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id })}>
+																<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id, initialize: () => initialize() })}>
 																	<Text style={style.productBuyHeader}>Buy</Text>
 																</TouchableOpacity>
 															</TouchableOpacity>
@@ -270,7 +282,7 @@ export default function salonprofile(props) {
 											data={services}
 											style={{ height: height - 386 }}
 											renderItem={({ item, index }) => 
-												<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id })}>
+												<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id, initialize: () => initialize() })}>
 													<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
 													<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
 														<Text style={style.serviceName}>{item.name}</Text>
@@ -279,7 +291,7 @@ export default function salonprofile(props) {
 														<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
 														<Text style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
 
-														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id })}>
+														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id, initialize: () => initialize() })}>
 															<Text>Book a time</Text>
 														</TouchableOpacity>
 													</View>
@@ -295,42 +307,50 @@ export default function salonprofile(props) {
 					</View>
 
 					<View style={style.bottomNavs}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
-							<FontAwesome5 name="user-circle" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
-							<FontAwesome name="history" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-							<Entypo name="shopping-cart" size={30}/>
-							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 0,
-									routes: [{ name: "main" }]
-								})
-							)
-						}}>
-							<Entypo name="home" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							AsyncStorage.clear()
+						<View style={style.bottomNavsRow}>
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+									<FontAwesome5 name="user-circle" size={30}/>
+								</TouchableOpacity>
+							)}
 
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'login' }]
-								})
-							);
-						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
-						</TouchableOpacity>
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
+									<FontAwesome name="history" size={30}/>
+								</TouchableOpacity>
+							)}
+
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+									<Entypo name="shopping-cart" size={30}/>
+									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+								</TouchableOpacity>
+							)}
+
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 0,
+										routes: [{ name: "main" }]
+									})
+								)
+							}}>
+								<Entypo name="home" size={30}/>
+							</TouchableOpacity>
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								if (userId) {
+									AsyncStorage.clear()
+								} else {
+									setShowauth(true)
+								}
+							}}>
+								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</View>
 
-				<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
+				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
 			</View>
 		</View>
 	)
@@ -373,7 +393,8 @@ const style = StyleSheet.create({
 	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavsRow: { flexDirection: 'row' },
+	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 })

@@ -13,7 +13,7 @@ export default function recent(props) {
 	const [items, setItems] = useState([])
 	const [cartIndex, setCartindex] = useState(0)
 	const [loaded, setLoaded] = useState(false)
-
+	
 	const getTheTransactions = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const data = { userid, cartIndex: 0 }

@@ -11,32 +11,22 @@ LogBox.ignoreLogs([
 
 const { height, width } = Dimensions.get('window')
 
-// pages
-import Login from './src/pages/login'
-import Forgotpassword from './src/pages/forgotpassword'
-import Resetpassword from './src/pages/resetpassword'
-import Verifyuser from './src/pages/verifyuser'
-import Register from './src/pages/register'
 import Setup from './src/pages/setup'
-
 import Main from './src/pages/main'
-import Account from './src/pages/account'
-import Recent from './src/pages/recent'
-
-// restaurants
 import Restaurantprofile from './src/pages/restaurants/restaurantprofile'
 import Makereservation from './src/pages/restaurants/makereservation'
 import Order from './src/pages/restaurants/order'
 import Itemprofile from './src/pages/restaurants/itemprofile'
 
-import Cart from './src/components/cart'
 import Menu from './src/components/menu'
-
-// salons
-//import Salons from './src/pages/salons'
 import Salonprofile from './src/pages/salons/salonprofile'
 import Booktime from './src/pages/salons/booktime'
 
+
+// logged in pages
+import Account from './src/pages/account'
+import Recent from './src/pages/recent'
+import Cart from './src/components/cart'
 import Notifications from './src/components/notifications'
 
 const Stack = createNativeStackNavigator();
@@ -57,7 +47,7 @@ export default function App() {
                     setRoute("setup")
                 }
             } else {
-                setRoute("login")
+                setRoute("main")
             }
         }
         
@@ -67,11 +57,6 @@ export default function App() {
             return (
                 <NavigationContainer>
                     <Stack.Navigator initialRouteName={route}>
-                        <Stack.Screen name="login" component={Login} options={{ headerShown: false }}/>
-                        <Stack.Screen name="forgotpassword" component={Forgotpassword} options={{ headerShown: false }}/>
-                        <Stack.Screen name="resetpassword" component={Resetpassword} options={{ headerShown: false }}/>
-                        <Stack.Screen name="verifyuser" component={Verifyuser} options={{ headerShown: false }}/>
-                        <Stack.Screen name="register" component={Register} options={{ headerShown: false }}/>
                         <Stack.Screen name="setup" component={Setup} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
                         

@@ -13,7 +13,7 @@ export default function verifyuser(props) {
 	const [cellnumber, setCellnumber] = useState(registerInfo.cellnumber)
 	const [verifyCode, setVerifycode] = useState('')
 	const [userCode, setUsercode] = useState('111111')
-
+	
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 

@@ -10,14 +10,14 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function login({ navigation }) {
-	const [phonenumber, setPhonenumber] = useState(loginInfo.cellnumber)
+	const [cellnumber, setCellnumber] = useState(loginInfo.cellnumber)
 	const [password, setPassword] = useState(loginInfo.password)
 
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
 
 	const login = () => {
-		const data = { cellnumber: phonenumber, password: password }
+		const data = { cellnumber, password }
 
 		setLoading(true)
 
@@ -61,8 +61,8 @@ export default function login({ navigation }) {
 
 						<View style={style.inputsBox}>
 							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Phone number:</Text>
-								<TextInput style={style.input} onChangeText={(phonenumber) => setPhonenumber(phonenumber)} value={phonenumber} keyboardType="numeric" autoCorrect={false}/>
+								<Text style={style.inputHeader}>Cell number:</Text>
+								<TextInput style={style.input} onChangeText={(cellnumber) => setCellnumber(cellnumber)} value={cellnumber} keyboardType="numeric" autoCorrect={false}/>
 							</View>
 
 							<View style={style.inputContainer}>

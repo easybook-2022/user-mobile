@@ -31,9 +31,8 @@ export const loginInfo = { username: login.username, cellnumber: login.cellnumbe
 let register = users[6]
 export const registerInfo = { username: register.username, cellnumber: register.cellnumber, password: register.password, latitude: 43.663631, longitude: -79.351501 }
 
-export const local_api_url = "http://localhost:5000"
-export const wifi_api_url = "http://192.168.0.172:5000"
-export const server_api_url = "https://www.easygo.tk"
+export const wifi_api_url = "http://192.168.0.172:5000/flask"
+export const server_api_url = "https://www.easygo.tk/flask"
 export const url = wifi_api_url
 export const cardInfo = { number, expMonth, expYear, cvc }
 export const stripe_key = "sk_test_lft1B76yZfF2oEtD5rI3y8dz"

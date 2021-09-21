@@ -645,7 +645,6 @@ export default function notifications(props) {
 						</View>
 					</Modal>
 				)}
-
 				{showPaymentRequired && (
 					<Modal transparent={true}>
 						<View style={{ paddingVertical: offsetPadding }}>

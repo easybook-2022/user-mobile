@@ -170,7 +170,6 @@ export default function setup({ navigation }) {
 						</View>
 
 						{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
-
 						{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
 						<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupAccount()}>
@@ -187,7 +186,7 @@ export default function setup({ navigation }) {
 							navigation.dispatch(
 								CommonActions.reset({
 									index: 1,
-									routes: [{ name: 'login' }]
+									routes: [{ name: 'main' }]
 								})
 							);
 						}}>

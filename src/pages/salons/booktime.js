@@ -8,6 +8,7 @@ import { requestAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
 import Cart from '../../components/cart'
+import Userauth from '../../components/userauth'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -17,8 +18,9 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function booktime(props) {
-	let { locationid, serviceid } = props.route.params
-	let scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
+	const { locationid, serviceid } = props.route.params
+	const func = props.route.params
+	const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
 	const [name, setName] = useState('')
 	const [times, setTimes] = useState([])
@@ -26,26 +28,32 @@ export default function booktime(props) {
 	const [closeTime, setClosetime] = useState(0)
 	const [loaded, setLoaded] = useState(false)
 	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
+	const [showAuth, setShowauth] = useState(false)
+	const [userId, setUserid] = useState(null)
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		getNumCartItems(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setNumcartitems(res.numCartItems)
-				}
-			})
+		setUserid(userid)
+
+		if (userid != null) {
+			getNumCartItems(userid)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						setNumcartitems(res.numCartItems)
+					}
+				})
+		}
 	}
 	
-	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", note: "", requested: false, errormsg: "" })
+	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", note: "", requested: false, errormsg: "", action: false })
 
 	const getTheServiceInfo = async() => {
 		getServiceInfo(serviceid)
@@ -104,13 +112,10 @@ export default function booktime(props) {
 						let timepassed = currenttime > currDateStr
 						let timetaken = scheduled.indexOf(currDateStr) > -1
 
-						if (!timepassed) {
-							newTimes.push({ 
-								key: newTimes.length, header: timedisplay, 
-								time: currDateStr, 
-								available: !timetaken
-							})
-						}
+						newTimes.push({ 
+							key: newTimes.length, header: timedisplay, 
+							time: currDateStr, timetaken, timepassed
+						})
 					}
 
 					setTimes(newTimes)
@@ -120,53 +125,65 @@ export default function booktime(props) {
 	}
 	const requestAnAppointment = async() => {
 		const userid = await AsyncStorage.getItem("userid")
-		const { timeheader, time, note } = confirm
-		const data = { userid, locationid, scheduleid, serviceid, time, note: note ? note : "" }
 
-		requestAppointment(data)
-			.then((res) => {
-				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					}
-				}
-			})
-			.then((res) => {
-				if (res) setConfirm({ ...confirm, requested: true })
-			})
-			.catch((err) => {
-				if (err.response.status == 400) {
-					if (err.response.data.status) {
-						const status = err.response.data.status
+		if (userid != null) {
+			const { timeheader, time, note } = confirm
+			const data = { userid, locationid, scheduleid, serviceid, time, note: note ? note : "" }
 
-						switch (status) {
-							case "cardrequired":
-								setConfirm({ ...confirm, show: false })
-								setShowpaymentrequired(true)
-
-								break;
-							case "existed":
-								setConfirm({ ...confirm, errormsg: err.response.data.errormsg })
-
-								break;
-							default:
-								
+			requestAppointment(data)
+				.then((res) => {
+					if (res.status == 200) {
+						if (!res.data.errormsg) {
+							return res.data
 						}
 					}
-				}
-			})
+				})
+				.then((res) => {
+					if (res) setConfirm({ ...confirm, show: true, requested: true })
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						if (err.response.data.status) {
+							const status = err.response.data.status
+
+							switch (status) {
+								case "cardrequired":
+									setConfirm({ ...confirm, show: false })
+									setShowpaymentrequired(true)
+
+									break;
+								case "existed":
+									setConfirm({ ...confirm, show: true, errormsg: err.response.data.errormsg })
+
+									break;
+								default:
+									
+							}
+						}
+					}
+				})
+		} else {
+			setConfirm({ ...confirm, show: false, action: true })
+			setShowauth(true)
+		}
+	}
+	const initialize = () => {
+		getTheNumCartItems()
+		getTheServiceInfo()
 	}
 
 	useEffect(() => {
-		getTheNumCartItems()
-		getTheServiceInfo()
+		initialize()
 	}, [])
 
 	return (
 		<View style={style.booktime}>
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
-					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
+					<TouchableOpacity style={style.back} onPress={() => {
+						func.initialize()
+						props.navigation.goBack()
+					}}>
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 
@@ -184,11 +201,22 @@ export default function booktime(props) {
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 									<View style={style.times}>
 										{times.map(info => (
-											<TouchableOpacity style={!info.available ? style.selected : style.unselect} disabled={!info.available} key={info.key} onPress={() => {
-												if (info.available) setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })
-											}}>
-												<Text style={{ color: !info.available ? 'white' : 'black', fontSize: 15 }}>{info.header}</Text>
-											</TouchableOpacity>
+											<>
+												{!info.timetaken && !info.timepassed ? 
+													<TouchableOpacity style={style.unselect} key={info.key} onPress={() => setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })}>
+														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+													</TouchableOpacity>
+													:
+													info.timetaken ? 
+														<TouchableOpacity style={style.selected} disabled={true} key={info.key} onPress={() => {}}>
+															<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
+														</TouchableOpacity>
+														:
+														<TouchableOpacity style={style.selectedPassed} disabled={true} key={info.key} onPress={() => {}}>
+															<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+														</TouchableOpacity>
+												}
+											</>
 										))}
 									</View>
 								</View>
@@ -199,12 +227,15 @@ export default function booktime(props) {
 							</View>
 					}
 
-					<View style={style.bottomNavsContainer}>
-						<View style={style.bottomNavs}>
-							<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-								<Entypo name="shopping-cart" size={30}/>
-								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-							</TouchableOpacity>
+					<View style={style.bottomNavs}>
+						<View style={style.bottomNavsRow}>
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+									<Entypo name="shopping-cart" size={30}/>
+									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+								</TouchableOpacity>
+							)}
+								
 							<TouchableOpacity style={style.bottomNav} onPress={() => {
 								props.navigation.dispatch(
 									CommonActions.reset({
@@ -214,6 +245,18 @@ export default function booktime(props) {
 								)
 							}}>
 								<Entypo name="home" size={30}/>
+							</TouchableOpacity>
+
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								if (userId) {
+									AsyncStorage.clear()
+
+									setUserid(null)
+								} else {
+									setShowauth(true)
+								}
+							}}>
+								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -259,6 +302,7 @@ export default function booktime(props) {
 												<Text style={style.requestedHeaderInfo}>You will get notify by the salon in your notification very soon</Text>
 												<TouchableOpacity style={style.requestedClose} onPress={() => {
 													setConfirm({ ...confirm, show: false, requested: false })
+													func.initialize()
 													props.navigation.goBack()
 												}}>
 													<Text style={style.requestedCloseHeader}>Ok</Text>
@@ -271,9 +315,7 @@ export default function booktime(props) {
 						</TouchableWithoutFeedback>
 					</Modal>
 				)}
-				
-				<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
-
+				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
 				{showPaymentRequired && (
 					<Modal transparent={true}>
 						<View style={{ paddingVertical: offsetPadding }}>
@@ -300,6 +342,26 @@ export default function booktime(props) {
 						</View>
 					</Modal>
 				)}
+				{showAuth && (
+					<Modal transparent={true}>
+						<Userauth close={() => setShowauth(false)} done={(id, msg) => {
+							if (msg == "setup") {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: "setup" }]
+									})
+								);
+							} else {
+								setUserid(id)
+
+								if (confirm.action) requestAnAppointment()
+							}
+
+							setShowauth(false)
+						}} navigate={props.navigation.navigate}/>
+					</Modal>
+				)}
 			</View>
 		</View>
 	)
@@ -319,13 +381,15 @@ const style = StyleSheet.create({
 	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 300 },
 	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
 	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 90 },
 
 	noTime: { flexDirection: 'column', height: screenHeight - 191, justifyContent: 'space-around', width: '100%' },
 	noTimeHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 
-	bottomNavsContainer: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around' },
-	bottomNavs: { flexDirection: 'row', height: '100%', justifyContent: 'space-between', width: 100 },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNavsRow: { flexDirection: 'row' },
+	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
+	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 

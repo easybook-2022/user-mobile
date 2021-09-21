@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native'
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
@@ -10,6 +10,7 @@ import { getNumCartItems } from '../apis/carts'
 
 import Notifications from '../components/notifications'
 import Cart from '../components/cart'
+import Userauth from '../components/userauth'
 
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -31,16 +32,20 @@ export default function main({ navigation }) {
 	const [locations, setLocations] = useState([])
 	const [openNotifications, setOpenNotifications] = useState(false)
 	const [numNotifications, setNumnotifications] = useState(0)
+	const [userId, setUserid] = useState(null)
 
 	const [currentGeo, setCurrentgeo] = useState({ msg: "not yet" })
 	const [lastGeo, setLastgeo] = useState({ msg: "not yet" })
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
+	const [showAuth, setShowauth] = useState(false)
 
 	const getTheNumUpdates = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const time = Date.now()
 		const data = { userid, time }
+
+		setUserid(userid)
 
 		if (userid != null) {
 			getNumUpdates(data)
@@ -57,23 +62,24 @@ export default function main({ navigation }) {
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		getNumCartItems(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setNumcartitems(res.numCartItems)
-				}
-			})
+		if (userid != null) {
+			getNumCartItems(userid)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						setNumcartitems(res.numCartItems)
+					}
+				})
+		}
 	}
 	
 	const getTheLocations = async(longitude, latitude, locationName) => {
-		const userid = await AsyncStorage.getItem("userid")
 		const d = new Date(), day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-		const data = { userid, longitude, latitude, locationName, day: day[d.getDay()] }
+		const data = { longitude, latitude, locationName, day: day[d.getDay()] }
 
 		getLocations(data)
 			.then((res) => {
@@ -96,7 +102,7 @@ export default function main({ navigation }) {
 		const location = newLocations[lindex]
 		const { longitude, latitude } = geolocation
 		const d = new Date(), day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-		const data = { userid, longitude, latitude, locationName: searchLocationname, type, index, day: day[d.getDay()] }
+		const data = { longitude, latitude, locationName: searchLocationname, type, index, day: day[d.getDay()] }
 
 		getMoreLocations(data)
 			.then((res) => {
@@ -238,13 +244,14 @@ export default function main({ navigation }) {
 		clearInterval(updateTrackUser)
 		clearInterval(updateNotifications)
 	}
-
-	useEffect(() => {
+	const initialize = () => {
 		getTheNumUpdates()
 		getTheNumCartItems()
-		getLocationPermission()
+		startAllInterval()
+	}
 
-		updateNotifications = setInterval(() => getTheNumUpdates(), 2000)
+	useEffect(() => {
+		initialize()
 	}, [])
 	
 	return (
@@ -254,10 +261,12 @@ export default function main({ navigation }) {
 					<View style={style.headers}>
 						<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 							<TextInput style={style.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search name" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
-							<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
-								<FontAwesome name="bell" size={30}/>
-								{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}
-							</TouchableOpacity>
+							{userId && (
+								<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
+									<FontAwesome name="bell" size={30}/>
+									{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}
+								</TouchableOpacity>
+							)}
 						</View>
 					</View>
 
@@ -283,7 +292,7 @@ export default function main({ navigation }) {
 										{item.index < item.max && (
 											<TouchableOpacity style={style.seeMore} onPress={() => {
 												clearAllInterval()
-												navigation.navigate(item.service)
+												navigation.navigate(item.service, { initialize: () => initialize() })
 											}}>
 												<Text style={style.seeMoreHeader}>See More</Text>
 											</TouchableOpacity>
@@ -306,7 +315,7 @@ export default function main({ navigation }) {
 												renderItem={({ item }) => 
 													<TouchableOpacity style={style.location} onPress={() => {
 														clearAllInterval()
-														navigation.navigate(item.nav, { locationid: item.id, refetch: () => startAllInterval() })
+														navigation.navigate(item.nav, { locationid: item.id, refetch: () => startAllInterval(), initialize: () => initialize() })
 													}}>
 														<View style={style.locationPhotoHolder}>
 															<Image source={{ uri: logo_url + item.logo }} style={{ height: 80, width: 80 }}/>
@@ -329,41 +338,69 @@ export default function main({ navigation }) {
 					</View>
 
 					<View style={style.bottomNavs}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							clearAllInterval()
-							navigation.navigate("account", { refetch: () => startAllInterval() })
-						}}>
-							<FontAwesome5 name="user-circle" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							clearAllInterval()
-							navigation.navigate("recent", { refetch: () => startAllInterval() })
-						}}>
-							<FontAwesome name="history" size={30}/>
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-							<Entypo name="shopping-cart" size={30}/>
-							{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-						</TouchableOpacity>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							clearAllInterval()
+						<View style={style.bottomNavsRow}>
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => {
+									clearAllInterval()
+									navigation.navigate("account", { refetch: () => startAllInterval() })
+								}}>
+									<FontAwesome5 name="user-circle" size={30}/>
+								</TouchableOpacity>
+							)}
 
-							AsyncStorage.clear()
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => {
+									clearAllInterval()
+									navigation.navigate("recent", { refetch: () => startAllInterval() })
+								}}>
+									<FontAwesome name="history" size={30}/>
+								</TouchableOpacity>
+							)}
 
-							navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'login' }]
-								})
-							);
-						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
-						</TouchableOpacity>
+							{userId && (
+								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+									<Entypo name="shopping-cart" size={30}/>
+									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+								</TouchableOpacity>
+							)}
+
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								if (userId) {
+									clearAllInterval()
+
+									AsyncStorage.clear()
+
+									setUserid(null)
+								} else {
+									setShowauth(true)
+								}
+							}}>
+								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</View>
 
-				<Modal visible={openNotifications}><Notifications navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>
-				<Modal visible={openCart}><Cart close={() => setOpencart(false)}/></Modal>
+				{openNotifications && <Modal><Notifications navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>}
+				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
+				{showAuth && (
+					<Modal transparent={true}>
+						<Userauth close={() => setShowauth(false)} done={(id, msg) => {
+							if (msg == "setup") {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: "setup" }]
+									})
+								);
+							} else {
+								setUserid(id)
+							}
+
+							setShowauth(false)
+						}} navigate={navigation.navigate}/>
+					</Modal>
+				)}
 			</View>
 		</View>
 	)
@@ -392,7 +429,8 @@ const style = StyleSheet.create({
 	locationHours: { fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5 },
+	bottomNavsRow: { flexDirection: 'row' },
+	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	numCartItemsHeader: { fontWeight: 'bold' },
+	numCartItemsHeader: { fontWeight: 'bold' }
 })
