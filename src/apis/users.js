@@ -55,6 +55,13 @@ export const updateUser = data => {
 	)
 }
 
+export const updateUserNotificationToken = data => {
+	return axios.post(
+		`${url}/users/update_user_notification_token`,
+		data
+	)
+}
+
 export const addPaymentMethod = data => {
 	return axios.post(
 		`${url}/users/add_paymentmethod`,

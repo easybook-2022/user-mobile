@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native'
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
+import { loginInfo, registerInfo } from '../../assets/info'
 import { getCode, verifyUser, resetPassword, registerUser, loginUser } from '../apis/users'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -11,7 +12,7 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function userauth(props) {
-	const [authInfo, setAuthinfo] = useState({ type: 'login', info: { cellnumber: "6666666666", password: "password" }, loading: false, verifycode: null, codesent: false })
+	const [authInfo, setAuthinfo] = useState({ type: 'login', info: { cellnumber: "0000000000", password: "password" }, loading: false, verifycode: null, codesent: false })
 	const [errorMsg, setErrormsg] = useState('')
 
 	const login = () => {
@@ -131,7 +132,7 @@ export default function userauth(props) {
 
 					console.log(code)
 
-					setAuthinfo({ ...authInfo, verifycode: code, codesent: true })
+					setAuthinfo({ ...authInfo, info: { resetcode: code }, verifycode: code, codesent: true })
 				}
 			})
 			.catch((error) => console.log(error))
@@ -318,10 +319,10 @@ export default function userauth(props) {
 
 				<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 					<View style={style.options}>
-						<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser' })}>
+						<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser', info: registerInfo })}>
 							<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
 						</TouchableOpacity>
-						<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'login' })}>
+						<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'login', info: loginInfo })}>
 							<Text style={style.optionHeader}>Already a member ? Log in</Text>
 						</TouchableOpacity>
 						<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'forgotpassword' })}>

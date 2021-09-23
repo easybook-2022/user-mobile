@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
 import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { logo_url } from '../../assets/info'
-import { getNumUpdates } from '../apis/users'
+import { getNumUpdates, updateUserNotificationToken } from '../apis/users'
 import { getLocations, getMoreLocations } from '../apis/locations'
 import { getNumCartItems } from '../apis/carts'
 
-import Notifications from '../components/notifications'
+import NotificationsBox from '../components/notifications'
 import Cart from '../components/cart'
 import Userauth from '../components/userauth'
 
@@ -27,6 +28,7 @@ let updateTrackUser, updateNotifications
 
 export default function main({ navigation }) {
 	const [locationPermission, setLocationpermission] = useState(false)
+	const [notificationPermission, setNotificationpermission] = useState(false)
 	const [geolocation, setGeolocation] = useState({ longitude: null, latitude: null })
 	const [searchLocationname, setSearchlocationname] = useState('')
 	const [locations, setLocations] = useState([])
@@ -84,15 +86,28 @@ export default function main({ navigation }) {
 		getLocations(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					}
+					return res.data
 				}
 			})
 			.then((res) => {
 				if (res) {
 					setLocations(res.locations)
 					setSearchlocationname(locationName)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					if (err.response.data.status) {
+						const status = err.response.data.status
+
+						switch (status) {
+							case "unknowncoords":
+								getLocationPermission()
+
+								break;
+							default:
+						}
+					}
 				}
 			})
 	}
@@ -189,6 +204,66 @@ export default function main({ navigation }) {
 			}
 		}
 	}
+	const getNotificationPermission = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+		const { status } = await Notifications.getPermissionsAsync()
+
+		if (status == "granted") {
+			setNotificationpermission(true)
+
+			const { data } = await Notifications.getExpoPushTokenAsync({
+				experienceId: "@robogram/easygo-user"
+			})
+
+			if (userid != null) {
+				updateUserNotificationToken({ userid, token: data })
+					.then((res) => {
+						if (res.status == 200) {
+							return res.data
+						}
+					})
+					.then((res) => {
+						if (res) {
+
+						}
+					})
+					.catch((err) => {
+						if (err.response.status == 400) {
+
+						}
+					})
+			}
+		} else {
+			const info = await Notifications.requestPermissionsAsync()
+
+			if (info.status == "granted") {
+				setNotificationpermission(true)
+
+				const { data } = await Notifications.getExpoPushTokenAsync({
+					experienceId: "@robogram/easygo-user"
+				})
+
+				if (userid != null) {
+					updateUserNotificationToken({ userid, token: data })
+						.then((res) => {
+							if (res.status == 200) {
+								return res.data
+							}
+						})
+						.then((res) => {
+							if (res) {
+
+							}
+						})
+						.catch((err) => {
+							if (err.response.status == 400) {
+								
+							}
+						})
+				}
+			}
+		}
+	}
 	const trackUserLocation = async() => {
 		let longitude, latitude
 		
@@ -238,13 +313,14 @@ export default function main({ navigation }) {
 	}
 	const startAllInterval = () => {
 		getLocationPermission()
+		getNotificationPermission()
 		updateNotifications = setInterval(() => getTheNumUpdates(), 2000)
 	}
 	const clearAllInterval = () => {
 		clearInterval(updateTrackUser)
 		clearInterval(updateNotifications)
 	}
-	const initialize = () => {
+	const initialize = async() => {
 		getTheNumUpdates()
 		getTheNumCartItems()
 		startAllInterval()
@@ -381,7 +457,7 @@ export default function main({ navigation }) {
 					</View>
 				</View>
 
-				{openNotifications && <Modal><Notifications navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>}
+				{openNotifications && <Modal><NotificationsBox navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>}
 				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
 				{showAuth && (
 					<Modal transparent={true}>
@@ -398,6 +474,7 @@ export default function main({ navigation }) {
 							}
 
 							setShowauth(false)
+							initialize()
 						}} navigate={navigation.navigate}/>
 					</Modal>
 				)}
