@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
+import { displayTime } from '../../../assets/info'
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours } from '../../apis/locations'
 import { requestAppointment } from '../../apis/schedules'
@@ -16,6 +17,9 @@ import Entypo from 'react-native-vector-icons/Entypo'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
+const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const pushtime = 1000 * (60 * 10)
 
 export default function booktime(props) {
 	const { locationid, serviceid } = props.route.params
@@ -23,9 +27,43 @@ export default function booktime(props) {
 	const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
 	const [name, setName] = useState('')
+	const [scheduledTimes, setScheduledtimes] = useState([])
+	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
+	const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
+	const [selectedDateInfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, time: 0 })
+	const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
+		{ key: "day-row-0", row: [
+	    	{ key: "day-0-0", num: 0, passed: false }, { key: "day-0-1", num: 0, passed: false }, { key: "day-0-2", num: 0, passed: false }, 
+	    	{ key: "day-0-3", num: 0, passed: false }, { key: "day-0-4", num: 0, passed: false }, { key: "day-0-5", num: 0, passed: false }, 
+	    	{ key: "day-0-6", num: 0, passed: false }
+    	]}, 
+  		{ key: "day-row-1", row: [
+	    	{ key: "day-1-0", num: 0, passed: false }, { key: "day-1-1", num: 0, passed: false }, { key: "day-1-2", num: 0, passed: false }, 
+	    	{ key: "day-1-3", num: 0, passed: false }, { key: "day-1-4", num: 0, passed: false }, { key: "day-1-5", num: 0, passed: false }, 
+	    	{ key: "day-1-6", num: 0, passed: false }
+    	]}, 
+    	{ key: "day-row-2", row: [
+	    	{ key: "day-2-0", num: 0, passed: false }, { key: "day-2-1", num: 0, passed: false }, { key: "day-2-2", num: 0, passed: false }, 
+	    	{ key: "day-2-3", num: 0, passed: false }, { key: "day-2-4", num: 0, passed: false }, { key: "day-2-5", num: 0, passed: false }, 
+	    	{ key: "day-2-6", num: 0, passed: false }
+    	]}, 
+	  	{ key: "day-row-3", row: [
+	    	{ key: "day-3-0", num: 0, passed: false }, { key: "day-3-1", num: 0, passed: false }, { key: "day-3-2", num: 0, passed: false }, 
+	    	{ key: "day-3-3", num: 0, passed: false }, { key: "day-3-4", num: 0, passed: false }, { key: "day-3-5", num: 0, passed: false }, 
+	    	{ key: "day-3-6", num: 0, passed: false }
+	    ]}, 
+	    { key: "day-row-4", row: [
+	    	{ key: "day-4-0", num: 0, passed: false }, { key: "day-4-1", num: 0, passed: false }, { key: "day-4-2", num: 0, passed: false }, 
+	    	{ key: "day-4-3", num: 0, passed: false }, { key: "day-4-4", num: 0, passed: false }, { key: "day-4-5", num: 0, passed: false }, 
+	    	{ key: "day-4-6", num: 0, passed: false }
+	    ]}, 
+	    { key: "day-row-5", row: [
+	    	{ key: "day-5-0", num: 0, passed: false }, { key: "day-5-1", num: 0, passed: false }, { key: "day-5-2", num: 0, passed: false }, 
+	    	{ key: "day-5-3", num: 0, passed: false }, { key: "day-5-4", num: 0, passed: false }, { key: "day-5-5", num: 0, passed: false }, 
+	    	{ key: "day-5-6", num: 0, passed: false }
+	    ]}
+	]})
 	const [times, setTimes] = useState([])
-	const [openTime, setOpentime] = useState(0)
-	const [closeTime, setClosetime] = useState(0)
 	const [loaded, setLoaded] = useState(false)
 	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 	const [showAuth, setShowauth] = useState(false)
@@ -53,7 +91,7 @@ export default function booktime(props) {
 		}
 	}
 	
-	const [confirm, setConfirm] = useState({ show: false, service: "", timeheader: "", time: "", note: "", requested: false, errormsg: "", action: false })
+	const [confirmNewrequest, setConfirmnewrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "", action: false })
 
 	const getTheServiceInfo = async() => {
 		getServiceInfo(serviceid)
@@ -91,12 +129,40 @@ export default function booktime(props) {
 					openHour = openPeriod == "PM" ? parseInt(openHour) + 12 : openHour
 					closeHour = closePeriod == "PM" ? parseInt(closeHour) + 12 : closeHour
 
-					const currTime = new Date(Date.now()).toString().split(" ")
+					const currTime = new Date(Date.now())
+					const currDay = days[currTime.getDay()]
+					const currDate = currTime.getDate()
+					const currMonth = months[currTime.getMonth()]
 
-					let openStr = currTime[0] + " " + currTime[1] + " " + currTime[2] + " " + currTime[3] + " " + openHour + ":" + openMinute
-					let closeStr = currTime[0] + " " + currTime[1] + " " + currTime[2] + " " + currTime[3] + " " + closeHour + ":" + closeMinute
+					let openStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + openHour + ":" + openMinute
+					let closeStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + closeHour + ":" + closeMinute
 					let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr)
-					let newTimes = [], currenttime = Date.now(), currDateStr = openDateStr, pushtime = 1000 * (60 * 5)
+					let newTimes = [], currenttime = Date.now(), currDateStr = openDateStr
+					let firstDay = (new Date(currTime.getFullYear(), currTime.getMonth())).getDay()
+					let numDays = 32 - new Date(currTime.getFullYear(), currTime.getMonth(), 32).getDate()
+					let daynum = 1, data = calendar.data, datetime = 0, datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
+
+					data.forEach(function (info, rowindex) {
+						info.row.forEach(function (day, dayindex) {
+							day.num = 0
+
+							if (rowindex == 0) {
+								if (dayindex >= firstDay) {
+									datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
+
+									day.passed = datenow > datetime
+									day.num = daynum
+									daynum++
+								}
+							} else if (daynum <= numDays) {
+								datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
+
+								day.passed = datenow > datetime
+								day.num = daynum
+								daynum++
+							}
+						})
+					})
 
 					while (currDateStr < (closeDateStr - pushtime)) {
 						currDateStr += pushtime
@@ -118,17 +184,148 @@ export default function booktime(props) {
 						})
 					}
 
+					setOpentime({ hour: openHour, minute: openMinute })
+					setClosetime({ hour: closeHour, minute: closeMinute })
+					setSelecteddateinfo({ month: currMonth, year: currTime.getFullYear(), day: currDay, date: currDate, time: 0 })
+					setCalendar({ firstDay, numDays, data })
+					setScheduledtimes(scheduled)
 					setTimes(newTimes)
 					setLoaded(true)
 				}
 			})
 	}
+	const dateNavigate = (dir) => {
+		setLoaded(false)
+
+		const currTime = new Date(Date.now())
+		const currDay = days[currTime.getDay()]
+		const currMonth = months[currTime.getMonth()]
+
+		let month = months.indexOf(selectedDateInfo.month), year = selectedDateInfo.year
+
+		month = dir == 'left' ? month - 1 : month + 1
+
+		if (month < 0) {
+			month = 11
+			year--
+		} else if (month > 11) {
+			month = 0
+			year++
+		}
+
+		let firstDay, numDays, daynum = 1, data = calendar.data, datetime
+		let datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
+
+		firstDay = (new Date(year, month)).getDay()
+		numDays = 32 - new Date(year, month, 32).getDate()
+		data.forEach(function (info, rowindex) {
+			info.row.forEach(function (day, dayindex) {
+				day.num = 0
+				day.passed = false
+
+				if (rowindex == 0) {
+					if (dayindex >= firstDay) {
+						datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
+
+						day.passed = datenow > datetime
+						day.num = daynum
+						daynum++
+					}
+				} else if (daynum <= numDays) {
+					datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
+
+					day.passed = datenow > datetime
+					day.num = daynum
+					daynum++
+				}
+			})
+		})
+
+		let date = month == currTime.getMonth() && year == currTime.getFullYear() ? currTime.getDate() : 1
+		let openStr = months[month] + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
+		let closeStr = months[month] + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
+		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
+		let currenttime = Date.now(), newTimes = []
+
+		while (currDateStr < (closeDateStr - pushtime)) {
+			currDateStr += pushtime
+
+			let timestr = new Date(currDateStr).toString().split(" ")[4]
+			let time = timestr.split(":")
+			let hour = parseInt(time[0])
+			let minute = time[1]
+			let period = hour > 11 ? "pm" : "am"
+
+			let currtime = parseInt(hour.toString() + "" + minute)
+			let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+			let timepassed = currenttime > currDateStr
+			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
+
+			newTimes.push({ 
+				key: newTimes.length, header: timedisplay, 
+				time: currDateStr, timetaken, timepassed
+			})
+		}
+
+		setSelecteddateinfo({ ...selectedDateInfo, month: months[month], date: null, year })
+		setCalendar({ firstDay, numDays, data })
+		setTimes(newTimes)
+		setLoaded(true)
+	}
+	const selectDate = (date) => {
+		const { month, year } = selectedDateInfo
+
+		let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
+		let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
+		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
+		let currenttime = Date.now(), newTimes = []
+
+		while (currDateStr < (closeDateStr - pushtime)) {
+			currDateStr += pushtime
+
+			let timestr = new Date(currDateStr).toString().split(" ")[4]
+			let time = timestr.split(":")
+			let hour = parseInt(time[0])
+			let minute = time[1]
+			let period = hour > 11 ? "pm" : "am"
+
+			let currtime = parseInt(hour.toString() + "" + minute)
+			let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+			let timepassed = currenttime > currDateStr
+			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
+
+			newTimes.push({ 
+				key: newTimes.length, header: timedisplay, 
+				time: currDateStr, timetaken, timepassed
+			})
+		}
+
+		setSelecteddateinfo({ ...selectedDateInfo, date })
+		setTimes(newTimes)
+	}
+	const selectTime = (name, timeheader, time) => {
+		const { month, date, year } = selectedDateInfo
+
+		setSelecteddateinfo({ ...selectedDateInfo, name, time })
+
+		if (selectedDateInfo.date) {
+			if (!scheduleid) {
+				setConfirmnewrequest({ ...confirmNewrequest, show: true, service: name, time })
+			} else {
+				setConfirmnewrequest({ ...confirmNewrequest, show: true, oldtime: oldTime, service: name, time, note: oldNote })
+			}
+		}
+	}
 	const requestAnAppointment = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
 		if (userid != null) {
-			const { timeheader, time, note } = confirm
-			const data = { userid, locationid, scheduleid, serviceid, time, note: note ? note : "" }
+			const { month, date, year, time } = selectedDateInfo
+			const { note, oldtime } = confirmNewrequest
+			const selecteddate = new Date(time)
+			const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
+			const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
+			const data = { userid, locationid, scheduleid, serviceid, oldtime, time: dateInfo, note: note ? note : "" }
 
 			requestAppointment(data)
 				.then((res) => {
@@ -139,7 +336,15 @@ export default function booktime(props) {
 					}
 				})
 				.then((res) => {
-					if (res) setConfirm({ ...confirm, show: true, requested: true })
+					if (res) {
+						if (res.status == "new" || res.status == "updated") {
+							setConfirmnewrequest({ ...confirmNewrequest, show: true, requested: true })
+						} else {
+							let { oldtime, note } = res
+
+							setConfirmnewrequest({ ...confirmNewrequest, show: true, oldtime, note })
+						}
+					}
 				})
 				.catch((err) => {
 					if (err.response.status == 400) {
@@ -148,12 +353,8 @@ export default function booktime(props) {
 
 							switch (status) {
 								case "cardrequired":
-									setConfirm({ ...confirm, show: false })
+									setConfirmnewrequest({ ...confirmNewrequest, show: false })
 									setShowpaymentrequired(true)
-
-									break;
-								case "existed":
-									setConfirm({ ...confirm, show: true, errormsg: err.response.data.errormsg })
 
 									break;
 								default:
@@ -163,7 +364,7 @@ export default function booktime(props) {
 					}
 				})
 		} else {
-			setConfirm({ ...confirm, show: false, action: true })
+			setConfirmnewrequest({ ...confirmNewrequest, show: false, action: true })
 			setShowauth(true)
 		}
 	}
@@ -181,7 +382,10 @@ export default function booktime(props) {
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<TouchableOpacity style={style.back} onPress={() => {
-						func.initialize()
+						if (func.initialize) {
+							func.initialize()
+						}
+						
 						props.navigation.goBack()
 					}}>
 						<Text style={style.backHeader}>Back</Text>
@@ -197,26 +401,65 @@ export default function booktime(props) {
 						:
 						times.length > 0 ? 
 							<ScrollView style={{ height: screenHeight - 191 }}>
-								<Text style={style.timesHeader}>Availabilities</Text>
+								<View style={style.dateHeaders}>
+									<View style={style.date}>
+										<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
+										<Text style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
+										<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
+									</View>
+
+									<View style={style.dateDays}>
+										<View style={style.dateDaysRow}>
+											{days.map((day, index) => (
+												<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
+													<Text style={{ fontWeight: 'bold', textAlign: 'center' }}>{day.substr(0, 3)}</Text>
+												</TouchableOpacity>
+											))}
+										</View>
+										{calendar.data.map((info, rowindex) => (
+											<View key={info.key} style={style.dateDaysRow}>
+												{info.row.map((day, dayindex) => (
+													day.num > 0 ?
+														day.passed ? 
+															<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
+																<Text style={style.dateDayTouchHeader}>{day.num}</Text>
+															</TouchableOpacity>
+															:
+															selectedDateInfo.date == day.num ?
+																<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
+																	<Text style={style.dateDayTouchHeaderSelected}>{day.num}</Text>
+																</TouchableOpacity>
+																:
+																<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
+																	<Text style={style.dateDayTouchHeader}>{day.num}</Text>
+																</TouchableOpacity>
+														:
+														<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={style.dateDayTouchDisabled}></TouchableOpacity>
+												))}
+											</View>
+										))}
+									</View>
+								</View>
+								<Text style={style.timesHeader}>Pick a time</Text>
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 									<View style={style.times}>
 										{times.map(info => (
-											<>
-												{!info.timetaken && !info.timepassed ? 
-													<TouchableOpacity style={style.unselect} key={info.key} onPress={() => setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })}>
+											<View key={info.key}>
+												{(!info.timetaken && !info.timepassed) ? 
+													<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
 														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
 													</TouchableOpacity>
 													:
-													info.timetaken ? 
-														<TouchableOpacity style={style.selected} disabled={true} key={info.key} onPress={() => {}}>
+													info.timetaken ?
+														<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
 															<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
 														</TouchableOpacity>
 														:
-														<TouchableOpacity style={style.selectedPassed} disabled={true} key={info.key} onPress={() => {}}>
+														<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
 															<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
 														</TouchableOpacity>
-												}
-											</>
+												}	
+											</View>
 										))}
 									</View>
 								</View>
@@ -262,29 +505,42 @@ export default function booktime(props) {
 					</View>
 				</View>
 
-				{confirm.show && (
+				{confirmNewrequest.show && (
 					<Modal transparent={true}>
 						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
-									{!confirm.requested ? 
+									{!confirmNewrequest.requested ? 
 										<>
-											<Text style={style.confirmHeader}>
-												<Text style={{ fontFamily: 'appFont' }}>Request an appointment for </Text>
-												{confirm.service + '\n'}
-												at
-												{'\n' + confirm.timeheader}
-											</Text>
+											{confirmNewrequest.oldtime == 0 ? 
+												<>
+													<Text style={style.confirmHeader}>
+														<Text style={{ fontFamily: 'appFont' }}>Request an appointment for</Text>
+														{'\n' + confirmNewrequest.service + '\n'}
+														{displayTime(confirmNewrequest.time) + '\n'}
+													</Text>
+												</>
+												:
+												<>
+													<Text style={style.confirmHeader}>
+														<Text style={{ fontFamily: 'appFont' }}>You already requested an appointment for</Text>
+														{'\n' + confirmNewrequest.service + '\n'}
+														{displayTime(confirmNewrequest.oldtime) + '\n'}
+														<Text style={{ fontFamily: 'appFont' }}>Would you like to change it to</Text>
+														{'\n' + displayTime(confirmNewrequest.time) + '\n'}
+													</Text>
+												</>
+											}
 
 											<View style={style.note}>
-												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} autoCorrect={false}/>
+												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirmnewrequest({...confirmNewrequest, note })} autoCorrect={false}/>
 											</View>
 
-											{confirm.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
+											{confirmNewrequest.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
 
 											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 												<View style={style.confirmOptions}>
-													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirm({ show: false, service: "", time: "", errormsg: "" })}>
+													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmnewrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "", action: false })}>
 														<Text style={style.confirmOptionHeader}>No</Text>
 													</TouchableOpacity>
 													<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
@@ -297,12 +553,16 @@ export default function booktime(props) {
 										<>
 											<View style={style.requestedHeaders}>
 												<Text style={style.requestedHeader}>Appointment requested for{'\n'}</Text>
-												<Text style={style.requestedHeaderInfo}>{confirm.service} {'\n'}</Text>
-												<Text style={style.requestedHeaderInfo}>at {confirm.timeheader} {'\n'}</Text>
+												<Text style={style.requestedHeaderInfo}>{confirmNewrequest.service} {'\n'}</Text>
+												<Text style={style.requestedHeaderInfo}>{displayTime(confirmNewrequest.time)} {'\n'}</Text>
 												<Text style={style.requestedHeaderInfo}>You will get notify by the salon in your notification very soon</Text>
 												<TouchableOpacity style={style.requestedClose} onPress={() => {
-													setConfirm({ ...confirm, show: false, requested: false })
-													func.initialize()
+													setConfirmnewrequest({ ...confirmNewrequest, show: false, requested: false })
+													
+													if (func.initialize) {
+														func.initialize()
+													}
+
 													props.navigation.goBack()
 												}}>
 													<Text style={style.requestedCloseHeader}>Ok</Text>
@@ -355,7 +615,7 @@ export default function booktime(props) {
 							} else {
 								setUserid(id)
 
-								if (confirm.action) requestAnAppointment()
+								if (confirmNewrequest.action) requestAnAppointment()
 							}
 
 							setShowauth(false)
@@ -373,9 +633,23 @@ const style = StyleSheet.create({
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
-	headers: { height: 47, marginBottom: 50 },
+	headers: { marginBottom: 10 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center' },
+
+	dateHeaders: { alignItems: 'center' },
+	date: { flexDirection: 'row', margin: 10 },
+	dateNav: { marginHorizontal: 20 },
+	dateHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 5, textAlign: 'center', width: 170 },
+	dateDays: { alignItems: 'center' },
+	dateDaysRow: { flexDirection: 'row' },
+	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
+	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
+	dateDayTouchHeaderSelected: { color: 'white', fontSize: 17, textAlign: 'center' },
+	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
+	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: 40 },
+	dateDayTouchHeader: { color: 'black', fontSize: 17, textAlign: 'center' },
+	dateDayTouchHeaderDisabled: { color: 'white', fontSize: 17, textAlign: 'center' },
 
 	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
 	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 300 },

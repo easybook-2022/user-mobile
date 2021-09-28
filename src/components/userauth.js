@@ -338,17 +338,17 @@ export default function userauth(props) {
 const style = StyleSheet.create({
 	authContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	authBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', width: '80%' },
-	authClose: { marginVertical: 20 },
-	authBoxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', paddingVertical: 30 },
+	authClose: { marginTop: 20 },
+	authBoxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 15, fontWeight: 'bold' },
 
 	authInputsBox: { alignItems: 'center' },
-	authInputContainer: { marginVertical: '5%' },
+	authInputContainer: { marginTop: '5%' },
 	authInputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 	authInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10, width: width - 100 },
 	resend: { alignItems: 'center', backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
 	resendHeader: { fontWeight: 'bold' },
-	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
+	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: 100 },
 	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
 
 	options: {  },

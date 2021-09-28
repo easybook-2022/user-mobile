@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
-import { logo_url } from '../../assets/info'
+import { logo_url, displayTime } from '../../assets/info'
 import { getNotifications } from '../apis/users'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
 import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining, cancelService, sendServicePayment, sendDiningPayment, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
@@ -16,33 +16,8 @@ export default function notifications(props) {
 	const [items, setItems] = useState([])
 	const [loaded, setLoaded] = useState(false)
 	const [confirm, setConfirm] = useState({ show: false, type: "", index: 0, name: "", price: "", quality: "" })
+	const [cancelServiceRequest, setCancelservicerequest] = useState({ show: false, id: -1, location: "", service: "", time: 0, index: -1 })
 	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
-
-	const displayTimeStr = (unixtime) => {
-		let weekdays = { "Mon": "Monday", "Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday", "Fri": "Friday", "Sat": "Saturday", "Sun": "Sunday" }
-		let months = { 
-			"Jan": "January", "Feb": "February", "Mar": "March", "Apr": "April", "May": "May", "Jun": "June", 
-			"Jul": "July", "Aug": "August", "Sep": "September", "Oct": "October", "Nov": "November", "Dec": "December" 
-		}
-		let d = new Date(unixtime).toString().split(" ")
-		let day = weekdays[d[0]]
-		let month = months[d[1]]
-		let date = d[2]
-		let year = d[3]
-
-		let time = d[4].split(":")
-		let hour = parseInt(time[0])
-		let minute = time[1]
-		let period = hour > 11 ? "pm" : "am"
-
-		hour = hour > 12 ? hour - 12 : hour
-
-		//day + ", " + month + " " + date + ", " + year + " at " + 
-
-		let timestr = hour + ":" + minute + " " + period;
-
-		return timestr
-	}
 
 	const cancelTheCartOrder = async(cartid, index) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -206,26 +181,32 @@ export default function notifications(props) {
 				}
 			})
 	}
-	const cancelTheService = (scheduleid, index) => {
-		const data = { scheduleid, type: "customer" }
+	const cancelTheService = (info, index) => {
+		if (!cancelServiceRequest.show) {
+			const { id, location, service, time } = info
 
-		cancelService(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					if (res.delete) {
+			setCancelservicerequest({ show: true, id, location, service, time, index })
+		} else {
+			const { id, index } = cancelServiceRequest
+
+			cancelService(id)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
 						const newItems = [...items]
 
 						newItems.splice(index, 1)
 
 						setItems(newItems)
+
+						setCancelservicerequest({ show: false, location: "", service: "", time: 0, index: -1 })
 					}
-				}
-			})
+				})
+		}
 	}
 	const sendTheServicePayment = (scheduleid, index) => {
 		sendServicePayment(scheduleid)
@@ -456,8 +437,8 @@ export default function notifications(props) {
 																	{(item.diners + 1) > 0 ? ' for ' + (item.diners + 1) + ' ' + ((item.diners + 1) == 1 ? 'person' : 'people') : null }
 																	{'\n'}at{'\n'}
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
-																	{'\n'}at{'\n'}
-																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
+																	{'\n'}
+																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTime(item.time)}</Text>
 																	{'\n'}
 																</Text>
 																:
@@ -470,19 +451,19 @@ export default function notifications(props) {
 																	}
 																	{'\n'}at
 																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{'\n' + item.location}</Text>
-																	{'\n'}at{'\n'} 
-																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
+																	{'\n'}
+																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTime(item.time)}</Text>
 																</Text>
 															:
 															<Text style={style.itemServiceHeader}>You requested an appointment for {' '}
 																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.service}</Text>
 																{'\n'}at{'\n'}
 																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
-																{'\n'}at{'\n'}
-																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTimeStr(item.time)}</Text>
+																{'\n'}
+																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTime(item.time)}</Text>
 															</Text>
 														}
-														{item.action == "requested" && <Text style={{ fontWeight: '100' }}>waiting for the {item.locationtype == 'restaurant' ? 'restaurant' : 'salon'}'s response</Text>}
+														{(item.action == "requested" || item.action == "change") && <Text style={{ fontWeight: '100' }}>waiting for the {item.locationtype == 'restaurant' ? 'restaurant' : 'salon'}'s response</Text>}
 														{item.action == "accepted" && (
 															<>
 																<Text style={style.itemServiceResponseHeader}>
@@ -536,13 +517,19 @@ export default function notifications(props) {
 																	:
 																	<View style={{ alignItems: 'center' }}>
 																		<View style={style.actions}>
-																			<TouchableOpacity style={style.action} onPress={() => cancelTheService(item.id, index)}>
+																			<TouchableOpacity style={style.action} onPress={() => cancelTheService(item, index)}>
 																				<Text style={style.actionHeader}>Cancel Service</Text>
 																			</TouchableOpacity>
 																			<TouchableOpacity style={style.action} onPress={() => sendTheServicePayment(item.id, index)}>
 																				<Text style={style.actionHeader}>Send Payment{item.paymentSent ? ' Again' : ''}</Text>
 																			</TouchableOpacity>
-																		</View>
+																			<TouchableOpacity style={style.action} onPress={() => {
+																				props.close()
+																				props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid })
+																			}}>
+																				<Text style={style.actionHeader}>Reschedule</Text>
+																			</TouchableOpacity>
+																		</View>											
 																	</View>
 																}
 															</>
@@ -572,7 +559,7 @@ export default function notifications(props) {
 																		<Text style={style.itemHeader}>
 																			<Text>The {item.locationtype == "restaurant" ? "restaurant" : "salon"} requested this time for you.</Text>
 																			{'\n'}
-																			<Text style={style.itemServiceResponseHeader}>{displayTimeStr(item.nextTime)}</Text>
+																			<Text style={style.itemServiceResponseHeader}>{displayTime(item.nextTime)}</Text>
 																			{'\n\n'}
 																			<Text>Will you be available?</Text>
 																		</Text>
@@ -616,7 +603,6 @@ export default function notifications(props) {
 						}
 					</View>
 				</View>
-
 				{confirm.show && (
 					<Modal transparent={true}>
 						<View style={{ paddingTop: offsetPadding }}>
@@ -638,6 +624,31 @@ export default function notifications(props) {
 											setConfirm({ ...confirm, show: false, type: "", index: 0, name: "", quantity: "", price: "" })
 										}}>
 											<Text style={style.confirmOptionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+				{cancelServiceRequest.show && (
+					<Modal transparent={true}>
+						<View style={{ paddingTop: offsetPadding }}>
+							<View style={style.confirmBox}>
+								<View style={style.confirmContainer}>
+									<Text style={style.confirmHeader}>
+										<Text style={{ fontFamily: 'arial'}}>Are you sure you want to cancel the service appointment of</Text>
+										{'\n\n' + cancelServiceRequest.service + '\n'}
+										{'\nat ' + cancelServiceRequest.location + '\n'}
+										{displayTime(cancelServiceRequest.time)}
+									</Text>
+
+									<View style={style.confirmOptions}>
+										<TouchableOpacity style={style.confirmOption} onPress={() => setCancelservicerequest({ show: false, service: "", time: 0, index: -1 })}>
+											<Text style={style.confirmOptionHeader}>No</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.confirmOption} onPress={() => cancelTheService()}>
+											<Text style={style.confirmOptionHeader}>Yes</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -682,7 +693,7 @@ const style = StyleSheet.create({
 	close: { marginTop: 20, marginHorizontal: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
-	body: { flexDirection: 'column', height: screenHeight - 112, justifyContent: 'space-around' },
+	body: { flexDirection: 'column', height: screenHeight - 94, justifyContent: 'space-around' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
 	itemImageHolders: { width: 100 },
 	itemLocationImageHolder: { borderRadius: 50, height: 80, overflow: 'hidden', width: 80 },

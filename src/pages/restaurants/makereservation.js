@@ -424,22 +424,19 @@ export default function booktime(props) {
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 									<View style={style.times}>
 										{times.map(info => (
-											<>
-												{!info.timetaken && !info.timepassed ? 
-													<TouchableOpacity style={style.unselect} key={info.key} onPress={() => setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })}>
-														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+											!info.timetaken && !info.timepassed ? 
+												<TouchableOpacity style={style.unselect} key={info.key} onPress={() => setConfirm({ ...confirm, show: true, service: name, timeheader: info.header, time: info.time })}>
+													<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+												</TouchableOpacity>
+												:
+												info.timetaken ? 
+													<TouchableOpacity style={style.selected} disabled={true} key={info.key} onPress={() => {}}>
+														<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
 													</TouchableOpacity>
 													:
-													info.timetaken ? 
-														<TouchableOpacity style={style.selected} disabled={true} key={info.key} onPress={() => {}}>
-															<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
-														</TouchableOpacity>
-														:
-														<TouchableOpacity style={style.selectedPassed} disabled={true} key={info.key} onPress={() => {}}>
-															<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
-														</TouchableOpacity>
-												}
-											</>
+													<TouchableOpacity style={style.selectedPassed} disabled={true} key={info.key} onPress={() => {}}>
+														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+													</TouchableOpacity>
 										))}
 									</View>
 								</View>

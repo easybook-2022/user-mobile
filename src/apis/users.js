@@ -55,9 +55,9 @@ export const updateUser = data => {
 	)
 }
 
-export const updateUserNotificationToken = data => {
+export const updateNotificationToken = data => {
 	return axios.post(
-		`${url}/users/update_user_notification_token`,
+		`${url}/users/update_notification_token`,
 		data
 	)
 }

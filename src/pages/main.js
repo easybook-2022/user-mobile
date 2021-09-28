@@ -5,7 +5,7 @@ import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { logo_url } from '../../assets/info'
-import { getNumUpdates, updateUserNotificationToken } from '../apis/users'
+import { getNumUpdates, updateNotificationToken } from '../apis/users'
 import { getLocations, getMoreLocations } from '../apis/locations'
 import { getNumCartItems } from '../apis/carts'
 
@@ -216,7 +216,7 @@ export default function main({ navigation }) {
 			})
 
 			if (userid != null) {
-				updateUserNotificationToken({ userid, token: data })
+				updateNotificationToken({ userid, token: data })
 					.then((res) => {
 						if (res.status == 200) {
 							return res.data
@@ -244,7 +244,7 @@ export default function main({ navigation }) {
 				})
 
 				if (userid != null) {
-					updateUserNotificationToken({ userid, token: data })
+					updateNotificationToken({ userid, token: data })
 						.then((res) => {
 							if (res.status == 200) {
 								return res.data
@@ -313,7 +313,7 @@ export default function main({ navigation }) {
 	}
 	const startAllInterval = () => {
 		getLocationPermission()
-		getNotificationPermission()
+		//getNotificationPermission()
 		updateNotifications = setInterval(() => getTheNumUpdates(), 2000)
 	}
 	const clearAllInterval = () => {
@@ -328,6 +328,11 @@ export default function main({ navigation }) {
 
 	useEffect(() => {
 		initialize()
+
+		Notifications.addNotificationResponseReceivedListener(res => {
+			const { data } = res.notification.request.content
+
+		});
 	}, [])
 	
 	return (

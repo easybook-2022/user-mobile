@@ -92,8 +92,6 @@ export default function menu(props) {
 					} else if (msg == "products") {
 						getAllProducts()
 					}
-
-					setLoaded(true)
 				}
 			})
 	}
@@ -124,6 +122,7 @@ export default function menu(props) {
 					setMenus(column)
 					setNummenus(data.length)
 					setShowmenus(true)
+					setLoaded(true)
 				}
 			})
 	}
@@ -141,6 +140,7 @@ export default function menu(props) {
 					setProducts(res.products)
 					setNumproducts(res.numproducts)
 					setShowproducts(true)
+					setLoaded(true)
 				}
 			})
 	}
@@ -158,6 +158,7 @@ export default function menu(props) {
 					setServices(res.services)
 					setNumservices(res.numservices)
 					setShowservices(true)
+					setLoaded(true)
 				}
 			})
 	}
@@ -175,7 +176,10 @@ export default function menu(props) {
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<TouchableOpacity style={style.back} onPress={() => {
-						func.initialize()
+						if (func.initialize()) {
+							func.initialize()
+						}
+
 						props.navigation.goBack()
 					}}>
 						<Text style={style.backHeader}>Back</Text>
