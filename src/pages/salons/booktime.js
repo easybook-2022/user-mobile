@@ -88,10 +88,15 @@ export default function booktime(props) {
 						setNumcartitems(res.numCartItems)
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		}
 	}
 	
-	const [confirmNewrequest, setConfirmnewrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "", action: false })
+	const [confirmRequest, setConfirmrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "", action: false })
 
 	const getTheServiceInfo = async() => {
 		getServiceInfo(serviceid)
@@ -106,6 +111,11 @@ export default function booktime(props) {
 
 					setName(name)
 					getTheLocationHours()
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -167,14 +177,12 @@ export default function booktime(props) {
 					while (currDateStr < (closeDateStr - pushtime)) {
 						currDateStr += pushtime
 
-						let timestr = new Date(currDateStr).toString().split(" ")[4]
-						let time = timestr.split(":")
-						let hour = parseInt(time[0])
-						let minute = time[1]
-						let period = hour > 11 ? "pm" : "am"
+						let timestr = new Date(currDateStr)
+						let hour = timestr.getHours()
+						let minute = timestr.getMinutes()
+						let period = hour < 12 ? "am" : "pm"
 
-						let currtime = parseInt(hour.toString() + "" + minute)
-						let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+						let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 						let timepassed = currenttime > currDateStr
 						let timetaken = scheduled.indexOf(currDateStr) > -1
 
@@ -191,6 +199,11 @@ export default function booktime(props) {
 					setScheduledtimes(scheduled)
 					setTimes(newTimes)
 					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -250,14 +263,12 @@ export default function booktime(props) {
 		while (currDateStr < (closeDateStr - pushtime)) {
 			currDateStr += pushtime
 
-			let timestr = new Date(currDateStr).toString().split(" ")[4]
-			let time = timestr.split(":")
-			let hour = parseInt(time[0])
-			let minute = time[1]
-			let period = hour > 11 ? "pm" : "am"
+			let timestr = new Date(currDateStr)
+			let hour = timestr.getHours()
+			let minute = timestr.getMinutes()
+			let period = hour < 12 ? "am" : "pm"
 
-			let currtime = parseInt(hour.toString() + "" + minute)
-			let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 			let timepassed = currenttime > currDateStr
 			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
 
@@ -283,14 +294,12 @@ export default function booktime(props) {
 		while (currDateStr < (closeDateStr - pushtime)) {
 			currDateStr += pushtime
 
-			let timestr = new Date(currDateStr).toString().split(" ")[4]
-			let time = timestr.split(":")
-			let hour = parseInt(time[0])
-			let minute = time[1]
-			let period = hour > 11 ? "pm" : "am"
+			let timestr = new Date(currDateStr)
+			let hour = timestr.getHours()
+			let minute = timestr.getMinutes()
+			let period = hour < 12 ? "am" : "pm"
 
-			let currtime = parseInt(hour.toString() + "" + minute)
-			let timedisplay = (hour > 12 ? hour - 12 : hour) + ":" + minute + " " + period
+			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 			let timepassed = currenttime > currDateStr
 			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
 
@@ -309,11 +318,7 @@ export default function booktime(props) {
 		setSelecteddateinfo({ ...selectedDateInfo, name, time })
 
 		if (selectedDateInfo.date) {
-			if (!scheduleid) {
-				setConfirmnewrequest({ ...confirmNewrequest, show: true, service: name, time })
-			} else {
-				setConfirmnewrequest({ ...confirmNewrequest, show: true, oldtime: oldTime, service: name, time, note: oldNote })
-			}
+			setConfirmrequest({ ...confirmRequest, show: true, service: name, time })
 		}
 	}
 	const requestAnAppointment = async() => {
@@ -321,7 +326,7 @@ export default function booktime(props) {
 
 		if (userid != null) {
 			const { month, date, year, time } = selectedDateInfo
-			const { note, oldtime } = confirmNewrequest
+			const { note, oldtime } = confirmRequest
 			const selecteddate = new Date(time)
 			const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
 			const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
@@ -332,39 +337,45 @@ export default function booktime(props) {
 					if (res.status == 200) {
 						if (!res.data.errormsg) {
 							return res.data
+						} else {
+							setConfirmrequest({ ...confirmRequest, show: true, errormsg: res.data.errormsg })
 						}
 					}
 				})
 				.then((res) => {
 					if (res) {
-						if (res.status == "new" || res.status == "updated") {
-							setConfirmnewrequest({ ...confirmNewrequest, show: true, requested: true })
+						if (res.status == "new" || res.status == "updated" || res.status == "requested") {
+							setConfirmrequest({ ...confirmRequest, requested: true })
+
+							if (func.initialize) {
+								func.initialize()
+							}
+							
+							props.navigation.goBack()
 						} else {
 							let { oldtime, note } = res
 
-							setConfirmnewrequest({ ...confirmNewrequest, show: true, oldtime, note })
+							setConfirmrequest({ ...confirmRequest, show: true, oldtime, note })
 						}
 					}
 				})
 				.catch((err) => {
 					if (err.response.status == 400) {
-						if (err.response.data.status) {
-							const status = err.response.data.status
+						const status = err.response.data.status
 
-							switch (status) {
-								case "cardrequired":
-									setConfirmnewrequest({ ...confirmNewrequest, show: false })
-									setShowpaymentrequired(true)
+						switch (status) {
+							case "cardrequired":
+								setConfirmrequest({ ...confirmRequest, show: false })
+								setShowpaymentrequired(true)
 
-									break;
-								default:
-									
-							}
+								break;
+							default:
+								
 						}
 					}
 				})
 		} else {
-			setConfirmnewrequest({ ...confirmNewrequest, show: false, action: true })
+			setConfirmrequest({ ...confirmRequest, show: false, action: true })
 			setShowauth(true)
 		}
 	}
@@ -505,42 +516,38 @@ export default function booktime(props) {
 					</View>
 				</View>
 
-				{confirmNewrequest.show && (
+				{confirmRequest.show && (
 					<Modal transparent={true}>
 						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
 							<View style={style.confirmBox}>
 								<View style={style.confirmContainer}>
-									{!confirmNewrequest.requested ? 
+									{!confirmRequest.requested ? 
 										<>
-											{confirmNewrequest.oldtime == 0 ? 
-												<>
-													<Text style={style.confirmHeader}>
-														<Text style={{ fontFamily: 'appFont' }}>Request an appointment for</Text>
-														{'\n' + confirmNewrequest.service + '\n'}
-														{displayTime(confirmNewrequest.time) + '\n'}
-													</Text>
-												</>
+											{confirmRequest.oldtime == 0 ? 
+												<Text style={style.confirmHeader}>
+													<Text style={{ fontFamily: 'appFont' }}>Request an appointment for</Text>
+													{'\n' + confirmRequest.service + '\n'}
+													{displayTime(confirmRequest.time) + '\n'}
+												</Text>
 												:
-												<>
-													<Text style={style.confirmHeader}>
-														<Text style={{ fontFamily: 'appFont' }}>You already requested an appointment for</Text>
-														{'\n' + confirmNewrequest.service + '\n'}
-														{displayTime(confirmNewrequest.oldtime) + '\n'}
-														<Text style={{ fontFamily: 'appFont' }}>Would you like to change it to</Text>
-														{'\n' + displayTime(confirmNewrequest.time) + '\n'}
-													</Text>
-												</>
+												<Text style={style.confirmHeader}>
+													<Text style={{ fontFamily: 'appFont' }}>You already requested an appointment for</Text>
+													{'\n' + confirmRequest.service + '\n'}
+													{displayTime(confirmRequest.oldtime) + '\n\n'}
+													<Text style={{ fontFamily: 'appFont' }}>Are you sure you want to change it to</Text>
+													{'\n' + displayTime(confirmRequest.time) + '\n'}
+												</Text>
 											}
 
 											<View style={style.note}>
-												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirmnewrequest({...confirmNewrequest, note })} autoCorrect={false}/>
+												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirmrequest({...confirmRequest, note })} autoCorrect={false}/>
 											</View>
 
-											{confirmNewrequest.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
+											{confirmRequest.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
 
 											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 												<View style={style.confirmOptions}>
-													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmnewrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "", action: false })}>
+													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "", action: false })}>
 														<Text style={style.confirmOptionHeader}>No</Text>
 													</TouchableOpacity>
 													<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
@@ -553,11 +560,11 @@ export default function booktime(props) {
 										<>
 											<View style={style.requestedHeaders}>
 												<Text style={style.requestedHeader}>Appointment requested for{'\n'}</Text>
-												<Text style={style.requestedHeaderInfo}>{confirmNewrequest.service} {'\n'}</Text>
-												<Text style={style.requestedHeaderInfo}>{displayTime(confirmNewrequest.time)} {'\n'}</Text>
+												<Text style={style.requestedHeaderInfo}>{confirmRequest.service} {'\n'}</Text>
+												<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)} {'\n'}</Text>
 												<Text style={style.requestedHeaderInfo}>You will get notify by the salon in your notification very soon</Text>
 												<TouchableOpacity style={style.requestedClose} onPress={() => {
-													setConfirmnewrequest({ ...confirmNewrequest, show: false, requested: false })
+													setConfirmrequest({ ...confirmRequest, show: false, requested: false })
 													
 													if (func.initialize) {
 														func.initialize()
@@ -615,7 +622,7 @@ export default function booktime(props) {
 							} else {
 								setUserid(id)
 
-								if (confirmNewrequest.action) requestAnAppointment()
+								if (confirmRequest.action) requestAnAppointment()
 							}
 
 							setShowauth(false)

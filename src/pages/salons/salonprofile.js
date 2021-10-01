@@ -67,6 +67,11 @@ export default function salonprofile(props) {
 						setNumcartitems(res.numCartItems)
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		}
 	}
 	const getTheLocationProfile = async() => {
@@ -103,6 +108,11 @@ export default function salonprofile(props) {
 					setLoaded(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getAllMenus = async() => {
 		const data = { locationid, parentmenuid: "" }
@@ -134,6 +144,11 @@ export default function salonprofile(props) {
 					setShowmenus(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getAllProducts = async() => {
 		const data = { locationid, menuid: "" }
@@ -151,6 +166,11 @@ export default function salonprofile(props) {
 					setShowproducts(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getAllServices = async() => {
 		const data = { locationid, menuid: "" }
@@ -166,6 +186,11 @@ export default function salonprofile(props) {
 					setServices(res.services)
 					setNumservices(res.numservices)
 					setShowservices(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}

@@ -22,7 +22,6 @@ import Menu from './src/components/menu'
 import Salonprofile from './src/pages/salons/salonprofile'
 import Booktime from './src/pages/salons/booktime'
 
-
 // logged in pages
 import Account from './src/pages/account'
 import Recent from './src/pages/recent'

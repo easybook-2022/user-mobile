@@ -64,6 +64,11 @@ export default function restaurantprofile(props) {
 						setNumcartitems(res.numCartItems)
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		}
 	}
 	const getTheLocationProfile = async() => {
@@ -96,6 +101,11 @@ export default function restaurantprofile(props) {
 					}
 
 					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -137,6 +147,11 @@ export default function restaurantprofile(props) {
 					setShowmenus(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getAllProducts = async() => {
 		const data = { locationid, menuid: "" }
@@ -152,6 +167,11 @@ export default function restaurantprofile(props) {
 					setProducts(res.products)
 					setNumproducts(res.numproducts)
 					setShowproducts(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -170,8 +190,14 @@ export default function restaurantprofile(props) {
 				<View style={style.box}>
 					<View style={style.profileInfo}>
 						<TouchableOpacity style={style.back} onPress={() => {
-							refetch()
-							func.initialize()
+							if (refetch) {
+								refetch()
+							}
+
+							if (func.initialize) {
+								func.initialize()
+							}
+
 							props.navigation.goBack()
 						}}>
 							<Text style={style.backHeader}>Back</Text>

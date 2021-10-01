@@ -69,6 +69,11 @@ export default function account(props) {
 					setProfile({ uri: '', name: '', old: profile })
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	const openPaymentMethodForm = () => {
@@ -135,6 +140,11 @@ export default function account(props) {
 					getThePaymentMethods()
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	const usePaymentMethod = async(cardid) => {
@@ -160,6 +170,11 @@ export default function account(props) {
 					})
 
 					setPaymentMethods(newPaymentmethods)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -188,6 +203,11 @@ export default function account(props) {
 						expYear: exp_year.toString(),
 						cvc: cardInfo.cvc
 					})
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -247,6 +267,11 @@ export default function account(props) {
 					getThePaymentMethods()
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const deletePaymentMethod = async(cardid, index) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -265,6 +290,11 @@ export default function account(props) {
 					newPaymentmethods.splice(index, 1)
 
 					setPaymentMethods(newPaymentmethods)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -319,6 +349,11 @@ export default function account(props) {
 					setLoaded(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const updateAccount = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -347,6 +382,11 @@ export default function account(props) {
 								routes: [{ name: "main" }]
 							})
 						)
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
 					}
 				})
 		} else {
@@ -465,7 +505,7 @@ export default function account(props) {
 								<View style={style.cameraContainer}>
 									<Text style={style.inputHeader}>Profile Picture</Text>
 
-									{profile.uri ? (
+									{profile.uri ? 
 										<>
 											<Image style={style.camera} source={{ uri: profile.uri }}/>
 
@@ -473,7 +513,7 @@ export default function account(props) {
 												<AntDesign name="closecircleo" size={30}/>
 											</TouchableOpacity>
 										</>
-									) : (
+										:
 										profile.old ? 
 											<>
 												<Image style={style.camera} source={{ uri: logo_url + profile.old }}/>
@@ -490,7 +530,7 @@ export default function account(props) {
 													<Entypo name="camera" size={30}/>
 												</TouchableOpacity>
 											</>
-									)}	
+									}	
 								</View>
 
 								{loading ? <ActivityIndicator size="small"/> : null}

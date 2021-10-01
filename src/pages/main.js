@@ -76,6 +76,11 @@ export default function main({ navigation }) {
 						setNumcartitems(res.numCartItems)
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+
+					}
+				})
 		}
 	}
 	
@@ -97,16 +102,14 @@ export default function main({ navigation }) {
 			})
 			.catch((err) => {
 				if (err.response.status == 400) {
-					if (err.response.data.status) {
-						const status = err.response.data.status
+					const status = err.response.data.status
 
-						switch (status) {
-							case "unknowncoords":
-								getLocationPermission()
+					switch (status) {
+						case "unknowncoords":
+							getLocationPermission()
 
-								break;
-							default:
-						}
+							break;
+						default:
 					}
 				}
 			})
@@ -137,6 +140,11 @@ export default function main({ navigation }) {
 						newLocations[lindex] = location
 						setLocations(newLocations)
 					}
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}

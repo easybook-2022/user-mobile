@@ -46,7 +46,11 @@ export default function userauth(props) {
 					props.done(id, msg)
 				}
 			})
-			.catch((error) => console.log(error))
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const verify = () => {
 		const { info } = authInfo
@@ -74,6 +78,11 @@ export default function userauth(props) {
 					console.log(verifycode)
 
 					setAuthinfo({ ...authInfo, type: 'verifyuser', loading: false, verifycode })
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -110,6 +119,11 @@ export default function userauth(props) {
 					props.navigate("setup")
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getTheCode = () => {
 		const cellnumber = authInfo.info.cellnumber ? authInfo.info.cellnumber : ""
@@ -135,7 +149,11 @@ export default function userauth(props) {
 					setAuthinfo({ ...authInfo, info: { resetcode: code }, verifycode: code, codesent: true })
 				}
 			})
-			.catch((error) => console.log(error))
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const done = () => {
 		const { info, verifycode } = authInfo
@@ -187,7 +205,11 @@ export default function userauth(props) {
 					}
 				}
 			})
-			.catch((error) => console.log(error))
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	return (

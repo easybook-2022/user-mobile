@@ -42,3 +42,7 @@ export const getLocationHours = data => {
 		data
 	)
 }
+
+export const getWorkers = id => {
+	return axios.get(`${url}/locations/get_workers/${id}`)
+}

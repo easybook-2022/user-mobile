@@ -24,7 +24,10 @@ export const setupUser = data => {
 
 	form.append("userid", data.userid)
 	form.append("username", data.username)
-	form.append("profile", { uri: data.profile.uri, name: data.profile.name })
+
+	if (data.profile.uri) {
+		form.append("profile", { uri: data.profile.uri, name: data.profile.name })
+	}
 
 	return axios.post(
 		`${url}/users/setup`,

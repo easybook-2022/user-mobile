@@ -163,6 +163,11 @@ export default function cart(props) {
 					setLoaded(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const editTheCartItem = async(cartid) => {
 		editCartItem(cartid)
@@ -183,6 +188,11 @@ export default function cart(props) {
 						quantity, note, options, others, sizes,
 						price, cost
 					})
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -221,6 +231,11 @@ export default function cart(props) {
 					getTheCartItems()
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	const getFriendsList = async(username) => {
@@ -237,6 +252,11 @@ export default function cart(props) {
 				if (res) {
 					setFriends(res.searchedFriends)
 					setNumfriends(res.numSearchedFriends)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -325,6 +345,11 @@ export default function cart(props) {
 					}
 
 					setSelectedFriends(newSelectedFriends)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -428,6 +453,11 @@ export default function cart(props) {
 					setIteminfo({ ...itemInfo, cartid })
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const updateTheCallfor = async() => {
 		let { cartid } = itemInfo
@@ -460,6 +490,11 @@ export default function cart(props) {
 					if (res) {
 						getTheCartItems()
 						setOpenfriendscart(false)
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
 					}
 				})
 		}
@@ -495,6 +530,11 @@ export default function cart(props) {
 					setActivecheckout(false)
 					setShowconfirm(true)
 					setLoading(false)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}

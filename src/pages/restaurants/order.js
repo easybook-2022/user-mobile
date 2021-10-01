@@ -23,6 +23,7 @@ export default function order(props) {
 	const [timeStr, setTimestr] = useState('')
 	const [name, setName] = useState('')
 	const [totalDiners, setTotaldiners] = useState(0)
+	const [seated, setSeated] = useState(false)
 	const [menuTrack, setMenutrack] = useState([""])
 	const [menuId, setMenuid] = useState('')
 	const [menuName, setMenuname] = useState('')
@@ -90,13 +91,12 @@ export default function order(props) {
 
 					setName(scheduleInfo.name)
 					setTotaldiners(scheduleInfo.numdiners)
+					setSeated(scheduleInfo.seated)
 
-					let date = new Date(unix).toString().split(" ")
-					let time = date[4].split(":")
-
-					let hour = time[0]
-					let minute = time[1]
-					let period = hour > 12 ? "PM" : "AM"
+					let date = new Date(unix)
+					let hour = date.getHours()
+					let minute = date.getMinutes()
+					let period = hour > 12 ? "pm" : "am"
 
 					hour = hour > 12 ? hour - 12 : hour
 					hour = parseInt(hour)
@@ -104,6 +104,11 @@ export default function order(props) {
 					setUserid(userId)
 					setTimestr(hour + ":" + minute + " " + period)
 					getTheLocationProfile()
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -135,7 +140,9 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-
+				if (err.response.status == 400) {
+					
+				}
 			})
 	}
 	const getTheInfo = async(menuid) => {
@@ -166,6 +173,11 @@ export default function order(props) {
 					}
 
 					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -221,7 +233,9 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-
+				if (err.response.status == 400) {
+					
+				}
 			})
 	}
 	const getAllProducts = async(menuid) => {
@@ -239,6 +253,11 @@ export default function order(props) {
 					setNumproducts(res.numproducts)
 					setShowproducts(true)
 					setViewtype('products')
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -259,6 +278,11 @@ export default function order(props) {
 					})
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	
 	const seeTheDiningOrders = async() => {
@@ -272,6 +296,12 @@ export default function order(props) {
 				if (res) {
 					setRounds(res.rounds)
 					setOpenrounds(true)
+					setSeated(res.dinersseated)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -291,13 +321,11 @@ export default function order(props) {
 			})
 			.catch((err) => {
 				if (err.response.status == 400) {
-					if (err.response.data.status) {
-						const status = err.response.data.status
+					const status = err.response.data.status
 
-						switch (status) {
-							case "unconfirmedorders":
-								setShowunconfirmedorders(true)
-						}
+					switch (status) {
+						case "unconfirmedorders":
+							setShowunconfirmedorders(true)
 					}
 				}
 			})
@@ -325,6 +353,11 @@ export default function order(props) {
 						price, cost
 					})
 					setOpenrounds(false)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -370,6 +403,11 @@ export default function order(props) {
 						seeTheDiningOrders()
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		}
 	}
 	const updateTheOrder = async() => {
@@ -405,6 +443,11 @@ export default function order(props) {
 				if (res) {
 					setIteminfo({ ...itemInfo, show: false })
 					seeTheDiningOrders()
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -555,6 +598,11 @@ export default function order(props) {
 						seeTheDiningOrders()
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		}
 	}
 	const addToDinersOrder = async() => {
@@ -620,6 +668,11 @@ export default function order(props) {
 					setOpeneditdiners(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getFriendsList = async(username) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -635,6 +688,11 @@ export default function order(props) {
 				if (res) {
 					setSearchedfriends(res.searchedFriends)
 					setNumsearchedfriends(res.numSearchedFriends)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -763,13 +821,11 @@ export default function order(props) {
 			})
 			.catch((err) => {
 				if (err.response.status == 400) {
-					if (err.response.data.status) {
-						const status = err.response.data.status
+					const status = err.response.data.status
 
-						switch (status) {
-							case "activediner":
-								setShowunconfirmedorders(true)
-						}
+					switch (status) {
+						case "activediner":
+							setShowunconfirmedorders(true)
 					}
 				}
 			})
@@ -806,6 +862,11 @@ export default function order(props) {
 					closeEditTheDiners()
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	const editTheOrderCallfor = async(orderid) => {
@@ -827,6 +888,11 @@ export default function order(props) {
 					setOpenrounds(false)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const confirmTheDiningOrder = (orderid, ordererid) => {
 		const data = { orderid, ordererid }
@@ -839,6 +905,11 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) seeTheDiningOrders()
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
 			})
 	}
 	const updateTheOrderCallfor = async() => {
@@ -874,6 +945,11 @@ export default function order(props) {
 					setIteminfo({ ...itemInfo, orderid: "" })
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getDinersList = async(username) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -889,6 +965,11 @@ export default function order(props) {
 				if (res) {
 					setDiners(res.searchedDiners)
 					setNumdiners(res.numSearchedDiners)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -914,71 +995,81 @@ export default function order(props) {
 				if (res) {
 					const { selectable } = res
 
-					if (selectable) {
-						newDiners.forEach(function (info) {
-							info.row.forEach(function (diner) {
-								if (diner.id == userid) {
-									selected.id = userid
-									selected.profile = diner.profile
-									selected.username = diner.username
-								}
-							})
+					newDiners.forEach(function (info) {
+						info.row.forEach(function (diner) {
+							if (diner.id == userid) {
+								selected.id = userid
+								selected.profile = diner.profile
+								selected.username = diner.username
+							}
 						})
+					})
 
-						if (newSelectedcallfor.length > 0) {
-							last_row = newSelectedcallfor[newSelectedcallfor.length - 1].row
+					if (newSelectedcallfor.length > 0) {
+						last_row = newSelectedcallfor[newSelectedcallfor.length - 1].row
 
-							for (k in last_row) {
-								if (last_row[k].id) {
-									next_key = parseInt(last_row[k].key.split("-").pop()) + 1
-								} else {
-									unfill = true
-									selected.key = "selected-callfor-" + next_key
-									last_row[k] = selected
-									next_key += 1
-
-									break
-								}
-							}
-
-							if (unfill) {
-								newSelectedcallfor[newSelectedcallfor.length - 1].row = last_row
-								setNumselectedcallfor(numSelectedcallfor + 1)
+						for (k in last_row) {
+							if (last_row[k].id) {
+								next_key = parseInt(last_row[k].key.split("-").pop()) + 1
 							} else {
+								unfill = true
 								selected.key = "selected-callfor-" + next_key
-								newSelectedcallfor.push({
-									key: "selected-callfor-row-" + (newSelectedcallfor.length),
-									row: [
-										selected,
-										{ key: "selected-callfor-" + (next_key + 1) },
-										{ key: "selected-callfor-" + (next_key + 2) },
-										{ key: "selected-callfor-" + (next_key + 3) }
-									]
-								})
-							}
+								last_row[k] = selected
+								next_key += 1
 
+								break
+							}
+						}
+
+						if (unfill) {
+							newSelectedcallfor[newSelectedcallfor.length - 1].row = last_row
 							setNumselectedcallfor(numSelectedcallfor + 1)
 						} else {
-							selected.key = "selected-callfor-0"
-							newSelectedcallfor = [{
-								key: "selected-callfor-row-0",
+							selected.key = "selected-callfor-" + next_key
+							newSelectedcallfor.push({
+								key: "selected-callfor-row-" + (newSelectedcallfor.length),
 								row: [
 									selected,
-									{ key: "selected-callfor-1" },
-									{ key: "selected-callfor-2" },
-									{ key: "selected-callfor-3" }
+									{ key: "selected-callfor-" + (next_key + 1) },
+									{ key: "selected-callfor-" + (next_key + 2) },
+									{ key: "selected-callfor-" + (next_key + 3) }
 								]
-							}]
-							setNumselectedcallfor(1)
+							})
 						}
 
-						setSelectedcallfor(newSelectedcallfor)
+						setNumselectedcallfor(numSelectedcallfor + 1)
 					} else {
-						if (res.msg == "paymentrequired") {
-							setShowpaymentrequired({ show: true, username: res.username })
-						} else {
-							setShowunconfirmeddiner({ show: true, username: res.username })
-						}
+						selected.key = "selected-callfor-0"
+						newSelectedcallfor = [{
+							key: "selected-callfor-row-0",
+							row: [
+								selected,
+								{ key: "selected-callfor-1" },
+								{ key: "selected-callfor-2" },
+								{ key: "selected-callfor-3" }
+							]
+						}]
+						setNumselectedcallfor(1)
+					}
+
+					setSelectedcallfor(newSelectedcallfor)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					const { status, info } = err.response.data
+					const { username } = info
+
+					switch (status) {
+						case "paymentrequired":
+							setShowpaymentrequired({ show: true, username })
+
+							break
+						case "unconfirmeddiner":
+							setShowunconfirmeddiner({ show: true, username })
+
+							break
+						default:
 					}
 				}
 			})
@@ -1292,12 +1383,21 @@ export default function order(props) {
 										<View style={style.round} key={round.key}>
 											{round.status == "ordering" ? 
 												<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-													<View style={{ alignItems: 'center', flexDirection: 'row' }}>
-														<Text>Ready ?</Text>
-														<TouchableOpacity style={style.roundTouch} onPress={() => sendTheOrders()}>
-															<Text>Send to Kitchen</Text>
-														</TouchableOpacity>
-													</View>
+													{seated ? 
+														<View style={{ alignItems: 'center', flexDirection: 'row' }}>
+															<Text>Ready ?</Text>
+															<TouchableOpacity style={style.roundTouch} onPress={() => sendTheOrders()}>
+																<Text>Send to Kitchen</Text>
+															</TouchableOpacity>
+														</View>
+														:
+														<View style={{ alignItems: 'center' }}>
+															<Text style={{ marginVertical: 5 }}>You need to be seated first to submit your order(s)</Text>
+															<TouchableOpacity style={style.roundTouchDisabled} disabled={true} onPress={() => {}}>
+																<Text>Send to Kitchen</Text>
+															</TouchableOpacity>
+														</View>
+													}
 												</View>
 												:
 												<Text style={style.roundHeader}>This round {round.status == 'making' ? 'is already sent' : 'has been served'}</Text>
@@ -1883,6 +1983,7 @@ const style = StyleSheet.create({
 	closeRounds: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: 28, justifyContent: 'space-around', marginVertical: 10, padding: 2 },
 	roundList: { height: screenHeight - 75 },
 	roundTouch: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5, width: 120 },
+	roundTouchDisabled: { alignItems: 'center', backgroundColor: 'grey', borderColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5, width: 120 },
 	roundTouchHeader: {  },
 	round: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
 	roundHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },

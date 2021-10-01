@@ -37,8 +37,11 @@ export const cancelService = id => {
 	return axios.get(`${url}/schedules/cancel_service/${id}`)
 }
 
-export const sendServicePayment = id => {
-	return axios.get(`${url}/schedules/send_service_payment/${id}`)
+export const sendServicePayment = data => {
+	return axios.post(
+		`${url}/schedules/send_service_payment`,
+		data
+	)
 }
 
 export const sendDiningPayment = data => {

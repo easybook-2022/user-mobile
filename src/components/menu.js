@@ -66,6 +66,11 @@ export default function menu(props) {
 						setNumcartitems(res.numCartItems)
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		}
 	}
 	
@@ -92,6 +97,11 @@ export default function menu(props) {
 					} else if (msg == "products") {
 						getAllProducts()
 					}
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -125,6 +135,11 @@ export default function menu(props) {
 					setLoaded(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getAllProducts = async() => {
 		const data = { locationid, menuid }
@@ -141,6 +156,11 @@ export default function menu(props) {
 					setNumproducts(res.numproducts)
 					setShowproducts(true)
 					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -161,6 +181,11 @@ export default function menu(props) {
 					setLoaded(true)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const initialize = () => {
 		getTheNumCartItems()
@@ -176,7 +201,7 @@ export default function menu(props) {
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<TouchableOpacity style={style.back} onPress={() => {
-						if (func.initialize()) {
+						if (func.initialize) {
 							func.initialize()
 						}
 

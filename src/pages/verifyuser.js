@@ -43,6 +43,11 @@ export default function verifyuser(props) {
 					setLoading(false)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	return (

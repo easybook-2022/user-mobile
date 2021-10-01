@@ -57,6 +57,11 @@ export default function setup({ navigation }) {
 						)
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		} else {
 			if (!username) {
 				setErrormsg("Please enter a username you like")
@@ -212,7 +217,7 @@ const style = StyleSheet.create({
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
-	errorMsg: { color: 'red', fontWeight: 'bold', textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 10 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },

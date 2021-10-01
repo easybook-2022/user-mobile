@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Constants from 'expo-constants';
 import { logo_url, displayTime } from '../../assets/info'
 import { getNotifications } from '../apis/users'
+import { getWorkers } from '../apis/locations'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
 import { acceptReservation, closeRequest, cancelReservationJoining, acceptReservationJoining, cancelService, sendServicePayment, sendDiningPayment, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
 
@@ -11,6 +12,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+const workerImage = 80
 
 export default function notifications(props) {
 	const [items, setItems] = useState([])
@@ -18,6 +20,7 @@ export default function notifications(props) {
 	const [confirm, setConfirm] = useState({ show: false, type: "", index: 0, name: "", price: "", quality: "" })
 	const [cancelServiceRequest, setCancelservicerequest] = useState({ show: false, id: -1, location: "", service: "", time: 0, index: -1 })
 	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
+	const [showOwners, setShowowners] = useState({ show: false, scheduleid: 0, index: -1, owners: [], workerid: 0 })
 
 	const cancelTheCartOrder = async(cartid, index) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -38,6 +41,11 @@ export default function notifications(props) {
 					setItems(newItems)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+
+				}
+			})
 	}
 	const cancelTheDiningOrder = async(orderid, index) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -56,6 +64,11 @@ export default function notifications(props) {
 					newItems.splice(index, 1)
 
 					setItems(newItems)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+
 				}
 			})
 	}
@@ -105,6 +118,11 @@ export default function notifications(props) {
 					setItems(newItems)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+
+				}
+			})
 	}
 	const acceptTheReservation = (index) => {
 		const newItems = [...items]
@@ -126,6 +144,11 @@ export default function notifications(props) {
 					newItems[index].confirm = true
 
 					setItems(newItems)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+
 				}
 			})
 	}
@@ -167,16 +190,14 @@ export default function notifications(props) {
 			})
 			.catch((err) => {
 				if (err.response.status == 400) {
-					if (err.response.data.status) {
-						const status = err.response.data.status
+					const status = err.response.data.status
 
-						switch (status) {
-							case "cardrequired":
-								setShowpaymentrequired(true)
+					switch (status) {
+						case "cardrequired":
+							setShowpaymentrequired(true)
 
-								break;
-							default:
-						}
+							break;
+						default:
 					}
 				}
 			})
@@ -206,24 +227,76 @@ export default function notifications(props) {
 						setCancelservicerequest({ show: false, location: "", service: "", time: 0, index: -1 })
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+
+					}
+				})
 		}
 	}
 	const sendTheServicePayment = (scheduleid, index) => {
-		sendServicePayment(scheduleid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
+		if (!showOwners.show) {
+			getWorkers(scheduleid)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						const { owners } = res
+
+						setShowowners({ ...showOwners, show: true, scheduleid, index, owners })
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+
+					}
+				})
+		} else {
+			const { scheduleid, index, owners, workerid } = showOwners
+			const data = { scheduleid, workerid }
+
+			sendServicePayment(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						const newItems = [...items]
+
+						newItems[index].paymentSent = true
+
+						setItems(newItems)
+						setShowowners({ show: false, scheduleid: 0, index: -1, owners: [], workerid: 0 })
+					}
+				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+
+					}
+				})
+		}
+	}
+	const selectWorker = id => {
+		const { owners } = showOwners
+		let workerid
+
+		owners.forEach(function (info) {
+			info.row.forEach(function (worker) {
+				worker.selected = false
+
+				if (worker.id == id) {
+					worker.selected = true
+					workerid = worker.id
 				}
 			})
-			.then((res) => {
-				if (res) {
-					const newItems = [...items]
+		})
 
-					newItems[index].paymentSent = true
-
-					setItems(newItems)
-				}
-			})
+		setShowowners({ ...showOwners, owners, workerid })
 	}
 	const sendTheDiningPayment = async(scheduleid, index) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -244,6 +317,11 @@ export default function notifications(props) {
 					setItems(newItems)
 				}
 			})
+			.catch((err) => {
+				if (res.response.status == 400) {
+
+				}
+			})
 	}
 
 	const getTheNotifications = async() => {
@@ -259,6 +337,11 @@ export default function notifications(props) {
 				if (res) {
 					setItems(res.notifications)
 					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+
 				}
 			})
 	}
@@ -480,16 +563,43 @@ export default function notifications(props) {
 																	item.confirm ? 
 																		<View style={{ alignItems: 'center' }}>
 																			<View style={style.itemServiceOrder}>
-																				<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
-																					props.close()
-																					props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
-																				}}>
-																					<Text style={style.itemServiceOrderTouchHeader}>Start Ordering your meal(s)</Text>
-																				</TouchableOpacity>
-																				<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => sendTheDiningPayment(item.id, index)}>
-																					<Text style={style.itemServiceOrderTouchHeader}>Send payment{item.paymentSent ? " again" : ""}</Text>
-																				</TouchableOpacity>
+																				{item.seated && (
+																					<>
+																						<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
+																							props.close()
+																							props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
+																						}}>
+																							<Text style={style.itemServiceOrderTouchHeader}>Start Ordering your meal(s)</Text>
+																						</TouchableOpacity>
+																						<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => sendTheDiningPayment(item.id, index)}>
+																							<Text style={style.itemServiceOrderTouchHeader}>Send payment{item.paymentSent ? " again" : ""}</Text>
+																						</TouchableOpacity>
+																					</>
+																				)}
 																			</View>
+
+																			{!item.seated && (
+																				<>
+																					<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
+																						props.close()
+																						props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
+																					}}>
+																						<Text style={style.itemServiceOrderTouchHeader}>See the menu</Text>
+																					</TouchableOpacity>
+																					<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
+																						props.close()
+																						props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
+																					}}>
+																						<Text style={style.itemServiceOrderTouchHeader}>Reschedule</Text>
+																					</TouchableOpacity>
+																					<View style={style.itemServiceOrderTouchDisabled} onPress={() => {}}>
+																						<Text style={style.itemServiceOrderTouchHeader}>
+																							Awaits seating{'\n'}
+																							<Text>........</Text>
+																						</Text>
+																					</View>
+																				</>
+																			)}
 																		</View>
 																		:
 																		item.booker ? 
@@ -525,7 +635,7 @@ export default function notifications(props) {
 																			</TouchableOpacity>
 																			<TouchableOpacity style={style.action} onPress={() => {
 																				props.close()
-																				props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid })
+																				props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id })
 																			}}>
 																				<Text style={style.actionHeader}>Reschedule</Text>
 																			</TouchableOpacity>
@@ -682,6 +792,46 @@ export default function notifications(props) {
 						</View>
 					</Modal>
 				)}
+				{showOwners.show && (
+					<Modal transparent={true}>
+						<View style={{ paddingVertical: offsetPadding }}>
+							<View style={style.payworkerBox}>
+								<View style={style.payworkerContainer}>
+									<TextInput style={style.payworkerSearchInput} placeholder="Search worker" placeholderTextColor="rgba(0, 0, 0, 0.5)"/>
+
+									<Text style={style.payworkerWorkersListHeader}>Select worker to send payment</Text>
+
+									<View style={style.payworkerWorkersList}>
+										<FlatList
+											data={showOwners.owners}
+											renderItem={({ item, index }) => 
+												<View key={item.key} style={style.payworkerWorkersRow}>
+													{item.row.map(info => (
+														<TouchableOpacity key={info.key} style={!info.selected ? style.payworkerWorker : style.payworkerWorkerDisabled} onPress={() => selectWorker(info.id)}>
+															<View style={style.payworkerWorkerProfile}>
+																<Image source={{ uri: logo_url + info.profile }} style={{ height: workerImage, width: workerImage }}/>
+															</View>
+															<Text style={style.payworkerWorkerHeader}>{info.username}</Text>
+														</TouchableOpacity>
+													))}
+												</View>
+											}
+										/>
+									</View>
+
+									<View style={style.payworkerActions}>
+										<TouchableOpacity style={style.payworkerAction} onPress={() => setShowowners({ show: false, owners: [] })}>
+											<Text style={style.payworkerActionHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={showOwners.workerid > 0 ? style.payworkerAction : style.payworkerActionDisabled} disabled={showOwners.workerid == 0} onPress={() => sendTheServicePayment()}>
+											<Text style={style.payworkerActionHeader}>Send</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
 			</View>
 		</View>
 	);
@@ -706,6 +856,7 @@ const style = StyleSheet.create({
 	itemServiceResponseTouchHeader: { fontWeight: 'bold', textAlign: 'center' },
 	itemServiceOrder: { flexDirection: 'row', justifyContent: 'space-between', width: 250 },
 	itemServiceOrderTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 2, padding: 5, width: 120 },
+	itemServiceOrderTouchDisabled: { backgroundColor: 'grey', borderColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 2, padding: 5, width: 120 },
 	itemServiceOrderTouchHeader: { fontSize: 13, textAlign: 'center' },
 	storeRequested: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 3, padding: 5 },
 	itemServiceNewTimeHeader: {  },
@@ -740,5 +891,20 @@ const style = StyleSheet.create({
 	cardRequiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	cardRequiredActionHeader: { }
+	cardRequiredActionHeader: { },
+
+	payworkerBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	payworkerContainer: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
+	payworkerSearchInput: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 40, width: '90%' },
+	payworkerWorkersList: { height: '70%' },
+	payworkerWorkersListHeader: { fontWeight: 'bold', textAlign: 'center' },
+	payworkerWorkersRow: { flexDirection: 'row', justifyContent: 'space-between' },
+	payworkerWorker: { alignItems: 'center', marginHorizontal: 5, padding: 5 },
+	payworkerWorkerDisabled: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: 5, marginHorizontal: 5, padding: 5 },
+	payworkerWorkerProfile: { borderRadius: workerImage / 2, height: workerImage, overflow: 'hidden', width: workerImage },
+	payworkerWorkerHeader: {  },
+	payworkerActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	payworkerAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	payworkerActionDisabled: { alignItems: 'center', backgroundColor: 'grey', borderColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	payworkerActionHeader: { },
 })

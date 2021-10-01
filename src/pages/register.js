@@ -45,6 +45,11 @@ export default function register(props) {
 					props.navigation.navigate("setup")
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 
 	return (

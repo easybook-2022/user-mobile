@@ -69,6 +69,11 @@ export default function itemProfile(props) {
 						setNumcartitems(res.numCartItems)
 					}
 				})
+				.catch((err) => {
+					if (err.response.status == 400) {
+						
+					}
+				})
 		}
 	}
 	const changeAmount = (index, action) => {
@@ -215,16 +220,14 @@ export default function itemProfile(props) {
 					})
 					.catch((err) => {
 						if (err.response.status == 400) {
-							if (err.response.data.status) {
-								const status = err.response.data.status
+							const status = err.response.data.status
 
-								switch (status) {
-									case "cardrequired":
-										setShowpaymentrequired(true)
+							switch (status) {
+								case "cardrequired":
+									setShowpaymentrequired(true)
 
-										break;
-									default:
-								}
+									break;
+								default:
 							}
 						}
 					})
@@ -262,6 +265,11 @@ export default function itemProfile(props) {
 					setCost(quantity * price)
 				}
 			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
+				}
+			})
 	}
 	const getFriendsList = async(username) => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -277,6 +285,11 @@ export default function itemProfile(props) {
 				if (res) {
 					setFriends(res.searchedFriends)
 					setNumfriends(res.numSearchedFriends)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
@@ -365,6 +378,11 @@ export default function itemProfile(props) {
 					}
 
 					setSelectedFriends(newSelectedFriends)
+				}
+			})
+			.catch((err) => {
+				if (err.response.status == 400) {
+					
 				}
 			})
 	}
