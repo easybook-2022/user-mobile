@@ -1,8 +1,13 @@
-import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react'
+import { 
+	ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, 
+	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { displayTime } from '../../../assets/info'
+import { socket, url, displayTime } from '../../../assets/info'
+import { getTrialInfo } from '../../apis/users'
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours } from '../../apis/locations'
 import { requestAppointment } from '../../apis/schedules'
@@ -17,16 +22,18 @@ import Entypo from 'react-native-vector-icons/Entypo'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
-const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const pushtime = 1000 * (60 * 10)
 
 export default function booktime(props) {
+	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
+	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+	const pushtime = 1000 * (60 * 10)
+
 	const { locationid, serviceid } = props.route.params
 	const func = props.route.params
 	const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
 	const [name, setName] = useState('')
+	const [trialStatus, setTrialstatus] = useState('')
 	const [scheduledTimes, setScheduledtimes] = useState([])
 	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
 	const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
@@ -65,18 +72,21 @@ export default function booktime(props) {
 	]})
 	const [times, setTimes] = useState([])
 	const [loaded, setLoaded] = useState(false)
-	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
+	const [showPaymentrequired, setShowpaymentrequired] = useState(false)
+	const [showTrialover, setShowtrialover] = useState(false)
 	const [showAuth, setShowauth] = useState(false)
 	const [userId, setUserid] = useState(null)
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
+	const [confirmRequest, setConfirmrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })
+
+	const isMounted = useRef(null)
+
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		setUserid(userid)
-
-		if (userid != null) {
+		if (userid) {
 			getNumCartItems(userid)
 				.then((res) => {
 					if (res.status == 200) {
@@ -84,19 +94,18 @@ export default function booktime(props) {
 					}
 				})
 				.then((res) => {
-					if (res) {
+					if (res && isMounted.current == true) {
+						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
 		}
 	}
-	
-	const [confirmRequest, setConfirmrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "", action: false })
 
 	const getTheServiceInfo = async() => {
 		getServiceInfo(serviceid)
@@ -114,8 +123,38 @@ export default function booktime(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
+				}
+			})
+	}
+	const getTheTrialInfo = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+		const time = Date.now()
+		const data = { userid, time }
+
+		getTrialInfo(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const { msg } = res
+
+					if (msg == "trialover") {
+
+					} else {
+
+					}
+
+					setTrialstatus()
+				}
+			})
+			.catch((err) => {
+				if (err.response && err.response.status == 400) {
+
 				}
 			})
 	}
@@ -135,9 +174,6 @@ export default function booktime(props) {
 
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
-
-					openHour = openPeriod == "PM" ? parseInt(openHour) + 12 : openHour
-					closeHour = closePeriod == "PM" ? parseInt(closeHour) + 12 : closeHour
 
 					const currTime = new Date(Date.now())
 					const currDay = days[currTime.getDay()]
@@ -202,7 +238,7 @@ export default function booktime(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -322,36 +358,30 @@ export default function booktime(props) {
 		}
 	}
 	const requestAnAppointment = async() => {
-		const userid = await AsyncStorage.getItem("userid")
-
-		if (userid != null) {
+		if (userId) {
 			const { month, date, year, time } = selectedDateInfo
 			const { note, oldtime } = confirmRequest
 			const selecteddate = new Date(time)
 			const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
 			const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
-			const data = { userid, locationid, scheduleid, serviceid, oldtime, time: dateInfo, note: note ? note : "" }
+			let data = { 
+				id: scheduleid, userid: userId, locationid, serviceid, oldtime, 
+				time: dateInfo, note: note ? note : "", 
+				type: "requestAppointment", currTime: Date.now()
+			}
 
 			requestAppointment(data)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setConfirmrequest({ ...confirmRequest, show: true, errormsg: res.data.errormsg })
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
 					if (res) {
+						alert(JSON.stringify(res))
 						if (res.status == "new" || res.status == "updated" || res.status == "requested") {
-							setConfirmrequest({ ...confirmRequest, requested: true })
-
-							if (func.initialize) {
-								func.initialize()
-							}
-							
-							props.navigation.goBack()
+							data = { ...data, receiver: res.receiver }
+							socket.emit("socket/requestAppointment", data, () => setConfirmrequest({ ...confirmRequest, requested: true }))
 						} else {
 							let { oldtime, note } = res
 
@@ -360,8 +390,8 @@ export default function booktime(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						const status = err.response.data.status
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
 
 						switch (status) {
 							case "cardrequired":
@@ -369,23 +399,32 @@ export default function booktime(props) {
 								setShowpaymentrequired(true)
 
 								break;
+							case "trialover":
+								setConfirmrequest({ ...confirmRequest, show: false })
+								setTrialover(true)
+
+								break
 							default:
-								
+								setConfirmrequest({ ...confirmRequest, show: true, errormsg })
 						}
+					} else {
+
 					}
 				})
 		} else {
-			setConfirmrequest({ ...confirmRequest, show: false, action: true })
+			setConfirmrequest({ ...confirmRequest, show: false })
 			setShowauth(true)
 		}
 	}
-	const initialize = () => {
-		getTheNumCartItems()
-		getTheServiceInfo()
-	}
 
 	useEffect(() => {
-		initialize()
+		isMounted.current = true
+
+		getTheNumCartItems()
+		getTheServiceInfo()
+		getTheTrialInfo()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -456,20 +495,23 @@ export default function booktime(props) {
 									<View style={style.times}>
 										{times.map(info => (
 											<View key={info.key}>
-												{(!info.timetaken && !info.timepassed) ? 
+												{(!info.timetaken && !info.timepassed) && (
 													<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
 														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
 													</TouchableOpacity>
-													:
-													info.timetaken ?
-														<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-															<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
-														</TouchableOpacity>
-														:
-														<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-															<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
-														</TouchableOpacity>
-												}	
+												)}
+
+												{(info.timetaken && !info.timepassed) && (
+													<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
+														<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
+													</TouchableOpacity>
+												)}
+
+												{(!info.timetaken && info.timepassed) && (
+													<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
+														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+													</TouchableOpacity>
+												)}	
 											</View>
 										))}
 									</View>
@@ -547,7 +589,7 @@ export default function booktime(props) {
 
 											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 												<View style={style.confirmOptions}>
-													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "", action: false })}>
+													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })}>
 														<Text style={style.confirmOptionHeader}>No</Text>
 													</TouchableOpacity>
 													<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
@@ -582,26 +624,56 @@ export default function booktime(props) {
 						</TouchableWithoutFeedback>
 					</Modal>
 				)}
-				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
-				{showPaymentRequired && (
+				{openCart && <Modal><Cart close={() => {
+					getTheNumCartItems()
+					setOpencart(false)
+				}}/></Modal>}
+				{showPaymentrequired && (
 					<Modal transparent={true}>
 						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.cardRequiredBox}>
-								<View style={style.cardRequiredContainer}>
-									<Text style={style.cardRequiredHeader}>
+							<View style={style.requiredBox}>
+								<View style={style.requiredContainer}>
+									<Text style={style.requiredHeader}>
 										You need to provide a payment method to book
 										an appointment
 									</Text>
 
-									<View style={style.cardRequiredActions}>
-										<TouchableOpacity style={style.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
-											<Text style={style.cardRequiredActionHeader}>Close</Text>
+									<View style={style.requiredActions}>
+										<TouchableOpacity style={style.requiredAction} onPress={() => setShowpaymentrequired(false)}>
+											<Text style={style.requiredActionHeader}>Close</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.cardRequiredAction} onPress={() => {
+										<TouchableOpacity style={style.requiredAction} onPress={() => {
 											setShowpaymentrequired(false)
 											props.navigation.navigate("account", { required: "card" })
 										}}>
-											<Text style={style.cardRequiredActionHeader}>Ok</Text>
+											<Text style={style.requiredActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+				{showTrialover && (
+					<Modal transparent={true}>
+						<View style={{ paddingVertical: offsetPadding }}>
+							<View style={style.requiredBox}>
+								<View style={style.requiredContainer}>
+									<Text style={style.requiredHeader}>
+										Your 30 days trial period is up. A cost of $0.50
+										will be charged from you if any of your future appointment
+										is accepted by a salon
+									</Text>
+
+									<View style={style.requiredActions}>
+										<TouchableOpacity style={style.requiredAction} onPress={() => setShowtrialover(false)}>
+											<Text style={style.requiredActionHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.requiredAction} onPress={() => {
+											setShowpaymentrequired(true)
+											setShowtrialover(false)
+										}}>
+											<Text style={style.requiredActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -620,9 +692,7 @@ export default function booktime(props) {
 									})
 								);
 							} else {
-								setUserid(id)
-
-								if (confirmRequest.action) requestAnAppointment()
+								socket.emit("socket/user/login", "user" + id, () => setUserid(id))
 							}
 
 							setShowauth(false)
@@ -637,7 +707,7 @@ export default function booktime(props) {
 const style = StyleSheet.create({
 	booktime: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, margin: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	headers: { marginBottom: 10 },
@@ -689,12 +759,12 @@ const style = StyleSheet.create({
 	requestedHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	requestedHeaderInfo: { fontSize: 20, textAlign: 'center' },
 
-	cardRequiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	cardRequiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	cardRequiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	cardRequiredActionHeader: { },
+	requiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
+	requiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	requiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	requiredActionHeader: { },
 
 	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 })

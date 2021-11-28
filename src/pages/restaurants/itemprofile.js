@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { AsyncStorage, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
 import Constants from 'expo-constants';
-import { logo_url } from '../../../assets/info'
+import { socket, logo_url } from '../../../assets/info'
 import { searchFriends, selectUser, requestUserPaymentMethod } from '../../apis/users'
 import { getProductInfo } from '../../apis/products'
 import { getNumCartItems, addItemtocart } from '../../apis/carts'
@@ -52,12 +53,12 @@ export default function itemProfile(props) {
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(2)
 
+	const isMounted = useRef(null)
+
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		setUserid(userid)
-
-		if (userid != null) {
+		if (userid) {
 			getNumCartItems(userid)
 				.then((res) => {
 					if (res.status == 200) {
@@ -65,12 +66,13 @@ export default function itemProfile(props) {
 					}
 				})
 				.then((res) => {
-					if (res) {
+					if (res && isMounted.current == true) {
+						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -167,10 +169,8 @@ export default function itemProfile(props) {
 		setCost(newCost)
 	}
 	const addCart = async() => {
-		const userid = await AsyncStorage.getItem("userid")
-
-		if (userid != null) {
-			let callfor = [], size = ""
+		if (userId) {
+			let callfor = [], receiver = [], size = ""
 			let newOptions = JSON.parse(JSON.stringify(options))
 			let newOthers = JSON.parse(JSON.stringify(others))
 			let newSizes = JSON.parse(JSON.stringify(sizes))
@@ -182,6 +182,7 @@ export default function itemProfile(props) {
 					info.row.forEach(function (friend) {
 						if (friend.username) {
 							callfor.push({ userid: friend.id.toString(), status: friend.paymentrequested ? 'payment' : 'waiting' })
+							receiver.push("user" + friend.id)
 						}
 					})
 				})
@@ -198,28 +199,24 @@ export default function itemProfile(props) {
 					delete other['key']
 				})
 
-				const data = { userid, productid, quantity, callfor, options: newOptions, others: newOthers, sizes: newSizes, note: itemNote }
+				let data = { userid: userId, productid, quantity, callfor, options: newOptions, others: newOthers, sizes: newSizes, note: itemNote, receiver }
 
 				addItemtocart(data)
 					.then((res) => {
 						if (res.status == 200) {
-							if (!res.data.errormsg) {
-								return res.data
-							} else {
-								if (res.data.status == "cardrequired") {
-									setShowpaymentrequired(true)
-								}
-							}
+							return res.data
 						}
 					})
 					.then((res) => {
 						if (res) {
-							setOpenfriendscart(false)
-							showCart()
+							socket.emit("socket/addItemtocart", data, () => {
+								setOpenfriendscart(false)
+								showCart()
+							})
 						}
 					})
 					.catch((err) => {
-						if (err.response.status == 400) {
+						if (err.response && err.response.status == 400) {
 							const status = err.response.data.status
 
 							switch (status) {
@@ -252,7 +249,7 @@ export default function itemProfile(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { image, info, name, options, others, sizes, price } = res.productInfo
 
 					setItemname(name)
@@ -266,14 +263,13 @@ export default function itemProfile(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const getFriendsList = async(username) => {
-		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, username }
+		const data = { userid: userId, username }
 
 		searchFriends(data)
 			.then((res) => {
@@ -288,7 +284,7 @@ export default function itemProfile(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -381,7 +377,7 @@ export default function itemProfile(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -436,9 +432,7 @@ export default function itemProfile(props) {
 		setNumSelectedFriends(numSelectedFriends - 1)
 	}
 	const openFriendsCart = async() => {
-		const userid = await AsyncStorage.getItem("userid")
-
-		if (userid != null) {
+		if (userId) {
 			let newOrderingItem = {...orderingItem}
 			let newOptions = JSON.parse(JSON.stringify(options))
 			let newOthers = JSON.parse(JSON.stringify(others))
@@ -480,7 +474,13 @@ export default function itemProfile(props) {
 	}
 
 	useEffect(() => {
+		isMounted.current = true
+
 		initialize()
+
+		return () => {
+			isMounted.current = false
+		}
 	}, [])
 
 	return (
@@ -488,7 +488,10 @@ export default function itemProfile(props) {
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<TouchableOpacity style={style.back} onPress={() => {
-						func.initialize()
+						if (func.initialize) {
+							func.initialize()
+						}
+						
 						props.navigation.goBack()
 					}}>
 						<Text style={style.backHeader}>Back</Text>
@@ -588,7 +591,7 @@ export default function itemProfile(props) {
 						)}
 
 						<View style={style.note}>
-							<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setItemnote(note)} autoCorrect={false}/>
+							<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setItemnote(note)} autoCorrect={false} autoCapitalize="none"/>
 						</View>
 
 						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -616,7 +619,7 @@ export default function itemProfile(props) {
 									<Text style={style.itemActionHeader}>Add to your cart</Text>
 								</TouchableOpacity>
 								<TouchableOpacity style={style.itemAction} onPress={() => openFriendsCart()}>
-									<Text style={style.itemActionHeader}>Add to a friend's cart</Text>
+									<Text style={style.itemActionHeader}>Call for friend(s)</Text>
 								</TouchableOpacity>
 							</View>
 						</View>
@@ -668,12 +671,15 @@ export default function itemProfile(props) {
 						</View>
 					</View>
 
-					{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
+					{openCart && <Modal><Cart close={() => {
+						getTheNumCartItems()
+						setOpencart(false)
+					}}/></Modal>}
 					{openFriendscart && (
 						<Modal>
 							<View style={{ paddingVertical: offsetPadding }}>
 								<View style={style.usersList}>
-									<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
+									<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"/>
 
 									<View style={style.usersListContainer}>
 										<View style={{ height: '50%', overflow: 'hidden' }}>
@@ -851,13 +857,15 @@ export default function itemProfile(props) {
 										})
 									);
 								} else {
-									setUserid(id)
+									socket.emit("socket/user/login", "user" + id, () => {
+										setUserid(id)
 
-									if (showAuth.action == "addcart") {
-										addCart()
-									} else if (showAuth.action == "openfriendscart") {
-										openFriendsCart()
-									}
+										if (showAuth.action == "addcart") {
+											addCart()
+										} else if (showAuth.action == "openfriendscart") {
+											openFriendsCart()
+										}
+									})
 								}
 
 								setShowauth({ show: false, action: false })

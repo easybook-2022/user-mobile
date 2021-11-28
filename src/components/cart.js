@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { logo_url } from '../../assets/info'
+import { socket, logo_url } from '../../assets/info'
 import { searchFriends, selectUser, requestUserPaymentMethod } from '../apis/users'
 import { getCartItems, editCartItem, updateCartItem, removeFromCart, changeCartItem, editCallfor, updateCallfor, removeCallfor, checkoutCart } from '../apis/carts'
 
@@ -12,6 +13,7 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
 export default function cart(props) {
+	const [userId, setUserid] = useState(null)
 	const [items, setItems] = useState([])
 	const [loaded, setLoaded] = useState(false)
 	const [activeCheckout, setActivecheckout] = useState(false)
@@ -33,6 +35,9 @@ export default function cart(props) {
 	const [errorMsg, setErrormsg] = useState('')
 	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 	const [showNotifyUser, setShownotifyuser] = useState({ show: false, userid: 0, username: "" })
+	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
+	
+	const isMounted = useRef(null)
 	
 	const changeOption = (index, selected) => {
 		let { options } = itemInfo
@@ -157,14 +162,17 @@ export default function cart(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
-					setItems(res.cartItems)
-					setActivecheckout(res.activeCheckout)
-					setLoaded(true)
+				if (res && isMounted.current == true) {
+					socket.emit("socket/user/login", userid, () => {
+						setUserid(userid)
+						setItems(res.cartItems)
+						setActivecheckout(res.activeCheckout)
+						setLoaded(true)
+					})
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -191,7 +199,7 @@ export default function cart(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -232,15 +240,14 @@ export default function cart(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 
 	const getFriendsList = async(username) => {
-		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, username }
+		const data = { userid: userId, username }
 
 		searchFriends(data)
 			.then((res) => {
@@ -255,7 +262,7 @@ export default function cart(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -348,7 +355,7 @@ export default function cart(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -454,14 +461,14 @@ export default function cart(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const updateTheCallfor = async() => {
 		let { cartid } = itemInfo
-		let callfor = []
+		let callfor = [], receiver = []
 
 		if (openFriendscart && selectedFriends.length == 0) {
 			setErrormsg("You didn't select anyone")
@@ -469,7 +476,8 @@ export default function cart(props) {
 			selectedFriends.forEach(function (info) {
 				info.row.forEach(function (friend) {
 					if (friend.username) {
-						callfor.push({ userid: friend.id, status: friend.paymentrequested ? 'payment' : 'waiting' })
+						callfor.push({ userid: friend.id.toString(), status: friend.paymentrequested ? 'payment' : 'waiting' })
+						receiver.push("user" + friend.id)
 					}
 				})
 			})
@@ -479,22 +487,22 @@ export default function cart(props) {
 			updateCallfor(data)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setErrormsg(res.data.errormsg)
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
 					if (res) {
-						getTheCartItems()
-						setOpenfriendscart(false)
+						socket.emit("socket/updateCallfor", receiver, () => {
+							getTheCartItems()
+							setOpenfriendscart(false)
+						})
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
+
+						setErrormsg(errormsg)
 					}
 				})
 		}
@@ -509,13 +517,14 @@ export default function cart(props) {
 				}
 			})
 			.then((res) => {
-				if (res) getTheCartItems()
+				if (res) {
+					socket.emit("socket/removeCallfor", "user" + callforid, () => getTheCartItems())
+				}
 			})
 	}
 	const checkout = async() => {
 		const time = Date.now()
-		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, time }
+		let data = { userid: userId, time, type: "checkout" }
 
 		setLoading(true)
 
@@ -527,21 +536,107 @@ export default function cart(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setActivecheckout(false)
-					setShowconfirm(true)
-					setLoading(false)
+					data = { ...data, receiver: res.receiver }
+					socket.emit("socket/checkoutCart", data, () => {
+						setActivecheckout(false)
+						setShowconfirm(true)
+						setLoading(false)
+
+						getTheCartItems()
+					})
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 
+	const startWebsocket = () => {
+		socket.on("updateOrderers", data => {
+			if (data.type == "cancelCartOrder") {
+				const { userid, cartid } = data
+				const newItems = [...items]
+				const orderers = [], row = []
+
+				setActivecheckout(true)
+
+				newItems.forEach(function (item) {
+					item.orderers.forEach(function (info) {
+						info.row.forEach(function (orderer) {
+							if (orderer.id != userid) {
+								row.push(orderer)
+
+								if (row.length == 4) {
+									orderers.push(row)
+									row = []
+								}
+
+								if (orderer.status && (orderer.status != "confirmed" && orderer.status != "rejected")) {
+									setActivecheckout(false)
+								}
+							}
+						})
+					})
+				})
+
+				setItems(newItems.filter(item => {
+					if (item.id == cartid) {
+						if (orderers.length > 0) {
+							return item.orderers = orderers
+						}
+					} else {
+						return item
+					}
+				}))
+			} else if (data.type == "confirmCartOrder") {
+				const { userid, id } = data
+				const newItems = [...items]
+
+				setActivecheckout(true)
+
+				newItems.forEach(function (item) {
+					item.orderers.forEach(function (info) {
+						info.row.forEach(function (orderer) {
+							if (item.id == id && orderer.id == userid) {
+								orderer.status = "confirmed"
+							}
+
+							if (orderer.status && (orderer.status != "confirmed" && orderer.status != "rejected")) {
+								setActivecheckout(false)
+							}
+						})
+					})
+				})
+
+				setItems(newItems)
+			}
+		})
+		socket.io.on("open", () => {
+			if (userId) {
+				socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))
+			}
+		})
+		socket.io.on("close", () => userId ? setShowdisabledscreen(true) : {})
+	}
+
 	useEffect(() => {
+		isMounted.current = true
+
 		getTheCartItems()
+
+		return () => isMounted.current = false
 	}, [])
+
+	useEffect(() => {
+		startWebsocket()
+
+		return () => {
+			socket.off("updateOrderers")
+			isMounted.current = false
+		}
+	}, [items.length])
 
 	return (
 		<View style={style.cart}>
@@ -563,7 +658,7 @@ export default function cart(props) {
 									renderItem={({ item, index }) => 
 										<View style={style.item} key={item.key}>
 											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-												<TouchableOpacity onPress={async() => {
+												<TouchableOpacity disabled={item.status == "checkout"} onPress={async() => {
 													removeFromCart(item.id)
 														.then((res) => {
 															if (res.status == 200) {
@@ -616,7 +711,7 @@ export default function cart(props) {
 											</View>
 
 											<View style={{ alignItems: 'center' }}>
-												<TouchableOpacity style={style.itemChange} onPress={() => editTheCartItem(item.id)}>
+												<TouchableOpacity style={style.itemChange} disabled={item.status == "checkout"} onPress={() => editTheCartItem(item.id)}>
 													<Text style={style.itemChangeHeader}>Edit Order</Text>
 												</TouchableOpacity>
 											</View>
@@ -630,7 +725,7 @@ export default function cart(props) {
 											<View style={{ alignItems: 'center' }}>
 												<View style={style.orderersEdit}>
 													<Text style={style.orderersEditHeader}>Calling for</Text>
-													<TouchableOpacity style={style.orderersEditTouch} onPress={() => editTheCallfor(item.id)}>
+													<TouchableOpacity style={style.orderersEditTouch} disabled={item.status == "checkout"} onPress={() => editTheCallfor(item.id)}>
 														<Text style={style.orderersEditTouchHeader}>{item.orderers.length > 0 ? 'Edit' : 'Add'}</Text>
 													</TouchableOpacity>
 												</View>
@@ -650,7 +745,7 @@ export default function cart(props) {
 																			<Text style={style.ordererHeader}>{info.username}</Text>
 																			<Text style={style.ordererStatus}>{info.status}</Text>
 
-																			<TouchableOpacity style={style.ordererRemove} onPress={() => removeTheCallfor(item.id, info.id)}>
+																			<TouchableOpacity style={style.ordererRemove} disabled={item.status == "checkout"} onPress={() => removeTheCallfor(item.id, info.id)}>
 																				<Text style={style.ordererRemoveHeader}>Remove</Text>
 																			</TouchableOpacity>
 																		</View>
@@ -811,7 +906,7 @@ export default function cart(props) {
 										)}
 
 										<View style={style.note}>
-											<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false}/>
+											<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false} autoCapitalize="none"/>
 										</View>
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -852,7 +947,7 @@ export default function cart(props) {
 						<View style={style.friendsCart}>
 							<View style={{ paddingVertical: offsetPadding }}>
 								<View style={style.friendsList}>
-									<TextInput style={style.friendNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
+									<TextInput style={style.friendNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"/>
 
 									<View style={style.friendsListContainer}>
 										<View style={style.friendsListSearched}>
@@ -1025,6 +1120,26 @@ export default function cart(props) {
 					</Modal>
 				)}
 			</View>
+
+			{showDisabledScreen && (
+				<Modal transparent={true}>
+					<View style={style.disabled}>
+						<View style={style.disabledContainer}>
+							<Text style={style.disabledHeader}>
+								There is an update to the app{'\n\n'}
+								Please wait a moment{'\n\n'}
+								or tap 'Close'
+							</Text>
+
+							<TouchableOpacity style={style.disabledClose} onPress={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}>
+								<Text style={style.disabledCloseHeader}>Close</Text>
+							</TouchableOpacity>
+
+							<ActivityIndicator size="large"/>
+						</View>
+					</View>
+				</Modal>
+			)}
 		</View>
 	);
 }
@@ -1178,4 +1293,10 @@ const style = StyleSheet.create({
 	notifyUserActionHeader: { },
 
 	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 5, textAlign: 'center' },
+
+	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
+	disabledContainer: { alignItems: 'center', width: '100%' },
+	disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
+	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
+	disabledCloseHeader: {  }
 })

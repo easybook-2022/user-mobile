@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import { 
+	ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, 
+	Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
@@ -17,17 +21,19 @@ import Entypo from 'react-native-vector-icons/Entypo'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const amexLogo = require("../../assets/amex.jpg")
-const dinersclubLogo = require("../../assets/dinersclub.png")
-const discoverLogo = require("../../assets/discover.png")
-const jbcLogo = require("../../assets/jbc.png")
-const mastercardLogo = require("../../assets/mastercard.png")
-const unionpayLogo = require("../../assets/unionpay.png")
-const visaLogo = require("../../assets/visa.png")
 
 export default function account(props) {
-	const { refetch } = props.route.params
-	const required = props.route.params ? props.route.params.required : ""
+	const amexLogo = require("../../assets/amex.jpg")
+	const dinersclubLogo = require("../../assets/dinersclub.png")
+	const discoverLogo = require("../../assets/discover.png")
+	const jbcLogo = require("../../assets/jbc.png")
+	const mastercardLogo = require("../../assets/mastercard.png")
+	const unionpayLogo = require("../../assets/unionpay.png")
+	const visaLogo = require("../../assets/visa.png")
+
+	const { params } = props.route
+	const refetch = params && params.refetch ? params.refetch : null
+	const required = params && params.required ? params.required : null
 
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -70,7 +76,7 @@ export default function account(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -141,7 +147,7 @@ export default function account(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -173,7 +179,7 @@ export default function account(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -206,7 +212,7 @@ export default function account(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -268,7 +274,7 @@ export default function account(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -293,7 +299,7 @@ export default function account(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -350,7 +356,7 @@ export default function account(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -366,12 +372,7 @@ export default function account(props) {
 			updateUser(data)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setLoading(false)
-							setErrormsg(res.data.errormsg)
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
@@ -385,8 +386,22 @@ export default function account(props) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
+
+						switch (status) {
+							case "sameusername":
+								setLoading(false)
+								setErrormsg(errormsg)
+
+								break
+							case "samecellnumber":
+								setLoading(false)
+								setErrormsg(errormsg)
+
+								break
+							default:
+						}
 					}
 				})
 		} else {
@@ -398,12 +413,6 @@ export default function account(props) {
 
 			if (!cellnumber) {
 				setErrormsg("Please enter your cell phone number")
-
-				return
-			}
-
-			if (!profile.name) {
-				setErrormsg("Please take a photo of yourself for identification purpose")
 
 				return
 			}
@@ -454,12 +463,12 @@ export default function account(props) {
 		}
 	}
 	const openCamera = async() => {
-		const { status } = await Camera.getPermissionsAsync()
+		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
 			setPermission(status === 'granted')
 		} else {
-			const { status } = await Camera.requestPermissionsAsync()
+			const { status } = await Camera.requestCameraPermissionsAsync()
 
 			setPermission(status === 'granted')
 		}
@@ -471,9 +480,7 @@ export default function account(props) {
 
 		openCamera()
 
-		if (required == "card") {
-			openPaymentMethodForm()
-		}
+		if (required == "card") openPaymentMethodForm()
 	}, [])
 
 	return (
@@ -481,7 +488,7 @@ export default function account(props) {
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<TouchableOpacity style={style.back} onPress={() => {
-						refetch()
+						if (refetch) refetch()
 						props.navigation.goBack()
 					}}>
 						<Text style={style.backHeader}>Back</Text>
@@ -567,8 +574,8 @@ export default function account(props) {
 											<TouchableOpacity style={style.paymentMethodAction} onPress={() => editPaymentMethod(info.cardid, index)}>
 												<Text style={style.paymentMethodActionHeader}>Edit</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={info.default ? style.paymentMethodActionDisabled : style.paymentMethodAction} disabled={info.default} onPress={() => deletePaymentMethod(info.cardid, index)}>
-												<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Remove</Text>
+											<TouchableOpacity style={style.paymentMethodAction} onPress={() => deletePaymentMethod(info.cardid, index)}>
+												<Text style={style.paymentMethodActionHeader}>Remove</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
@@ -660,7 +667,7 @@ export default function account(props) {
 const style = StyleSheet.create({
 	account: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
 
@@ -683,9 +690,9 @@ const style = StyleSheet.create({
 	paymentMethodNumberHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', padding: 5, width: '70%' },
 	paymentMethodNumberHeader: { fontSize: 20, paddingVertical: 4, textAlign: 'center', width: '50%' },
 	paymentMethodActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	paymentMethodAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 100 },
+	paymentMethodAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 80 },
 	paymentMethodActionHeader: { fontSize: 12, textAlign: 'center' },
-	paymentMethodActionDisabled: { backgroundColor: 'black', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 100 },
+	paymentMethodActionDisabled: { backgroundColor: 'black', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 80 },
 	paymentMethodActionHeaderDisabled: { color: 'white', fontSize: 12, textAlign: 'center' },
 
 	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10, width: 100 },

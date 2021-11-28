@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
@@ -13,10 +14,11 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 
 export default function setup({ navigation }) {
+	const offsetPadding = Constants.statusBarHeight
+	const screenHeight = height - (offsetPadding * 2)
+
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
@@ -28,21 +30,17 @@ export default function setup({ navigation }) {
 	
 	const setupAccount = async() => {
 		const userid = await AsyncStorage.getItem("userid")
+		const time = Date.now()
 
-		if (username && profile.name) {
-			const data = { userid, username, profile }
+		if (username) {
+			const data = { userid, username, profile, permission, time }
 
 			setLoading(true)
 
 			setupUser(data)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setLoading(false)
-							setErrormsg(res.data.errormsg)
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
@@ -58,19 +56,16 @@ export default function setup({ navigation }) {
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
+
+						setLoading(false)
+						setErrormsg(errormsg)
 					}
 				})
 		} else {
 			if (!username) {
 				setErrormsg("Please enter a username you like")
-
-				return
-			}
-
-			if (!profile.name) {
-				setErrormsg("Please take a photo of yourself for identification purpose")
 
 				return
 			}
@@ -85,7 +80,7 @@ export default function setup({ navigation }) {
 		let char = "", captured, self = this
 
 		if (camComp) {
-			let options = { quality: 0 };
+			let options = { quality: 0, base64: true };
 			let photo = await camComp.takePictureAsync(options)
 			let photo_option = [{ resize: { width: width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
@@ -121,12 +116,12 @@ export default function setup({ navigation }) {
 		}
 	}
 	const openCamera = async() => {
-		const { status } = await Camera.getPermissionsAsync()
+		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
 			setPermission(status === 'granted')
 		} else {
-			const { status } = await Camera.requestPermissionsAsync()
+			const { status } = await Camera.requestCameraPermissionsAsync()
 
 			setPermission(status === 'granted')
 		}
@@ -218,7 +213,7 @@ const style = StyleSheet.create({
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraAction: { margin: 10 },
 	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
-	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 10 },
+	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

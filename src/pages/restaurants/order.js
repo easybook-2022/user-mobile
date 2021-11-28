@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react'
+import { 
+	ActivityIndicator, Dimensions, ScrollView, View, FlatList, 
+	Text, TextInput, Image, TouchableOpacity, StyleSheet, Modal 
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { logo_url } from '../../../assets/info'
+import { socket, logo_url } from '../../../assets/info'
 import { searchFriends, searchDiners } from '../../apis/users'
 import { getLocationProfile, getInfo } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
@@ -19,7 +23,7 @@ const imageSize = itemSize - 30
 export default function order(props) {
 	const { locationid, scheduleid } = props.route.params
 
-	const [userId, setUserid] = useState(0)
+	const [userId, setUserid] = useState(null)
 	const [timeStr, setTimestr] = useState('')
 	const [name, setName] = useState('')
 	const [totalDiners, setTotaldiners] = useState(0)
@@ -61,7 +65,7 @@ export default function order(props) {
 	const [openRounds, setOpenrounds] = useState(false)
 	const [rounds, setRounds] = useState([])
 
-	const [openEditdiners, setOpeneditdiners] = useState(false)
+	const [openEditdiners, setOpeneditdiners] = useState({ show: false, changes: 0 })
 	const [searchedFriends, setSearchedfriends] = useState([])
 	const [numSearchedfriends, setNumsearchedfriends] = useState(0)
 	const [selectedDiners, setSelecteddiners] = useState([])
@@ -74,9 +78,12 @@ export default function order(props) {
 	const [selectedCallfor, setSelectedcallfor] = useState([])
 	const [numSelectedcallfor, setNumselectedcallfor] = useState(0)
 	const [orderingItem, setOrderingitem] = useState({ name: "", info: "", image: "", note: "", options: [], others: [], sizes: [], quantity: 1, cost: 0, errorMsg: "" })
+	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
+
+	const isMounted = useRef(null)
 
 	const getTheScheduleInfo = async() => {
-		const userId = await AsyncStorage.getItem("userid")
+		const userid = await AsyncStorage.getItem("userid")
 
 		getScheduleInfo(scheduleid)
 			.then((res) => {
@@ -85,29 +92,32 @@ export default function order(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
-					const { scheduleInfo } = res
-					const unix = parseInt(scheduleInfo.time)
+				if (res && isMounted.current == true) {
+					socket.emit("socket/user/login", userid, () => {
+						const { scheduleInfo } = res
+						const unix = parseInt(scheduleInfo.time)
 
-					setName(scheduleInfo.name)
-					setTotaldiners(scheduleInfo.numdiners)
-					setSeated(scheduleInfo.seated)
+						setUserid(userid)
+						setName(scheduleInfo.name)
+						setTotaldiners(scheduleInfo.numdiners)
+						setSeated(scheduleInfo.seated)
 
-					let date = new Date(unix)
-					let hour = date.getHours()
-					let minute = date.getMinutes()
-					let period = hour > 12 ? "pm" : "am"
+						let date = new Date(unix)
+						let hour = date.getHours()
+						let minute = date.getMinutes()
+						let period = hour > 12 ? "pm" : "am"
 
-					hour = hour > 12 ? hour - 12 : hour
-					hour = parseInt(hour)
+						hour = hour > 12 ? hour - 12 : hour
+						hour = parseInt(hour)
+						minute = minute < 10 ? "0" + minute : minute
 
-					setUserid(userId)
-					setTimestr(hour + ":" + minute + " " + period)
-					getTheLocationProfile()
+						setTimestr(hour + ":" + minute + " " + period)
+						getTheLocationProfile()
+					})
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -126,21 +136,18 @@ export default function order(props) {
 			.then((res) => {
 				if (res) {
 					const { msg, locationInfo } = res
-					const { name, logo } = locationInfo
 
-					setLocationinfo({ name, logo })
+					setLocationinfo({ name: locationInfo.name, logo: locationInfo.logo })
 
 					if (msg == "menus") {
 						getAllMenus("")
 					} else if (msg == "products") {
 						getAllProducts("")
 					}
-
-					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -171,12 +178,10 @@ export default function order(props) {
 					} else if (msg == "products") {
 						getAllProducts(menuid)
 					}
-
-					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -230,10 +235,11 @@ export default function order(props) {
 					setNummenus(data.length)
 					setShowmenus(true)
 					setViewtype('menus')
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -253,10 +259,11 @@ export default function order(props) {
 					setNumproducts(res.numproducts)
 					setShowproducts(true)
 					setViewtype('products')
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -279,7 +286,7 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -300,12 +307,14 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const sendTheOrders = async() => {
+		let data = { scheduleid, type: "sendOrders" }
+
 		sendOrders(scheduleid)
 			.then((res) => {
 				if (res.status == 200) {
@@ -313,14 +322,21 @@ export default function order(props) {
 				}
 			})
 			.then((res) => {
-				const newRounds = [...rounds]
+				if (res) {
+					const { receiverLocations, receiverDiners } = res
+						
+					data = { ...data, receiverLocations, receiverDiners }
+					socket.emit("socket/sendOrders", data, () => {
+						const newRounds = [...rounds]
 
-				newRounds[0].status = "making"
+						newRounds[0].status = "making"
 
-				setRounds(newRounds)
+						setRounds(newRounds)
+					})
+				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					const status = err.response.data.status
 
 					switch (status) {
@@ -356,7 +372,7 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -389,7 +405,7 @@ export default function order(props) {
 			})
 		} else {
 			const { orderid } = deleteRequestInfo
-			const data = { scheduleid, orderid }
+			let data = { scheduleid, orderid, type: "deleteOrder" }
 
 			deleteOrder(data)
 				.then((res) => {
@@ -399,12 +415,15 @@ export default function order(props) {
 				})
 				.then((res) => {
 					if (res) {
-						setDeleterequestinfo({ ...deleteRequestInfo, show: false })
-						seeTheDiningOrders()
+						data = { ...data, receiver: res.receiver }
+						socket.emit("socket/deleteOrder", data, () => {
+							setDeleterequestinfo({ ...deleteRequestInfo, show: false })
+							seeTheDiningOrders()
+						})
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -446,7 +465,7 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -547,7 +566,6 @@ export default function order(props) {
 		setIteminfo({ ...itemInfo, quantity: newQuantity, cost: newCost })
 	}
 	const addOrder = async() => {
-		const userid = await AsyncStorage.getItem("userid")
 		let { productid, name, info, note, image, price, options, others, sizes, quantity } = itemInfo
 		let newOptions = JSON.parse(JSON.stringify(options))
 		let newOthers = JSON.parse(JSON.stringify(others))
@@ -577,30 +595,46 @@ export default function order(props) {
 				delete size['key']
 			})
 
-			const data = { userid, scheduleid, productid, quantity, callfor, options: newOptions, others: newOthers, sizes: newSizes, note }
+			let data = { 
+				userid: userId, scheduleid, productid, quantity, 
+				callfor, options: newOptions, others: newOthers, 
+				sizes: newSizes, note,
+				type: "addItemtoorder"
+			}
 
 			addItemtoorder(data)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setIteminfo({ ...itemInfo, errorMsg: res.data.errormsg })
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
 					if (res) {
-						setOpeneditcallfor(false)
-						setIteminfo({ ...itemInfo, show: false, errorMsg: "" })
-						closeEditTheDiners()
-						closeEditTheCallfor()
-						seeTheDiningOrders()
+						const { receiver } = res
+
+						if (receiver.length > 0) {
+							data = { ...data, receiver: res.receiver }
+							socket.emit("socket/addItemtoorder", data, () => {
+								setOpeneditcallfor(false)
+								setIteminfo({ ...itemInfo, show: false, quantity: 1, errorMsg: "" })
+								closeEditTheDiners()
+								closeEditTheCallfor()
+								seeTheDiningOrders()
+							})
+						} else {
+							setOpeneditcallfor(false)
+							setIteminfo({ ...itemInfo, show: false, quantity: 1, errorMsg: "" })
+							closeEditTheDiners()
+							closeEditTheCallfor()
+							seeTheDiningOrders()
+						}
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
+
+						setIteminfo({ ...itemInfo, errorMsg: errormsg })
 					}
 				})
 		}
@@ -661,22 +695,19 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setSearchedfriends([])
-					setNumsearchedfriends(0)
 					setSelecteddiners(res.diners)
 					setNumselecteddiners(res.numdiners)
-					setOpeneditdiners(true)
+					setOpeneditdiners({ show: true, changes: 0 })
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const getFriendsList = async(username) => {
-		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, username }
+		const data = { userid: userId, username }
 
 		searchFriends(data)
 			.then((res) => {
@@ -691,7 +722,7 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -820,7 +851,7 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					const status = err.response.data.status
 
 					switch (status) {
@@ -831,7 +862,7 @@ export default function order(props) {
 			})
 	}
 	const closeEditTheDiners = () => {
-		setOpeneditdiners(false)
+		setOpeneditdiners({ show: false, changes: 0 })
 		setSearchedfriends([])
 		setNumsearchedfriends(0)
 		setSelecteddiners([])
@@ -848,7 +879,7 @@ export default function order(props) {
 			})
 		})
 
-		const data = { scheduleid, diners }
+		let data = { scheduleid, diners, type: "addDiners" }
 
 		addDiners(data)
 			.then((res) => {
@@ -858,12 +889,15 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setTotaldiners(diners.length)
-					closeEditTheDiners()
+					data = { ...data, receiver: res.receiver }
+					socket.emit("socket/addDiners", data, () => {
+						setTotaldiners(diners.length)
+						closeEditTheDiners()
+					})
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -889,13 +923,14 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const confirmTheDiningOrder = (orderid, ordererid) => {
-		const data = { orderid, ordererid }
+		let data = { orderid, ordererid, type: "confirmDiningOrder" }
+		const newRounds = [...rounds]
 
 		confirmDiningOrder(data)
 			.then((res) => {
@@ -904,10 +939,29 @@ export default function order(props) {
 				} 
 			})
 			.then((res) => {
-				if (res) seeTheDiningOrders()
+				if (res) {
+					data = { ...data, receiver: res.receiver }
+					socket.emit("socket/confirmDiningOrder", data, () => {
+						newRounds.forEach(function (round) {
+							round.round.forEach(function (orders) {
+								orders.orders.forEach(function (order) {
+									order.orderers.forEach(function (info) {
+										info.row.forEach(function (item) {
+											if (order.id == orderid && item.id == ordererid) {
+												item.status = "confirmed"
+											}
+										})
+									})
+								})
+							})
+						})
+
+						setRounds(newRounds)
+					})
+				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -929,11 +983,7 @@ export default function order(props) {
 		updateOrderCallfor(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					} else {
-						setOrderingitem({ ...orderingItem, errorMsg: res.data.errormsg })
-					}
+					return res.data
 				}
 			})
 			.then((res) => {
@@ -946,14 +996,15 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
-					
+				if (err.response && err.response.status == 400) {
+					const { errormsg, status } = err.response.data
+
+					setOrderingitem({ ...orderingItem, errorMsg: errormsg })
 				}
 			})
 	}
 	const getDinersList = async(username) => {
-		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, scheduleid, username }
+		const data = { userid: userId, scheduleid, username }
 
 		searchDiners(data)
 			.then((res) => {
@@ -968,7 +1019,7 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -1056,16 +1107,16 @@ export default function order(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					const { status, info } = err.response.data
 					const { username } = info
 
 					switch (status) {
-						case "paymentrequired":
+						case "required":
 							setShowpaymentrequired({ show: true, username })
 
 							break
-						case "unconfirmeddiner":
+						case "filled":
 							setShowunconfirmeddiner({ show: true, username })
 
 							break
@@ -1118,9 +1169,125 @@ export default function order(props) {
 		setNumselectedcallfor(0)
 	}
 
+	const startWebsocket = () => {
+		socket.on("updateDiners", data => {
+			if (data.type == "acceptReservationJoining") {
+				const newSelectedDiners = [...selectedDiners]
+
+				newSelectedDiners.forEach(function (item) {
+					item.row.forEach(function (item) {
+						if (item.id == data.userid) {
+							item.status = "confirmed"
+						}
+					})
+				})
+
+				setSelecteddiners(newSelectedDiners)
+			}
+		})
+		socket.on("updateRounds", data => {
+			const newRounds = [...rounds]
+
+			if (data.type == "sendOrders") {
+				newRounds[0].status = "making"
+
+				setRounds(newRounds)
+			} else if (data.type == "confirmDiningOrder") {
+				const { orderid, ordererid } = data
+
+				newRounds.forEach(function (round) {
+					round.round.forEach(function (orders) {
+						orders.orders.forEach(function (order) {
+							order.orderers.forEach(function (info) {
+								info.row.forEach(function (item) {
+									if (order.id == orderid && item.id == ordererid) {
+										item.status = "confirmed"
+									}
+								})
+							})
+						})
+					})
+				})
+
+				setRounds(newRounds)
+			} else if (data.type == "cancelDiningOrder") {
+				const { orderid, ordererid, numCallfor } = data
+				let collects = [], callfor = [], row = []
+
+				newRounds.forEach(function (round, roundindex) {
+					round.round.forEach(function (orders) {
+						orders.orders.forEach(function (order, orderindex) {
+							if (numCallfor == 0) {
+								if (order.id == orderid) {
+									orders.orders.splice(orderindex, 1)
+
+									if (orders.orders.length == 0) {
+										newRounds.splice(roundindex, 1)
+									}
+								}
+							} else {
+								order.orderers.forEach(function (info) {
+									info.row.forEach(function (item) {
+										if (item.id != ordererid) {
+											collects.push(item)
+										}
+									})
+								})
+
+								collects.forEach(function (collect) {
+									row.push(collect)
+
+									if (row.length == 4) {
+										callfor.push(row)
+										row = []
+									}
+								})
+
+								if (row.length > 0) {
+									callfor.push(row)
+								}
+
+								order.orderers = callfor
+							}
+						})
+					})
+				})
+
+				setRounds(newRounds)
+			} else if (data.type == "deliverRound") {
+				setRounds(newRounds.filter(item => {
+					if (item.id == data.roundid) {
+						return item.status = "served"
+					} else {
+						return item
+					}
+				}))
+			}
+		})
+		socket.io.on("open", () => {
+			if (userId) {
+				socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))
+			}
+		})
+		socket.io.on("close", () => userId ? setShowdisabledscreen(true) : {})
+	}
+
 	useEffect(() => {
+		isMounted.current = true
+
 		getTheScheduleInfo()
+
+		return () => isMounted.current = false
 	}, [])
+
+	useEffect(() => {
+		startWebsocket()
+
+		return () => {
+			socket.off("updateDiners")
+			socket.off("updateRounds")
+		}
+	}, [searchedFriends.length, selectedDiners.length, rounds.length])
 
 	return (
 		<View style={style.boxContainer}>
@@ -1322,7 +1489,7 @@ export default function order(props) {
 								)}
 
 								<View style={style.note}>
-									<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false}/>
+									<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false} autoCapitalize="none"/>
 								</View>
 
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -1379,7 +1546,7 @@ export default function order(props) {
 							</View>
 							{rounds.length > 0 ? 
 								<ScrollView style={style.roundList}>
-									{rounds.map(round => (
+									{rounds.map((round, roundIndex) => (
 										<View style={style.round} key={round.key}>
 											{round.status == "ordering" ? 
 												<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -1402,8 +1569,8 @@ export default function order(props) {
 												:
 												<Text style={style.roundHeader}>This round {round.status == 'making' ? 'is already sent' : 'has been served'}</Text>
 											}
-											{round.round.map(orders => (
-												orders.orders.map(order => (
+											{round.round.map((orders, ordersIndex) => (
+												orders.orders.map((order, orderIndex) => (
 													<View style={style.order} key={order.key}>
 														<View style={{ alignItems: 'center' }}>
 															<View style={style.orderItem} key={order.key}>
@@ -1413,7 +1580,6 @@ export default function order(props) {
 																	<Image source={{ uri: logo_url + order.image }} style={style.orderItemImage}/>
 																</View>
 																<Text style={style.orderItemName}>{order.name}</Text>
-																	
 
 																{order.options.map((option, infoindex) => (
 																	<Text key={option.key} style={style.itemInfo}>
@@ -1471,9 +1637,9 @@ export default function order(props) {
 														</View>
 
 														{order.orderers.length > 0 ? 
-															order.orderers.map(info => (
+															order.orderers.map((info, infoIndex) => (
 																<View style={style.orderCallfor} key={info.key}>
-																	{info.row.map(orderer => (
+																	{info.row.map((orderer, ordererIndex) => (
 																		orderer.username ?
 																			<View style={style.orderer} key={orderer.key}>
 																				<View style={style.ordererProfile}>
@@ -1607,11 +1773,11 @@ export default function order(props) {
 					</Modal>
 				)}
 
-				{openEditdiners && (
+				{openEditdiners.show && (
 					<Modal>
 						<View style={{ paddingVertical: offsetPadding }}>
 							<View style={style.usersList}>
-								<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false}/>
+								<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"/>
 
 								<View style={style.usersListContainer}>
 									<View style={style.usersListSearched}>
@@ -1641,6 +1807,12 @@ export default function order(props) {
 										{numSelecteddiners > 0 && (
 											<>
 												<Text style={style.selectedUsersHeader}>{numSelecteddiners} Selected Diner(s)</Text>
+
+												{openEditdiners.changes > 0 && (
+													<TouchableOpacity onPress={() => editTheDiners()}>
+														<Text>Refresh {openEditdiners.changes > 1 ? "(" + openEditdiners.changes + ")" : null}</Text>
+													</TouchableOpacity>
+												)}
 
 												<FlatList
 													data={selectedDiners}
@@ -1685,7 +1857,7 @@ export default function order(props) {
 											<Text style={style.actionHeader}>Close</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.action} onPress={() => addFriendsToDining()}>
-											<Text style={style.actionHeader}>Add</Text>
+											<Text style={style.actionHeader}>Done</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -1720,7 +1892,7 @@ export default function order(props) {
 					<Modal>
 						<View style={{ paddingVertical: offsetPadding }}>
 							<View style={style.usersList}>
-								<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner to order for" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
+								<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner to order for" onChangeText={(username) => getDinersList(username)} autoCorrect={false} autoCapitalize="none"/>
 
 								<View style={style.usersListContainer}>
 									<View style={style.usersListSearched}>
@@ -1884,6 +2056,26 @@ export default function order(props) {
 					</Modal>
 				)}
 			</View>
+
+			{showDisabledScreen && (
+				<Modal transparent={true}>
+					<View style={style.disabled}>
+						<View style={style.disabledContainer}>
+							<Text style={style.disabledHeader}>
+								There is an update to the app{'\n\n'}
+								Please wait a moment{'\n\n'}
+								or tap 'Close'
+							</Text>
+
+							<TouchableOpacity style={style.disabledClose} onPress={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}>
+								<Text style={style.disabledCloseHeader}>Close</Text>
+							</TouchableOpacity>
+
+							<ActivityIndicator size="large"/>
+						</View>
+					</View>
+				</Modal>
+			)}
 		</View>
 	)
 }
@@ -2007,7 +2199,7 @@ const style = StyleSheet.create({
 	orderer: { alignItems: 'center', height: 80, marginHorizontal: 10, width: (width / 4) - 30 },
 	ordererProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	ordererUsername: { textAlign: 'center' },
-	ordererConfirm: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3 },
+	ordererConfirm: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3, width: 70 },
 	ordererConfirmHeader: { fontSize: 8, textAlign: 'center' },
 	ordererStatus: { fontSize: 8, textAlign: 'center' },
 
@@ -2061,4 +2253,10 @@ const style = StyleSheet.create({
 	errorActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	errorAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	errorActionHeader: { },
+
+	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
+	disabledContainer: { alignItems: 'center', width: '100%' },
+	disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
+	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
+	disabledCloseHeader: {  }
 })

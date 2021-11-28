@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { logo_url } from '../../../assets/info'
@@ -47,12 +48,12 @@ export default function restaurantprofile(props) {
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 
+	const isMounted = useRef(null)
+
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		setUserid(userid)
-
-		if (userid != null) {
+		if (userid) {
 			getNumCartItems(userid)
 				.then((res) => {
 					if (res.status == 200) {
@@ -60,12 +61,13 @@ export default function restaurantprofile(props) {
 					}
 				})
 				.then((res) => {
-					if (res) {
+					if (res && isMounted.current == true) {
+						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -83,7 +85,7 @@ export default function restaurantprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { locationInfo, msg } = res
 					const { name, logo, addressOne, addressTwo, city, province, postalcode, phonenumber, distance, longitude, latitude } = locationInfo
 					const address = addressOne + " " + addressTwo + ", " + city + " " + province + ", " + postalcode
@@ -99,12 +101,10 @@ export default function restaurantprofile(props) {
 					} else if (msg == "products") {
 						getAllProducts()
 					}
-
-					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -119,7 +119,7 @@ export default function restaurantprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					let data = res.menus
 					let row = [], column = []
 					let rownum = 0, key = ""
@@ -145,10 +145,11 @@ export default function restaurantprofile(props) {
 					setMenus(column)
 					setNummenus(data.length)
 					setShowmenus(true)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -163,14 +164,15 @@ export default function restaurantprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setProducts(res.products)
 					setNumproducts(res.numproducts)
 					setShowproducts(true)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -181,7 +183,11 @@ export default function restaurantprofile(props) {
 	}
 
 	useEffect(() => {
+		isMounted.current = true
+		
 		initialize()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -192,10 +198,6 @@ export default function restaurantprofile(props) {
 						<TouchableOpacity style={style.back} onPress={() => {
 							if (refetch) {
 								refetch()
-							}
-
-							if (func.initialize) {
-								func.initialize()
 							}
 
 							props.navigation.goBack()
@@ -294,7 +296,7 @@ export default function restaurantprofile(props) {
 								)}
 							</>
 							:
-							<ActivityIndicator size="small"/>
+							<ActivityIndicator size="large"/>
 						}
 					</View>
 
@@ -344,7 +346,10 @@ export default function restaurantprofile(props) {
 					</View>
 				</View>
 
-				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
+				{openCart && <Modal><Cart close={() => {
+					getTheNumCartItems()
+					setOpencart(false)
+				}}/></Modal>}
 				{showAuth && (
 					<Modal transparent={true}>
 						<Userauth close={() => setShowauth(false)} done={(id, msg) => {
@@ -401,8 +406,8 @@ const style = StyleSheet.create({
 	productBuyHeader: { textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNavsRow: { flexDirection: 'row' },
-	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 })

@@ -8,7 +8,7 @@ export const requestAppointment = data => {
 	)
 }
 
-export const acceptReservation = data => {
+export const acceptRequest = data => {
 	return axios.post(
 		`${url}/schedules/accept_request`,
 		data
@@ -17,6 +17,13 @@ export const acceptReservation = data => {
 
 export const closeRequest = id => {
 	return axios.get(`${url}/schedules/close_request/${id}`)
+}
+
+export const confirmRequest = data => {
+	return axios.post(
+		`${url}/schedules/confirm_request`,
+		data
+	)
 }
 
 export const cancelReservationJoining = data => {
@@ -37,9 +44,9 @@ export const cancelService = id => {
 	return axios.get(`${url}/schedules/cancel_service/${id}`)
 }
 
-export const sendServicePayment = data => {
+export const allowPayment = data => {
 	return axios.post(
-		`${url}/schedules/send_service_payment`,
+		`${url}/schedules/allow_payment`,
 		data
 	)
 }

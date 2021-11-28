@@ -2,14 +2,13 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { AsyncStorage, Text, View, Dimensions, StyleSheet, LogBox } from 'react-native';
+import { Text, View, StyleSheet, LogBox } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
 
 LogBox.ignoreLogs([
     'Non-serializable values were found in the navigation state',
 ]);
-
-const { height, width } = Dimensions.get('window')
 
 import Setup from './src/pages/setup'
 import Main from './src/pages/main'
@@ -28,9 +27,9 @@ import Recent from './src/pages/recent'
 import Cart from './src/components/cart'
 import Notifications from './src/components/notifications'
 
-const Stack = createNativeStackNavigator();
-
 export default function App() {
+    const Stack = createNativeStackNavigator();
+    
     const [loaded] = Font.useFonts({ appFont: require('./assets/Chilanka-Regular.ttf') });
     const [route, setRoute] = useState(null)
 
@@ -58,7 +57,6 @@ export default function App() {
                     <Stack.Navigator initialRouteName={route}>
                         <Stack.Screen name="setup" component={Setup} options={{ headerShown: false }}/>
                         <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
-                        
                         <Stack.Screen name="restaurantprofile" component={Restaurantprofile} options={{ headerShown: false }}/>
                         <Stack.Screen name="makereservation" component={Makereservation} options={{ headerShown: false }}/>
                         <Stack.Screen name="order" component={Order} options={{ headerShown: false }}/>

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react'
+import { ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { logo_url } from '../../../assets/info'
@@ -50,12 +51,12 @@ export default function salonprofile(props) {
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 
+	const isMounted = useRef(null)
+
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		setUserid(userid)
-
-		if (userid != null) {
+		if (userid) {
 			getNumCartItems(userid)
 				.then((res) => {
 					if (res.status == 200) {
@@ -63,12 +64,13 @@ export default function salonprofile(props) {
 					}
 				})
 				.then((res) => {
-					if (res) {
+					if (res && isMounted.current == true) {
+						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -104,12 +106,12 @@ export default function salonprofile(props) {
 					} else if (msg == "products") {
 						getAllProducts()
 					}
-
-					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
+					
+				} else {
 					
 				}
 			})
@@ -124,7 +126,7 @@ export default function salonprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					let data = res.menus
 					let row = [], column = []
 					let rownum = 0
@@ -142,10 +144,11 @@ export default function salonprofile(props) {
 					setMenus(column)
 					setNummenus(data.length)
 					setShowmenus(true)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -160,20 +163,21 @@ export default function salonprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setProducts(res.products)
 					setNumproducts(res.numproducts)
 					setShowproducts(true)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const getAllServices = async() => {
-		const data = { locationid, menuid: "" }
+		const data = { userid: userId, locationid, menuid: "" }
 
 		getServices(data)
 			.then((res) => {
@@ -182,14 +186,15 @@ export default function salonprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setServices(res.services)
 					setNumservices(res.numservices)
 					setShowservices(true)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -200,7 +205,11 @@ export default function salonprofile(props) {
 	}
 	
 	useEffect(() => {
+		isMounted.current = true
+
 		initialize()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -209,8 +218,10 @@ export default function salonprofile(props) {
 				<View style={style.box}>
 					<View style={style.profileInfo}>
 						<TouchableOpacity style={style.back} onPress={() => {
-							refetch()
-							func.initialize()
+							if (refetch) {
+								refetch()
+							}
+							
 							props.navigation.goBack()
 						}}>
 							<Text style={style.backHeader}>Back</Text>
@@ -365,8 +376,10 @@ export default function salonprofile(props) {
 							<TouchableOpacity style={style.bottomNav} onPress={() => {
 								if (userId) {
 									AsyncStorage.clear()
+
+									setUserid(null)
 								} else {
-									setShowauth(true)
+									setShowauth({ show: true, action: false })
 								}
 							}}>
 								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
@@ -375,7 +388,36 @@ export default function salonprofile(props) {
 					</View>
 				</View>
 
-				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
+				{openCart && <Modal><Cart close={() => {
+					getTheNumCartItems()
+					setOpencart(false)
+				}}/></Modal>}
+				{showAuth.show && (
+					<Modal transparent={true}>
+						<Userauth close={() => setShowauth({ show: false, action: "" })} done={(id, msg) => {
+							if (msg == "setup") {
+								props.navigation.dispatch(
+									CommonActions.reset({
+										index: 1,
+										routes: [{ name: "setup" }]
+									})
+								);
+							} else {
+								socket.emit("socket/user/login", "user" + id, () => {
+									setUserid(id)
+
+									if (showAuth.action == "addcart") {
+										addCart()
+									} else if (showAuth.action == "openfriendscart") {
+										openFriendsCart()
+									}
+								})
+							}
+
+							setShowauth({ show: false, action: false })
+						}} navigate={props.navigation.navigate}/>
+					</Modal>
+				)}
 			</View>
 		</View>
 	)
@@ -386,13 +428,13 @@ const style = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	profileInfo: { height: 180 },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginHorizontal: 20, marginTop: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginHorizontal: 20, marginVertical: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	header: { fontFamily: 'appFont', fontSize: 15, fontWeight: 'bold', marginVertical: 5, paddingHorizontal: 50, textAlign: 'center' },
 	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 
-	body: { flexDirection: 'column', height: screenHeight - 220, justifyContent: 'space-around' },
+	body: { flexDirection: 'column', height: screenHeight - 230, justifyContent: 'space-around' },
 	bodyHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 

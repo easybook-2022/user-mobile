@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { ActivityIndicator, AsyncStorage, Dimensions, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react'
+import { ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { logo_url } from '../../assets/info'
@@ -49,12 +50,13 @@ export default function menu(props) {
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
+
+	const isMounted = useRef(null)
+
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		setUserid(userid)
-
-		if (userid != null) {
+		if (userid) {
 			getNumCartItems(userid)
 				.then((res) => {
 					if (res.status == 200) {
@@ -62,12 +64,13 @@ export default function menu(props) {
 					}
 				})
 				.then((res) => {
-					if (res) {
+					if (res && isMounted.current == true) {
+						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -84,7 +87,7 @@ export default function menu(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { msg, menuName, menuInfo } = res
 
 					setMenuname(menuName)
@@ -100,7 +103,7 @@ export default function menu(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -116,7 +119,7 @@ export default function menu(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					let data = res.menus
 					let row = [], column = []
 					let rownum = 0
@@ -136,7 +139,7 @@ export default function menu(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -151,7 +154,7 @@ export default function menu(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setProducts(res.products)
 					setNumproducts(res.numproducts)
 					setShowproducts(true)
@@ -159,13 +162,13 @@ export default function menu(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const getAllServices = async() => {
-		const data = { locationid, menuid }
+		const data = { userid: userId, locationid, menuid }
 
 		getServices(data)
 			.then((res) => {
@@ -174,7 +177,7 @@ export default function menu(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setServices(res.services)
 					setNumservices(res.numservices)
 					setShowservices(true)
@@ -182,7 +185,7 @@ export default function menu(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -193,7 +196,11 @@ export default function menu(props) {
 	}
 
 	useEffect(() => {
+		isMounted.current = true
+
 		initialize()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -285,7 +292,10 @@ export default function menu(props) {
 											showsVerticalScrollIndicator={false}
 											data={services}
 											renderItem={({ item, index }) => 
-												<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { locationid, serviceid: item.id, initialize: () => initialize() })}>
+												<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { 
+													locationid, scheduleid: item.scheduleid,
+													serviceid: item.id, initialize: () => initialize()
+												})}>
 													<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
 													<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
 														<Text style={style.serviceName}>{item.name}</Text>
@@ -293,7 +303,10 @@ export default function menu(props) {
 														
 														<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
 
-														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, serviceid: item.id, initialize: () => initialize() })}>
+														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { 
+															locationid, scheduleid: item.scheduleid,
+															serviceid: item.id, initialize: () => initialize() 
+														})}>
 															<Text>Book a time</Text>
 														</TouchableOpacity>
 													</View>
@@ -358,7 +371,10 @@ export default function menu(props) {
 					</View>
 				</View>
 
-				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
+				{openCart && <Modal><Cart close={() => {
+					getTheNumCartItems()
+					setOpencart(false)
+				}}/></Modal>}
 				{showAuth && (
 					<Modal transparent={true}>
 						<Userauth close={() => setShowauth(false)} done={(id, msg) => {

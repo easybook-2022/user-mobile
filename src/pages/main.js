@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native'
+import React, { useEffect, useState, useRef } from 'react'
+import { 
+	ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, 
+	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
+} from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { logo_url } from '../../assets/info'
+import { socket, logo_url } from '../../assets/info'
 import { getNumUpdates, updateNotificationToken } from '../apis/users'
 import { getLocations, getMoreLocations } from '../apis/locations'
 import { getNumCartItems } from '../apis/carts'
@@ -24,14 +28,16 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
-let updateTrackUser, updateNotifications
-
 export default function main({ navigation }) {
+	let updateTrackUser
+
 	const [locationPermission, setLocationpermission] = useState(false)
 	const [notificationPermission, setNotificationpermission] = useState(false)
+	const [localnetworkPermission, setLocalnetworkpermission] = useState(false)
 	const [geolocation, setGeolocation] = useState({ longitude: null, latitude: null })
 	const [searchLocationname, setSearchlocationname] = useState('')
 	const [locations, setLocations] = useState([])
+	const [loaded, setLoaded] = useState(false)
 	const [openNotifications, setOpenNotifications] = useState(false)
 	const [numNotifications, setNumnotifications] = useState(0)
 	const [userId, setUserid] = useState(null)
@@ -41,15 +47,17 @@ export default function main({ navigation }) {
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 	const [showAuth, setShowauth] = useState(false)
+	const [userName, setUsername] = useState('')
+	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
+	
+	const isMounted = useRef(null)
 
-	const getTheNumUpdates = async() => {
+	const fetchTheNumNotifications = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 		const time = Date.now()
 		const data = { userid, time }
 
-		setUserid(userid)
-
-		if (userid != null) {
+		if (userid) {
 			getNumUpdates(data)
 				.then((res) => {
 					if (res.status == 200) {
@@ -57,14 +65,24 @@ export default function main({ navigation }) {
 					}
 				})
 				.then((res) => {
-					if (res) setNumnotifications(res.numNotifications)
+					if (res && isMounted.current == true) {
+						socket.emit("socket/user/login", userid, () => {
+							setUserid(userid)
+							setNumnotifications(res.numNotifications)
+						})
+					}
+				})
+				.catch((err) => {
+					if (err.response && err.response.status == 400) {
+
+					}
 				})
 		}
 	}
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		if (userid != null) {
+		if (userid) {
 			getNumCartItems(userid)
 				.then((res) => {
 					if (res.status == 200) {
@@ -72,12 +90,10 @@ export default function main({ navigation }) {
 					}
 				})
 				.then((res) => {
-					if (res) {
-						setNumcartitems(res.numCartItems)
-					}
+					if (res && isMounted.current == true) setNumcartitems(res.numCartItems)
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 
 					}
 				})
@@ -88,6 +104,8 @@ export default function main({ navigation }) {
 		const d = new Date(), day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 		const data = { longitude, latitude, locationName, day: day[d.getDay()] }
 
+		setLoaded(false)
+
 		getLocations(data)
 			.then((res) => {
 				if (res.status == 200) {
@@ -95,13 +113,14 @@ export default function main({ navigation }) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					setLocations(res.locations)
 					setSearchlocationname(locationName)
+					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					const status = err.response.data.status
 
 					switch (status) {
@@ -115,7 +134,6 @@ export default function main({ navigation }) {
 			})
 	}
 	const getTheMoreLocations = async(type, lindex, index) => {
-		const userid = await AsyncStorage.getItem("userid")
 		const newLocations = [...locations]
 		const location = newLocations[lindex]
 		const { longitude, latitude } = geolocation
@@ -129,7 +147,7 @@ export default function main({ navigation }) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { index, max, newlocations } = res
 
 					if (newlocations.length > 0) {
@@ -143,7 +161,7 @@ export default function main({ navigation }) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -152,65 +170,44 @@ export default function main({ navigation }) {
 		const info = await Location.hasServicesEnabledAsync()
 		let longitude = await AsyncStorage.getItem("longitude")
 		let latitude = await AsyncStorage.getItem("latitude")
-		let permission = false
 
-		if (longitude && latitude) {
-			setGeolocation({ longitude, latitude })
+		if (!longitude || !latitude) {
+			const { status } = await Location.getForegroundPermissionsAsync()
 
-			setLocationpermission(true)
-			getTheLocations(longitude, latitude, '')
-		}
+		 	if (status != 'granted') {
+		 		const fore = await Location.requestForegroundPermissionsAsync()
 
-		if (info) {
-			const getfore = await Location.getForegroundPermissionsAsync()
-			const getback = await Location.getBackgroundPermissionsAsync()
-
-			if (getfore.status == 'granted' || getback.status == 'granted') {
-				setLocationpermission(true)
-			} else {
-				const fore = await Location.requestForegroundPermissionsAsync()
-				const back = await Location.requestBackgroundPermissionsAsync()
-
-				if (fore.status == 'granted' && back.status == 'granted') {
+				if (fore.status == 'granted') {
 					setLocationpermission(true)
 				}
-			}
+		 	}
 
 			const last = await Location.getLastKnownPositionAsync()
 
 			if (last) {
 				longitude = last.coords.longitude
 				latitude = last.coords.latitude
-
-				setGeolocation({ longitude, latitude })
-
-				AsyncStorage.setItem("longitude", longitude.toString())
-				AsyncStorage.setItem("latitude", latitude.toString())
 			} else {
 				const current = await Location.getCurrentPositionAsync()
 
 				if (current.coords.longitude && current.coords.latitude) {
 					longitude = current.coords.longitude
 					latitude = current.coords.latitude
-
-					setGeolocation({ longitude, latitude })
-
-					AsyncStorage.setItem("longitude", longitude.toString())
-					AsyncStorage.setItem("latitude", latitude.toString())
 				}
 			}
 
-			if (longitude && latitude) {
-				getTheLocations(longitude, latitude, '')
-
-				updateTrackUser = setInterval(() => trackUserLocation(), 2000)
-			} else {
+			if (!longitude && !latitude) {
 				const longitude = parseFloat(await AsyncStorage.getItem("longitude"))
 				const latitude = parseFloat(await AsyncStorage.getItem("latitude"))
-
-				setGeolocation({ longitude, latitude })
 			}
 		}
+
+		AsyncStorage.setItem("longitude", longitude.toString())
+		AsyncStorage.setItem("latitude", latitude.toString())
+
+		updateTrackUser = setInterval(() => trackUserLocation(), 2000)
+		setGeolocation({ longitude, latitude })
+		getTheLocations(longitude, latitude, "")
 	}
 	const getNotificationPermission = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -218,58 +215,35 @@ export default function main({ navigation }) {
 
 		if (status == "granted") {
 			setNotificationpermission(true)
-
-			const { data } = await Notifications.getExpoPushTokenAsync({
-				experienceId: "@robogram/easygo-user"
-			})
-
-			if (userid != null) {
-				updateNotificationToken({ userid, token: data })
-					.then((res) => {
-						if (res.status == 200) {
-							return res.data
-						}
-					})
-					.then((res) => {
-						if (res) {
-
-						}
-					})
-					.catch((err) => {
-						if (err.response.status == 400) {
-
-						}
-					})
-			}
 		} else {
 			const info = await Notifications.requestPermissionsAsync()
 
 			if (info.status == "granted") {
 				setNotificationpermission(true)
-
-				const { data } = await Notifications.getExpoPushTokenAsync({
-					experienceId: "@robogram/easygo-user"
-				})
-
-				if (userid != null) {
-					updateNotificationToken({ userid, token: data })
-						.then((res) => {
-							if (res.status == 200) {
-								return res.data
-							}
-						})
-						.then((res) => {
-							if (res) {
-
-							}
-						})
-						.catch((err) => {
-							if (err.response.status == 400) {
-								
-							}
-						})
-				}
 			}
+		}
+
+		const { data } = await Notifications.getExpoPushTokenAsync({
+			experienceId: "@robogram/easygo-user"
+		})
+
+		if (userid) {
+			updateNotificationToken({ userid, token: data })
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+
+					}
+				})
+				.catch((err) => {
+					if (err.response && err.response.status == 400) {
+
+					}
+				})
 		}
 	}
 	const trackUserLocation = async() => {
@@ -319,29 +293,64 @@ export default function main({ navigation }) {
 
 		return ""
 	}
-	const startAllInterval = () => {
-		getLocationPermission()
-		//getNotificationPermission()
-		updateNotifications = setInterval(() => getTheNumUpdates(), 2000)
+	const startWebsocket = async() => {
+		socket.on("updateNumNotifications", () => fetchTheNumNotifications())
+		socket.io.on("open", () => {
+			if (userId) {
+				socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))
+			}
+		})
+		socket.io.on("close", () => userId ? setShowdisabledscreen(true) : {})
 	}
-	const clearAllInterval = () => {
-		clearInterval(updateTrackUser)
-		clearInterval(updateNotifications)
-	}
-	const initialize = async() => {
-		getTheNumUpdates()
+
+	const initialize = () => {
+		fetchTheNumNotifications()
 		getTheNumCartItems()
-		startAllInterval()
+		getLocationPermission()
+
+		if (Constants.isDevice) getNotificationPermission()
 	}
 
 	useEffect(() => {
 		initialize()
-
-		Notifications.addNotificationResponseReceivedListener(res => {
-			const { data } = res.notification.request.content
-
-		});
 	}, [])
+
+	useEffect(() => {
+		isMounted.current = true
+
+		startWebsocket()
+
+		if (Constants.isDevice) {
+			Notifications.addNotificationResponseReceivedListener(res => {
+				const { data } = res.notification.request.content
+
+				if (data.type == "rescheduleAppointment") {
+					setOpenNotifications(true)
+				} else if (data.type == "acceptRequest") {
+					setOpenNotifications(true)
+				} else if (data.type == "receivePayment") {
+					fetchTheNumNotifications()
+				} else if (data.type == "cancelRequest") {
+					setOpenNotifications(true)
+				} else if (data.type == "orderReady") {
+					setOpenNotifications(true)
+				} else if (data.type == "canServeDiners") {
+					setOpenNotifications(true)
+				} else if (data.type == "addDiners") {
+					setOpenNotifications(true)
+				} else if (data.type == "addItemtoorder") {
+					setOpenNotifications(true)
+				}
+			});
+		}
+
+		return () => {
+			clearInterval(updateTrackUser)
+			socket.off("updateNumNotifications")
+
+			isMounted.current = false
+		}
+	}, [numNotifications])
 	
 	return (
 		<View style={style.main}>
@@ -360,17 +369,13 @@ export default function main({ navigation }) {
 					</View>
 
 					<View style={style.refresh}>
-						<TouchableOpacity style={style.refreshTouch} onPress={() => {
-							getTheNumUpdates()
-							getTheNumCartItems()
-							getLocationPermission()
-						}}>
+						<TouchableOpacity style={style.refreshTouch} onPress={() => getLocationPermission()}>
 							<Text style={style.refreshTouchHeader}>Refresh</Text>
 						</TouchableOpacity>
 					</View>
 
 					<View style={style.body}>
-						{geolocation.longitude && geolocation.latitude ? 
+						{geolocation.longitude && geolocation.latitude && loaded ? 
 							<FlatList
 								showsVerticalScrollIndicator={false}
 								data={locations}
@@ -380,7 +385,7 @@ export default function main({ navigation }) {
 
 										{item.index < item.max && (
 											<TouchableOpacity style={style.seeMore} onPress={() => {
-												clearAllInterval()
+												clearInterval(updateTrackUser)
 												navigation.navigate(item.service, { initialize: () => initialize() })
 											}}>
 												<Text style={style.seeMoreHeader}>See More</Text>
@@ -403,8 +408,8 @@ export default function main({ navigation }) {
 												data={item.locations}
 												renderItem={({ item }) => 
 													<TouchableOpacity style={style.location} onPress={() => {
-														clearAllInterval()
-														navigation.navigate(item.nav, { locationid: item.id, refetch: () => startAllInterval(), initialize: () => initialize() })
+														clearInterval(updateTrackUser)
+														navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
 													}}>
 														<View style={style.locationPhotoHolder}>
 															<Image source={{ uri: logo_url + item.logo }} style={{ height: 80, width: 80 }}/>
@@ -430,8 +435,8 @@ export default function main({ navigation }) {
 						<View style={style.bottomNavsRow}>
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => {
-									clearAllInterval()
-									navigation.navigate("account", { refetch: () => startAllInterval() })
+									clearInterval(updateTrackUser)
+									navigation.navigate("account", { refetch: () => initialize() })
 								}}>
 									<FontAwesome5 name="user-circle" size={30}/>
 								</TouchableOpacity>
@@ -439,8 +444,8 @@ export default function main({ navigation }) {
 
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => {
-									clearAllInterval()
-									navigation.navigate("recent", { refetch: () => startAllInterval() })
+									clearInterval(updateTrackUser)
+									navigation.navigate("recent", { refetch: () => initialize() })
 								}}>
 									<FontAwesome name="history" size={30}/>
 								</TouchableOpacity>
@@ -455,11 +460,11 @@ export default function main({ navigation }) {
 
 							<TouchableOpacity style={style.bottomNav} onPress={() => {
 								if (userId) {
-									clearAllInterval()
-
-									AsyncStorage.clear()
-
-									setUserid(null)
+									socket.emit("socket/user/logout", userId, () => {
+										clearInterval(updateTrackUser)
+										AsyncStorage.clear()
+										setUserid(null)
+									})
 								} else {
 									setShowauth(true)
 								}
@@ -470,20 +475,29 @@ export default function main({ navigation }) {
 					</View>
 				</View>
 
-				{openNotifications && <Modal><NotificationsBox navigation={navigation} close={() => setOpenNotifications(false)}/></Modal>}
-				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
+				{openNotifications && 
+					<Modal><NotificationsBox navigation={navigation} close={() => {
+						fetchTheNumNotifications()
+						setOpenNotifications(false)
+					}}/>
+					</Modal>
+				}
+				{openCart && <Modal><Cart close={() => {
+					getTheNumCartItems()
+					setOpencart(false)
+				}}/></Modal>}
 				{showAuth && (
 					<Modal transparent={true}>
 						<Userauth close={() => setShowauth(false)} done={(id, msg) => {
 							if (msg == "setup") {
-								props.navigation.dispatch(
+								navigation.dispatch(
 									CommonActions.reset({
 										index: 1,
 										routes: [{ name: "setup" }]
 									})
 								);
 							} else {
-								setUserid(id)
+								socket.emit("socket/user/login", "user" + id, () => setUserid(id))
 							}
 
 							setShowauth(false)
@@ -492,6 +506,26 @@ export default function main({ navigation }) {
 					</Modal>
 				)}
 			</View>
+
+			{showDisabledScreen && (
+				<Modal transparent={true}>
+					<View style={style.disabled}>
+						<View style={style.disabledContainer}>
+							<Text style={style.disabledHeader}>
+								There is an update to the app{'\n\n'}
+								Please wait a moment{'\n\n'}
+								or tap 'Close'
+							</Text>
+
+							<TouchableOpacity style={style.disabledClose} onPress={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}>
+								<Text style={style.disabledCloseHeader}>Close</Text>
+							</TouchableOpacity>
+
+							<ActivityIndicator size="large"/>
+						</View>
+					</View>
+				</Modal>
+			)}
 		</View>
 	)
 }
@@ -503,10 +537,10 @@ const style = StyleSheet.create({
 	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 15, margin: 10, padding: 10, width: width - 80 },
 	notification: { flexDirection: 'row', marginRight: 10, marginVertical: 10 },
 
-	refresh: { alignItems: 'center' },
+	refresh: { alignItems: 'center', height: 53 },
 	refreshTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, marginVertical: 10, padding: 5, width: 100 },
 	refreshTouchHeader: { textAlign: 'center' },
-	body: { flexDirection: 'column', height: screenHeight - 143, justifyContent: 'space-around' },
+	body: { flexDirection: 'column', height: screenHeight - 173, justifyContent: 'space-around' },
 
 	service: { marginBottom: 10, marginHorizontal: 5 },
 	rowHeader: { fontWeight: 'bold', margin: 10 },
@@ -519,8 +553,14 @@ const style = StyleSheet.create({
 	locationHours: { fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNavsRow: { flexDirection: 'row' },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	numCartItemsHeader: { fontWeight: 'bold' }
+	numCartItemsHeader: { fontWeight: 'bold' },
+
+	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
+	disabledContainer: { alignItems: 'center', width: '100%' },
+	disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
+	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
+	disabledCloseHeader: {  }
 })

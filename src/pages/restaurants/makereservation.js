@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react'
-import { AsyncStorage, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react'
+import { 
+	ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, 
+	TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { logo_url, displayTime } from '../../../assets/info'
+import { socket, logo_url, displayTime } from '../../../assets/info'
 import { getLocationHours, getLocationProfile, makeReservation, getInfo } from '../../apis/locations'
 import { getReservationInfo } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
@@ -21,11 +25,12 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const imageSize = 50
-const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
-const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const pushtime = 1000 * (60 * 10)
 
 export default function booktime(props) {
+	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
+	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+	const pushtime = 1000 * (60 * 10)
+	
 	const { locationid } = props.route.params
 	const func = props.route.params
 	const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
@@ -85,12 +90,14 @@ export default function booktime(props) {
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
+	const [confirmRequest, setConfirmrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })
+	
+	const isMounted = useRef(null)
+
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
-		setUserid(userid)
-
-		if (userid != null) {
+		if (userid) {
 			getNumCartItems(userid)
 				.then((res) => {
 					if (res.status == 200) {
@@ -98,19 +105,18 @@ export default function booktime(props) {
 					}
 				})
 				.then((res) => {
-					if (res) {
+					if (res && isMounted.current == true) {
+						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
 		}
 	}
-	
-	const [confirmRequest, setConfirmrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })
 
 	const getTheLocationProfile = async() => {
 		const longitude = await AsyncStorage.getItem("longitude")
@@ -120,13 +126,11 @@ export default function booktime(props) {
 		getLocationProfile(data)
 			.then((res) => {
 				if (res.status == 200) {
-					if (!res.data.errormsg) {
-						return res.data
-					}
+					return res.data
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { name } = res.locationInfo
 
 					setName(name)
@@ -134,7 +138,7 @@ export default function booktime(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -262,7 +266,7 @@ export default function booktime(props) {
 				}
 			})
 			.then((res) => {
-				if (res) {
+				if (res && isMounted.current == true) {
 					const { diners, table, note } = res.reservationInfo
 
 					setNumselecteddiners(diners)
@@ -271,7 +275,7 @@ export default function booktime(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -292,9 +296,6 @@ export default function booktime(props) {
 
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
-
-					openHour = openPeriod == "PM" ? parseInt(openHour) + 12 : openHour
-					closeHour = closePeriod == "PM" ? parseInt(closeHour) + 12 : closeHour
 
 					const currTime = new Date(Date.now())
 					const currDay = days[currTime.getDay()]
@@ -359,15 +360,13 @@ export default function booktime(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const makeTheReservation = async() => {
-		const userid = await AsyncStorage.getItem("userid")
-
-		if (userid != null) {
+		if (userId) {
 			const { month, date, year, time } = selectedDateInfo
 			const { note, oldtime } = confirmRequest
 			const selecteddate = new Date(time)
@@ -383,38 +382,35 @@ export default function booktime(props) {
 				})
 			})
 
-			const data = { userid, locationid, scheduleid, oldtime, time: dateInfo, diners, note: note ? note : "" }
+			let data = { 
+				userid: userId, locationid, scheduleid, table: selectedTable, 
+				oldtime, time: dateInfo, diners, note: note ? note : "",
+				type: "makeReservation"
+			}
 
 			makeReservation(data)
 				.then((res) => {
 					if (res.status == 200) {
-						if (!res.data.errormsg) {
-							return res.data
-						} else {
-							setConfirmrequest({ ...confirmRequest, show: true, errormsg: res.data.errormsg })
-						}
+						return res.data
 					}
 				})
 				.then((res) => {
 					if (res) {
 						if (res.status == "new" || res.status == "updated" || res.status == "requested") {
-							setConfirmrequest({ ...confirmRequest, requested: true })
+							const { receivingUsers, receivingLocations } = res
 
-							if (func.initialize) {
-								func.initialize()
-							}
-							
-							props.navigation.goBack()
+							data = { ...data, receivingUsers, receivingLocations }
+							socket.emit("socket/makeReservation", data, () => setConfirmrequest({ ...confirmRequest, requested: true }))
 						} else {
 							let { oldtime, note } = res
 
-							setConfirmrequest({ ...confirmRequest, show: true, oldtime, note })
+							setConfirmrequest({ ...confirmRequest, oldtime, note })
 						}
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
-						const status = err.response.data.status
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
 
 						switch (status) {
 							case "cardrequired":
@@ -423,6 +419,7 @@ export default function booktime(props) {
 
 								break;
 							default:
+								setConfirmrequest({ ...confirmRequest, show: true, errormsg })
 						}
 					}
 				})
@@ -437,8 +434,7 @@ export default function booktime(props) {
 	}
 
 	const getDinersList = async(username) => {
-		const userid = await AsyncStorage.getItem("userid")
-		const data = { userid, username }
+		const data = { userid: userId, username }
 
 		searchFriends(data)
 			.then((res) => {
@@ -453,7 +449,7 @@ export default function booktime(props) {
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
@@ -565,9 +561,7 @@ export default function booktime(props) {
 		setNumselecteddiners(numSelectedDiners - 1)
 	}
 	const openDinersList = async() => {
-		const userid = await AsyncStorage.getItem("userid")
-
-		if (userid != null) {
+		if (userId) {
 			const data = { locationid, menuid: "" }
 
 			getInfo(data)
@@ -578,14 +572,12 @@ export default function booktime(props) {
 				})
 				.then((res) => {
 					if (res) {
-						const { storeName, storeLogo } = res
-
 						setOpenlist(true)
-						setLocationinfo({ name: storeName, logo: storeLogo })
+						setLocationinfo({ name: res.name, logo: res.icon })
 					}
 				})
 				.catch((err) => {
-					if (err.response.status == 400) {
+					if (err.response && err.response.status == 400) {
 						
 					}
 				})
@@ -603,7 +595,11 @@ export default function booktime(props) {
 	}
 
 	useEffect(() => {
+		isMounted.current = true
+
 		initialize()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -621,9 +617,9 @@ export default function booktime(props) {
 					</TouchableOpacity>
 
 					<View style={style.headers}>
-						<Text style={style.boxHeader}>{!scheduleid ? 'Make a' : 'Remake a' } reservation {scheduleid ? 'for ' : 'at '}</Text>
+						<Text style={style.boxHeader}>{!scheduleid ? 'Make a' : 'Remake the' } reservation {scheduleid ? 'for ' : 'at '}</Text>
 
-						{scheduleid && <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>{(numSelectedDiners + 1)} {(numSelectedDiners + 1) == 1 ? 'person' : 'people'}</Text>}
+						{scheduleid && <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>{numSelectedDiners} {numSelectedDiners == 1 ? 'person' : 'people'}</Text>}
 						{scheduleid && <Text style={style.boxHeader}>at</Text>}
 
 						<Text style={style.serviceHeader}>{name}</Text>
@@ -641,7 +637,7 @@ export default function booktime(props) {
 												<TouchableOpacity style={style.dinersAdd} onPress={() => openDinersList()}>
 													<Text style={style.dinersAddHeader}>{numSelectedDiners > 0 ? 'Edit' : 'Add Other'} Diner(s)</Text>
 												</TouchableOpacity>
-												<Text style={style.dinersHeader}>{numSelectedDiners} Diner(s) Selected</Text>
+												<Text style={style.dinersHeader}>{numSelectedDiners} other diner(s) selected</Text>
 											</>
 										)}	
 									</View>
@@ -691,20 +687,23 @@ export default function booktime(props) {
 									<View style={style.times}>
 										{times.map(info => (
 											<View key={info.key}>
-												{(!info.timetaken && !info.timepassed) ? 
+												{(!info.timetaken && !info.timepassed) && (
 													<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
 														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
 													</TouchableOpacity>
-													:
-													info.timetaken ? 
-														<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-															<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
-														</TouchableOpacity>
-														:
-														<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-															<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
-														</TouchableOpacity>
-												}
+												)}
+
+												{(info.timetaken && !info.timepassed) && (
+													<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
+														<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
+													</TouchableOpacity>
+												)}
+
+												{(!info.timetaken && info.timepassed) && (
+													<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
+														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+													</TouchableOpacity>
+												)}
 											</View>
 										))}
 									</View>
@@ -773,7 +772,7 @@ export default function booktime(props) {
 											{confirmRequest.oldtime == 0 ? 
 												<Text style={style.confirmHeader}>
 													<Text style={{ fontFamily: 'appFont' }}>{!scheduleid ? 'Request' : 'Re-request'} a reservation for {'\n'}</Text>
-													{numSelectedDiners > 0 ? 
+													{(numSelectedDiners + 1) > 0 ? 
 														" " + (numSelectedDiners + 1) + " " + ((numSelectedDiners + 1) > 1 ? 'people' : 'person') 
 														: 
 														" yourself"
@@ -785,7 +784,7 @@ export default function booktime(props) {
 												<Text style={style.confirmHeader}>
 													<Text style={{ fontFamily: 'appFont' }}>You already requested a reservation for {'\n'}</Text>
 													{numSelectedDiners > 0 ? 
-														" " + (numSelectedDiners + 1) + " " + ((numSelectedDiners + 1) > 1 ? 'people' : 'person') 
+														" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
 														: 
 														" yourself"
 													}
@@ -797,7 +796,7 @@ export default function booktime(props) {
 											}
 
 											<View style={style.note}>
-												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirmrequest({...confirmRequest, note })} value={confirmRequest.note} autoCorrect={false}/>
+												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirmrequest({...confirmRequest, note })} value={confirmRequest.note} autoCorrect={false} autoCapitalize="none"/>
 											</View>
 
 											{confirmRequest.errormsg ? <Text style={style.errorMsg}>You already requested a reservation for this restaurant</Text> : null}
@@ -823,7 +822,7 @@ export default function booktime(props) {
 													<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
 													<Text style={style.requestedHeaderInfo}>
 														{'\n'}for 
-														{numSelectedDiners > 0 ? 
+														{(numSelectedDiners + 1) > 0 ? 
 															" " + (numSelectedDiners + 1) + " " + ((numSelectedDiners + 1) > 1 ? 'people' : 'person') 
 															: 
 															" yourself"
@@ -850,13 +849,16 @@ export default function booktime(props) {
 						</TouchableWithoutFeedback>
 					</Modal>
 				)}
-				{openCart && <Modal><Cart close={() => setOpencart(false)}/></Modal>}
+				{openCart && <Modal><Cart close={() => {
+					getTheNumCartItems()
+					setOpencart(false)
+				}}/></Modal>}
 				{openList && (
 					<Modal>
 						<View style={style.dinersListBox}>
 							<View style={{ paddingVertical: offsetPadding }}>
 								<View style={style.dinersList}>
-									<TextInput style={style.dinerNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner to add to reservation" onChangeText={(username) => getDinersList(username)} autoCorrect={false}/>
+									<TextInput style={style.dinerNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner(s) to add to reservation" onChangeText={(username) => getDinersList(username)} autoCorrect={false} autoCapitalize="none"/>
 
 									<View style={style.dinersListContainer}>
 										<View style={style.dinersListSearched}>
@@ -971,15 +973,17 @@ export default function booktime(props) {
 									})
 								);
 							} else {
-								setUserid(id)
+								socket.emit("socket/user/login", "user" + id, () => {
+									setUserid(id)
 
-								if (showAuth.action == "makereservation") {
-									makeTheReservation()
-								} else if (showAuth.action == "opendinerslist") {
-									openDinersList()
-								}
+									if (showAuth.action == "makereservation") {
+										makeTheReservation()
+									} else if (showAuth.action == "opendinerslist") {
+										openDinersList()
+									}
 
-								setShowauth({ show: false, action: "" })
+									setShowauth({ show: false, action: "" })
+								})
 							}
 						}} navigate={props.navigation.navigate}/>
 					</Modal>
@@ -992,7 +996,7 @@ export default function booktime(props) {
 const style = StyleSheet.create({
 	makereservation: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	headers: { height: 100, marginVertical: 10 },

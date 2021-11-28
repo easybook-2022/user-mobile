@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { AsyncStorage, ActivityIndicator, Dimensions, FlatList, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { ActivityIndicator, Dimensions, FlatList, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getTransactions } from '../apis/transactions'
 
-const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
-
 export default function recent(props) {
-	const { refetch } = props.route.params
+	const { height, width } = Dimensions.get('window')
+	const offsetPadding = Constants.statusBarHeight
+	const screenHeight = height - offsetPadding
+	
+	const { params } = props.route
+	const refetch = params && params.refetch ? params.refetch : null
+	const [userId, setUserid] = useState(null)
 	const [items, setItems] = useState([])
 	const [cartIndex, setCartindex] = useState(0)
 	const [loaded, setLoaded] = useState(false)
+
+	const isMounted = useRef(null)
 	
 	const getTheTransactions = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -26,34 +31,33 @@ export default function recent(props) {
 			})
 			.then((res) => {
 				if (res) {
+					setUserid(userid)
 					setItems(res.transactions)
 					setLoaded(true)
 				}
 			})
 			.catch((err) => {
-				if (err.response.status == 400) {
+				if (err.response && err.response.status == 400) {
 					
 				}
 			})
 	}
 	const displayDateStr = (unixtime) => {
-		let weekdays = { "Mon": "Monday", "Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday", "Fri": "Friday", "Sat": "Saturday", "Sun": "Sunday" }
-		let months = { 
-			"Jan": "January", "Feb": "February", "Mar": "March", "Apr": "April", "May": "May", "Jun": "June", 
-			"Jul": "July", "Aug": "August", "Sep": "September", "Oct": "October", "Nov": "November", "Dec": "December" 
-		}
-		let d = new Date(unixtime).toString().split(" ")
-		let day = weekdays[d[0]]
-		let month = months[d[1]]
-		let date = d[2]
-		let year = d[3]
+		let weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+		let months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
 
-		let time = d[4].split(":")
-		let hour = parseInt(time[0])
-		let minute = time[1]
-		let period = hour > 11 ? "pm" : "am"
+		let d = new Date(unixtime)
+		let day = weekdays[d.getDay()]
+		let month = months[d.getMonth()]
+		let date = d.getDate()
+		let year = d.getFullYear()
+
+		let hour = d.getHours()
+		let minute = d.getMinutes()
+		let period = hour > 12 ? "pm" : "am"
 
 		hour = hour > 12 ? hour - 12 : hour
+		minute = minute < 10 ? "0" + minute : minute
 
 		let datestr = day + ", " + month + " " + date + ", " + year + " at " + hour + ":" + minute + " " + period;
 
@@ -61,7 +65,11 @@ export default function recent(props) {
 	}
 
 	useEffect(() => {
+		isMounted.current = true
+
 		getTheTransactions()
+
+		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -69,7 +77,7 @@ export default function recent(props) {
 			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<TouchableOpacity style={style.back} onPress={() => {
-						refetch()
+						if (refetch) refetch()
 						props.navigation.goBack()
 					}}>
 						<Text style={style.backHeader}>Back</Text>
@@ -83,17 +91,24 @@ export default function recent(props) {
 								data={items}
 								renderItem={({ item, index }) => 
 									<View key={item.key} style={style.group}>
-										<Text style={style.dateHeader}><Text style={{ fontWeight: 'bold' }}>Purchased:</Text> {displayDateStr(item.time)}</Text>
+										<Text style={style.dateHeader}>
+											{item.items[0].type == "service" ? 
+												<><Text style={{ fontWeight: 'bold' }}>Requested:</Text> {displayDateStr(item.time)}</>
+												:
+												<><Text style={{ fontWeight: 'bold' }}>Purchased:</Text> {displayDateStr(item.time)}</>
+											}
+										</Text>
 
 										{item.items.map(recent => (
 											<View style={style.item} key={recent.key}>
 												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-													<View style={style.itemImageHolder}>
-														<Image source={{ uri: logo_url + recent.image }} style={style.itemImage}/>
+													<View style={{ alignItems: 'center' }}>
+														<Text style={style.itemName}>{recent.name}</Text>
+														<View style={style.itemImageHolder}>
+															<Image source={{ uri: logo_url + recent.image }} style={style.itemImage}/>
+														</View>
 													</View>
 													<View style={style.itemInfos}>
-														<Text style={style.itemName}>{recent.name}</Text>
-
 														{recent.type == "product" && (
 															<>
 																{recent.options.map(option => (
@@ -124,7 +139,11 @@ export default function recent(props) {
 														)}	
 													</View>
 													<View>
-														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>cost:</Text> ${recent.cost}</Text>
+														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Service cost:</Text> ${recent.cost.toFixed(2)}</Text>
+														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${recent.fee.toFixed(2)}</Text>
+														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${recent.pst.toFixed(2)}</Text>
+														<Text style={[style.header, { marginBottom: 10 }]}><Text style={{ fontWeight: 'bold' }}>GST:</Text> ${recent.gst.toFixed(2)}</Text>
+														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total:</Text> ${recent.total.toFixed(2)}</Text>
 													</View>
 												</View>
 											</View>
@@ -150,12 +169,12 @@ export default function recent(props) {
 const style = StyleSheet.create({
 	recent: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
-	group: { borderRadius: 10, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	dateHeader: { fontSize: 15, marginVertical: 10 },
+	group: { borderRadius: 10, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10 },
+	dateHeader: { fontSize: 15, marginBottom: 20 },
 	item: { marginBottom: 5 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
 	itemImage: { height: 100, width: 100 },

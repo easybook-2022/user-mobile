@@ -10,9 +10,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -33,11 +30,7 @@
     },
     "notification": {
       "icon": "./assets/notification.png"
-    },
-    "plugins": [
-      [
-        "expo-notifications"
-      ]
-    ]
-  }
+    }
+  },
+  "name": "EasyGO(User)"
 }
