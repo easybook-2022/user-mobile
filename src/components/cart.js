@@ -17,6 +17,7 @@ export default function cart(props) {
 	const [items, setItems] = useState([])
 	const [loaded, setLoaded] = useState(false)
 	const [activeCheckout, setActivecheckout] = useState(false)
+	const [totalCost, setTotalcost] = useState(0.00)
 	const [loading, setLoading] = useState(false)
 	const [showConfirm, setShowconfirm] = useState(false)
 	const [itemInfo, setIteminfo] = useState({ 
@@ -167,6 +168,7 @@ export default function cart(props) {
 						setUserid(userid)
 						setItems(res.cartItems)
 						setActivecheckout(res.activeCheckout)
+						setTotalcost(res.totalcost)
 						setLoaded(true)
 					})
 				}
@@ -706,7 +708,11 @@ export default function cart(props) {
 												</View>
 												<View>
 													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.cost.toFixed(2)}</Text>
+													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Price:</Text> ${item.price.toFixed(2)}</Text>
+													{item.pst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>}
+													{item.hst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${item.hst.toFixed(2)}</Text>}
+													{item.fee > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>}
+													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.totalcost.toFixed(2)}</Text>
 												</View>
 											</View>
 
@@ -762,6 +768,7 @@ export default function cart(props) {
 								/>
 
 								<View style={{ alignItems: 'center' }}>
+									{totalCost > 0 && <Text>Total cost: ${totalCost.toFixed(2)}</Text>}
 									{loading && <ActivityIndicator size="small"/>}
 									<TouchableOpacity style={activeCheckout && !loading ? style.checkout : style.checkoutDisabled} disabled={!activeCheckout || loading} onPress={() => checkout()}>
 										<Text style={style.checkoutHeader}>Checkout</Text>

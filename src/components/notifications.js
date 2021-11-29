@@ -247,10 +247,11 @@ export default function notifications(props) {
 			socketType = item.locationtype == "restaurant" ? "restaurant" : "salon"
 
 			const cost = 0.17
-			const pst = parseFloat((cost * 0.08).toFixed(2))
-			const hst = parseFloat((cost * 0.05).toFixed(2))
-			const fee = parseFloat((stripeFee(cost) - cost).toFixed(2))
-			const total = parseFloat((cost + pst + hst + fee).toFixed(2))
+			const pst = cost * 0.08
+			const hst = cost * 0.05
+			const total = stripeFee(cost + pst + hst)
+			const nofee = cost + pst + hst
+			const fee = total - nofee
 
 			try {
 				let res = await getTrialInfo(data)
@@ -264,8 +265,8 @@ export default function notifications(props) {
 
 					setShowchargeuser({ 
 						...showChargeuser, show: true, trialstatus: { days, status }, scheduleid, index, type: "salon",
-						cost: cost.toFixed(2), pst: pst.toFixed(2), 
-						hst: hst.toFixed(2), fee: fee.toFixed(2), total: total.toFixed(2)
+						cost: cost.toFixed(2), pst: pst.toFixed(2), hst: hst.toFixed(2), 
+						fee: fee.toFixed(2), total: total.toFixed(2)
 					})
 				}
 			} catch(err) {
@@ -314,7 +315,6 @@ export default function notifications(props) {
 							newItems[index].chargedUser = true
 
 							setItems(newItems)
-							setShowchargeuser({ ...showChargeuser, show: false, trialstatus: { days: 0, status: "" }})
 						})
 					}
 				})
@@ -358,15 +358,17 @@ export default function notifications(props) {
 
 		if (!showChargeuser.show) {
 			const cost = 0.17
-			const pst = parseFloat((cost * 0.08).toFixed(2))
-			const hst = parseFloat((cost * 0.05).toFixed(2))
-			const fee = parseFloat((stripeFee(cost) - cost).toFixed(2))
-			const total = parseFloat((cost + pst + hst + fee).toFixed(2))
+			const pst = cost * 0.08
+			const hst = cost * 0.05
+			const total = stripeFee(cost + pst + hst)
+			const nofee = cost + pst + hst
+			const fee = total - nofee
 
 			setShowchargeuser({ 
-				show: true, locationid, scheduleid, type: "restaurant",
-				cost: cost.toFixed(2), pst: pst.toFixed(2), index, 
-				hst: hst.toFixed(2), fee: fee.toFixed(2), total: total.toFixed(2)
+				show: true, locationid, scheduleid, type: "restaurant", index, 
+				cost: cost.toFixed(2), pst: pst.toFixed(2), 
+				hst: hst.toFixed(2), fee: fee.toFixed(2), 
+				total: total.toFixed(2)
 			})
 		} else {
 			const { locationid, scheduleid, index } = showChargeuser
@@ -424,15 +426,16 @@ export default function notifications(props) {
 					if (res) {
 						const { owners } = res
 						const cost = serviceprice
-						const pst = parseFloat((cost * 0.08).toFixed(2))
-						const hst = parseFloat((cost * 0.05).toFixed(2))
-						const fee = parseFloat((stripeFee(cost) - cost).toFixed(2))
-						const total = parseFloat((cost + pst + hst + fee).toFixed(2))
+						const pst = cost * 0.08
+						const hst = cost * 0.05
+						const total = stripeFee(cost + pst + hst)
+						const nofee = cost + pst + hst
+						const fee = total - nofee
 
 						setShowowners({ 
 							...showOwners, show: true, showworkers: true, scheduleid, index, owners, 
-							cost: cost.toFixed(2), pst: pst.toFixed(2), 
-							hst: hst.toFixed(2), fee: fee.toFixed(2), total: total.toFixed(2)
+							cost: cost.toFixed(2), pst: pst.toFixed(2), hst: hst.toFixed(2), 
+							fee: fee.toFixed(2), total: total.toFixed(2)
 						})
 					}
 				})
@@ -534,12 +537,18 @@ export default function notifications(props) {
 				if (res) {
 					if (getinfo == true) {
 						const amount = res.amount
-						const pst = parseFloat((amount * 0.08).toFixed(2))
-						const hst = parseFloat((amount * 0.05).toFixed(2))
-						const fee = parseFloat((stripeFee(amount) - amount).toFixed(2))
-						const total = parseFloat((amount + pst + hst + fee).toFixed(2))
+						const pst = amount * 0.08
+						const hst = amount * 0.05
+						const total = stripeFee(amount + pst + hst)
+						const nofee = amount + pst + hst
+						const fee = total - nofee
 
-						setShowpaymentdetail({ show: true, scheduleid, index, amount, pst, hst, fee, total })
+						setShowpaymentdetail({ 
+							show: true, scheduleid, index, 
+							amount: amount.toFixed(2), pst: pst.toFixed(2), 
+							hst: hst.toFixed(2), fee: fee.toFixed(2), 
+							total: total.toFixed(2)
+						})
 					} else {
 						const { index } = showPaymentdetail
 						const newItems = [...items]
@@ -1430,8 +1439,10 @@ export default function notifications(props) {
 											A charge of $ 0.50 will be applied
 											to your credit card to proceed with
 											confirmation
+										</Text>
 
-											{'\n\n'}App fee: ${showChargeuser.cost}
+										<Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+											App fee: ${showChargeuser.cost}
 											{'\n'}E-pay fee: ${showChargeuser.fee}
 											{'\n'}PST: ${showChargeuser.pst}
 											{'\n'}HST: ${showChargeuser.hst}
@@ -1463,10 +1474,10 @@ export default function notifications(props) {
 						<View style={{ paddingVertical: offsetPadding }}>
 							<View style={style.popBox}>
 								<View style={style.popContainer}>
-									<Text style={style.popHeader}>
-										Payment detail
+									<Text style={style.popHeader}>Payment detail</Text>
 
-										{'\n\n'}Amount: ${showPaymentdetail.amount}
+									<Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+										Amount: ${showPaymentdetail.amount}
 										{'\n'}E-pay fee: ${showPaymentdetail.fee}
 										{'\n'}PST: ${showPaymentdetail.pst}
 										{'\n'}HST: ${showPaymentdetail.hst}
@@ -1522,54 +1533,35 @@ export default function notifications(props) {
 											<TouchableOpacity style={style.payworkerAction} onPress={() => setShowowners({ ...showOwners, show: false, owners: [], trialstatus: { days: 0, status: "" } })}>
 												<Text style={style.payworkerActionHeader}>Close</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={showOwners.workerid > 0 ? style.payworkerAction : style.payworkerActionDisabled} disabled={showOwners.workerid == 0} onPress={() => allowThePayment()}>
+											<TouchableOpacity style={showOwners.workerid > 0 ? style.payworkerAction : style.payworkerActionDisabled} disabled={showOwners.workerid == 0} onPress={() => setShowowners({ ...showOwners, showworkers: false })}>
 												<Text style={style.payworkerActionHeader}>Send</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
 								</View>
 								:
-								showOwners.trialstatus.days > 0 ? 
-									<View style={style.popBox}>
-										<View style={style.popContainer}>
-											<Text style={style.popHeader}>
-												Payment is allowed
-												{'\n\n'}
-												Trial end in {showOwners.trialstatus.days} day(s)
-											</Text>
+								<View style={style.popBox}>
+									<View style={style.popContainer}>
+										<Text style={style.popHeader}>Payment Detail</Text>
 
-											<View style={style.popActions}>
-												<TouchableOpacity style={style.popAction} onPress={() => setShowowners({ ...showOwners, show: false, trialstatus: { days: 0, status: "" } })}>
-													<Text style={style.popActionHeader}>Ok</Text>
-												</TouchableOpacity>
-											</View>
+										<Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+											Service cost: ${showOwners.cost}
+											{'\n'}E-pay fee: ${showOwners.fee}
+											{'\n'}PST: ${showOwners.pst}
+											{'\n'}HST: ${showOwners.hst}
+											{'\n'}Total: ${showOwners.total}
+										</Text>
+
+										<View style={style.popActions}>
+											<TouchableOpacity style={style.popAction} onPress={() => setShowowners({ ...showOwners, show: false, trialstatus: { days: 0, status: "" } })}>
+												<Text style={style.popActionHeader}>Close</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.popAction} onPress={() => allowThePayment()}>
+												<Text style={style.popActionHeader}>Ok</Text>
+											</TouchableOpacity>
 										</View>
 									</View>
-									:
-									<View style={style.popBox}>
-										<View style={style.popContainer}>
-											<Text style={style.popHeader}>
-												Trial over
-												{'\n'}
-												Payment Detail
-
-												{'\n\n'}Service cost: ${showOwners.cost}
-												{'\n'}E-pay fee: ${showOwners.fee}
-												{'\n'}PST: ${showOwners.pst}
-												{'\n'}HST: ${showOwners.hst}
-												{'\n'}Total: ${showOwners.total}
-											</Text>
-
-											<View style={style.popActions}>
-												<TouchableOpacity style={style.popAction} onPress={() => setShowowners({ ...showOwners, show: false, trialstatus: { days: 0, status: "" } })}>
-													<Text style={style.popActionHeader}>Close</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.popAction} onPress={() => allowThePayment()}>
-													<Text style={style.popActionHeader}>Ok</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									</View>
+								</View>
 							}
 						</View>
 					</Modal>

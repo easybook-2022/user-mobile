@@ -93,9 +93,9 @@ export default function recent(props) {
 									<View key={item.key} style={style.group}>
 										<Text style={style.dateHeader}>
 											{item.items[0].type == "service" ? 
-												<><Text style={{ fontWeight: 'bold' }}>Requested:</Text> {displayDateStr(item.time)}</>
+												<><Text style={{ fontWeight: 'bold' }}>Appointment on</Text> {displayDateStr(item.time)}</>
 												:
-												<><Text style={{ fontWeight: 'bold' }}>Purchased:</Text> {displayDateStr(item.time)}</>
+												<><Text style={{ fontWeight: 'bold' }}>Purchased on</Text> {displayDateStr(item.time)}</>
 											}
 										</Text>
 

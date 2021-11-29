@@ -772,8 +772,8 @@ export default function booktime(props) {
 											{confirmRequest.oldtime == 0 ? 
 												<Text style={style.confirmHeader}>
 													<Text style={{ fontFamily: 'appFont' }}>{!scheduleid ? 'Request' : 'Re-request'} a reservation for {'\n'}</Text>
-													{(numSelectedDiners + 1) > 0 ? 
-														" " + (numSelectedDiners + 1) + " " + ((numSelectedDiners + 1) > 1 ? 'people' : 'person') 
+													{numSelectedDiners > 0 ? 
+														" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
 														: 
 														" yourself"
 													}
@@ -822,8 +822,8 @@ export default function booktime(props) {
 													<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
 													<Text style={style.requestedHeaderInfo}>
 														{'\n'}for 
-														{(numSelectedDiners + 1) > 0 ? 
-															" " + (numSelectedDiners + 1) + " " + ((numSelectedDiners + 1) > 1 ? 'people' : 'person') 
+														{numSelectedDiners > 0 ? 
+															" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
 															: 
 															" yourself"
 														}

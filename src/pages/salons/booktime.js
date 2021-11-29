@@ -378,7 +378,6 @@ export default function booktime(props) {
 				})
 				.then((res) => {
 					if (res) {
-						alert(JSON.stringify(res))
 						if (res.status == "new" || res.status == "updated" || res.status == "requested") {
 							data = { ...data, receiver: res.receiver }
 							socket.emit("socket/requestAppointment", data, () => setConfirmrequest({ ...confirmRequest, requested: true }))
