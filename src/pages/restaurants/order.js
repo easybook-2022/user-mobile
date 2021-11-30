@@ -1265,11 +1265,11 @@ export default function order(props) {
 			}
 		})
 		socket.io.on("open", () => {
-			if (userId) {
+			if (userId != null) {
 				socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))
 			}
 		})
-		socket.io.on("close", () => userId ? setShowdisabledscreen(true) : {})
+		socket.io.on("close", () => userId != null ? setShowdisabledscreen(true) : {})
 	}
 
 	useEffect(() => {

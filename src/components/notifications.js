@@ -246,14 +246,14 @@ export default function notifications(props) {
 			scheduleid = item.id
 			socketType = item.locationtype == "restaurant" ? "restaurant" : "salon"
 
-			const cost = 0.17
-			const pst = cost * 0.08
-			const hst = cost * 0.05
-			const total = stripeFee(cost + pst + hst)
-			const nofee = cost + pst + hst
-			const fee = total - nofee
+			if (!chargedUser) {
+				const cost = 0.16
+				const pst = cost * 0.08
+				const hst = cost * 0.05
+				const total = stripeFee(cost + pst + hst)
+				const nofee = cost + pst + hst
+				const fee = total - nofee
 
-			try {
 				let res = await getTrialInfo(data)
 
 				if (res.status == 200) {
@@ -269,29 +269,21 @@ export default function notifications(props) {
 						fee: fee.toFixed(2), total: total.toFixed(2)
 					})
 				}
-			} catch(err) {
-				if (err.response && err.response.status == 400) {
-					const { errormsg, status } = err.response.data
-
-					switch (status) {
-						case "cardrequired":
-							setShowchargeuser({ ...showChargeuser, show: false })
-							setShowservicepaymentrequired(true)
-
-							break
-						default:
-					}
-				}
+			} else {
+				confirm = true
 			}
 		} else {
-			let item = items[showChargeuser.index]
+			let { index, trialstatus } = showChargeuser
+			let item = items[index]
 
-			chargedUser = item.chargedUser
 			scheduleid = item.id
 			socketType = item.locationtype == "restaurant" ? "restaurant" : "salon"
 
-			if (showChargeuser.trialstatus.status == "trialover") {
+			if (trialstatus.status == "trialover") {
 				confirm = true
+			} else if (trialstatus.status == "cardrequired") {
+				setShowchargeuser({ ...showChargeuser, show: false })
+				setShowservicepaymentrequired(true)
 			}
 		}
 
@@ -315,6 +307,10 @@ export default function notifications(props) {
 							newItems[index].chargedUser = true
 
 							setItems(newItems)
+
+							if (showChargeuser.trialstatus.status == "trialover") {
+								setShowchargeuser({ ...showOwners, show: false, trialstatus: { days: 0, status: "" } })
+							}
 						})
 					}
 				})
@@ -738,11 +734,11 @@ export default function notifications(props) {
 			}
 		})
 		socket.io.on("open", () => {
-			if (userId) {
+			if (userId != null) {
 				socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))
 			}
 		})
-		socket.io.on("close", () => userId ? setShowdisabledscreen(true) : {})
+		socket.io.on("close", () => userId != null ? setShowdisabledscreen(true) : {})
 	}
 
 	useEffect(() => {

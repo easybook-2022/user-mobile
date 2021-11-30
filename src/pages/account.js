@@ -37,7 +37,7 @@ export default function account(props) {
 
 	const [permission, setPermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
-	const [camType, setCamtype] = useState(Camera.Constants.Type.back);
+	const [camType, setCamtype] = useState(Camera.Constants.Type.front);
 
 	const [username, setUsername] = useState('')
 	const [cellnumber, setCellnumber] = useState('')
