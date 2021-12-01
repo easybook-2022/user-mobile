@@ -40,7 +40,7 @@ const emptyCard = { number: "", expMonth: "", expYear: "", cvc: "" }
 const { number, expMonth, expYear, cvc } = 
 	test_input ? 
 		test_stripe ? 
-			testCards[Math.floor(Math.random() * 2) + 0]
+			testCards[0]
 			:
 			realCards[Math.floor(Math.random() * 2) + 0]
 	:

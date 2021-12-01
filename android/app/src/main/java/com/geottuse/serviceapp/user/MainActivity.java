@@ -1,4 +1,4 @@
-package com.easygouser;
+package com.geottuse.serviceapp.user;
 
 import android.os.Bundle;
 

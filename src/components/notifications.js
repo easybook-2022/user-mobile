@@ -891,7 +891,13 @@ export default function notifications(props) {
 																: null
 															))}
 														</View>
-														<Text style={style.quantity}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
+														<View>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>HST fee:</Text> ${item.hst.toFixed(2)}</Text>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.total.toFixed(2)}</Text>
+														</View>
 													</View>
 
 													{(item.status == "checkout" || item.status == "ready") && (
@@ -991,7 +997,13 @@ export default function notifications(props) {
 																: null
 															))}
 														</View>
-														<Text style={style.quantity}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {item.quantity}</Text>
+														<View>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>HST fee:</Text> ${item.hst.toFixed(2)}</Text>
+															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.total.toFixed(2)}</Text>
+														</View>
 													</View>
 													<Text style={style.itemOrderNumber}>Your order#: {item.orderNumber}</Text>
 													<Text style={style.itemHeader}>
@@ -1621,7 +1633,7 @@ const style = StyleSheet.create({
 	itemInfos: {  },
 	itemName: { fontSize: 20, marginBottom: 10 },
 	itemInfo: { fontSize: 15 },
-	quantity: { fontSize: 15 },
+	itemInfoHeader: { fontSize: 15 },
 	adderInfo: { alignItems: 'center' },
 	adderInfoProfile: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 	adderInfoHeader: { padding: 10 },
