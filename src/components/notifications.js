@@ -5,7 +5,7 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { socket, url, logo_url, displayTime, stripeFee } from '../../assets/info'
 import { getNotifications, getTrialInfo } from '../apis/users'
-import { getWorkers, searchWorkers } from '../apis/locations'
+import { getWorkers, searchWorkers } from '../apis/owners'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
 import { acceptRequest, closeRequest, confirmRequest, cancelReservationJoining, acceptReservationJoining, cancelService, allowPayment, sendDiningPayment, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
 
@@ -299,7 +299,7 @@ export default function notifications(props) {
 				})
 				.then((res) => {
 					if (res) {
-						data = { ...data, receivers: res.receivers }
+						data = { ...data, receivers: res.receivers, worker: items[index].worker }
 						socket.emit("socket/confirmRequest", data, () => {
 							newItems[index].action = "confirmed"
 							newItems[index].nextTime = 0
@@ -408,11 +408,12 @@ export default function notifications(props) {
 				})
 		}
 	}
-	const allowThePayment = async(scheduleid, index) => {
+	const allowThePayment = async(info, index) => {
 		if (!showOwners.show) {
-			const { serviceprice } = items[index]
+			const { id, locationid, serviceprice } = items[index]
+			const scheduleid = id
 
-			getWorkers(scheduleid)
+			getWorkers(locationid)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -598,14 +599,14 @@ export default function notifications(props) {
 			const newItems = [...items]
 
 			if (data.type == "acceptRequest") {
-				const { tablenum, receivers } = data
+				const { tablenum, receivers, worker } = data
 
 				setItems(newItems.filter(item => {
 					if (item.id == data.scheduleid) {
 						if (receivers.booker[0].replace("user", "") == userId) {
-							return item.action = "accepted", item.table = tablenum, item.confirm = true
+							return item.action = "accepted", item.table = tablenum, item.confirm = true, item.worker = worker
 						} else {
-							return item.action = "accepted", item.table = tablenum
+							return item.action = "accepted", item.table = tablenum, item.worker = worker
 						}
 					} else {
 						return item
@@ -1067,6 +1068,8 @@ export default function notifications(props) {
 																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
 																{'\n'}
 																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTime(item.time)}</Text>
+
+																{item.worker != null && <Text style={{ fontSize: 20 }}>{'\nwith worker: ' + item.worker.username}</Text>}
 															</Text>
 														}
 
@@ -1227,7 +1230,7 @@ export default function notifications(props) {
 																			<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
 																				<Text style={style.actionHeader}>Cancel Service</Text>
 																			</TouchableOpacity>
-																			<TouchableOpacity style={style.action} onPress={() => allowThePayment(item.id, index)}>
+																			<TouchableOpacity style={style.action} onPress={() => allowThePayment(item, index)}>
 																				<Text style={style.actionHeader}>Allow Payment{item.allowPayment ? ' Again' : ''}</Text>
 																			</TouchableOpacity>
 																			<TouchableOpacity style={style.action} onPress={() => {
@@ -1311,6 +1314,7 @@ export default function notifications(props) {
 						}
 					</View>
 				</View>
+
 				{confirm.show && (
 					<Modal transparent={true}>
 						<View style={{ paddingTop: offsetPadding }}>
@@ -1426,11 +1430,7 @@ export default function notifications(props) {
 								{showChargeuser.trialstatus.days > 0 ? 
 									<View style={style.popBox}>
 										<View style={style.popContainer}>
-											<Text style={style.popHeader}>
-												Appointment Confirmed
-												{'\n\n'}
-												Trial end in {showChargeuser.trialstatus.days} day(s)
-											</Text>
+											<Text style={style.popHeader}>Appointment Confirmed</Text>
 
 											<View style={style.popActions}>
 												<TouchableOpacity style={style.popAction} onPress={() => setShowchargeuser({ ...showChargeuser, show: false, showworkers: false, trialstatus: { days: 0, status: "" }})}>

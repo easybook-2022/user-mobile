@@ -33,6 +33,7 @@ export default function salonprofile(props) {
 	const [phonenumber, setPhonenumber] = useState('')
 	const [distance, setDistance] = useState(0)
 	const [showAuth, setShowauth] = useState(false)
+	const [showInfo, setShowinfo] = useState(false)
 	const [userId, setUserid] = useState(null)
 
 	const [showMenus, setShowmenus] = useState(false)
@@ -127,22 +128,8 @@ export default function salonprofile(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					let data = res.menus
-					let row = [], column = []
-					let rownum = 0
-
-					data.forEach(function (menu, index) {
-						row.push(menu)
-
-						if (row.length == 2 || (data.length - 1 == index && row.length > 0)) {
-							column.push({ key: "r-" + rownum, items: row })
-							row = []
-							rownum++
-						}
-					})
-
-					setMenus(column)
-					setNummenus(data.length)
+					setMenus(res.menus)
+					setNummenus(res.nummenus)
 					setShowmenus(true)
 					setLoaded(true)
 				}
@@ -226,25 +213,6 @@ export default function salonprofile(props) {
 						}}>
 							<Text style={style.backHeader}>Back</Text>
 						</TouchableOpacity>
-						
-						{loaded ? 
-							<View style={style.headers}>
-								<View style={style.logoHolder}>
-									<Image style={style.logo} source={{ uri: logo_url + logo }}/>
-								</View>
-								<Text style={style.header}>{name}</Text>
-								<Text style={style.header}>{address}</Text>
-								<View style={{ alignItems: 'center' }}>
-									<View style={{ flexDirection: 'row' }}>
-										<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
-											<AntDesign name="phone" size={30}/>
-										</TouchableOpacity>
-										<Text style={style.phonenumber}>{phonenumber}</Text>
-									</View>
-								</View>
-								<Text style={style.header}>{distance}</Text>
-							</View>
-						: null }
 					</View>
 					
 					<View style={style.body}>
@@ -252,7 +220,12 @@ export default function salonprofile(props) {
 							<>
 								{showMenus && (
 									<>
-										<Text style={style.bodyHeader}>{numMenus} Menu(s)</Text>
+										<View style={{ alignItems: 'center' }}>
+											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
+												<Text style={style.moreInfoHeader}>View Salon Info</Text>
+											</TouchableOpacity>
+											<Text style={style.bodyHeader}>{numMenus} Menu(s)</Text>
+										</View>
 
 										<FlatList
 											showsVerticalScrollIndicator={false}
@@ -260,13 +233,20 @@ export default function salonprofile(props) {
 											style={{ height: height - 386 }}
 											renderItem={({ item, index }) => 
 												<View key={item.key} style={style.row}>
-													{item.items.map(( menu, index ) => (
-														<TouchableOpacity key={menu.key} style={style.item} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id, initialize: () => initialize() })}>
-															<View style={style.itemPhotoHolder}>
-																<Image source={{ uri: logo_url + menu.image }} style={{ height: (width * 0.5) - 100, width: (width * 0.5) - 100 }}/>
+													{item.row.map(menu => (
+														menu.id ? 
+															<View key={menu.key} style={style.item}>
+																<View style={style.itemPhotoHolder}>
+																	<Image source={{ uri: logo_url + menu.image }} style={{ height: (width * 0.5) - 100, width: (width * 0.5) - 100 }}/>
+																</View>
+																<Text style={style.itemHeader}>{menu.name}</Text>
+																<Text style={style.itemNumCatHeader}>{menu.numCategories} service(s)</Text>
+																<TouchableOpacity style={style.seeMenu} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id, initialize: () => initialize() })}>
+																	<Text style={style.seeMenuHeader}>See Menu</Text>
+																</TouchableOpacity>
 															</View>
-															<Text style={style.itemHeader}>{menu.name} ({menu.numCategories})</Text>
-														</TouchableOpacity>
+															:
+															<View key={menu.key} style={style.item}></View>
 													))}
 												</View>
 											}
@@ -276,7 +256,12 @@ export default function salonprofile(props) {
 
 								{showProducts && (
 									<>
-										<Text style={style.bodyHeader}>{numProducts} Product(s)</Text>
+										<View style={{ alignItems: 'center' }}>
+											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
+												<Text style={style.moreInfoHeader}>More Info</Text>
+											</TouchableOpacity>
+											<Text style={style.bodyHeader}>{numProducts} Product(s)</Text>
+										</View>
 
 										<FlatList
 											showsVerticalScrollIndicator={false}
@@ -293,7 +278,7 @@ export default function salonprofile(props) {
 																{product.info && <Text style={style.productInfo}>{product.info}</Text>}
 
 																<View style={{ flexDirection: 'row' }}>
-																	<Text style={style.productDetail}>{product.price}</Text>
+																	<Text style={style.productPrice}>$ {product.price}</Text>
 																</View>
 
 																<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id, initialize: () => initialize() })}>
@@ -311,7 +296,12 @@ export default function salonprofile(props) {
 
 								{showServices && (
 									<>
-										<Text style={style.bodyHeader}>{numServices} Service(s)</Text>
+										<View style={{ alignItems: 'center' }}>
+											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
+												<Text style={style.moreInfoHeader}>More Info</Text>
+											</TouchableOpacity>
+											<Text style={style.bodyHeader}>{numServices} Service(s)</Text>
+										</View>
 
 										<FlatList
 											showsVerticalScrollIndicator={false}
@@ -418,6 +408,32 @@ export default function salonprofile(props) {
 						}} navigate={props.navigation.navigate}/>
 					</Modal>
 				)}
+				{showInfo && (
+					<Modal transparent={true}>
+						<View style={style.showInfoContainer}>
+							<View style={style.showInfoBox}>
+								<TouchableOpacity style={style.showInfoClose} onPress={() => setShowinfo(false)}>
+									<AntDesign name="close" size={40}/>
+								</TouchableOpacity>
+
+								<View style={style.logoHolder}>
+									<Image style={style.logo} source={{ uri: logo_url + logo }}/>
+								</View>
+								<Text style={style.showInfoHeader}>{name}</Text>
+								<Text style={style.showInfoHeader}>{address}</Text>
+								<View style={{ alignItems: 'center' }}>
+									<View style={{ flexDirection: 'row' }}>
+										<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
+											<AntDesign name="phone" size={30}/>
+										</TouchableOpacity>
+										<Text style={style.phonenumber}>{phonenumber}</Text>
+									</View>
+								</View>
+								<Text style={style.showInfoHeader}>{distance}</Text>
+							</View>
+						</View>
+					</Modal>
+				)}
 			</View>
 		</View>
 	)
@@ -427,27 +443,30 @@ const style = StyleSheet.create({
 	salonprofile: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	profileInfo: { height: 200 },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginHorizontal: 20, marginVertical: 20, padding: 5, width: 100 },
+	profileInfo: { height: 55 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginHorizontal: 20, marginTop: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
-	header: { fontFamily: 'appFont', fontSize: 15, fontWeight: 'bold', marginVertical: 5, paddingHorizontal: 50, textAlign: 'center' },
-	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+	moreInfo: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 160 },
+	moreInfoHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 
-	body: { flexDirection: 'column', height: screenHeight - 230, justifyContent: 'space-around' },
-	bodyHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
+	body: { flexDirection: 'column', height: screenHeight - 85, justifyContent: 'space-around' },
+	bodyHeader: { fontSize: 20, fontWeight: 'bold', padding: 3, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 
-	item: { alignItems: 'center', height: width * 0.5, width: width * 0.5 },
+	item: { alignItems: 'center', height: width * 0.5, marginBottom: 10, width: width * 0.5 },
 	itemPhotoHolder: { borderRadius: ((width * 0.5) - 100) / 2, height: (width * 0.5) - 100, overflow: 'hidden', width: (width * 0.5) - 100 },
-	itemHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 20 },
+	itemHeader: { fontFamily: 'appFont', fontSize: 20, marginTop: 20 },
+	itemNumCatHeader: { fontFamily: 'appFont', fontSize: 15 },
+	seeMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
+	seeMenuHeader: { fontSize: 20 },
 
 	// product
 	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10 },
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
 	productName: { fontSize: 20, fontWeight: 'bold' },
 	productInfo: { fontSize: 15 },
-	productDetail: { fontSize: 15, marginHorizontal: 10, marginVertical: 5 },
+	productPrice: { fontSize: 15, marginHorizontal: 10, marginVertical: 5 },
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
 	productBuyHeader: { textAlign: 'center' },
 
@@ -464,4 +483,12 @@ const style = StyleSheet.create({
 	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
+
+	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
+	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, width: 44 },
+	logoHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
+	logo: { height: 100, width: 100 },
+	showInfoHeader: { fontFamily: 'appFont', fontSize: 25, fontWeight: 'bold', marginVertical: 5 },
+	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 })

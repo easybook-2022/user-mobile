@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { 
-	ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, 
+	ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, Image, TextInput, 
 	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { socket, url, displayTime } from '../../../assets/info'
+import { socket, url, logo_url, displayTime } from '../../../assets/info'
 import { getTrialInfo } from '../../apis/users'
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours } from '../../apis/locations'
+import { getWorkers, getWorkerInfo } from '../../apis/owners'
 import { requestAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
@@ -22,6 +23,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+const workerImage = (width / 3) - 40
 
 export default function booktime(props) {
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -37,7 +39,7 @@ export default function booktime(props) {
 	const [scheduledTimes, setScheduledtimes] = useState([])
 	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
 	const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
-	const [selectedDateInfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, time: 0 })
+	const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, time: 0 })
 	const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
 		{ key: "day-row-0", row: [
 	    	{ key: "day-0-0", num: 0, passed: false }, { key: "day-0-1", num: 0, passed: false }, { key: "day-0-2", num: 0, passed: false }, 
@@ -71,6 +73,7 @@ export default function booktime(props) {
 	    ]}
 	]})
 	const [times, setTimes] = useState([])
+	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ show: false, worker: null, workers: [] })
 	const [loaded, setLoaded] = useState(false)
 	const [showPaymentrequired, setShowpaymentrequired] = useState(false)
 	const [showTrialover, setShowtrialover] = useState(false)
@@ -221,10 +224,11 @@ export default function booktime(props) {
 						let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 						let timepassed = currenttime > currDateStr
 						let timetaken = scheduled.indexOf(currDateStr) > -1
+						let working = true
 
 						newTimes.push({ 
 							key: newTimes.length, header: timedisplay, 
-							time: currDateStr, timetaken, timepassed
+							time: currDateStr, timetaken, timepassed, working
 						})
 					}
 
@@ -243,6 +247,43 @@ export default function booktime(props) {
 				}
 			})
 	}
+	const getTheWorkers = async() => {
+		getWorkers(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setSelectedworkerinfo({ show: true, worker: null, workers: res.owners })
+				}
+			})
+	}
+	const selectWorker = id => {
+		let workerinfo
+
+		getWorkerInfo(id)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					selectedWorkerinfo.workers.forEach(function (item) {
+						item.row.forEach(function (worker) {
+							if (worker.id == id) {
+								workerinfo = {...worker, days: res.days }
+
+								setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, worker: workerinfo })
+								selectDate(selectedDateinfo.date, res.days)
+							}
+						})
+					})
+				}
+			})
+	}
 	const dateNavigate = (dir) => {
 		setLoaded(false)
 
@@ -250,7 +291,7 @@ export default function booktime(props) {
 		const currDay = days[currTime.getDay()]
 		const currMonth = months[currTime.getMonth()]
 
-		let month = months.indexOf(selectedDateInfo.month), year = selectedDateInfo.year
+		let month = months.indexOf(selectedDateinfo.month), year = selectedDateinfo.year
 
 		month = dir == 'left' ? month - 1 : month + 1
 
@@ -314,18 +355,33 @@ export default function booktime(props) {
 			})
 		}
 
-		setSelecteddateinfo({ ...selectedDateInfo, month: months[month], date: null, year })
+		setSelecteddateinfo({ ...selectedDateinfo, month: months[month], date: null, year })
 		setCalendar({ firstDay, numDays, data })
 		setTimes(newTimes)
 		setLoaded(true)
 	}
-	const selectDate = (date) => {
-		const { month, year } = selectedDateInfo
+	const selectDate = (date, days) => {
+		const { month, year } = selectedDateinfo
+		const hours = days != null ? 
+						days
+						: 
+						selectedWorkerinfo.worker != null ? 
+							selectedWorkerinfo.worker.days 
+							: 
+							null
 
 		let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
 		let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
 		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
-		let currenttime = Date.now(), newTimes = []
+		let day = new Date(openDateStr).toString().substr(0, 3)
+		let currenttime = Date.now(), newTimes = [], workerStarttime = null, workerEndtime = null, workerTime = null
+
+		if (hours != null) {
+			workerTime = hours[day]
+
+			workerStarttime = Date.parse(month + " " + date + ", " + year + " " + workerTime["start"])
+			workerEndtime = Date.parse(month + " " + date + ", " + year + " " + workerTime["end"])
+		}
 
 		while (currDateStr < (closeDateStr - pushtime)) {
 			currDateStr += pushtime
@@ -338,34 +394,42 @@ export default function booktime(props) {
 			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 			let timepassed = currenttime > currDateStr
 			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
+			let working = hours != null ? 
+								hours[day]["working"] ?
+									(currDateStr > workerStarttime && currDateStr < workerEndtime)
+									:
+									false
+								:
+								true
 
 			newTimes.push({ 
 				key: newTimes.length, header: timedisplay, 
-				time: currDateStr, timetaken, timepassed
+				time: currDateStr, timetaken, timepassed, working
 			})
 		}
 
-		setSelecteddateinfo({ ...selectedDateInfo, date })
+		setSelecteddateinfo({ ...selectedDateinfo, date })
 		setTimes(newTimes)
 	}
 	const selectTime = (name, timeheader, time) => {
-		const { month, date, year } = selectedDateInfo
+		const { month, date, year } = selectedDateinfo
 
-		setSelecteddateinfo({ ...selectedDateInfo, name, time })
+		setSelecteddateinfo({ ...selectedDateinfo, name, time })
 
-		if (selectedDateInfo.date) {
+		if (selectedDateinfo.date) {
 			setConfirmrequest({ ...confirmRequest, show: true, service: name, time })
 		}
 	}
 	const requestAnAppointment = async() => {
 		if (userId) {
-			const { month, date, year, time } = selectedDateInfo
+			const { month, date, year, time } = selectedDateinfo
+			const { worker } = selectedWorkerinfo
 			const { note, oldtime } = confirmRequest
 			const selecteddate = new Date(time)
 			const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
 			const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
 			let data = { 
-				id: scheduleid, userid: userId, locationid, serviceid, oldtime, 
+				id: scheduleid, userid: userId, workerid: worker != null ? worker.id : -1, locationid, serviceid, oldtime, 
 				time: dateInfo, note: note ? note : "", 
 				type: "requestAppointment", currTime: Date.now()
 			}
@@ -441,7 +505,7 @@ export default function booktime(props) {
 					</TouchableOpacity>
 
 					<View style={style.headers}>
-						<Text style={style.boxHeader}>{!scheduleid ? 'Book' : 'Re-book'} a time for</Text>
+						<Text style={style.boxHeader}>{!scheduleid ? 'Book' : 'Re-book'} for</Text>
 						<Text style={style.serviceHeader}>{name}</Text>
 					</View>
 
@@ -450,10 +514,39 @@ export default function booktime(props) {
 						:
 						times.length > 0 ? 
 							<ScrollView style={{ height: screenHeight - 191 }}>
+								<View style={style.chooseWorker}>
+									<Text style={style.timesHeader}>Pick a worker</Text>
+									<Text style={style.chooseWorkerHeader}>(Optional, random by default)</Text>
+
+									<View style={style.chooseWorkerActions}>
+										{selectedWorkerinfo.worker != null && (
+											<TouchableOpacity style={style.chooseWorkerAction} onPress={() => {
+												setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
+												selectDate(selectedDateinfo.date)
+											}}>
+												<Text style={style.chooseWorkerActionHeader}>Cancel Worker</Text>
+											</TouchableOpacity>
+										)}
+											
+										<TouchableOpacity style={style.chooseWorkerAction} onPress={() => getTheWorkers()}>
+											<Text style={style.chooseWorkerActionHeader}>{selectedWorkerinfo.worker == null ? 'Choose your worker' : 'Choose a different worker'}</Text>
+										</TouchableOpacity>
+									</View>
+										
+
+									{selectedWorkerinfo.worker != null && (
+										<View style={style.selectedWorker}>
+											<Image style={style.selectedWorkerImage} source={{ uri: logo_url + selectedWorkerinfo.worker.profile }}/>
+											<Text style={style.selectedWorkerHeader}>{selectedWorkerinfo.worker.username}</Text>
+										</View>
+									)}
+								</View>
+
 								<View style={style.dateHeaders}>
+									<Text style={style.timesHeader}>Pick a date</Text>
 									<View style={style.date}>
 										<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
-										<Text style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
+										<Text style={style.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
 										<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
 									</View>
 
@@ -461,7 +554,7 @@ export default function booktime(props) {
 										<View style={style.dateDaysRow}>
 											{days.map((day, index) => (
 												<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
-													<Text style={{ fontWeight: 'bold', textAlign: 'center' }}>{day.substr(0, 3)}</Text>
+													<Text style={style.dateDayTouchDisabledHeader}>{day.substr(0, 3)}</Text>
 												</TouchableOpacity>
 											))}
 										</View>
@@ -471,12 +564,12 @@ export default function booktime(props) {
 													day.num > 0 ?
 														day.passed ? 
 															<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
-																<Text style={style.dateDayTouchHeader}>{day.num}</Text>
+																<Text style={style.dateDayTouchPassedHeader}>{day.num}</Text>
 															</TouchableOpacity>
 															:
-															selectedDateInfo.date == day.num ?
+															selectedDateinfo.date == day.num ?
 																<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
-																	<Text style={style.dateDayTouchHeaderSelected}>{day.num}</Text>
+																	<Text style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
 																</TouchableOpacity>
 																:
 																<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
@@ -490,27 +583,26 @@ export default function booktime(props) {
 									</View>
 								</View>
 								<Text style={style.timesHeader}>Pick a time</Text>
-								<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
+								<View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
 									<View style={style.times}>
 										{times.map(info => (
 											<View key={info.key}>
-												{(!info.timetaken && !info.timepassed) && (
+												{(!info.timetaken && !info.timepassed && info.working) && (
 													<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+														<Text style={style.unselectHeader}>{info.header}</Text>
 													</TouchableOpacity>
 												)}
 
-												{(info.timetaken && !info.timepassed) && (
-													<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-														<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
-													</TouchableOpacity>
+												{(info.timetaken || info.timepassed || !info.working) && (
+													info.timetaken ? 
+														<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
+															<Text style={style.selectedHeader}>{info.header}</Text>
+														</TouchableOpacity>
+														:
+														<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
+															<Text style={style.selectedPassedHeader}>{info.header}</Text>
+														</TouchableOpacity>
 												)}
-
-												{(!info.timetaken && info.timepassed) && (
-													<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
-													</TouchableOpacity>
-												)}	
 											</View>
 										))}
 									</View>
@@ -623,6 +715,42 @@ export default function booktime(props) {
 						</TouchableWithoutFeedback>
 					</Modal>
 				)}
+				{selectedWorkerinfo.show && (
+					<Modal transparent={true}>
+						<View style={{ paddingVertical: offsetPadding }}>
+							<View style={style.workersContainer}>
+								<View style={style.workersBox}>
+									<Text style={style.workersHeader}>Book the worker you want</Text>
+
+									<View style={style.workersList}>
+										<FlatList
+											data={selectedWorkerinfo.workers}
+											renderItem={({ item, index }) => 
+												<View key={item.key} style={style.workersRow}>
+													{item.row.map(info => (
+														info.id ? 
+															<TouchableOpacity key={info.key} style={!info.selected ? style.worker : style.workerDisabled} onPress={() => selectWorker(info.id)}>
+																<View style={style.workerProfile}>
+																	<Image source={{ uri: logo_url + info.profile }} style={{ height: workerImage, width: workerImage }}/>
+																</View>
+																<Text style={style.workerHeader}>{info.username}</Text>
+															</TouchableOpacity>
+															:
+															<View key={info.key} style={style.worker}></View>
+													))}
+												</View>
+											}
+										/>
+									</View>
+
+									<TouchableOpacity style={style.workersClose} onPress={() => setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, workers: [] })}>
+										<Text style={style.workersCloseHeader}>Cancel</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
 				{openCart && <Modal><Cart close={() => {
 					getTheNumCartItems()
 					setOpencart(false)
@@ -713,25 +841,43 @@ const style = StyleSheet.create({
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center' },
 
-	dateHeaders: { alignItems: 'center' },
+	chooseWorker: { alignItems: 'center', marginBottom: 50, marginTop: 50 },
+	chooseWorkerHeader: { fontSize: 20 },
+
+	chooseWorkerActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	chooseWorkerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 2, padding: 5, width: 150 },
+	chooseWorkerActionHeader: { textAlign: 'center' },
+	selectedWorker: { marginVertical: 10 },
+	selectedWorkerImage: { borderRadius: workerImage / 2, height: workerImage, width: workerImage },
+	selectedWorkerHeader: { fontWeight: 'bold', textAlign: 'center' },
+
+	dateHeaders: { alignItems: 'center', marginVertical: 50 },
 	date: { flexDirection: 'row', margin: 10 },
 	dateNav: { marginHorizontal: 20 },
 	dateHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 5, textAlign: 'center', width: 170 },
 	dateDays: { alignItems: 'center' },
 	dateDaysRow: { flexDirection: 'row' },
+
 	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
+	dateDayTouchHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
+
 	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchHeaderSelected: { color: 'white', fontSize: 17, textAlign: 'center' },
+	dateDayTouchSelectedHeader: { color: 'white', fontSize: 13, textAlign: 'center' },
+
 	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
+	dateDayTouchPassedHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
+
 	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: 40 },
-	dateDayTouchHeader: { color: 'black', fontSize: 17, textAlign: 'center' },
-	dateDayTouchHeaderDisabled: { color: 'white', fontSize: 17, textAlign: 'center' },
+	dateDayTouchDisabledHeader: { fontSize: 13, fontWeight: 'bold' },
 
 	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 300 },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 90 },
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 90 },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 253 },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
+	unselectHeader: { color: 'black', fontSize: 15 },
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
+	selectedHeader: { color: 'black', fontSize: 15 },
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 80 },
+	selectedPassedHeader: { color: 'black', fontSize: 15 },
 
 	noTime: { flexDirection: 'column', height: screenHeight - 191, justifyContent: 'space-around', width: '100%' },
 	noTimeHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
@@ -757,6 +903,18 @@ const style = StyleSheet.create({
 	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	requestedHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	requestedHeaderInfo: { fontSize: 20, textAlign: 'center' },
+
+	workersContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	workersBox: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
+	workersHeader: { fontFamily: 'appFont', fontSize: 20, paddingVertical: 20, textAlign: 'center' },
+	workersRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	workersList: { height: '80%' },
+	workersRow: { flexDirection: 'row', justifyContent: 'space-between' },
+	worker: { alignItems: 'center', marginHorizontal: 5, padding: 5, width: (width / 3) - 30 },
+	workerProfile: { borderRadius: workerImage / 2, height: workerImage, overflow: 'hidden', width: workerImage },
+	workerHeader: { fontSize: 15, fontWeight: 'bold'  },
+	workersClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	workersCloseHeader: { textAlign: 'center' },
 
 	requiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },

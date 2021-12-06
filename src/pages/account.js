@@ -8,6 +8,7 @@ import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
+import * as ImagePicker from 'expo-image-picker';
 import { CommonActions } from '@react-navigation/native';
 import { cardInfo, stripe_key, logo_url } from '../../assets/info'
 import { 
@@ -35,9 +36,9 @@ export default function account(props) {
 	const refetch = params && params.refetch ? params.refetch : null
 	const required = params && params.required ? params.required : null
 
-	const [permission, setPermission] = useState(null);
+	const [cameraPermission, setCamerapermission] = useState(null);
+	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
-	const [camType, setCamtype] = useState(Camera.Constants.Type.front);
 
 	const [username, setUsername] = useState('')
 	const [cellnumber, setCellnumber] = useState('')
@@ -429,12 +430,11 @@ export default function account(props) {
 		if (camComp) {
 			let options = { quality: 0 };
 			let photo = await camComp.takePictureAsync(options)
-			let photo_option = [{ resize: { width: width, height: width }}]
+			let photo_option = [
+				{ resize: { width: width, height: width }},
+				{ flip: ImageManipulator.FlipType.Horizontal }
+			]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
-
-			if (camType == Camera.Constants.Type.front) {
-				photo_option.push({ flip: ImageManipulator.FlipType.Horizontal })
-			}
 
 			photo = await ImageManipulator.manipulateAsync(
 				photo.localUri || photo.uri,
@@ -462,23 +462,70 @@ export default function account(props) {
 			})
 		}
 	}
-	const openCamera = async() => {
+	const choosePhoto = async() => {
+		let letters = [
+			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+		]
+		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
+		let char = "", captured, self = this
+		let photo = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			aspect: [4, 3],
+			quality: 0.1,
+			base64: true
+		});
+
+		for (let k = 0; k <= photo_name_length - 1; k++) {
+			if (k % 2 == 0) {
+                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+            } else {
+                char += "" + (Math.floor(Math.random() * 9) + 0);
+            }
+		}
+
+		if (!photo.cancelled) {
+			FileSystem.moveAsync({
+				from: photo.uri,
+				to: `${FileSystem.documentDirectory}/${char}.jpg`
+			})
+			.then(() => {
+				setProfile({
+					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
+					name: `${char}.jpg`
+				})
+			})
+		}
+	}
+	const allowCamera = async() => {
 		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
-			setPermission(status === 'granted')
+			setCamerapermission(status === 'granted')
 		} else {
 			const { status } = await Camera.requestCameraPermissionsAsync()
 
-			setPermission(status === 'granted')
+			setCamerapermission(status === 'granted')
 		}
+	}
+	const allowChoosing = async() => {
+		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
+        
+        if (status == 'granted') {
+        	setPickingpermission(status === 'granted')
+        } else {
+        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        	setPickingpermission(status === 'granted')
+        }
 	}
 
 	useEffect(() => {
 		getTheUserInfo()
 		getThePaymentMethods()
 
-		openCamera()
+		allowCamera()
+		allowChoosing()
 
 		if (required == "card") openPaymentMethodForm()
 	}, [])
@@ -517,7 +564,7 @@ export default function account(props) {
 											<Image style={style.camera} source={{ uri: profile.uri }}/>
 
 											<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ ...profile, uri: '', name: '' })}>
-												<AntDesign name="closecircleo" size={30}/>
+												<Text style={style.cameraActionHeader}>Cancel</Text>
 											</TouchableOpacity>
 										</>
 										:
@@ -526,16 +573,21 @@ export default function account(props) {
 												<Image style={style.camera} source={{ uri: logo_url + profile.old }}/>
 
 												<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '', old: '' })}>
-													<AntDesign name="closecircleo" size={30}/>
+													<Text style={style.cameraActionHeader}>Cancel</Text>
 												</TouchableOpacity>
 											</>
 											:
 											<>
-												<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
+												<Camera style={style.camera} type={Camera.Constants.Type.front} ref={r => {setCamcomp(r)}}/>
 
-												<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-													<Entypo name="camera" size={30}/>
-												</TouchableOpacity>
+												<View style={style.cameraActions}>
+													<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+														<Text style={style.cameraActionHeader}>Take this photo</Text>
+													</TouchableOpacity>
+													<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
+														<Text style={style.cameraActionHeader}>Choose from phone</Text>
+													</TouchableOpacity>
+												</View>
 											</>
 									}	
 								</View>
@@ -677,7 +729,9 @@ const style = StyleSheet.create({
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
 	cameraContainer: { alignItems: 'center', marginBottom: 10, width: '100%' },
 	camera: { height: width * 0.8, width: width * 0.8 },
-	cameraAction: { margin: 10 },
+	cameraActions: { flexDirection: 'row' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
+	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
 
 	paymentMethods: { alignItems: 'center', margin: 10 },
 	paymentMethodHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
@@ -703,7 +757,7 @@ const style = StyleSheet.create({
 	formHeader: { fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	formInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
 	formInputHeader: { fontSize: 20, fontWeight: 'bold' },
-	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, padding: 5, width: '100%' },
+	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 5, width: '100%' },
 	formSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
 	formSubmitHeader: {  },
 

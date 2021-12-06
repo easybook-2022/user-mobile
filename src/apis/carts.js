@@ -9,6 +9,10 @@ export const getCartItems = id => {
 	return axios.get(`${url}/carts/get_cart_items/${id}`)
 }
 
+export const getCartItemsTotal = id => {
+	return axios.get(`${url}/carts/get_cart_items_total/${id}`)
+}
+
 export const editCartItem = id => {
 	return axios.get(`${url}/carts/edit_cart_item/${id}`)
 }

@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { socket, logo_url } from '../../assets/info'
 import { searchFriends, selectUser, requestUserPaymentMethod } from '../apis/users'
-import { getCartItems, editCartItem, updateCartItem, removeFromCart, changeCartItem, editCallfor, updateCallfor, removeCallfor, checkoutCart } from '../apis/carts'
+import { getCartItems, getCartItemsTotal, editCartItem, updateCartItem, removeFromCart, changeCartItem, editCallfor, updateCallfor, removeCallfor, checkoutCart } from '../apis/carts'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -17,7 +17,6 @@ export default function cart(props) {
 	const [items, setItems] = useState([])
 	const [loaded, setLoaded] = useState(false)
 	const [activeCheckout, setActivecheckout] = useState(false)
-	const [totalCost, setTotalcost] = useState(0.00)
 	const [loading, setLoading] = useState(false)
 	const [showConfirm, setShowconfirm] = useState(false)
 	const [itemInfo, setIteminfo] = useState({ 
@@ -25,6 +24,7 @@ export default function cart(props) {
 		image: "", price: "", options: [], others: [], sizes: [], quantity: 1, cost: 0,
 		errorMsg: ""
 	})
+	const [showPaymentdetails, setShowpaymentdetails] = useState({ show: false, info: null })
 
 	// friends cart
 	const [openFriendscart, setOpenfriendscart] = useState(false)
@@ -168,7 +168,7 @@ export default function cart(props) {
 						setUserid(userid)
 						setItems(res.cartItems)
 						setActivecheckout(res.activeCheckout)
-						setTotalcost(res.totalcost)
+						setShowpaymentdetails({ ...showPaymentdetails, info: res.totalcost })
 						setLoaded(true)
 					})
 				}
@@ -244,6 +244,25 @@ export default function cart(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				}
+			})
+	}
+	const removeTheCartItem = id => {
+		const newItems = [...items]
+
+		removeFromCart(id)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setItems(newItems.filter(item => {
+						if (item.id != id) {
+							return item
+						}
+					}))
 				}
 			})
 	}
@@ -524,6 +543,19 @@ export default function cart(props) {
 				}
 			})
 	}
+	const getPaymentDetails = async() => {
+		getCartItemsTotal(userId)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setShowpaymentdetails({ ...showPaymentdetails, show: true, info: res.totalCost })
+				}
+			})
+	}
 	const checkout = async() => {
 		const time = Date.now()
 		let data = { userid: userId, time, type: "checkout" }
@@ -660,17 +692,7 @@ export default function cart(props) {
 									renderItem={({ item, index }) => 
 										<View style={style.item} key={item.key}>
 											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-												<TouchableOpacity disabled={item.status == "checkout"} onPress={async() => {
-													removeFromCart(item.id)
-														.then((res) => {
-															if (res.status == 200) {
-																return res.data
-															}
-														})
-														.then((res) => {
-															if (res) getTheCartItems()
-														})
-												}}>
+												<TouchableOpacity disabled={item.status == "checkout"} onPress={() => removeTheCartItem(item.id)}>
 													<AntDesign name="closecircleo" size={20}/>
 												</TouchableOpacity>
 												<View style={style.itemImageHolder}>
@@ -768,11 +790,17 @@ export default function cart(props) {
 								/>
 
 								<View style={{ alignItems: 'center' }}>
-									{totalCost > 0 && <Text>Total cost: ${totalCost.toFixed(2)}</Text>}
-									{loading && <ActivityIndicator size="small"/>}
+									{showPaymentdetails.info != null && (
+										<TouchableOpacity style={style.viewPaymentDetails} onPress={() => getPaymentDetails()}>
+											<Text style={style.viewPaymentDetailsHeader}>View Payment Detail</Text>
+										</TouchableOpacity>
+									)}
+									
 									<TouchableOpacity style={activeCheckout && !loading ? style.checkout : style.checkoutDisabled} disabled={!activeCheckout || loading} onPress={() => checkout()}>
 										<Text style={style.checkoutHeader}>Checkout</Text>
 									</TouchableOpacity>
+
+									{loading && <ActivityIndicator size="small"/>}
 								</View>
 							</>
 							:
@@ -943,6 +971,30 @@ export default function cart(props) {
 											</View>
 										</View>
 									</ScrollView>
+								</View>
+							</View>
+						</View>
+					</Modal>
+				)}
+
+				{showPaymentdetails.show && (
+					<Modal transparent={true}>
+						<View style={{ paddingVertical: offsetPadding }}>
+							<View style={style.paymentDetailsContainer}>
+								<View style={style.paymentDetailsBox}>
+									<TouchableOpacity style={style.paymentDetailsClose} onPress={() => setShowpaymentdetails({ ...showPaymentdetails, show: false })}>
+										<AntDesign name="closecircleo" size={30}/>
+									</TouchableOpacity>
+
+									<Text style={style.paymentDetailsHeader}>Payment Details</Text>
+
+									<View>
+										<Text style={style.paymentDetailHeader}>Sub Total: ${showPaymentdetails.info.total.toFixed(2)}</Text>
+										<Text style={style.paymentDetailHeader}>PST: ${showPaymentdetails.info.pst.toFixed(2)}</Text>
+										<Text style={style.paymentDetailHeader}>HST: ${showPaymentdetails.info.hst.toFixed(2)}</Text>
+										<Text style={style.paymentDetailHeader}>E-pay fee: ${showPaymentdetails.info.fee.toFixed(2)}</Text>
+										<Text style={style.paymentDetailHeader}>Total Cost: ${showPaymentdetails.info.totalcost.toFixed(2)}</Text>
+									</View>
 								</View>
 							</View>
 						</View>
@@ -1182,8 +1234,11 @@ const style = StyleSheet.create({
 	ordererRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	ordererRemoveHeader: { },
 
+	viewPaymentDetails: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
+	viewPaymentDetailsHeader: { },
+
 	checkout: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 20, padding: 10 },
-	checkoutDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 20, opacity: 0.3, padding: 10 },
+	checkoutDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 5, opacity: 0.3, padding: 10 },
 	checkoutHeader: { },
 
 	// confirm & requested box
@@ -1209,12 +1264,16 @@ const style = StyleSheet.create({
 	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 120 },
 	itemActionHeader: { textAlign: 'center' },
 
+	// payment details
+	paymentDetailsContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	paymentDetailsBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
+	paymentDetailsHeader: { fontSize: 25 },
+	paymentDetailHeader: { fontSize: 20 },
+
 	// options
-	options: { flexDirection: 'row', justifyContent: 'space-between' },
-	optionSelected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 2, padding: 8 },
-	optionSelectedHeader: { color: 'white', fontSize: 15 },
-	option: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 2, padding: 8 },
-	optionHeader: { color: 'black', fontSize: 15 },
+	// options: { flexDirection: 'row', justifyContent: 'space-between' },
+	// option: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 2, padding: 8 },
+	// optionHeader: { color: 'black', fontSize: 15 },
 
 	// amount
 	amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },

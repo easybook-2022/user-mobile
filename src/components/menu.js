@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -23,7 +23,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const itemSize = (width / 3) - 20
+const itemSize = (width * 0.5) - 50
 const imageSize = itemSize - 30
 
 export default function menu(props) {
@@ -33,6 +33,7 @@ export default function menu(props) {
 	const [menuName, setMenuname] = useState('')
 	const [menuInfo, setMenuinfo] = useState('')
 	const [showAuth, setShowauth] = useState(false)
+	const [showInfo, setShowinfo] = useState({ show: false, info: {} })
 	const [userId, setUserid] = useState(null)
 
 	const [showMenus, setShowmenus] = useState(false)
@@ -78,7 +79,9 @@ export default function menu(props) {
 	}
 	
 	const getTheInfo = async() => {
-		const data = { locationid, menuid }
+		const longitude = await AsyncStorage.getItem("longitude")
+		const latitude = await AsyncStorage.getItem("latitude")
+		const data = { locationid, menuid, longitude, latitude }
 
 		getInfo(data)
 			.then((res) => {
@@ -88,10 +91,15 @@ export default function menu(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					const { msg, menuName, menuInfo } = res
+					const { msg, menuName, menuInfo, info } = res
+					const { name, logo, addressOne, addressTwo, city, province, postalcode, phonenumber, distance, longitude, latitude } = info
+					const address = addressOne + " " + addressTwo + ", " + city + " " + province + ", " + postalcode
+
+					info["address"] = address
 
 					setMenuname(menuName)
 					setMenuinfo(menuInfo)
+					setShowinfo({ ...showInfo, info })
 
 					if (msg == "menus") {
 						getAllMenus()
@@ -99,6 +107,8 @@ export default function menu(props) {
 						getAllServices()
 					} else if (msg == "products") {
 						getAllProducts()
+					} else {
+						setLoaded(true)
 					}
 				}
 			})
@@ -227,7 +237,12 @@ export default function menu(props) {
 							<>
 								{showMenus && (
 									<>
-										<Text style={style.bodyHeader}>{numMenus} Menu(s)</Text>
+										<View style={{ alignItems: 'center' }}>
+											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
+												<Text style={style.moreInfoHeader}>View Salon Info</Text>
+											</TouchableOpacity>
+											<Text style={style.bodyHeader}>{numMenus} Menu(s)</Text>
+										</View>
 
 										<FlatList
 											showsVerticalScrollIndicator={false}
@@ -236,11 +251,14 @@ export default function menu(props) {
 												<View key={item.key} style={style.row}>
 													{item.items.map(( menu, index ) => (
 														menu.name ? 
-															<TouchableOpacity key={menu.key} style={style.menu} onPress={() => props.navigation.push("menu", { locationid: locationid, menuid: menu.id })}>
+															<TouchableOpacity key={menu.key} style={style.menu}>
 																<View style={style.menuImageHolder}>
 																	<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
 																</View>
 																<Text style={style.menuName}>({menu.numCategories}) {menu.name}</Text>
+																<TouchableOpacity style={style.seeMenu} onPress={() => props.navigation.push("menu", { locationid: locationid, menuid: menu.id })}>
+																	<Text style={style.seeMenuHeader}>See Menu</Text>
+																</TouchableOpacity>
 															</TouchableOpacity>
 															:
 															<View key={menu.key} style={style.menuDisabled}></View>
@@ -253,7 +271,12 @@ export default function menu(props) {
 
 								{showProducts && (
 									<>
-										<Text style={style.bodyHeader}>{numProducts} Product(s)</Text>
+										<View style={{ alignItems: 'center' }}>
+											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo({ ...showInfo, show: true })}>
+												<Text style={style.moreInfoHeader}>Restaurant Info</Text>
+											</TouchableOpacity>
+											<Text style={style.bodyHeader}>{numProducts} Product(s)</Text>
+										</View>
 
 										<FlatList
 											showsVerticalScrollIndicator={false}
@@ -267,12 +290,10 @@ export default function menu(props) {
 																<Text style={style.productName}>{product.name}</Text>
 																{product.info && <Text style={style.productInfo}>{product.info}</Text>}
 
-																<View style={{ flexDirection: 'row' }}>
-																	<Text style={style.productDetail}>{product.price}</Text>
-																</View>
+																<Text style={style.productPrice}>$ {product.price}</Text>
 
 																<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid, productid: product.id, initialize: () => initialize() })}>
-																	<Text style={style.productBuyHeader}>Buy</Text>
+																	<Text style={style.productBuyHeader}>Buy / See</Text>
 																</TouchableOpacity>
 															</TouchableOpacity>
 															:
@@ -299,15 +320,13 @@ export default function menu(props) {
 													<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
 													<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
 														<Text style={style.serviceName}>{item.name}</Text>
-														{item.info ? <Text style={style.serviceInfo}>{item.info}</Text> : null}
-														
+														<Text style={style.serviceInfo}><Text style={{ fontWeight: 'bold' }}>Information</Text>: {item.info}</Text>
 														<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
-
 														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { 
 															locationid, scheduleid: item.scheduleid,
 															serviceid: item.id, initialize: () => initialize() 
 														})}>
-															<Text>Book a time</Text>
+															<Text style={style.serviceBookHeader}>Book a time</Text>
 														</TouchableOpacity>
 													</View>
 												</TouchableOpacity>
@@ -317,7 +336,7 @@ export default function menu(props) {
 								)}
 
 								{(!showMenus && !showProducts && !showServices) && (
-									<Text style={style.noResults}>There is nothing on this menu</Text>
+									<Text style={style.noResults}>nothing is here ):</Text>
 								)}
 							</>
 							:
@@ -393,6 +412,32 @@ export default function menu(props) {
 						}} navigate={props.navigation.navigate}/>
 					</Modal>
 				)}
+				{showInfo.show && (
+					<Modal transparent={true}>
+						<View style={style.showInfoContainer}>
+							<View style={style.showInfoBox}>
+								<TouchableOpacity style={style.showInfoClose} onPress={() => setShowinfo({ ...showInfo, show: false })}>
+									<AntDesign name="close" size={40}/>
+								</TouchableOpacity>
+
+								<View style={style.logoHolder}>
+									<Image style={style.logo} source={{ uri: logo_url + showInfo.info.logo }}/>
+								</View>
+								<Text style={style.showInfoHeader}>{showInfo.info.name}</Text>
+								<Text style={style.showInfoHeader}>{showInfo.info.address}</Text>
+								<View style={{ alignItems: 'center' }}>
+									<View style={{ flexDirection: 'row' }}>
+										<TouchableOpacity onPress={() => Linking.openURL('tel://' + showInfo.info.phonenumber)}>
+											<AntDesign name="phone" size={30}/>
+										</TouchableOpacity>
+										<Text style={style.phonenumber}>{showInfo.info.phonenumber}</Text>
+									</View>
+								</View>
+								<Text style={style.showInfoHeader}>{showInfo.info.distance}</Text>
+							</View>
+						</View>
+					</Modal>
+				)}
 			</View>
 		</View>
 	)
@@ -401,10 +446,13 @@ export default function menu(props) {
 const style = StyleSheet.create({
 	boxContainer: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
-	body: { height: screenHeight - 110 },
+	moreInfo: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 160 },
+	moreInfoHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
+
+	body: { height: screenHeight - 85 },
 	headers: { height: 56 },
 	header: { fontSize: 20, textAlign: 'center' },
 	bodyHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
@@ -416,29 +464,40 @@ const style = StyleSheet.create({
 	menuDisabled: { height: itemSize, width: itemSize },
 	menuImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
 	menuName: { fontSize: 10, fontWeight: 'bold', textAlign: 'center' },
+	seeMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
+	seeMenuHeader: { fontSize: 20 },
 
 	// product
-	product: { alignItems: 'center', height: itemSize, marginBottom: 50, marginHorizontal: 10, width: itemSize },
+	product: { alignItems: 'center', marginBottom: 30, marginHorizontal: 10, width: itemSize },
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
 	productName: { fontSize: 20, fontWeight: 'bold' },
 	productInfo: { fontSize: 15 },
-	productDetail: { fontSize: 15, marginHorizontal: 10, marginVertical: 5 },
-	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
-	productBuyHeader: { textAlign: 'center' },
+	productPrice: { fontSize: 15, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 5 },
+	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	productBuyHeader: { fontSize: 20, textAlign: 'center' },
 
 	// service
-	service: { alignItems: 'center', flexDirection: 'row', marginBottom: 50, marginHorizontal: 10 },
+	service: { alignItems: 'center', flexDirection: 'row', marginVertical: 30, marginHorizontal: 10 },
 	serviceImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
 	serviceName: { fontSize: 15, fontWeight: 'bold', marginBottom: 10 },
 	serviceInfo: { fontSize: 15, marginBottom: 10 },
-	serviceDetail: { fontSize: 15 },
-	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	serviceDetail: { fontSize: 15, marginBottom: 20 },
+	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
+	serviceBookHeader: { fontSize: 20 },
 
-	noResults: { fontWeight: '100', marginVertical: 100, textAlign: 'center' },
+	noResults: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row' },
 	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
+
+	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
+	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, width: 44 },
+	logoHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
+	logo: { height: 100, width: 100 },
+	showInfoHeader: { fontFamily: 'appFont', fontSize: 25, fontWeight: 'bold', marginVertical: 5 },
+	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 })

@@ -5,6 +5,7 @@ import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
 import { Camera } from 'expo-camera';
 import * as ImageManipulator from 'expo-image-manipulator'
+import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { CommonActions } from '@react-navigation/native';
 import { setupUser } from '../apis/users'
@@ -19,7 +20,8 @@ export default function setup({ navigation }) {
 	const offsetPadding = Constants.statusBarHeight
 	const screenHeight = height - (offsetPadding * 2)
 
-	const [permission, setPermission] = useState(null);
+	const [cameraPermission, setCamerapermission] = useState(null);
+	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
 	const [camType, setCamtype] = useState(Camera.Constants.Type.front);
 	const [profile, setProfile] = useState({ uri: '', name: '' })
@@ -33,10 +35,9 @@ export default function setup({ navigation }) {
 		const time = Date.now()
 
 		if (username) {
-			const data = { userid, username, profile, permission, time }
+			const data = { userid, username, profile, permission: cameraPermission && pickingPermission, time }
 
 			setLoading(true)
-
 			setupUser(data)
 				.then((res) => {
 					if (res.status == 200) {
@@ -115,23 +116,72 @@ export default function setup({ navigation }) {
 			})
 		}
 	}
-	const openCamera = async() => {
+	const choosePhoto = async() => {
+		let letters = [
+			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+			"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+		]
+		let photo_name_length = Math.floor(Math.random() * (15 - 10)) + 10
+		let char = "", captured, self = this
+		let photo = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			aspect: [4, 3],
+			quality: 0.1,
+			base64: true
+		});
+
+		for (let k = 0; k <= photo_name_length - 1; k++) {
+			if (k % 2 == 0) {
+                char += "" + letters[Math.floor(Math.random() * letters.length)].toUpperCase();
+            } else {
+                char += "" + (Math.floor(Math.random() * 9) + 0);
+            }
+		}
+
+		if (!photo.cancelled) {
+			FileSystem.moveAsync({
+				from: photo.uri,
+				to: `${FileSystem.documentDirectory}/${char}.jpg`
+			})
+			.then(() => {
+				setProfile({
+					uri: `${FileSystem.documentDirectory}/${char}.jpg`,
+					name: `${char}.jpg`
+				})
+			})
+		}
+	}
+	const allowCamera = async() => {
 		const { status } = await Camera.getCameraPermissionsAsync()
 
 		if (status == 'granted') {
-			setPermission(status === 'granted')
+			setCamerapermission(status === 'granted')
 		} else {
 			const { status } = await Camera.requestCameraPermissionsAsync()
 
-			setPermission(status === 'granted')
+			setCamerapermission(status === 'granted')
 		}
+	}
+	const allowChoosing = async() => {
+		const { status } = await ImagePicker.getMediaLibraryPermissionsAsync()
+        
+        if (status == 'granted') {
+        	setPickingpermission(status === 'granted')
+        } else {
+        	const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        	setPickingpermission(status === 'granted')
+        }
 	}
 	
 	useEffect(() => {
-		(async() => openCamera())()
+		(async() => {
+			allowCamera()
+			allowChoosing()
+		})()
 	}, [])
 
-	if (permission === null) return <View/>
+	if (cameraPermission === null || pickingPermission === null) return <View/>
 
 	return (
 		<View style={style.setup}>
@@ -142,7 +192,7 @@ export default function setup({ navigation }) {
 
 						<View style={style.inputsBox}>
 							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Username:</Text>
+								<Text style={style.inputHeader}>Enter a nickname you like (example: therock):</Text>
 								<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
 							</View>
 
@@ -154,16 +204,21 @@ export default function setup({ navigation }) {
 										<Image style={style.camera} source={{ uri: profile.uri }}/>
 
 										<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
-											<AntDesign name="closecircleo" size={30}/>
+											<Text style={style.cameraActionHeader}>Cancel</Text>
 										</TouchableOpacity>
 									</>
 								) : (
 									<>
 										<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
 
-										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-											<Entypo name="camera" size={30}/>
-										</TouchableOpacity>
+										<View style={style.cameraActions}>
+											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+												<Text style={style.cameraActionHeader}>Take this photo</Text>
+											</TouchableOpacity>
+											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
+												<Text style={style.cameraActionHeader}>Choose from phone</Text>
+											</TouchableOpacity>
+										</View>
 									</>
 								)}	
 							</View>
@@ -211,7 +266,9 @@ const style = StyleSheet.create({
 	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
-	cameraAction: { margin: 10 },
+	cameraActions: { flexDirection: 'row' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
+	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
 	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
 

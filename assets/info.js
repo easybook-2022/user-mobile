@@ -69,12 +69,15 @@ export const displayTime = unixtime => {
 	const currentDate = Date.parse(months[currTime.getMonth()] + " " + currTime.getDate() + ", " + currTime.getFullYear() + " 23:59")
 	const time = parseInt(unixtime)
 	const selectedDate = new Date(time)
-	let hour = selectedDate.getHours(), minute = selectedDate.getMinutes(), period
+	let hour = selectedDate.getHours(), minute = selectedDate.getMinutes(), period, date = selectedDate.getDate()
 	let timeStr = "", timeheader = "", diff
 
 	minute = minute < 10 ? '0' + minute : minute
 	period = hour > 12 ? 'pm' : 'am'
-	hour = hour > 12 ? hour - 12 : hour
+	hour = hour > 12 ? 
+			hour - 12 
+			:
+			hour == 0 ? 12 : hour
 
 	timeheader = hour + ":" + minute + " " + period
 
@@ -88,29 +91,17 @@ export const displayTime = unixtime => {
 				let sDay = new Date(time)
 				let eDay = new Date(currentDate)
 
-				if (sDay.getDay() == eDay.getDay()) {
-					timeStr = " next " + days[sDay.getDay()] + " at " + timeheader
-				} else {
-					timeStr = " this " + days[sDay.getDay()] + " at " + timeheader
-				}
+				timeStr = " on " + days[sDay.getDay()] + " at " + timeheader
 			} else if (diff > 604800000 && diff <= 1210000000) { // next week
 				let sDay = new Date(time)
 				let eDay = new Date(currentDate)
 
-				if (sDay.getDay() != eDay.getDay()) {
-					timeStr = " next " + days[sDay.getDay()] + " at " + timeheader
-				} else {
-					timeStr = " this " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
-				}
+				timeStr = " next " + days[sDay.getDay()] + " at " + timeheader
 			} else {
 				let sDay = new Date(time)
 				let eDay = new Date(currentDate)
 
-				if (sDay.getMonth() != eDay.getMonth()) {
-					timeStr = " this " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
-				} else {
-					timeStr = " this " + days[sDay.getDay()] + ", " + date + " at " + timeheader
-				}
+				timeStr = " on " + days[sDay.getDay()] + ", " + months[sDay.getMonth()] + " " + date + " at " + timeheader
 			}
 		} else {
 			timeStr = "tomorrow at " + timeheader

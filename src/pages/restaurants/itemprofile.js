@@ -497,7 +497,7 @@ export default function itemProfile(props) {
 						<Text style={style.backHeader}>Back</Text>
 					</TouchableOpacity>
 
-					<ScrollView style={{ height: screenHeight - 90 }}>
+					<ScrollView style={{ height: screenHeight - 85 }}>
 						<View style={{ alignItems: 'center', marginVertical: 20 }}>
 							<View style={style.imageHolder}>
 								<Image source={{ uri: logo_url + itemImage }} style={style.image}/>
@@ -591,7 +591,12 @@ export default function itemProfile(props) {
 						)}
 
 						<View style={style.note}>
-							<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setItemnote(note)} autoCorrect={false} autoCapitalize="none"/>
+							<TextInput 
+								style={style.noteInput} multiline={true} 
+								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder="Leave a note if you want" 
+								maxLength={100} onChangeText={(note) => setItemnote(note)} 
+								autoCorrect={false} autoCapitalize="none"
+							/>
 						</View>
 
 						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -881,7 +886,7 @@ export default function itemProfile(props) {
 const style = StyleSheet.create({
 	itemprofile: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, height: 30, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
 	backHeader: { fontFamily: 'appFont', fontSize: 20 },
 
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
@@ -929,18 +934,18 @@ const style = StyleSheet.create({
 
 	// note
 	note: { alignItems: 'center', marginBottom: 20 },
-	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 100, padding: 5, width: '80%' },
+	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, height: 100, padding: 5, width: '80%' },
 
 	// quantity
 	quantity: { flexDirection: 'row', justifyContent: 'space-around' },
-	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, marginHorizontal: 10, paddingTop: 8, width: 35 },
+	quantityHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
 
-	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+	price: { fontSize: 20, fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
-	itemActionHeader: { textAlign: 'center' },
+	itemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
+	itemActionHeader: { fontSize: 15, textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row' },

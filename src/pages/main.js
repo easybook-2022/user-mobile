@@ -27,6 +27,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+const imageSize = 100
 
 export default function main({ navigation }) {
 	let updateTrackUser
@@ -361,8 +362,8 @@ export default function main({ navigation }) {
 							<TextInput style={style.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search name" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
 							{userId && (
 								<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
-									<FontAwesome name="bell" size={30}/>
-									{numNotifications > 0 && <Text style={{ fontWeight: 'bold' }}>{numNotifications}</Text>}
+									<FontAwesome name="bell" size={40}/>
+									{numNotifications > 0 && <Text style={style.notificationHeader}>{numNotifications}</Text>}
 								</TouchableOpacity>
 							)}
 						</View>
@@ -407,19 +408,23 @@ export default function main({ navigation }) {
 												showsHorizontalScrollIndicator={false}
 												data={item.locations}
 												renderItem={({ item }) => 
-													<TouchableOpacity style={style.location} onPress={() => {
-														clearInterval(updateTrackUser)
-														navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
-													}}>
+													<View style={style.location}>
 														<View style={style.locationPhotoHolder}>
-															<Image source={{ uri: logo_url + item.logo }} style={{ height: 80, width: 80 }}/>
+															<Image source={{ uri: logo_url + item.logo }} style={{ height: imageSize, width: imageSize }}/>
 														</View>
 
 														<Text style={style.locationName}>{item.name}</Text>
 														<Text style={style.locationDistance}>{item.distance}</Text>
 
+														<TouchableOpacity style={style.locationMenu} onPress={() => {
+															clearInterval(updateTrackUser)
+															navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
+														}}>
+															<Text style={style.locationMenuHeader}>See menu</Text>
+														</TouchableOpacity>
+
 														{displayLocationStatus(item.opentime, item.closetime) ? <Text style={style.locationHours}>{displayLocationStatus(item.opentime, item.closetime)}</Text> : null}
-													</TouchableOpacity>
+													</View>
 												}
 											/>
 										</View>
@@ -534,22 +539,25 @@ const style = StyleSheet.create({
 	main: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	headers: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: 70, justifyContent: 'space-between', padding: 5, width: '100%' },
-	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 15, margin: 10, padding: 10, width: width - 80 },
+	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 20, margin: 10, padding: 10, width: width - 100 },
 	notification: { flexDirection: 'row', marginRight: 10, marginVertical: 10 },
+	notificationHeader: { fontSize: 20, fontWeight: 'bold' },
 
 	refresh: { alignItems: 'center', height: 53 },
 	refreshTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, marginVertical: 10, padding: 5, width: 100 },
 	refreshTouchHeader: { textAlign: 'center' },
-	body: { flexDirection: 'column', height: screenHeight - 173, justifyContent: 'space-around' },
+	body: { flexDirection: 'column', height: screenHeight - 163, justifyContent: 'space-around' },
 
 	service: { marginBottom: 10, marginHorizontal: 5 },
-	rowHeader: { fontWeight: 'bold', margin: 10 },
+	rowHeader: { fontSize: 20, fontWeight: 'bold', margin: 10 },
 	seeMore: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	row: { flexDirection: 'row', marginBottom: 20 },
 	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: 100 },
-	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
-	locationName: { textAlign: 'center' },
-	locationDistance: { fontWeight: 'bold', textAlign: 'center' },
+	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: imageSize / 2, height: imageSize, overflow: 'hidden', width: imageSize },
+	locationName: { fontSize: 15, fontWeight: 'bold', textAlign: 'center' },
+	locationDistance: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	locationMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
+	locationMenuHeader: { fontSize: 20 },
 	locationHours: { fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
