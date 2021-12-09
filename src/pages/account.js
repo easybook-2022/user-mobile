@@ -596,7 +596,7 @@ export default function account(props) {
 
 								<View style={{ alignItems: 'center' }}>
 									<TouchableOpacity style={style.updateButton} onPress={() => updateAccount()}>
-										<Text>Done</Text>
+										<Text style={style.updateButtonHeader}>Done</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
@@ -605,7 +605,7 @@ export default function account(props) {
 								<Text style={style.paymentMethodHeader}>Payment Method(s)</Text>
 
 								<TouchableOpacity style={style.paymentMethodAdd} onPress={() => openPaymentMethodForm()}>
-									<Text>Add a card</Text>
+									<Text style={style.paymentMethodAddHeader}>Add a card</Text>
 								</TouchableOpacity>
 
 								{paymentMethods.map((info, index) => (
@@ -724,18 +724,19 @@ const style = StyleSheet.create({
 	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
 
 	inputsBox: { marginBottom: 50, paddingHorizontal: 50 },
-	inputContainer: { marginVertical: 30 },
-	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
-	cameraContainer: { alignItems: 'center', marginBottom: 10, width: '100%' },
+	inputContainer: { marginVertical: 50 },
+	inputHeader: { fontFamily: 'appFont', fontSize: 25, fontWeight: 'bold' },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5 },
+	cameraContainer: { alignItems: 'center', marginVertical: 50, width: '100%' },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
+	cameraActionHeader: { fontSize: 20, textAlign: 'center' },
 
 	paymentMethods: { alignItems: 'center', margin: 10 },
 	paymentMethodHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
 	paymentMethodAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
+	paymentMethodAddHeader: { fontSize: 20 },
 	paymentMethod: { marginVertical: 30 },
 	paymentMethodRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	paymentMethodHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
@@ -750,11 +751,12 @@ const style = StyleSheet.create({
 	paymentMethodActionHeaderDisabled: { color: 'white', fontSize: 12, textAlign: 'center' },
 
 	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10, width: 100 },
+	updateButtonHeader: { fontSize: 20 },
 
 	// form
 	form: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	formContainer: { backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-between', paddingVertical: 10, width: '90%' },
-	formHeader: { fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	formHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	formInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
 	formInputHeader: { fontSize: 20, fontWeight: 'bold' },
 	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 5, width: '100%' },

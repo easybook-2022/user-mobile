@@ -10,7 +10,7 @@ import { socket, logo_url, displayTime } from '../../../assets/info'
 import { getLocationHours, getLocationProfile, makeReservation, getInfo } from '../../apis/locations'
 import { getReservationInfo } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
-import { searchFriends } from '../../apis/users'
+import { getUserInfo, searchFriends } from '../../apis/users'
 
 import Cart from '../../components/cart'
 import Userauth from '../../components/userauth'
@@ -267,9 +267,10 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					const { diners, table, note } = res.reservationInfo
+					const { numdiners, diners, table, note } = res.reservationInfo
 
-					setNumselecteddiners(diners)
+					setNumselecteddiners(numdiners)
+					setSelecteddiners(diners)
 					setSelectedtable(table)
 					setConfirmrequest({ ...confirmRequest, note })
 				}
@@ -279,6 +280,35 @@ export default function booktime(props) {
 					
 				}
 			})
+	}
+
+	const getTheUserInfo = async() => {
+		const userid = await AsyncStorage.getItem("userid")
+
+		if (userid) {
+			getUserInfo(userid)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						const { id, username, profile } = res.userInfo
+
+						setNumselecteddiners(1)
+						setSelecteddiners([{
+							key: "selected-friend-0", 
+							row: [
+								{ key: "selected-friend-row-0", id, username, profile },
+								{ key: "selected-friend-row-1" },
+								{ key: "selected-friend-row-2" },
+								{ key: "selected-friend-row-3" },
+							]
+						}])
+					}
+				})
+		}
 	}
 	const getTheLocationHours = async() => {
 		const day = new Date(Date.now()).toString().split(" ")[0]
@@ -478,7 +508,7 @@ export default function booktime(props) {
 		if (newSelectedDiners.length > 0) {
 			last_row = newSelectedDiners[newSelectedDiners.length - 1].row
 
-			for (k in last_row) {
+			for (let k = 0; k < last_row.length; k++) {
 				if (last_row[k].id) {
 					next_key = parseInt(last_row[k].key.substr(16)) + 1
 				} else {
@@ -591,6 +621,8 @@ export default function booktime(props) {
 
 		if (scheduleid) {
 			getTheReservationInfo()
+		} else {
+			getTheUserInfo()
 		}
 	}
 
@@ -637,13 +669,40 @@ export default function booktime(props) {
 												<TouchableOpacity style={style.dinersAdd} onPress={() => openDinersList()}>
 													<Text style={style.dinersAddHeader}>{numSelectedDiners > 0 ? 'Edit' : 'Add Other'} Diner(s)</Text>
 												</TouchableOpacity>
-												<Text style={style.dinersHeader}>{numSelectedDiners} other diner(s) selected</Text>
+												<Text style={style.dinersHeader}>{numSelectedDiners} diner(s) selected</Text>
 											</>
-										)}	
+										)}
+
+										{(!openList && selectedDiners.length > 0) && (
+											selectedDiners.map(item => (
+												<View key={item.key} style={style.selectedDinersRow}>
+													{item.row.map(diner => (
+														diner.id ? 
+															<View key={diner.key} style={style.selectedDiner}>
+																{diner.id != userId ? 
+																	<TouchableOpacity style={style.selectedDinerDelete} onPress={() => deselectDiner(diner.id)}>
+																		<AntDesign name="closecircleo" size={15}/>
+																	</TouchableOpacity>
+																	:
+																	<View style={style.selectedDinerDelete}></View>
+																}
+																<View style={style.dinerProfileHolder}>
+																	<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
+																</View>
+															</View>
+															:
+															<View key={diner.key} style={style.selectedDiner}>
+															</View>
+													))}
+												</View>
+											))
+										)}
 									</View>
 								</View>
 
 								<View style={style.dateHeaders}>
+									<Text style={style.timesHeader}>Pick a date</Text>
+
 									<View style={style.date}>
 										<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
 										<Text style={style.dateHeader}>{selectedDateInfo.month}, {selectedDateInfo.year}</Text>
@@ -752,6 +811,8 @@ export default function booktime(props) {
 									AsyncStorage.clear()
 
 									setUserid(null)
+									setNumselecteddiners(0)
+									setSelectediners([])
 								} else {
 									setShowauth({ show: true, action: "" })
 								}
@@ -896,9 +957,13 @@ export default function booktime(props) {
 																{item.row.map(diner => (
 																	diner.username ? 
 																		<View key={diner.key} style={style.diner}>
-																			<TouchableOpacity style={style.dinerDelete} onPress={() => deselectDiner(diner.id)}>
-																				<AntDesign name="closecircleo" size={15}/>
-																			</TouchableOpacity>
+																			{diner.id != userId ? 
+																				<TouchableOpacity style={style.dinerDelete} onPress={() => deselectDiner(diner.id)}>
+																					<AntDesign name="closecircleo" size={15}/>
+																				</TouchableOpacity>
+																				:
+																				<View style={style.dinerDelete}></View>
+																			}
 																			<View style={style.dinerProfileHolder}>
 																				<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
 																			</View>
@@ -980,6 +1045,12 @@ export default function booktime(props) {
 										makeTheReservation()
 									} else if (showAuth.action == "opendinerslist") {
 										openDinersList()
+									} else {
+										if (scheduleid) {
+											getTheReservationInfo()
+										} else {
+											getTheUserInfo()
+										}
 									}
 
 									setShowauth({ show: false, action: "" })
@@ -1003,30 +1074,42 @@ const style = StyleSheet.create({
 	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center' },
 
-	dinersBox: { marginBottom: 0 },
-	dinersAdd: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+	dinersBox: { alignItems: 'center' },
+	dinersAdd: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
 	dinersAddHeader: { textAlign: 'center' },
 	dinersHeader: { marginVertical: 5, textAlign: 'center' },
+	selectedDinersRow: { flexDirection: 'row', justifyContent: 'space-around', padding: 10 },
+	selectedDiner: { alignItems: 'center' },
+	selectedDinerDelete: { height: 16, marginBottom: -5, marginLeft: 60, width: 16 },
+	selectedDinerProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
 
-	dateHeaders: { alignItems: 'center' },
+	dateHeaders: { alignItems: 'center', marginVertical: 50 },
 	date: { flexDirection: 'row', margin: 10 },
 	dateNav: { marginHorizontal: 20 },
 	dateHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 5, textAlign: 'center', width: 170 },
 	dateDays: { alignItems: 'center' },
 	dateDaysRow: { flexDirection: 'row' },
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
+
+	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
+	dateDayTouchHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
+	
+	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
 	dateDayTouchSelectedHeader: { color: 'white', fontSize: 17, textAlign: 'center' },
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: (width / 7) - 20 },
-	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: (width / 7) - 20 },
-	dateDayTouchHeader: { color: 'black', textAlign: 'center' },
-	dateDayTouchHeaderDisabled: { color: 'white', textAlign: 'center' },
+
+	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
+	dateDayTouchPassedHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
+	
+	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: 40 },
+	dateDayTouchDisabledHeader: { fontSize: 13, fontWeight: 'bold' },
 
 	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 300 },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: (width / 3) - 50 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: (width / 3) - 50 },
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: (width / 3) - 50 },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 253 },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
+	unselectHeader: { color: 'black', fontSize: 15 },
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
+	selectedHeader: { color: 'black', fontSize: 15 },
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 80 },
+	selectedPassedHeader: { color: 'black', fontSize: 15 },
 
 	noTime: { flexDirection: 'column', height: screenHeight - 191, justifyContent: 'space-around', width: '100%' },
 	noTimeHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
@@ -1063,9 +1146,9 @@ const style = StyleSheet.create({
 	dinersHeader: { fontWeight: 'bold', textAlign: 'center' },
 	dinersListSelected: { height: '50%', overflow: 'hidden' },
 	selectedDinersHeader: { fontWeight: 'bold', textAlign: 'center' },
-	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
+	row: { flexDirection: 'row', justifyContent: 'space-between', padding: 10 },
 	diner: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
-	dinerDelete: { marginBottom: -5, marginLeft: 60 },
+	dinerDelete: { height: 16, marginBottom: -5, marginLeft: 60, width: 16 },
 	dinerProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
 	dinerName: { textAlign: 'center' },
 

@@ -345,12 +345,12 @@ const style = StyleSheet.create({
 	authContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	authBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', width: '80%' },
 	authClose: { marginTop: 20 },
-	authBoxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 15, fontWeight: 'bold' },
+	authBoxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
 
-	authInputsBox: { alignItems: 'center' },
-	authInputContainer: { marginTop: '5%' },
-	authInputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	authInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 10, width: width - 100 },
+	authInputsBox: { alignItems: 'center', width: '90%' },
+	authInputContainer: { marginTop: '5%', width: '100%' },
+	authInputHeader: { fontFamily: 'appFont', fontSize: 25 },
+	authInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: '100%' },
 	resend: { alignItems: 'center', backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
 	resendHeader: { fontWeight: 'bold' },
 	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
@@ -359,5 +359,5 @@ const style = StyleSheet.create({
 
 	options: {  },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },
-	optionHeader: {  },
+	optionHeader: { fontSize: 15 },
 })

@@ -544,6 +544,7 @@ export default function booktime(props) {
 
 								<View style={style.dateHeaders}>
 									<Text style={style.timesHeader}>Pick a date</Text>
+									
 									<View style={style.date}>
 										<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
 										<Text style={style.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>

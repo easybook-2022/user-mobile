@@ -217,7 +217,7 @@ export default function itemProfile(props) {
 					})
 					.catch((err) => {
 						if (err.response && err.response.status == 400) {
-							const status = err.response.data.status
+							const { errormsg, status } = err.response.data
 
 							switch (status) {
 								case "cardrequired":
@@ -945,7 +945,7 @@ const style = StyleSheet.create({
 
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	itemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
-	itemActionHeader: { fontSize: 15, textAlign: 'center' },
+	itemActionHeader: { fontSize: 20, textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row' },

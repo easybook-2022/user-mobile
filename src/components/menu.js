@@ -23,7 +23,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const itemSize = (width * 0.5) - 50
+const itemSize = (width / 2) - 50
 const imageSize = itemSize - 30
 
 export default function menu(props) {
@@ -460,7 +460,7 @@ const style = StyleSheet.create({
 	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 
 	// menu
-	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, flexDirection: 'column', height: itemSize, justifyContent: 'space-between', padding: 2, width: itemSize },
+	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 2, width: itemSize },
 	menuDisabled: { height: itemSize, width: itemSize },
 	menuImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
 	menuName: { fontSize: 10, fontWeight: 'bold', textAlign: 'center' },
@@ -498,6 +498,6 @@ const style = StyleSheet.create({
 	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, width: 44 },
 	logoHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
 	logo: { height: 100, width: 100 },
-	showInfoHeader: { fontFamily: 'appFont', fontSize: 25, fontWeight: 'bold', marginVertical: 5 },
-	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+	showInfoHeader: { fontSize: 20, fontWeight: 'bold', margin: 10 },
+	phonenumber: { fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 })

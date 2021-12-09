@@ -20,7 +20,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const itemSize = (width / 3) - 20
+const itemSize = (width / 2) - 50
 const imageSize = itemSize - 30
 
 export default function restaurantprofile(props) {
@@ -120,30 +120,8 @@ export default function restaurantprofile(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					let data = res.menus
-					let row = [], column = []
-					let rownum = 0, key = ""
-
-					data.forEach(function (menu, index) {
-						row.push(menu)
-						key = parseInt(menu.key.replace("menu-", ""))
-
-						if (row.length == 3 || (data.length - 1 == index && row.length > 0)) {
-							if (data.length - 1 == index && row.length > 0) {
-								let leftover = 3 - row.length
-
-								for (let k = 0; k < leftover; k++) {
-									key++
-									row.push({ key: "menu-" + key })
-								}
-							}
-
-							column.push({ key: "row-" + rownum, row: row })
-						}
-					})
-
-					setMenus(column)
-					setNummenus(data.length)
+					setMenus(res.menus)
+					setNummenus(res.nummenus)
 					setShowmenus(true)
 					setLoaded(true)
 				}
@@ -226,10 +204,10 @@ export default function restaurantprofile(props) {
 								<View style={style.navs}>
 									<View style={{ flexDirection: 'row' }}>
 										<TouchableOpacity style={style.nav} onPress={() => getAllMenus()}>
-											<Text>Menu ({numMenus})</Text>
+											<Text style={style.navHeader}>Menu ({numMenus})</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("makereservation", { locationid, initialize: () => initialize() })}>
-											<Text>Book Table</Text>
+											<Text style={style.navHeader}>Book Table</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -247,14 +225,17 @@ export default function restaurantprofile(props) {
 										data={menus}
 										renderItem={({ item, index }) => 
 											<View key={item.key} style={style.row}>
-												{item.row.map(( menu, index ) => (
+												{item.row.map(menu => (
 													menu.name ? 
-														<TouchableOpacity key={menu.key} style={style.menu} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id, initialize: () => initialize() })}>
+														<View key={menu.key} style={style.menu}>
 															<View style={style.menuImageHolder}>
 																<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
 															</View>
 															<Text style={style.menuName}>{menu.name} ({menu.numCategories})</Text>
-														</TouchableOpacity>
+															<TouchableOpacity style={style.seeMenu} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id, initialize: () => initialize() })}>
+																<Text style={style.seeMenuHeader}>See menu</Text>
+															</TouchableOpacity>
+														</View>
 														:
 														<View key={menu.key} style={style.menuDisabled}></View>
 												))}
@@ -387,14 +368,17 @@ const style = StyleSheet.create({
 	phonenumber: { fontFamily: 'appFont', fontSize: 13, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8 },
 
 	navs: { flexDirection: 'row', justifyContent: 'space-around' },
-	nav: { alignItems: 'center', backgroundColor: 'white', borderRadius: 8, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 5, width: 100 },
+	nav: { alignItems: 'center', backgroundColor: 'white', borderRadius: 8, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 5, width: 120 },
+	navHeader: { fontSize: 20 },
 
 	body: { flexDirection: 'column', height: screenHeight - 300, justifyContent: 'space-around' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
-	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, flexDirection: 'column', height: itemSize, justifyContent: 'space-between', padding: 2, width: itemSize },
+	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 2, width: itemSize },
 	menuDisabled: { height: itemSize, width: itemSize },
 	menuImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
-	menuName: { fontSize: 10, fontWeight: 'bold', textAlign: 'center' },
+	menuName: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	seeMenu: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5 },
+	seeMenuHeader: { fontSize: 20, textAlign: 'center' },
 
 	// product
 	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10, width: itemSize },

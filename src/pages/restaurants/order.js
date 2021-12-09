@@ -17,8 +17,9 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const itemSize = (width / 3) - 20
-const imageSize = itemSize - 30
+const itemSize = (width / 2) - 50
+const imageSize = 100
+const orderImageSize = 130
 
 export default function order(props) {
 	const { locationid, scheduleid } = props.route.params
@@ -28,7 +29,7 @@ export default function order(props) {
 	const [name, setName] = useState('')
 	const [totalDiners, setTotaldiners] = useState(0)
 	const [seated, setSeated] = useState(false)
-	const [menuTrack, setMenutrack] = useState([""])
+	const [menuTrack, setMenutrack] = useState([])
 	const [menuId, setMenuid] = useState('')
 	const [menuName, setMenuname] = useState('')
 	const [menuInfo, setMenuinfo] = useState('')
@@ -152,6 +153,18 @@ export default function order(props) {
 				}
 			})
 	}
+	const goBack = () => {
+		let newMenutrack = [...menuTrack]
+
+		newMenutrack.pop()
+		setMenutrack(newMenutrack)
+
+		if (newMenutrack.length == 0) {
+			getTheInfo("")
+		} else {
+			getTheInfo(newMenutrack[newMenutrack.length - 1])
+		}
+	}
 	const getTheInfo = async(menuid) => {
 		const data = { locationid, menuid }
 
@@ -186,18 +199,6 @@ export default function order(props) {
 				}
 			})
 	}
-	const goBack = () => {
-		let newMenutrack = [...menuTrack]
-
-		newMenutrack.pop()
-		setMenutrack(newMenutrack)
-
-		if (newMenutrack.length == 1) {
-			getTheLocationProfile()
-		} else {
-			getTheInfo(newMenutrack[newMenutrack.length - 1])
-		}
-	}
 	const getAllMenus = async(parentmenuid) => {
 		const data = { locationid, parentmenuid }
 
@@ -209,30 +210,8 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					let data = res.menus
-					let row = [], column = []
-					let rownum = 0, key = ""
-
-					data.forEach(function (menu, index) {
-						row.push(menu)
-						key = parseInt(menu.key.replace("menu-", ""))
-
-						if (row.length == 3 || (data.length - 1 == index && row.length > 0)) {
-							if (data.length - 1 == index && row.length > 0) {
-								let leftover = 3 - row.length
-
-								for (let k = 0; k < leftover; k++) {
-									key++
-									row.push({ key: "menu-" + key })
-								}
-							}
-
-							column.push({ key: "row-" + rownum, row: row })
-						}
-					})
-
-					setMenus(column)
-					setNummenus(data.length)
+					setMenus(res.menus)
+					setNummenus(res.nummenus)
 					setShowmenus(true)
 					setViewtype('menus')
 					setLoaded(true)
@@ -337,7 +316,7 @@ export default function order(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					const status = err.response.data.status
+					const { errormsg, status } = err.response.data
 
 					switch (status) {
 						case "unconfirmedorders":
@@ -852,7 +831,7 @@ export default function order(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					const status = err.response.data.status
+					const { errormsg, status } = err.response.data
 
 					switch (status) {
 						case "activediner":
@@ -1318,7 +1297,7 @@ export default function order(props) {
 					<View style={style.body}>
 						{loaded ? 
 							<>
-								{menuTrack.length > 1 && (
+								{menuTrack.length > 0 && (
 									<View style={{ alignItems: 'center', marginTop: 20 }}>
 										<TouchableOpacity style={style.goBack} onPress={() => goBack()}>
 											<Text>Back</Text>
@@ -1334,13 +1313,16 @@ export default function order(props) {
 										renderItem={({ item, index }) => 
 											<View key={item.key} style={style.row}>
 												{item.row.map(( menu, index ) => (
-													menu.name ? 
-														<TouchableOpacity key={menu.key} style={style.menu} onPress={() => getTheInfo(menu.id)}>
+													menu.id ? 
+														<View key={menu.key} style={style.menu}>
 															<View style={style.menuImageHolder}>
 																<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
 															</View>
-															<Text style={style.menuName}>{menu.name}</Text>
-														</TouchableOpacity>
+															<Text style={style.menuName}>{menu.name} ({menu.numCategories})</Text>
+															<TouchableOpacity style={style.seeMenu} onPress={() => getTheInfo(menu.id)}>
+																<Text style={style.seeMenuHeader}>See Menu</Text>
+															</TouchableOpacity>
+														</View>
 														:
 														<View key={menu.key} style={style.menuDisabled}></View>
 												))}
@@ -1358,19 +1340,17 @@ export default function order(props) {
 											<View key={item.key} style={style.row}>
 												{item.row.map(product => (
 													product.name ? 
-														<TouchableOpacity key={product.key} style={style.product} onPress={() => getTheProductInfo(product.id)}>
+														<View key={product.key} style={style.product}>
 															<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
 															<Text style={style.productName}>{product.name}</Text>
 															{product.info && <Text style={style.productInfo}>{product.info}</Text>}
 
-															<View style={{ flexDirection: 'row' }}>
-																<Text style={style.productDetail}>{product.price}</Text>
-															</View>
+															<Text style={style.productPrice}>$ {product.price}</Text>
 
 															<TouchableOpacity style={style.productBuy} onPress={() => getTheProductInfo(product.id)}>
-																<Text style={style.productBuyHeader}>Get</Text>
+																<Text style={style.productBuyHeader}>See / Buy</Text>
 															</TouchableOpacity>
-														</TouchableOpacity>
+														</View>
 														:
 														<View key={product.key} style={style.product}></View>
 												))}
@@ -1489,7 +1469,12 @@ export default function order(props) {
 								)}
 
 								<View style={style.note}>
-									<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false} autoCapitalize="none"/>
+									<TextInput 
+										style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
+										placeholder="Leave a note if you want" maxLength={100} 
+										onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} 
+										autoCorrect={false} autoCapitalize="none"
+									/>
 								</View>
 
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -1579,36 +1564,39 @@ export default function order(props) {
 																<View style={style.orderItemImageHolder}>
 																	<Image source={{ uri: logo_url + order.image }} style={style.orderItemImage}/>
 																</View>
-																<Text style={style.orderItemName}>{order.name}</Text>
 
-																{order.options.map((option, infoindex) => (
-																	<Text key={option.key} style={style.itemInfo}>
-																		<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-																		{option.selected}
-																		{option.type == 'percentage' && '%'}
-																	</Text>
-																))}
+																<View style={style.orderItemInfos}>
+																	<Text style={style.orderItemInfo}>{order.name}</Text>
 
-																{order.others.map((other, otherindex) => (
-																	other.selected ? 
-																		<Text key={other.key} style={style.itemInfo}>
-																			<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-																			<Text>{other.input}</Text>
+																	{order.options.map((option, infoindex) => (
+																		<Text key={option.key} style={style.itemInfo}>
+																			<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+																			{option.selected}
+																			{option.type == 'percentage' && '%'}
 																		</Text>
-																	: null
-																))}
+																	))}
 
-																{order.sizes.map((size, sizeindex) => (
-																	size.selected ? 
-																		<Text key={size.key} style={style.itemInfo}>
-																			<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-																			<Text>{size.name}</Text>
-																		</Text>
-																	: null
-																))}
+																	{order.others.map((other, otherindex) => (
+																		other.selected ? 
+																			<Text key={other.key} style={style.itemInfo}>
+																				<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+																				<Text>{other.input}</Text>
+																			</Text>
+																		: null
+																	))}
 
-																<Text style={style.orderItemQuantity}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{order.quantity}</Text>
-																<Text style={style.orderItemPrice}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(order.cost).toFixed(2)}</Text>
+																	{order.sizes.map((size, sizeindex) => (
+																		size.selected ? 
+																			<Text key={size.key} style={style.itemInfo}>
+																				<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+																				<Text>{size.name}</Text>
+																			</Text>
+																		: null
+																	))}
+
+																	<Text style={style.orderItemInfo}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{order.quantity}</Text>
+																	<Text style={style.orderItemInfo}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(order.cost).toFixed(2)}</Text>
+																</View>
 															</View>
 														</View>
 
@@ -1625,7 +1613,7 @@ export default function order(props) {
 															</View>
 														)}
 
-														<View style={{ alignItems: 'center' }}>
+														<View style={{ alignItems: 'center', marginVertical: 10 }}>
 															<View style={style.orderersEdit}>
 																<Text style={style.orderersEditHeader}>Calling for {order.numorderers} {order.numorderers > 1 ? 'people' : 'person'}</Text>
 																{(round.status == "ordering" && order.orderer.id == userId) && (
@@ -2096,19 +2084,21 @@ const style = StyleSheet.create({
 	row: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10, width: '100%' },
 
 	// menu
-	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, flexDirection: 'column', height: itemSize, justifyContent: 'space-between', padding: 2, width: itemSize },
+	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 5, width: itemSize },
 	menuDisabled: { height: itemSize, width: itemSize },
 	menuImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
-	menuName: { fontSize: 10, fontWeight: 'bold', textAlign: 'center' },
+	menuName: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	seeMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
+	seeMenuHeader: { fontSize: 20 },
 
 	// product
 	product: { alignItems: 'center', marginBottom: 50, width: itemSize },
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
 	productName: { fontSize: 20, fontWeight: 'bold' },
 	productInfo: { fontSize: 15 },
-	productDetail: { fontSize: 15, marginHorizontal: 10, marginVertical: 5 },
-	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
-	productBuyHeader: { textAlign: 'center' },
+	productPrice: { fontSize: 20, marginVertical: 5 },
+	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	productBuyHeader: { fontSize: 20, textAlign: 'center' },
 
 	// hidden boxes
 	// item info
@@ -2158,18 +2148,18 @@ const style = StyleSheet.create({
 
 	// note
 	note: { alignItems: 'center', marginBottom: 20 },
-	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 100, padding: 5, width: '80%' },
+	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, height: 100, padding: 5, width: '80%' },
 
 	// quantity
 	quantity: { flexDirection: 'row', justifyContent: 'space-around' },
-	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, marginHorizontal: 10, paddingTop: 8, width: 35 },
+	quantityHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
 
-	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+	price: { fontSize: 20, fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 120 },
-	itemActionHeader: { textAlign: 'center' },
+	itemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
+	itemActionHeader: { fontSize: 15, textAlign: 'center' },
 
 	// rounds
 	closeRounds: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: 28, justifyContent: 'space-around', marginVertical: 10, padding: 2 },
@@ -2181,17 +2171,16 @@ const style = StyleSheet.create({
 	roundHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	order: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 5, margin: 5 },
 	orderItem: { alignItems: 'center', marginTop: 20 },
-	orderInfo: { fontWeight: 'bold', marginBottom: 20 },
-	orderItemImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
-	orderItemImage: { height: 80, width: 80 },
-	orderItemName: { fontWeight: 'bold' },
-	orderItemQuantity: {  },
-	orderItemPrice: {  },
+	orderInfo: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+	orderItemImageHolder: { borderRadius: orderImageSize / 2, height: orderImageSize, overflow: 'hidden', width: orderImageSize },
+	orderItemImage: { height: orderImageSize, width: orderImageSize },
+	orderItemInfos: { flexDirection: 'column', height: 100, justifyContent: 'space-between' },
+	orderItemInfo: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 	orderItemActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	orderItemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 110 },
 	orderItemActionHeader: { fontSize: 13, textAlign: 'center' },
 	orderersEdit: { flexDirection: 'row' },
-	orderersEditHeader: { fontWeight: 'bold', marginRight: 10, marginTop: 7, textAlign: 'center' },
+	orderersEditHeader: { fontSize: 20, fontWeight: 'bold', marginRight: 10, textAlign: 'center' },
 	orderersEditTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	orderersEditTouchHeader: { },
 	orderCallfor: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },

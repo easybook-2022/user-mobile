@@ -197,7 +197,7 @@ export default function setup({ navigation }) {
 							</View>
 
 							<View style={style.cameraContainer}>
-								<Text style={style.cameraHeader}>Profile Picture</Text>
+								<Text style={style.inputHeader}>Profile Picture</Text>
 
 								{profile.uri ? (
 									<>
@@ -228,26 +228,24 @@ export default function setup({ navigation }) {
 						{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
 						<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupAccount()}>
-							<Text>Done</Text>
+							<Text style={style.setupButtonHeader}>Done</Text>
 						</TouchableOpacity>
 					</View>
 				</ScrollView>
 
 				<View style={style.bottomNavs}>
-					<View style={{ flexDirection: 'row' }}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							AsyncStorage.clear()
+					<TouchableOpacity style={style.bottomNav} onPress={() => {
+						AsyncStorage.clear()
 
-							navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'main' }]
-								})
-							);
-						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
-						</TouchableOpacity>
-					</View>
+						navigation.dispatch(
+							CommonActions.reset({
+								index: 1,
+								routes: [{ name: 'main' }]
+							})
+						);
+					}}>
+						<Text style={style.bottomNavHeader}>Log-Out</Text>
+					</TouchableOpacity>
 				</View>
 			</View>
 		</View>
@@ -259,18 +257,19 @@ const style = StyleSheet.create({
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
 
-	inputsBox: { paddingHorizontal: 20, width: '80%' },
-	inputContainer: { marginVertical: 30 },
-	inputHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 20, padding: 5 },
+	inputsBox: { paddingHorizontal: 20, width: '90%' },
+	inputContainer: { marginVertical: 30, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: 25 },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: '100%' },
 	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 13, textAlign: 'center' },
+	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
 	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
+	setupButtonHeader: { fontSize: 20 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },

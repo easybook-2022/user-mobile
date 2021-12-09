@@ -122,7 +122,7 @@ export default function main({ navigation }) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					const status = err.response.data.status
+					const { errormsg, status } = err.response.data
 
 					switch (status) {
 						case "unknowncoords":
