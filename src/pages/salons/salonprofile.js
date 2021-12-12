@@ -318,7 +318,7 @@ export default function salonprofile(props) {
 														<Text style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
 
 														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id, initialize: () => initialize() })}>
-															<Text>Book a time</Text>
+															<Text style={style.serviceBookHeader}>Book a time</Text>
 														</TouchableOpacity>
 													</View>
 												</TouchableOpacity>
@@ -466,9 +466,9 @@ const style = StyleSheet.create({
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
 	productName: { fontSize: 20, fontWeight: 'bold' },
 	productInfo: { fontSize: 15 },
-	productPrice: { fontSize: 15, marginHorizontal: 10, marginVertical: 5 },
-	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
-	productBuyHeader: { textAlign: 'center' },
+	productPrice: { fontSize: 20, marginHorizontal: 10, marginVertical: 5 },
+	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	productBuyHeader: { fontSize: 20, textAlign: 'center' },
 
 	// service
 	service: { alignItems: 'center', flexDirection: 'row', marginBottom: 50, marginHorizontal: 10 },
@@ -476,7 +476,8 @@ const style = StyleSheet.create({
 	serviceName: { fontSize: 15, fontWeight: 'bold', marginBottom: 10 },
 	serviceInfo: { fontSize: 15, marginBottom: 10 },
 	serviceDetail: { fontSize: 15 },
-	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
+	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
+	serviceBookHeader: { fontSize: 20 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row' },

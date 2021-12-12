@@ -472,7 +472,7 @@ const style = StyleSheet.create({
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
 	productName: { fontSize: 20, fontWeight: 'bold' },
 	productInfo: { fontSize: 15 },
-	productPrice: { fontSize: 15, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 5 },
+	productPrice: { fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 5 },
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 	productBuyHeader: { fontSize: 20, textAlign: 'center' },
 
