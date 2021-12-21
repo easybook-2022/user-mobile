@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { CommonActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../assets/info'
 import { searchFriends, selectUser, requestUserPaymentMethod } from '../apis/users'
 import { getCartItems, getCartItemsTotal, editCartItem, updateCartItem, removeFromCart, changeCartItem, editCallfor, updateCallfor, removeCallfor, checkoutCart } from '../apis/carts'
@@ -11,6 +12,10 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
+
+const fsize = p => {
+	return width * p
+}
 
 export default function cart(props) {
 	const [userId, setUserid] = useState(null)
@@ -560,8 +565,6 @@ export default function cart(props) {
 		const time = Date.now()
 		let data = { userid: userId, time, type: "checkout" }
 
-		setLoading(true)
-
 		checkoutCart(data)
 			.then((res) => {
 				if (res.status == 200) {
@@ -805,7 +808,7 @@ export default function cart(props) {
 							</>
 							:
 							<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
-								<Text>Your cart is empty</Text>
+								<Text style={{ fontSize: fsize(0.05) }}>Your cart is empty</Text>
 							</View>
 						:
 						<View style={{ flexDirection: 'column', height: screenHeight - 113, justifyContent: 'space-around' }}>
@@ -825,7 +828,8 @@ export default function cart(props) {
 										<View style={style.confirmOptions}>
 											<TouchableOpacity style={style.confirmOption} onPress={() => {
 												setShowconfirm(false)
-												props.close()
+												props.showNotif()
+												
 											}}>
 												<Text style={style.confirmOptionHeader}>Ok</Text>
 											</TouchableOpacity>
@@ -1207,17 +1211,17 @@ const style = StyleSheet.create({
 	cart: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: screenHeight, width: '100%' },
 	close: { marginTop: 20, marginHorizontal: 20 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 35, height: 70, overflow: 'hidden', width: 70 },
 	itemImage: { height: 70, width: 70 },
 	itemInfos: {  },
-	itemName: { fontSize: 20, marginBottom: 10 },
-	itemInfo: { fontSize: 15 },
-	header: { fontSize: 15 },
+	itemName: { fontSize: fsize(0.05), marginBottom: 10 },
+	itemInfo: { fontSize: fsize(0.04) },
+	header: { fontSize: fsize(0.04) },
 	itemChange: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5, width: 80 },
-	itemChangeHeader: { fontSize: 13, textAlign: 'center' },
+	itemChangeHeader: { fontSize: fsize(0.035), textAlign: 'center' },
 	note: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, padding: 5 },
 	noteHeader: { textAlign: 'center' },
 	orderersContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginVertical: 10, padding: 5 },
@@ -1245,7 +1249,7 @@ const style = StyleSheet.create({
 	confirm: { backgroundColor: 'white' },
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row', justifyContent: 'space-around' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },
@@ -1256,8 +1260,8 @@ const style = StyleSheet.create({
 	itemClose: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', justifyContent: 'space-around', padding: 2 },
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	image: { height: 200, width: 200 },
-	boxItemHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-	boxItemHeaderInfo: {  fontSize: 15, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
+	boxItemHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+	boxItemHeaderInfo: {  fontSize: fsize(0.04), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
 	infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
@@ -1267,31 +1271,26 @@ const style = StyleSheet.create({
 	// payment details
 	paymentDetailsContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	paymentDetailsBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
-	paymentDetailsHeader: { fontSize: 25 },
-	paymentDetailHeader: { fontSize: 20 },
-
-	// options
-	// options: { flexDirection: 'row', justifyContent: 'space-between' },
-	// option: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 2, padding: 8 },
-	// optionHeader: { color: 'black', fontSize: 15 },
+	paymentDetailsHeader: { fontSize: fsize(0.06) },
+	paymentDetailHeader: { fontSize: fsize(0.05) },
 
 	// amount
 	amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	amountAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	amountHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+	amountHeader: { fontSize: fsize(0.04), fontWeight: 'bold', padding: 10 },
 
 	// percentage
 	percentage: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	percentageAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	percentageHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+	percentageHeader: { fontSize: fsize(0.04), fontWeight: 'bold', padding: 10 },
 
 	// others
 	othersBox: { alignItems: 'center', marginVertical: 20 },
 	othersHeader: { fontWeight: 'bold' },
 	others: { marginVertical: 20, width: '100%' },
 	other: { alignItems: 'center', marginVertical: 5, width: '100%' },
-	otherName: { fontSize: 20, fontWeight: 'bold' },
-	otherInput: { fontSize: 20 },
+	otherName: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	otherInput: { fontSize: fsize(0.05) },
 	otherPrice: { fontWeight: 'bold', marginRight: 10, marginTop: 5 },
 	otherActions: { flexDirection: 'row', marginTop: -5 },
 	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
@@ -1317,7 +1316,7 @@ const style = StyleSheet.create({
 	// quantity
 	quantity: { flexDirection: 'row', justifyContent: 'space-around' },
 	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	quantityHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+	quantityHeader: { fontSize: fsize(0.04), fontWeight: 'bold', padding: 10 },
 
 	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 
@@ -1338,22 +1337,22 @@ const style = StyleSheet.create({
 	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: 150, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
 	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
-	itemInfo: { fontSize: 15 },
-	itemHeader: { fontSize: 15 },
+	itemInfo: { fontSize: fsize(0.04) },
+	itemHeader: { fontSize: fsize(0.04) },
 	actions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 70 },
 	actionHeader: { textAlign: 'center' },
 
 	cardRequiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	cardRequiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	cardRequiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	cardRequiredHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	cardRequiredActionHeader: { },
 
 	notifyUserBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	notifyUserContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	notifyUserHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	notifyUserHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	notifyUserActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	notifyUserAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	notifyUserActionHeader: { },

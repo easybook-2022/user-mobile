@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ActivityIndicator, Dimensions, View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native'
+import { ActivityIndicator, Dimensions, View, Text, Image, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -11,11 +11,15 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 const { height, width } = Dimensions.get('window')
 const { username, cellnumber, password, confirmPassword } = loginInfo
 
+const fsize = p => {
+	return width * p
+}
+
 export default function userauth(props) {
 	const offsetPadding = Constants.statusBarHeight
 	const screenHeight = height - (offsetPadding * 2)
 
-	const [authInfo, setAuthinfo] = useState({ type: 'login', info: { cellnumber, password }, loading: false, verifycode: null, codesent: false, errormsg: "" })
+	const [authInfo, setAuthinfo] = useState({ type: '', info: { cellnumber, password }, loading: false, verifycode: null, codesent: false, errormsg: "" })
 
 	const login = () => {
 		const { info } = authInfo
@@ -287,54 +291,77 @@ export default function userauth(props) {
 
 						<Text style={style.errorMsg}>{authInfo.errormsg}</Text>
 
-						<TouchableOpacity style={style.submit} disabled={authInfo.loading} onPress={() => {
-							if (authInfo.type == 'forgotpassword') {
-								if (authInfo.codesent) {
-									done()
-								} else {
-									getTheCode()
-								}
-							} else if (authInfo.type == 'resetpassword') {
-								reset()
-							} else if (authInfo.type == 'login') {
-								login()
-							} else if (authInfo.type == 'verifyuser') {
-								if (authInfo.verifycode) {
-									if (authInfo.info.resetcode == '111111' || authInfo.info.resetcode == authInfo.verifycode) {
-										setAuthinfo({ ...authInfo, type: 'register' })
+						{authInfo.type ? 
+							<TouchableOpacity style={style.submit} disabled={authInfo.loading} onPress={() => {
+								if (authInfo.type == 'forgotpassword') {
+									if (authInfo.codesent) {
+										done()
+									} else {
+										getTheCode()
 									}
-								} else {
-									verify()
+								} else if (authInfo.type == 'resetpassword') {
+									reset()
+								} else if (authInfo.type == 'login') {
+									login()
+								} else if (authInfo.type == 'verifyuser') {
+									if (authInfo.verifycode) {
+										if (authInfo.info.resetcode == '111111' || authInfo.info.resetcode == authInfo.verifycode) {
+											setAuthinfo({ ...authInfo, type: 'register', errormsg: "" })
+										} else {
+											setAuthinfo({ ...authInfo, errormsg: "Code is incorrect" })
+										}
+									} else {
+										verify()
+									}
+								} else if (authInfo.type == 'register') {
+									register()
 								}
-							} else if (authInfo.type == 'register') {
-								register()
-							}
-						}}>
-							<Text style={style.submitHeader}>
-								{authInfo.type == 'forgotpassword' && (authInfo.codesent ? 'Done' : 'Get Code')}
-								{authInfo.type == 'verifyuser' && (authInfo.verifycode ? 'Verify' : 'Register')}
-								{authInfo.type == 'resetpassword' && 'Done'}
-								{authInfo.type == 'register' && 'Register'}
-								{authInfo.type == 'login' && 'Sign-In'}
-							</Text>
-						</TouchableOpacity>
+							}}>
+								<Text style={style.submitHeader}>
+									{authInfo.type == 'forgotpassword' && (authInfo.codesent ? 'Done' : 'Get Code')}
+									{authInfo.type == 'verifyuser' && (authInfo.verifycode ? 'Verify' : 'Register')}
+									{authInfo.type == 'resetpassword' && 'Done'}
+									{authInfo.type == 'register' && 'Register'}
+									{authInfo.type == 'login' && 'Sign-In'}
+								</Text>
+							</TouchableOpacity>
+							:
+							<View style={style.welcomeBox}>
+								<Text style={style.boxHeader}>Welcome to EasyGO (User)</Text>
+								<Text style={style.boxHeader}>We hope our service will get you the best service</Text>
+
+								<View style={style.boxNav}>
+									<Text style={style.boxActionsHeader}>Do you have an account ?</Text>
+									<View style={style.boxActions}>
+										<TouchableOpacity style={style.boxAction} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser' })}>
+											<Text style={style.boxActionHeader}>No</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.boxAction} onPress={() => setAuthinfo({ ...authInfo, type: 'login' })}>
+											<Text style={style.boxActionHeader}>Yes</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+						}
 					</View>
 					
-					{authInfo.loading ? <ActivityIndicator color="black" size="small"/> : null }
+					{authInfo.loading && authInfo.type ? <ActivityIndicator color="black" size="small"/> : null }
 
-					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-						<View style={style.options}>
-							<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser', info: registerInfo, errormsg: "" })}>
-								<Text style={style.optionHeader}>Don't have an account ? Sign up</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'login', info: loginInfo, errormsg: "" })}>
-								<Text style={style.optionHeader}>Already a member ? Log in</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'forgotpassword', errormsg: "" })}>
-								<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
-							</TouchableOpacity>
+					{authInfo.type ? 
+						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+							<View style={style.options}>
+								<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser', errormsg: "" })}>
+									<Text style={style.optionHeader}>Sign-Up instead</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'login', errormsg: "" })}>
+									<Text style={style.optionHeader}>Log-In instead</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'forgotpassword', errormsg: "" })}>
+									<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
+								</TouchableOpacity>
+							</View>
 						</View>
-					</View>
+					: null}
 				</View>
 			</TouchableWithoutFeedback>
 		</View>
@@ -345,19 +372,29 @@ const style = StyleSheet.create({
 	authContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	authBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', width: '80%' },
 	authClose: { marginTop: 20 },
-	authBoxHeader: { color: 'black', fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold' },
+	authBoxHeader: { color: 'black', fontSize: fsize(0.07), fontWeight: 'bold' },
 
 	authInputsBox: { alignItems: 'center', width: '90%' },
 	authInputContainer: { marginTop: '5%', width: '100%' },
-	authInputHeader: { fontFamily: 'appFont', fontSize: 25 },
-	authInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: '100%' },
+	authInputHeader: { fontSize: fsize(0.06) },
+	authInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5, width: '100%' },
 	resend: { alignItems: 'center', backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
 	resendHeader: { fontWeight: 'bold' },
+
 	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', padding: 10, width: 100 },
-	submitHeader: { fontWeight: 'bold', textAlign: 'center' },
+
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10, width: 100 },
+	submitHeader: { fontFamily: 'appFont', fontWeight: 'bold', textAlign: 'center' },
+
+	welcomeBox: { alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-between', width: '100%' },
+	boxHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	boxNav: { alignItems: 'center' },
+	boxActionsHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10  },
+	boxActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	boxAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: 100 },
+	boxActionHeader: { fontSize: fsize(0.05) },
 
 	options: {  },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },
-	optionHeader: { fontSize: 15 },
+	optionHeader: { fontSize: fsize(0.04) },
 })

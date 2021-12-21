@@ -16,6 +16,10 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 
+const fsize = p => {
+	return width * p
+}
+
 export default function setup({ navigation }) {
 	const offsetPadding = Constants.statusBarHeight
 	const screenHeight = height - (offsetPadding * 2)
@@ -234,18 +238,20 @@ export default function setup({ navigation }) {
 				</ScrollView>
 
 				<View style={style.bottomNavs}>
-					<TouchableOpacity style={style.bottomNav} onPress={() => {
-						AsyncStorage.clear()
+					<View style={style.bottomNavsRow}>
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							AsyncStorage.clear()
 
-						navigation.dispatch(
-							CommonActions.reset({
-								index: 1,
-								routes: [{ name: 'main' }]
-							})
-						);
-					}}>
-						<Text style={style.bottomNavHeader}>Log-Out</Text>
-					</TouchableOpacity>
+							navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: 'main' }]
+								})
+							);
+						}}>
+							<Text style={style.bottomNavHeader}>Log-Out</Text>
+						</TouchableOpacity>
+					</View>
 				</View>
 			</View>
 		</View>
@@ -255,23 +261,26 @@ export default function setup({ navigation }) {
 const style = StyleSheet.create({
 	setup: { backgroundColor: 'white' },
 	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	boxHeader: { fontFamily: 'appFont', fontSize: 50, fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { paddingHorizontal: 20, width: '90%' },
 	inputContainer: { marginVertical: 30, width: '100%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: 25 },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.06) },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5, width: '100%' },
 	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 15, textAlign: 'center' },
+	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+
 	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
+
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
-	setupButtonHeader: { fontSize: 20 },
+	setupButtonHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, marginVertical: 5, marginHorizontal: 20 },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 })

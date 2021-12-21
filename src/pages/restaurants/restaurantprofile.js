@@ -20,8 +20,10 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const itemSize = (width / 2) - 50
-const imageSize = itemSize - 30
+
+const fsize = p => {
+	return width * p
+}
 
 export default function restaurantprofile(props) {
 	const { locationid, refetch } = props.route.params
@@ -34,8 +36,9 @@ export default function restaurantprofile(props) {
 	const [distance, setDistance] = useState(0)
 	const [showAuth, setShowauth] = useState(false)
 	const [userId, setUserid] = useState(null)
+	const [showInfo, setShowinfo] = useState(false)
 
-	const [showMenus, setShowmenus] = useState(true)
+	const [showMenus, setShowmenus] = useState(false)
 	const [menus, setMenus] = useState([])
 	const [numMenus, setNummenus] = useState(0)
 
@@ -186,20 +189,15 @@ export default function restaurantprofile(props) {
 						{loaded ? 
 							<>
 								<View style={style.headers}>
+									<TouchableOpacity style={style.viewInfoTouch} onPress={() => setShowinfo(true)}>
+										<Text style={style.viewInfoTouchHeader}>View{'\n'}Info</Text>
+									</TouchableOpacity>
 									<View style={style.logoHolder}>
 										<Image style={style.logo} source={{ uri: logo_url + logo }}/>
 									</View>
-									<Text style={style.header}>{name}</Text>
-									<Text style={style.header}>{address}</Text>
-									<View style={{ alignItems: 'center' }}>
-										<View style={{ flexDirection: 'row' }}>
-											<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
-												<AntDesign name="phone" size={20}/>
-											</TouchableOpacity>
-											<Text style={style.phonenumber}>{phonenumber}</Text>
-										</View>
-									</View>
-									<Text style={style.header}>{distance}</Text>
+									<TouchableOpacity style={style.callTouch} onPress={() => Linking.openURL('tel://' + phonenumber)}>
+										<AntDesign name="phone" size={30}/>
+									</TouchableOpacity>
 								</View>
 								<View style={style.navs}>
 									<View style={{ flexDirection: 'row' }}>
@@ -221,7 +219,7 @@ export default function restaurantprofile(props) {
 								{showMenus && (
 									<FlatList
 										showsVerticalScrollIndicator={false}
-										style={{ marginHorizontal: 20, marginTop: 20 }}
+										style={{ height: '100%', marginHorizontal: 20 }}
 										data={menus}
 										renderItem={({ item, index }) => 
 											<View key={item.key} style={style.row}>
@@ -229,7 +227,7 @@ export default function restaurantprofile(props) {
 													menu.name ? 
 														<View key={menu.key} style={style.menu}>
 															<View style={style.menuImageHolder}>
-																<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
+																<Image source={{ uri: logo_url + menu.image }} style={{ height: fsize(0.3), width: fsize(0.3) }}/>
 															</View>
 															<Text style={style.menuName}>{menu.name} ({menu.numCategories})</Text>
 															<TouchableOpacity style={style.seeMenu} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id, initialize: () => initialize() })}>
@@ -248,7 +246,7 @@ export default function restaurantprofile(props) {
 									<FlatList
 										showsVerticalScrollIndicator={false}
 										data={products}
-										style={{ height: height - 320 }}
+										style={{ height: '100%', marginHorizontal: 20 }}
 										renderItem={({ item, index }) => 
 											<View key={item.key} style={style.row}>
 												{item.row.map(product => (
@@ -260,7 +258,7 @@ export default function restaurantprofile(props) {
 
 															{product.price != "" && (
 																<View style={{ flexDirection: 'row' }}>
-																	<Text style={style.productDetail}>$ {product.price}</Text>
+																	<Text style={style.productPrice}>$ {product.price}</Text>
 																</View>
 															)}
 
@@ -327,7 +325,17 @@ export default function restaurantprofile(props) {
 					</View>
 				</View>
 
-				{openCart && <Modal><Cart close={() => {
+				{openCart && <Modal><Cart showNotif={() => {
+					setOpencart(false)
+					setTimeout(function () {
+						props.navigation.dispatch(
+							CommonActions.reset({
+								index: 0,
+								routes: [{ name: "main", params: { showNotif: true } }]
+							})
+						)
+					}, 1000)
+				}} close={() => {
 					getTheNumCartItems()
 					setOpencart(false)
 				}}/></Modal>}
@@ -349,6 +357,29 @@ export default function restaurantprofile(props) {
 						}} navigate={props.navigation.navigate}/>
 					</Modal>
 				)}
+				{showInfo && (
+					<Modal transparent={true}>
+						<View style={style.showInfoContainer}>
+							<View style={style.showInfoBox}>
+								<TouchableOpacity style={style.showInfoClose} onPress={() => setShowinfo(false)}>
+									<AntDesign name="close" size={40}/>
+								</TouchableOpacity>
+
+								<Text style={style.showInfoHeader}>{name}</Text>
+								<Text style={style.showInfoHeader}>{address}</Text>
+								<View style={{ alignItems: 'center' }}>
+									<View style={{ flexDirection: 'row' }}>
+										<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
+											<AntDesign name="phone" size={30}/>
+										</TouchableOpacity>
+										<Text style={style.showInfoPhonenumber}>{phonenumber}</Text>
+									</View>
+								</View>
+								<Text style={style.showInfoHeader}>{distance}</Text>
+							</View>
+						</View>
+					</Modal>
+				)}
 			</View>
 		</View>
 	);
@@ -356,42 +387,49 @@ export default function restaurantprofile(props) {
 
 const style = StyleSheet.create({
 	restaurantprofile: { backgroundColor: 'white' },
-	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	profileInfo: { height: 260 },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	headers: { alignItems: 'center' },
-	logoHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
-	logo: { height: 50, width: 50 },
-	header: { fontFamily: 'appFont', fontSize: 13, fontWeight: 'bold', marginVertical: 5 },
-	phonenumber: { fontFamily: 'appFont', fontSize: 13, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8 },
+	profileInfo: { height: fsize(0.43) },
+	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: fsize(0.05), marginLeft: fsize(0.05), padding: fsize(0.01), width: 100 },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	headers: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	viewInfoTouch: { borderRadius: fsize(0.2) / 2, borderStyle: 'solid', borderWidth: 2, height: 52, marginTop: fsize(0.03), padding: 5, width: fsize(0.2) },
+	viewInfoTouchHeader: { textAlign: 'center' },
+	logoHolder: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), overflow: 'hidden', width: fsize(0.2) },
+	logo: { height: fsize(0.2), width: fsize(0.2) },
+	callTouch: { alignItems: 'center', borderRadius: fsize(0.2) / 2, borderStyle: 'solid', borderWidth: 2, height: 52, marginTop: fsize(0.03), paddingTop: 5, width: fsize(0.2) },
 
 	navs: { flexDirection: 'row', justifyContent: 'space-around' },
-	nav: { alignItems: 'center', backgroundColor: 'white', borderRadius: 8, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 5, width: 120 },
-	navHeader: { fontSize: 20 },
+	nav: { alignItems: 'center', backgroundColor: 'white', borderRadius: 8, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 5, width: fsize(0.3) },
+	navHeader: { fontSize: fsize(0.05) },
 
-	body: { flexDirection: 'column', height: screenHeight - 300, justifyContent: 'space-around' },
+	body: { height: screenHeight - (fsize(0.43) + 40) },
 	row: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
-	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 2, width: itemSize },
-	menuDisabled: { height: itemSize, width: itemSize },
-	menuImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
-	menuName: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 2, width: fsize(0.3) },
+	menuDisabled: { height: fsize(0.3), width: fsize(0.3) },
+	menuImageHolder: { alignItems: 'center', borderRadius: fsize(0.3) / 2, flexDirection: 'column', height: fsize(0.3), justifyContent: 'space-around', overflow: 'hidden', width: fsize(0.3) },
+	menuName: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	seeMenu: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 5, padding: 5 },
-	seeMenuHeader: { fontSize: 20, textAlign: 'center' },
+	seeMenuHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	// product
-	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10, width: itemSize },
-	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
-	productName: { fontSize: 15, fontWeight: 'bold' },
-	productInfo: { fontSize: 15 },
-	productDetail: { fontSize: 15, margin: 5 },
+	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10 },
+	productImage: { borderRadius: fsize(0.3) / 2, height: fsize(0.3), width: fsize(0.3) },
+	productName: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	productInfo: { fontSize: fsize(0.05) },
+	productPrice: { fontSize: fsize(0.05), margin: 5 },
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 50 },
 	productBuyHeader: { textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginVertical: 5 },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
+
+	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
+	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, width: 44 },
+	showInfoHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 10 },
+	showInfoPhonenumber: { fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 })

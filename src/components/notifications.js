@@ -16,6 +16,10 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const workerImage = (width / 3) - 40
 
+const fsize = p => {
+	return width * p
+}
+
 export default function notifications(props) {
 	const [userId, setUserid] = useState(null)
 	const [items, setItems] = useState([])
@@ -307,10 +311,6 @@ export default function notifications(props) {
 							newItems[index].chargedUser = true
 
 							setItems(newItems)
-
-							// if (showChargeuser.trialstatus.status == "trialover") {
-							// 	setShowchargeuser({ ...showOwners, show: false, trialstatus: { days: 30, status: "" } })
-							// }
 						})
 					}
 				})
@@ -639,11 +639,11 @@ export default function notifications(props) {
 					}
 				}))
 			} else if (data.type == "rescheduleAppointment") {
-				const { appointmentid, time } = data
+				const { appointmentid, time, worker } = data
 
 				setItems(newItems.filter(item => {
 					if (item.id == appointmentid) {
-						return item.action = "rebook", item.nextTime = parseInt(time)
+						return item.action = "rebook", item.nextTime = parseInt(time), item.worker = worker
 					} else {
 						return item
 					}
@@ -860,7 +860,7 @@ export default function notifications(props) {
 							<Text style={style.refreshHeader}>Refresh {numUnreaded > 0 ? <Text style={{ fontWeight: 'bold' }}>({numUnreaded})</Text> : null}</Text>
 						</TouchableOpacity>
 					</View>
-
+					
 					<View style={style.body}>
 						{loaded ? 
 							items.length > 0 ?
@@ -1048,9 +1048,9 @@ export default function notifications(props) {
 																	You requested a reservation
 																	{(item.diners) > 0 ? ' for ' + (item.diners) + ' ' + ((item.diners) == 1 ? 'person' : 'people') : null }
 																	{'\n'}at{'\n'}
-																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
+																	<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.location}</Text>
 																	{'\n'}
-																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTime(item.time)}</Text>
+																	<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{displayTime(item.time)}</Text>
 																	{'\n'}
 																</Text>
 																:
@@ -1068,20 +1068,20 @@ export default function notifications(props) {
 																		</>
 																	: null}
 																	{'\n'}at
-																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{'\n' + item.location}</Text>
+																	<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{'\n' + item.location}</Text>
 																	{'\n'}
-																	<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTime(item.time)}</Text>
+																	<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{displayTime(item.time)}</Text>
 																</Text>
 															:
 															<Text style={style.itemServiceHeader}>
 																You requested an appointment for {' '}
-																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.service}</Text>
+																<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.service}</Text>
 																{'\n'}at{'\n'}
-																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{item.location}</Text>
+																<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.location}</Text>
 																{'\n'}
-																<Text style={{ fontFamily: 'appFont', fontSize: 20 }}>{displayTime(item.time)}</Text>
+																<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{displayTime(item.time)}</Text>
 
-																{item.worker != null && <Text style={{ fontSize: 20 }}>{'\nwith worker: ' + item.worker.username}</Text>}
+																{item.worker != null && <Text style={{ fontSize: fsize(0.05) }}>{'\nwith worker: ' + item.worker.username}</Text>}
 															</Text>
 														}
 
@@ -1117,20 +1117,20 @@ export default function notifications(props) {
 																			:
 																			item.confirm ? 
 																				<>
-																					<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
+																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
 																						props.close()
 																						props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
 																					}}>
-																						<Text style={style.itemServiceOrderTouchHeader}>See the menu</Text>
+																						<Text style={style.itemServiceOrderActionHeader}>See the menu</Text>
 																					</TouchableOpacity>
-																					<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
+																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
 																						props.close()
 																						props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
 																					}}>
-																						<Text style={style.itemServiceOrderTouchHeader}>Reschedule</Text>
+																						<Text style={style.itemServiceOrderActionHeader}>Reschedule</Text>
 																					</TouchableOpacity>
 																					<View style={style.itemServiceOrderTouchDisabled} onPress={() => {}}>
-																						<Text style={style.itemServiceOrderTouchHeader}>
+																						<Text style={style.itemServiceOrderActionHeader}>
 																							Awaits seating{'\n'}
 																							<Text>........</Text>
 																						</Text>
@@ -1177,33 +1177,33 @@ export default function notifications(props) {
 																	item.confirm ? 
 																		<View style={{ alignItems: 'center' }}>
 																			{item.seated ?
-																				<View style={style.itemServiceOrder}>
-																					<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
+																				<View style={style.itemServiceOrderActions}>
+																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
 																						props.close()
 																						props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
 																					}}>
-																						<Text style={style.itemServiceOrderTouchHeader}>See menu</Text>
+																						<Text style={style.itemServiceOrderActionHeader}>See menu</Text>
 																					</TouchableOpacity>
-																					<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => sendTheDiningPayment(item.id, index)}>
-																						<Text style={style.itemServiceOrderTouchHeader}>Send payment{item.allowPayment ? " again" : ""}</Text>
+																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => sendTheDiningPayment(item.id, index)}>
+																						<Text style={style.itemServiceOrderActionHeader}>Send payment{item.allowPayment ? " again" : ""}</Text>
 																					</TouchableOpacity>
 																				</View>
 																				:
 																				<>
-																					<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
+																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
 																						props.close()
 																						props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
 																					}}>
-																						<Text style={style.itemServiceOrderTouchHeader}>See the menu</Text>
+																						<Text style={style.itemServiceOrderActionHeader}>See the menu</Text>
 																					</TouchableOpacity>
-																					<TouchableOpacity style={style.itemServiceOrderTouch} onPress={() => {
+																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
 																						props.close()
 																						props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
 																					}}>
-																						<Text style={style.itemServiceOrderTouchHeader}>Reschedule</Text>
+																						<Text style={style.itemServiceOrderActionHeader}>Reschedule</Text>
 																					</TouchableOpacity>
 																					<View style={style.itemServiceOrderTouchDisabled} onPress={() => {}}>
-																						<Text style={style.itemServiceOrderTouchHeader}>
+																						<Text style={style.itemServiceOrderActionHeader}>
 																							Awaits seating{'\n'}
 																							<Text>........</Text>
 																						</Text>
@@ -1315,7 +1315,7 @@ export default function notifications(props) {
 								/>
 								:
 								<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 114, justifyContent: 'space-around' }}>
-									<Text>No Notification(s) Yet</Text>
+									<Text style={{ fontSize: fsize(0.05) }}>No Notification(s) Yet</Text>
 								</View>
 							:
 							<View style={{ flexDirection: 'column', height: screenHeight - 114, justifyContent: 'space-around' }}>
@@ -1465,7 +1465,7 @@ export default function notifications(props) {
 											confirmation
 										</Text>
 
-										<Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+										<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
 											App fee: ${showChargeuser.cost}
 											{'\n'}E-pay fee: ${showChargeuser.fee}
 											{'\n'}PST: ${showChargeuser.pst}
@@ -1500,7 +1500,7 @@ export default function notifications(props) {
 								<View style={style.popContainer}>
 									<Text style={style.popHeader}>Payment detail</Text>
 
-									<Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+									<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
 										Amount: ${showPaymentdetail.amount}
 										{'\n'}E-pay fee: ${showPaymentdetail.fee}
 										{'\n'}PST: ${showPaymentdetail.pst}
@@ -1568,7 +1568,7 @@ export default function notifications(props) {
 									<View style={style.popContainer}>
 										<Text style={style.popHeader}>Payment Detail</Text>
 
-										<Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+										<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
 											Service cost: ${showOwners.cost}
 											{'\n'}E-pay fee: ${showOwners.fee}
 											{'\n'}PST: ${showOwners.pst}
@@ -1619,12 +1619,12 @@ const style = StyleSheet.create({
 	notifications: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: screenHeight, width: '100%' },
 	close: { marginTop: 20, marginHorizontal: 20 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	refresh: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5 },
-	refreshHeader: { },
+	refreshHeader: { fontSize: fsize(0.04) },
 
-	body: { flexDirection: 'column', height: screenHeight - 144, justifyContent: 'space-around' },
+	body: { flexDirection: 'column', height: screenHeight - 114, justifyContent: 'space-around' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
 	itemImageHolders: { width: 100 },
 	itemLocationImageHolder: { borderRadius: 50, height: 80, overflow: 'hidden', width: 80 },
@@ -1635,10 +1635,10 @@ const style = StyleSheet.create({
 	itemServiceResponseHeader: { fontWeight: 'bold', margin: 10 },
 	itemServiceResponseTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 60 },
 	itemServiceResponseTouchHeader: { fontWeight: 'bold', textAlign: 'center' },
-	itemServiceOrder: { flexDirection: 'row', justifyContent: 'space-between', width: 250 },
-	itemServiceOrderTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 2, padding: 5, width: 120 },
-	itemServiceOrderTouchDisabled: { backgroundColor: 'grey', borderColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 2, padding: 5, width: 120 },
-	itemServiceOrderTouchHeader: { fontSize: 13, textAlign: 'center' },
+	itemServiceOrderActions: { flexDirection: 'row', justifyContent: 'space-between' },
+	itemServiceOrderAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: fsize(0.3) },
+	itemServiceOrderTouchDisabled: { backgroundColor: 'grey', borderColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: fsize(0.3) },
+	itemServiceOrderActionHeader: { fontSize: fsize(0.035), textAlign: 'center' },
 	storeRequested: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 3, padding: 5 },
 	itemServiceNewTimeHeader: {  },
 	itemServiceNewTimeActions: { flexDirection: 'row' },
@@ -1647,29 +1647,29 @@ const style = StyleSheet.create({
 
 	// order
 	itemInfos: {  },
-	itemName: { fontSize: 20, marginBottom: 10 },
-	itemInfo: { fontSize: 15 },
-	itemInfoHeader: { fontSize: 15 },
+	itemName: { fontSize: fsize(0.05), marginBottom: 10 },
+	itemInfo: { fontSize: fsize(0.04) },
+	itemInfoHeader: { fontSize: fsize(0.04) },
 	adderInfo: { alignItems: 'center' },
 	adderInfoProfile: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
 	adderInfoHeader: { padding: 10 },
-	itemOrderNumber: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
-	itemHeader: { fontSize: 15, fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+	itemOrderNumber: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	itemHeader: { fontSize: fsize(0.04), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
 	action: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: 75 },
-	actionHeader: { fontSize: 10, textAlign: 'center' },
+	actionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row', justifyContent: 'space-around' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	confirmOptionHeader: { },
 
 	popBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	popContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	popHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	popHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	popActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	popAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	popActionHeader: { },

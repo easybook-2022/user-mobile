@@ -29,8 +29,13 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const imageSize = 100
 
-export default function main({ navigation }) {
+const fsize = p => {
+	return width * p
+}
+
+export default function main(props) {
 	let updateTrackUser
+	const openNotif = props.route.params ? props.route.params.showNotif ? props.route.params.showNotif : false : false
 
 	const [locationPermission, setLocationpermission] = useState(false)
 	const [notificationPermission, setNotificationpermission] = useState(false)
@@ -310,12 +315,18 @@ export default function main({ navigation }) {
 		getLocationPermission()
 
 		if (Constants.isDevice) getNotificationPermission()
+		if (openNotif) {
+			setTimeout(function () {
+				setOpenNotifications(true)
+				props.navigation.setParams({ showNotif: false })
+			}, 1000)
+		}
 	}
 
-	useEffect(() => {
+	useEffect(() => {	
 		initialize()
 	}, [])
-
+	
 	useEffect(() => {
 		isMounted.current = true
 
@@ -387,7 +398,7 @@ export default function main({ navigation }) {
 										{item.index < item.max && (
 											<TouchableOpacity style={style.seeMore} onPress={() => {
 												clearInterval(updateTrackUser)
-												navigation.navigate(item.service, { initialize: () => initialize() })
+												props.navigation.navigate(item.service, { initialize: () => initialize() })
 											}}>
 												<Text style={style.seeMoreHeader}>See More</Text>
 											</TouchableOpacity>
@@ -418,7 +429,7 @@ export default function main({ navigation }) {
 
 														<TouchableOpacity style={style.locationMenu} onPress={() => {
 															clearInterval(updateTrackUser)
-															navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
+															props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
 														}}>
 															<Text style={style.locationMenuHeader}>See menu</Text>
 														</TouchableOpacity>
@@ -441,7 +452,7 @@ export default function main({ navigation }) {
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => {
 									clearInterval(updateTrackUser)
-									navigation.navigate("account", { refetch: () => initialize() })
+									props.navigation.navigate("account", { refetch: () => initialize() })
 								}}>
 									<FontAwesome5 name="user-circle" size={30}/>
 								</TouchableOpacity>
@@ -450,7 +461,7 @@ export default function main({ navigation }) {
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => {
 									clearInterval(updateTrackUser)
-									navigation.navigate("recent", { refetch: () => initialize() })
+									props.navigation.navigate("recent", { refetch: () => initialize() })
 								}}>
 									<FontAwesome name="history" size={30}/>
 								</TouchableOpacity>
@@ -481,13 +492,24 @@ export default function main({ navigation }) {
 				</View>
 
 				{openNotifications && 
-					<Modal><NotificationsBox navigation={navigation} close={() => {
+					<Modal><NotificationsBox navigation={props.navigation} close={() => {
 						fetchTheNumNotifications()
 						setOpenNotifications(false)
 					}}/>
 					</Modal>
 				}
-				{openCart && <Modal><Cart close={() => {
+				{openCart && <Modal><Cart showNotif={() => {
+					
+					setOpencart(false)
+					setOpenNotifications(true)
+
+					// props.navigation.dispatch(
+					// 	CommonActions.reset({
+					// 		index: 0,
+					// 		routes: [{ name: "main", params: { showNotif: true } }]
+					// 	})
+					// )
+				}} close={() => {
 					getTheNumCartItems()
 					setOpencart(false)
 				}}/></Modal>}
@@ -495,7 +517,7 @@ export default function main({ navigation }) {
 					<Modal transparent={true}>
 						<Userauth close={() => setShowauth(false)} done={(id, msg) => {
 							if (msg == "setup") {
-								navigation.dispatch(
+								props.navigation.dispatch(
 									CommonActions.reset({
 										index: 1,
 										routes: [{ name: "setup" }]
@@ -507,7 +529,7 @@ export default function main({ navigation }) {
 
 							setShowauth(false)
 							initialize()
-						}} navigate={navigation.navigate}/>
+						}} navigate={props.navigation.navigate}/>
 					</Modal>
 				)}
 			</View>
@@ -539,30 +561,30 @@ const style = StyleSheet.create({
 	main: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	headers: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: 70, justifyContent: 'space-between', padding: 5, width: '100%' },
-	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: 20, margin: 10, padding: 10, width: width - 100 },
+	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: fsize(0.05), margin: 10, padding: 10, width: width - 100 },
 	notification: { flexDirection: 'row', marginRight: 10, marginVertical: 10 },
-	notificationHeader: { fontSize: 20, fontWeight: 'bold' },
+	notificationHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
 
 	refresh: { alignItems: 'center', height: 53 },
 	refreshTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, marginVertical: 10, padding: 5, width: 100 },
-	refreshTouchHeader: { textAlign: 'center' },
+	refreshTouchHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 	body: { flexDirection: 'column', height: screenHeight - 163, justifyContent: 'space-around' },
 
-	service: { marginBottom: 10, marginHorizontal: 5 },
-	rowHeader: { fontSize: 20, fontWeight: 'bold', margin: 10 },
+	service: { marginBottom: 10 },
+	rowHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 10 },
 	seeMore: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	row: { flexDirection: 'row', marginBottom: 20 },
 	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: 100 },
 	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: imageSize / 2, height: imageSize, overflow: 'hidden', width: imageSize },
-	locationName: { fontSize: 15, fontWeight: 'bold', textAlign: 'center' },
-	locationDistance: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	locationName: { fontSize: fsize(0.04), fontWeight: 'bold', textAlign: 'center' },
+	locationDistance: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	locationMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	locationMenuHeader: { fontSize: 20 },
+	locationMenuHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 	locationHours: { fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 

@@ -25,6 +25,10 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const workerImage = (width / 3) - 40
 
+const fsize = p => {
+	return width * p
+}
+
 export default function booktime(props) {
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -623,7 +627,7 @@ export default function booktime(props) {
 									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
 								</TouchableOpacity>
 							)}
-								
+
 							<TouchableOpacity style={style.bottomNav} onPress={() => {
 								props.navigation.dispatch(
 									CommonActions.reset({
@@ -704,7 +708,12 @@ export default function booktime(props) {
 														func.initialize()
 													}
 
-													props.navigation.goBack()
+													props.navigation.dispatch(
+														CommonActions.reset({
+															index: 0,
+															routes: [{ name: "main", params: { showNotif: true } }]
+														})
+													)
 												}}>
 													<Text style={style.requestedCloseHeader}>Ok</Text>
 												</TouchableOpacity>
@@ -752,7 +761,7 @@ export default function booktime(props) {
 						</View>
 					</Modal>
 				)}
-				{openCart && <Modal><Cart close={() => {
+				{openCart && <Modal><Cart navigation={props.navigation} close={() => {
 					getTheNumCartItems()
 					setOpencart(false)
 				}}/></Modal>}
@@ -836,14 +845,14 @@ const style = StyleSheet.create({
 	booktime: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
 	headers: { marginBottom: 10 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
-	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center' },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	serviceHeader: { fontSize: fsize(0.06), fontWeight: 'bold', textAlign: 'center' },
 
 	chooseWorker: { alignItems: 'center', marginBottom: 50, marginTop: 50 },
-	chooseWorkerHeader: { fontSize: 20 },
+	chooseWorkerHeader: { fontSize: fsize(0.05) },
 
 	chooseWorkerActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	chooseWorkerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 2, padding: 5, width: 150 },
@@ -855,37 +864,40 @@ const style = StyleSheet.create({
 	dateHeaders: { alignItems: 'center', marginVertical: 50 },
 	date: { flexDirection: 'row', margin: 10 },
 	dateNav: { marginHorizontal: 20 },
-	dateHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 5, textAlign: 'center', width: 170 },
+	dateHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginVertical: 5, textAlign: 'center', width: fsize(0.5) },
 	dateDays: { alignItems: 'center' },
 	dateDaysRow: { flexDirection: 'row' },
 
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
+	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
 
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchSelectedHeader: { color: 'white', fontSize: 13, textAlign: 'center' },
+	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchSelectedHeader: { color: 'white', fontSize: fsize(0.038), textAlign: 'center' },
 
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchPassedHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
+	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchPassedHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
 
-	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: 40 },
-	dateDayTouchDisabledHeader: { fontSize: 13, fontWeight: 'bold' },
+	dateDayTouchDisabled: { margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchDisabledHeader: { fontSize: fsize(0.038), fontWeight: 'bold' },
 
-	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 253 },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
-	unselectHeader: { color: 'black', fontSize: 15 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
-	selectedHeader: { color: 'black', fontSize: 15 },
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 80 },
-	selectedPassedHeader: { color: 'black', fontSize: 15 },
+	timesHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: fsize(0.79) },
+	
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
+	unselectHeader: { color: 'black', fontSize: fsize(0.04) },
+	
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
+	selectedHeader: { color: 'white', fontSize: fsize(0.04) },
+	
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
+	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
 
 	noTime: { flexDirection: 'column', height: screenHeight - 191, justifyContent: 'space-around', width: '100%' },
-	noTimeHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
+	noTimeHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNavsRow: { flexDirection: 'row' },
-	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
@@ -893,33 +905,33 @@ const style = StyleSheet.create({
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', justifyContent: 'space-around', paddingVertical: 20, width: '80%' },
-	confirmHeader: { fontSize: 15, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
-	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 15, height: 100, padding: 5, width: '80%' },
+	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.04), height: 100, padding: 5, width: '80%' },
 	confirmOptions: { flexDirection: 'row' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 50 },
 	confirmOptionHeader: { },
 	requestedHeaders: { alignItems: 'center', paddingHorizontal: 20 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
-	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
-	requestedHeaderInfo: { fontSize: 20, textAlign: 'center' },
+	requestedCloseHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	requestedHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	requestedHeaderInfo: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	workersContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	workersBox: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
-	workersHeader: { fontFamily: 'appFont', fontSize: 20, paddingVertical: 20, textAlign: 'center' },
+	workersHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), paddingVertical: 20, textAlign: 'center' },
 	workersRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	workersList: { height: '80%' },
 	workersRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	worker: { alignItems: 'center', marginHorizontal: 5, padding: 5, width: (width / 3) - 30 },
 	workerProfile: { borderRadius: workerImage / 2, height: workerImage, overflow: 'hidden', width: workerImage },
-	workerHeader: { fontSize: 15, fontWeight: 'bold'  },
+	workerHeader: { fontSize: fsize(0.04), fontWeight: 'bold'  },
 	workersClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
 	workersCloseHeader: { textAlign: 'center' },
 
 	requiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	requiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	requiredHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	requiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	requiredActionHeader: { },

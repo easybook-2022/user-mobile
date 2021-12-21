@@ -23,6 +23,10 @@ const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 
+const fsize = p => {
+	return width * p
+}
+
 export default function account(props) {
 	const amexLogo = require("../../assets/amex.jpg")
 	const dinersclubLogo = require("../../assets/dinersclub.png")
@@ -720,46 +724,46 @@ const style = StyleSheet.create({
 	account: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
 
-	inputsBox: { marginBottom: 50, paddingHorizontal: 50 },
-	inputContainer: { marginVertical: 50 },
-	inputHeader: { fontFamily: 'appFont', fontSize: 25, fontWeight: 'bold' },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: 25, padding: 5 },
+	inputsBox: { alignItems: 'center', marginBottom: 50 },
+	inputContainer: { marginVertical: 20, width: '90%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), fontWeight: 'bold' },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5 },
 	cameraContainer: { alignItems: 'center', marginVertical: 50, width: '100%' },
 	camera: { height: width * 0.8, width: width * 0.8 },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: 20, textAlign: 'center' },
+	cameraActionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	paymentMethods: { alignItems: 'center', margin: 10 },
-	paymentMethodHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
+	paymentMethodHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 	paymentMethodAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
-	paymentMethodAddHeader: { fontSize: 20 },
+	paymentMethodAddHeader: { fontSize: fsize(0.05) },
 	paymentMethod: { marginVertical: 30 },
 	paymentMethodRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	paymentMethodHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
+	paymentMethodHeader: { fontSize: fsize(0.05), fontWeight: 'bold', padding: 5 },
 	paymentMethodImageHolder: { height: 40, margin: 2, width: 40 },
 	paymentMethodImage: { height: 40, width: 40 },
 	paymentMethodNumberHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', padding: 5, width: '70%' },
-	paymentMethodNumberHeader: { fontSize: 20, paddingVertical: 4, textAlign: 'center', width: '50%' },
+	paymentMethodNumberHeader: { fontSize: fsize(0.05), paddingVertical: 4, textAlign: 'center', width: '50%' },
 	paymentMethodActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	paymentMethodAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 80 },
-	paymentMethodActionHeader: { fontSize: 12, textAlign: 'center' },
+	paymentMethodActionHeader: { fontSize: fsize(0.033), textAlign: 'center' },
 	paymentMethodActionDisabled: { backgroundColor: 'black', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 80 },
-	paymentMethodActionHeaderDisabled: { color: 'white', fontSize: 12, textAlign: 'center' },
+	paymentMethodActionHeaderDisabled: { color: 'white', fontSize: fsize(0.033), textAlign: 'center' },
 
-	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10, width: 100 },
-	updateButtonHeader: { fontSize: 20 },
+	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10, width: fsize(0.3) },
+	updateButtonHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
 	// form
 	form: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	formContainer: { backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-between', paddingVertical: 10, width: '90%' },
-	formHeader: { fontSize: 20, fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	formHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	formInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
-	formInputHeader: { fontSize: 20, fontWeight: 'bold' },
-	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: 20, padding: 5, width: '100%' },
+	formInputHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), padding: 5, width: '100%' },
 	formSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
 	formSubmitHeader: {  },
 

@@ -5,14 +5,17 @@ import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getTransactions } from '../apis/transactions'
 
+const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
+const screenHeight = height - offsetPadding
+
+const fsize = p => {
+	return width * p
+}
+
 export default function recent(props) {
-	const { height, width } = Dimensions.get('window')
-	const offsetPadding = Constants.statusBarHeight
-	const screenHeight = height - offsetPadding
-	
 	const { params } = props.route
 	const refetch = params && params.refetch ? params.refetch : null
-	const [userId, setUserid] = useState(null)
 	const [items, setItems] = useState([])
 	const [cartIndex, setCartindex] = useState(0)
 	const [loaded, setLoaded] = useState(false)
@@ -31,7 +34,6 @@ export default function recent(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setUserid(userid)
 					setItems(res.transactions)
 					setLoaded(true)
 				}
@@ -153,7 +155,7 @@ export default function recent(props) {
 							/>
 							:
 							<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
-								<Text>You don't have any recents</Text>
+								<Text style={{ fontSize: fsize(0.05) }}>You don't have any recents</Text>
 							</View>
 						:
 						<View style={{ flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
@@ -167,19 +169,19 @@ export default function recent(props) {
 }
 
 const style = StyleSheet.create({
-	recent: { backgroundColor: 'white' },
+	recent: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	group: { borderRadius: 10, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10 },
-	dateHeader: { fontSize: 15, marginBottom: 20 },
+	dateHeader: { fontSize: fsize(0.04), marginBottom: 20 },
 	item: { marginBottom: 5 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
 	itemImage: { height: 100, width: 100 },
 	itemInfos: {  },
-	itemName: { fontSize: 20, marginBottom: 10 },
-	itemInfo: { fontSize: 15 },
-	header: { fontSize: 15 }
+	itemName: { fontSize: fsize(0.05), marginBottom: 10 },
+	itemInfo: { fontSize: fsize(0.04) },
+	header: { fontSize: fsize(0.04) }
 })

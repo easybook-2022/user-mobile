@@ -26,6 +26,10 @@ const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
 const imageSize = 50
 
+const fsize = p => {
+	return width * p
+}
+
 export default function booktime(props) {
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -651,7 +655,7 @@ export default function booktime(props) {
 					<View style={style.headers}>
 						<Text style={style.boxHeader}>{!scheduleid ? 'Make a' : 'Remake the' } reservation {scheduleid ? 'for ' : 'at '}</Text>
 
-						{scheduleid && <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center' }}>{numSelectedDiners} {numSelectedDiners == 1 ? 'person' : 'people'}</Text>}
+						{scheduleid && <Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' }}>{numSelectedDiners} {numSelectedDiners == 1 ? 'person' : 'people'}</Text>}
 						{scheduleid && <Text style={style.boxHeader}>at</Text>}
 
 						<Text style={style.serviceHeader}>{name}</Text>
@@ -748,19 +752,19 @@ export default function booktime(props) {
 											<View key={info.key}>
 												{(!info.timetaken && !info.timepassed) && (
 													<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+														<Text style={{ color: 'black', fontSize: fsize(0.04) }}>{info.header}</Text>
 													</TouchableOpacity>
 												)}
 
 												{(info.timetaken && !info.timepassed) && (
 													<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-														<Text style={{ color: 'white', fontSize: 15 }}>{info.header}</Text>
+														<Text style={{ color: 'white', fontSize: fsize(0.04) }}>{info.header}</Text>
 													</TouchableOpacity>
 												)}
 
 												{(!info.timetaken && info.timepassed) && (
 													<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-														<Text style={{ color: 'black', fontSize: 15 }}>{info.header}</Text>
+														<Text style={{ color: 'black', fontSize: fsize(0.04) }}>{info.header}</Text>
 													</TouchableOpacity>
 												)}
 											</View>
@@ -778,19 +782,19 @@ export default function booktime(props) {
 						<View style={style.bottomNavsRow}>
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
-									<FontAwesome5 name="user-circle" size={30}/>
+									<FontAwesome5 name="user-circle" size={fsize(0.08)}/>
 								</TouchableOpacity>
 							)}
 
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
-									<FontAwesome name="history" size={30}/>
+									<FontAwesome name="history" size={fsize(0.08)}/>
 								</TouchableOpacity>
 							)}
 
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-									<Entypo name="shopping-cart" size={30}/>
+									<Entypo name="shopping-cart" size={fsize(0.08)}/>
 									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
 								</TouchableOpacity>
 							)}
@@ -803,7 +807,7 @@ export default function booktime(props) {
 									})
 								)
 							}}>
-								<Entypo name="home" size={30}/>
+								<Entypo name="home" size={fsize(0.08)}/>
 							</TouchableOpacity>
 
 							<TouchableOpacity style={style.bottomNav} onPress={() => {
@@ -898,7 +902,12 @@ export default function booktime(props) {
 														func.initialize()
 													}
 
-													props.navigation.goBack()
+													props.navigation.dispatch(
+														CommonActions.reset({
+															index: 0,
+															routes: [{ name: "main", params: { showNotif: true } }]
+														})
+													)
 												}}>
 													<Text style={style.requestedCloseHeader}>Ok</Text>
 												</TouchableOpacity>
@@ -910,7 +919,7 @@ export default function booktime(props) {
 						</TouchableWithoutFeedback>
 					</Modal>
 				)}
-				{openCart && <Modal><Cart close={() => {
+				{openCart && <Modal><Cart navigation={props.navigation} close={() => {
 					getTheNumCartItems()
 					setOpencart(false)
 				}}/></Modal>}
@@ -1068,11 +1077,11 @@ const style = StyleSheet.create({
 	makereservation: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
 	headers: { height: 100, marginVertical: 10 },
-	boxHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
-	serviceHeader: { fontSize: 25, fontWeight: 'bold', textAlign: 'center' },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	serviceHeader: { fontSize: fsize(0.06), fontWeight: 'bold', textAlign: 'center' },
 
 	dinersBox: { alignItems: 'center' },
 	dinersAdd: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
@@ -1086,37 +1095,40 @@ const style = StyleSheet.create({
 	dateHeaders: { alignItems: 'center', marginVertical: 50 },
 	date: { flexDirection: 'row', margin: 10 },
 	dateNav: { marginHorizontal: 20 },
-	dateHeader: { fontFamily: 'appFont', fontSize: 20, marginVertical: 5, textAlign: 'center', width: 170 },
+	dateHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginVertical: 5, textAlign: 'center', width: fsize(0.5) },
 	dateDays: { alignItems: 'center' },
 	dateDaysRow: { flexDirection: 'row' },
-
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
 	
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchSelectedHeader: { color: 'white', fontSize: 17, textAlign: 'center' },
+	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
 
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, padding: 7, width: 40 },
-	dateDayTouchPassedHeader: { color: 'black', fontSize: 13, textAlign: 'center' },
+	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchSelectedHeader: { color: 'white', fontSize: fsize(0.038), textAlign: 'center' },
+
+	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchPassedHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+
+	dateDayTouchDisabled: { margin: 3, paddingVertical: 10, width: fsize(0.1) },
+	dateDayTouchDisabledHeader: { fontSize: fsize(0.038), fontWeight: 'bold' },
+
+	timesHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: fsize(0.79) },
 	
-	dateDayTouchDisabled: { height: 40, margin: 3, padding: 3, width: 40 },
-	dateDayTouchDisabledHeader: { fontSize: 13, fontWeight: 'bold' },
-
-	timesHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: 253 },
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
-	unselectHeader: { color: 'black', fontSize: 15 },
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: 80 },
-	selectedHeader: { color: 'black', fontSize: 15 },
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, padding: 5, width: 80 },
-	selectedPassedHeader: { color: 'black', fontSize: 15 },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
+	unselectHeader: { color: 'black', fontSize: fsize(0.04) },
+	
+	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
+	selectedHeader: { color: 'white', fontSize: fsize(0.04) },
+	
+	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
+	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
 
 	noTime: { flexDirection: 'column', height: screenHeight - 191, justifyContent: 'space-around', width: '100%' },
-	noTimeHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
+	noTimeHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNavsRow: { flexDirection: 'row' },
-	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
@@ -1124,7 +1136,7 @@ const style = StyleSheet.create({
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', paddingVertical: 10, width: '80%' },
-	confirmHeader: { fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
 	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, height: 80, padding: 5, width: '80%' },
 	confirmOptions: { flexDirection: 'row' },
@@ -1132,10 +1144,10 @@ const style = StyleSheet.create({
 	confirmOptionHeader: { },
 	requestedHeaders: { alignItems: 'center', paddingHorizontal: 10 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
-	requestedCloseHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: 25 },
+	requestedCloseHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	requestedHeader: { fontFamily: 'appFont', fontSize: fsize(0.06) },
 	requestedHeaderInfos: { marginBottom: 30 },
-	requestedHeaderInfo: { fontSize: 18, paddingVertical: 5, textAlign: 'center' },
+	requestedHeaderInfo: { fontSize: fsize(0.048), paddingVertical: 5, textAlign: 'center' },
 
 	// friends list
 	dinersListBox: { backgroundColor: 'white' },
@@ -1163,7 +1175,7 @@ const style = StyleSheet.create({
 
 	cardRequiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	cardRequiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	cardRequiredHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	cardRequiredHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	cardRequiredActionHeader: { },

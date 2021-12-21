@@ -21,7 +21,10 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const imageSize = (width / 3) - 10
+
+const fsize = p => {
+	return width * p
+}
 
 export default function salonprofile(props) {
 	const { locationid, refetch } = props.route.params
@@ -211,7 +214,7 @@ export default function salonprofile(props) {
 							
 							props.navigation.goBack()
 						}}>
-							<Text style={style.backHeader}>Back</Text>
+							<Text allowFontScaling={false} style={style.backHeader}>Back</Text>
 						</TouchableOpacity>
 					</View>
 					
@@ -222,9 +225,9 @@ export default function salonprofile(props) {
 									<>
 										<View style={{ alignItems: 'center' }}>
 											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
-												<Text style={style.moreInfoHeader}>View Salon Info</Text>
+												<Text allowFontScaling={false} style={style.moreInfoHeader}>View Salon Info</Text>
 											</TouchableOpacity>
-											<Text style={style.bodyHeader}>{numMenus} Menu(s)</Text>
+											<Text allowFontScaling={false} style={style.bodyHeader}>{numMenus} Menu(s)</Text>
 										</View>
 
 										<FlatList
@@ -237,12 +240,12 @@ export default function salonprofile(props) {
 														menu.id ? 
 															<View key={menu.key} style={style.item}>
 																<View style={style.itemPhotoHolder}>
-																	<Image source={{ uri: logo_url + menu.image }} style={{ height: (width * 0.5) - 100, width: (width * 0.5) - 100 }}/>
+																	<Image source={{ uri: logo_url + menu.image }} style={{ height: fsize(0.3), width: fsize(0.3) }}/>
 																</View>
-																<Text style={style.itemHeader}>{menu.name}</Text>
-																<Text style={style.itemNumCatHeader}>{menu.numCategories} service(s)</Text>
+																<Text allowFontScaling={false} style={style.itemHeader}>{menu.name}</Text>
+																<Text allowFontScaling={false} style={style.itemNumCatHeader}>{menu.numCategories} service(s)</Text>
 																<TouchableOpacity style={style.seeMenu} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id, initialize: () => initialize() })}>
-																	<Text style={style.seeMenuHeader}>See Menu</Text>
+																	<Text allowFontScaling={false} style={style.seeMenuHeader}>See Menu</Text>
 																</TouchableOpacity>
 															</View>
 															:
@@ -258,9 +261,9 @@ export default function salonprofile(props) {
 									<>
 										<View style={{ alignItems: 'center' }}>
 											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
-												<Text style={style.moreInfoHeader}>More Info</Text>
+												<Text allowFontScaling={false} style={style.moreInfoHeader}>More Info</Text>
 											</TouchableOpacity>
-											<Text style={style.bodyHeader}>{numProducts} Product(s)</Text>
+											<Text allowFontScaling={false} style={style.bodyHeader}>{numProducts} Product(s)</Text>
 										</View>
 
 										<FlatList
@@ -273,16 +276,16 @@ export default function salonprofile(props) {
 														product.name ? 
 															<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id, initialize: () => initialize() })}>
 																<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
-																<Text style={style.productName}>{product.name}</Text>
+																<Text allowFontScaling={false} style={style.productName}>{product.name}</Text>
 																
-																{product.info && <Text style={style.productInfo}>{product.info}</Text>}
+																{product.info && <Text allowFontScaling={false} style={style.productInfo}>{product.info}</Text>}
 
 																<View style={{ flexDirection: 'row' }}>
-																	<Text style={style.productPrice}>$ {product.price}</Text>
+																	<Text allowFontScaling={false} style={style.productPrice}>$ {product.price}</Text>
 																</View>
 
 																<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id, initialize: () => initialize() })}>
-																	<Text style={style.productBuyHeader}>Buy</Text>
+																	<Text allowFontScaling={false} style={style.productBuyHeader}>Buy</Text>
 																</TouchableOpacity>
 															</TouchableOpacity>
 															:
@@ -298,9 +301,9 @@ export default function salonprofile(props) {
 									<>
 										<View style={{ alignItems: 'center' }}>
 											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
-												<Text style={style.moreInfoHeader}>More Info</Text>
+												<Text allowFontScaling={false} style={style.moreInfoHeader}>More Info</Text>
 											</TouchableOpacity>
-											<Text style={style.bodyHeader}>{numServices} Service(s)</Text>
+											<Text allowFontScaling={false} style={style.bodyHeader}>{numServices} Service(s)</Text>
 										</View>
 
 										<FlatList
@@ -310,15 +313,15 @@ export default function salonprofile(props) {
 											renderItem={({ item, index }) => 
 												<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id, initialize: () => initialize() })}>
 													<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
-													<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
-														<Text style={style.serviceName}>{item.name}</Text>
-														{item.info ? <Text style={style.serviceInfo}>{item.info}</Text> : null}
+													<View style={{ marginLeft: 10, width: (width - fsize(0.3)) - 30 }}>
+														<Text allowFontScaling={false} style={style.serviceName}>{item.name}</Text>
+														{item.info ? <Text allowFontScaling={false} style={style.serviceInfo}>{item.info}</Text> : null}
 
-														<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
-														<Text style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
+														<Text allowFontScaling={false} style={style.serviceDetail}><Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
+														<Text allowFontScaling={false} style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
 
 														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id, initialize: () => initialize() })}>
-															<Text style={style.serviceBookHeader}>Book a time</Text>
+															<Text allowFontScaling={false} style={style.serviceBookHeader}>Book a time</Text>
 														</TouchableOpacity>
 													</View>
 												</TouchableOpacity>
@@ -349,7 +352,7 @@ export default function salonprofile(props) {
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
 									<Entypo name="shopping-cart" size={30}/>
-									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+									{numCartItems > 0 && <Text allowFontScaling={false} style={style.numCartItemsHeader}>{numCartItems}</Text>}
 								</TouchableOpacity>
 							)}
 
@@ -372,13 +375,23 @@ export default function salonprofile(props) {
 									setShowauth({ show: true, action: false })
 								}
 							}}>
-								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+								<Text allowFontScaling={false} style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
 				</View>
 
-				{openCart && <Modal><Cart close={() => {
+				{openCart && <Modal><Cart showNotif={() => {
+					setOpencart(false)
+					setTimeout(function () {
+						props.navigation.dispatch(
+							CommonActions.reset({
+								index: 0,
+								routes: [{ name: "main", params: { showNotif: true } }]
+							})
+						)
+					}, 1000)
+				}} close={() => {
 					getTheNumCartItems()
 					setOpencart(false)
 				}}/></Modal>}
@@ -419,17 +432,17 @@ export default function salonprofile(props) {
 								<View style={style.logoHolder}>
 									<Image style={style.logo} source={{ uri: logo_url + logo }}/>
 								</View>
-								<Text style={style.showInfoHeader}>{name}</Text>
-								<Text style={style.showInfoHeader}>{address}</Text>
+								<Text allowFontScaling={false} style={style.showInfoHeader}>{name}</Text>
+								<Text allowFontScaling={false} style={style.showInfoHeader}>{address}</Text>
 								<View style={{ alignItems: 'center' }}>
 									<View style={{ flexDirection: 'row' }}>
 										<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
 											<AntDesign name="phone" size={30}/>
 										</TouchableOpacity>
-										<Text style={style.phonenumber}>{phonenumber}</Text>
+										<Text allowFontScaling={false} style={style.phonenumber}>{phonenumber}</Text>
 									</View>
 								</View>
-								<Text style={style.showInfoHeader}>{distance}</Text>
+								<Text allowFontScaling={false} style={style.showInfoHeader}>{distance}</Text>
 							</View>
 						</View>
 					</Modal>
@@ -445,43 +458,43 @@ const style = StyleSheet.create({
 
 	profileInfo: { height: 55 },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginHorizontal: 20, marginTop: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
 	moreInfo: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 160 },
-	moreInfoHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
+	moreInfoHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 
 	body: { flexDirection: 'column', height: screenHeight - 85, justifyContent: 'space-around' },
-	bodyHeader: { fontSize: 20, fontWeight: 'bold', padding: 3, textAlign: 'center' },
+	bodyHeader: { fontSize: fsize(0.05), fontWeight: 'bold', padding: 3, textAlign: 'center' },
 	row: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 
 	item: { alignItems: 'center', height: width * 0.5, marginBottom: 10, width: width * 0.5 },
-	itemPhotoHolder: { borderRadius: ((width * 0.5) - 100) / 2, height: (width * 0.5) - 100, overflow: 'hidden', width: (width * 0.5) - 100 },
-	itemHeader: { fontFamily: 'appFont', fontSize: 20, marginTop: 20 },
-	itemNumCatHeader: { fontFamily: 'appFont', fontSize: 15 },
+	itemPhotoHolder: { borderRadius: (fsize(0.3)) / 2, height: fsize(0.3), overflow: 'hidden', width: fsize(0.3) },
+	itemHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginTop: 20 },
+	itemNumCatHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
 	seeMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	seeMenuHeader: { fontSize: 20 },
+	seeMenuHeader: { fontSize: fsize(0.05) },
 
 	// product
 	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10 },
-	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
-	productName: { fontSize: 20, fontWeight: 'bold' },
-	productInfo: { fontSize: 15 },
-	productPrice: { fontSize: 20, marginHorizontal: 10, marginVertical: 5 },
+	productImage: { borderRadius: fsize(0.3) / 2, height: fsize(0.3), width: fsize(0.3) },
+	productName: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	productInfo: { fontSize: fsize(0.04) },
+	productPrice: { fontSize: fsize(0.05), marginHorizontal: 10, marginVertical: 5 },
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
-	productBuyHeader: { fontSize: 20, textAlign: 'center' },
+	productBuyHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	// service
 	service: { alignItems: 'center', flexDirection: 'row', marginBottom: 50, marginHorizontal: 10 },
 	serviceImage: { borderRadius: 50, height: 100, width: 100 },
-	serviceName: { fontSize: 15, fontWeight: 'bold', marginBottom: 10 },
-	serviceInfo: { fontSize: 15, marginBottom: 10 },
-	serviceDetail: { fontSize: 15 },
+	serviceName: { fontSize: fsize(0.04), fontWeight: 'bold', marginBottom: 10 },
+	serviceInfo: { fontSize: fsize(0.04), marginBottom: 10 },
+	serviceDetail: { fontSize: fsize(0.04) },
 	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
-	serviceBookHeader: { fontSize: 20 },
+	serviceBookHeader: { fontSize: fsize(0.05) },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNavsRow: { flexDirection: 'row' },
-	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 
@@ -490,6 +503,6 @@ const style = StyleSheet.create({
 	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, width: 44 },
 	logoHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
 	logo: { height: 100, width: 100 },
-	showInfoHeader: { fontFamily: 'appFont', fontSize: 25, fontWeight: 'bold', marginVertical: 5 },
-	phonenumber: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+	showInfoHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), fontWeight: 'bold', marginVertical: 5 },
+	phonenumber: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 })

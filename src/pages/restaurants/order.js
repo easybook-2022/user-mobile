@@ -21,6 +21,10 @@ const itemSize = (width / 2) - 50
 const imageSize = 100
 const orderImageSize = 130
 
+const fsize = p => {
+	return width * p
+}
+
 export default function order(props) {
 	const { locationid, scheduleid } = props.route.params
 
@@ -1168,9 +1172,11 @@ export default function order(props) {
 			const newRounds = [...rounds]
 
 			if (data.type == "sendOrders") {
-				newRounds[0].status = "making"
+				if (newRounds.length > 0) {
+					newRounds[0].status = "making"
 
-				setRounds(newRounds)
+					setRounds(newRounds)
+				}
 			} else if (data.type == "confirmDiningOrder") {
 				const { orderid, ordererid } = data
 
@@ -2072,8 +2078,8 @@ const style = StyleSheet.create({
 	boxContainer: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
-	boxHeader: { fontSize: 15, height: 54, textAlign: 'center' },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	boxHeader: { fontSize: fsize(0.07), height: 54, textAlign: 'center' },
 
 	orderActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	orderAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 130 },
@@ -2087,26 +2093,26 @@ const style = StyleSheet.create({
 	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 5, width: itemSize },
 	menuDisabled: { height: itemSize, width: itemSize },
 	menuImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
-	menuName: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	menuName: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	seeMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	seeMenuHeader: { fontSize: 20 },
+	seeMenuHeader: { fontSize: fsize(0.05) },
 
 	// product
 	product: { alignItems: 'center', marginBottom: 50, width: itemSize },
 	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
-	productName: { fontSize: 20, fontWeight: 'bold' },
-	productInfo: { fontSize: 15 },
-	productPrice: { fontSize: 20, marginVertical: 5 },
+	productName: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	productInfo: { fontSize: fsize(0.04) },
+	productPrice: { fontSize: fsize(0.05), marginVertical: 5 },
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
-	productBuyHeader: { fontSize: 20, textAlign: 'center' },
+	productBuyHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	// hidden boxes
 	// item info
 	itemClose: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: 28, justifyContent: 'space-around', marginVertical: 10, padding: 2 },
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	image: { height: 200, width: 200 },
-	boxItemHeader: { fontFamily: 'appFont', fontSize: 30, fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-	boxItemHeaderInfo: {  fontSize: 15, fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
+	boxItemHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+	boxItemHeaderInfo: {  fontSize: fsize(0.04), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 
 	info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
 	infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
@@ -2114,20 +2120,20 @@ const style = StyleSheet.create({
 	// amount
 	amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	amountAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	amountHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+	amountHeader: { fontSize: fsize(0.04), fontWeight: 'bold', padding: 10 },
 
 	// percentage
 	percentage: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	percentageAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	percentageHeader: { fontSize: 15, fontWeight: 'bold', padding: 10 },
+	percentageHeader: { fontSize: fsize(0.04), fontWeight: 'bold', padding: 10 },
 
 	// others
 	othersBox: { alignItems: 'center', marginVertical: 20 },
 	othersHeader: { fontWeight: 'bold' },
 	others: { marginVertical: 20, width: '100%' },
 	other: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, width: '100%' },
-	otherName: { fontSize: 20, fontWeight: 'bold' },
-	otherInput: { fontSize: 20 },
+	otherName: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	otherInput: { fontSize: fsize(0.05) },
 	otherPrice: { margin: 5 },
 	otherActions: { flexDirection: 'row', marginTop: -5 },
 	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
@@ -2148,18 +2154,18 @@ const style = StyleSheet.create({
 
 	// note
 	note: { alignItems: 'center', marginBottom: 20 },
-	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: 20, height: 100, padding: 5, width: '80%' },
+	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), height: 100, padding: 5, width: '80%' },
 
 	// quantity
 	quantity: { flexDirection: 'row', justifyContent: 'space-around' },
 	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, marginHorizontal: 10, paddingTop: 8, width: 35 },
-	quantityHeader: { fontSize: 20, fontWeight: 'bold', padding: 5 },
+	quantityHeader: { fontSize: fsize(0.05), fontWeight: 'bold', padding: 5 },
 
-	price: { fontSize: 20, fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+	price: { fontSize: fsize(0.05), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	itemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
-	itemActionHeader: { fontSize: 15, textAlign: 'center' },
+	itemActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 
 	// rounds
 	closeRounds: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: 28, justifyContent: 'space-around', marginVertical: 10, padding: 2 },
@@ -2168,41 +2174,41 @@ const style = StyleSheet.create({
 	roundTouchDisabled: { alignItems: 'center', backgroundColor: 'grey', borderColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5, width: 120 },
 	roundTouchHeader: {  },
 	round: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
-	roundHeader: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	roundHeader: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	order: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 5, margin: 5 },
 	orderItem: { alignItems: 'center', marginTop: 20 },
-	orderInfo: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+	orderInfo: { fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 20 },
 	orderItemImageHolder: { borderRadius: orderImageSize / 2, height: orderImageSize, overflow: 'hidden', width: orderImageSize },
 	orderItemImage: { height: orderImageSize, width: orderImageSize },
 	orderItemInfos: { flexDirection: 'column', height: 100, justifyContent: 'space-between' },
-	orderItemInfo: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	orderItemInfo: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	orderItemActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	orderItemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 110 },
 	orderItemActionHeader: { fontSize: 13, textAlign: 'center' },
 	orderersEdit: { flexDirection: 'row' },
-	orderersEditHeader: { fontSize: 20, fontWeight: 'bold', marginRight: 10, textAlign: 'center' },
+	orderersEditHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginRight: 10, textAlign: 'center' },
 	orderersEditTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	orderersEditTouchHeader: { },
 	orderCallfor: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
-	orderCallforHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+	orderCallforHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
 	orderer: { alignItems: 'center', height: 80, marginHorizontal: 10, width: (width / 4) - 30 },
 	ordererProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	ordererUsername: { textAlign: 'center' },
 	ordererConfirm: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 3, width: 70 },
-	ordererConfirmHeader: { fontSize: 8, textAlign: 'center' },
-	ordererStatus: { fontSize: 8, textAlign: 'center' },
+	ordererConfirmHeader: { fontSize: fsize(0.028), textAlign: 'center' },
+	ordererStatus: { fontSize: fsize(0.028), textAlign: 'center' },
 
 	// delete order
 	deleteOrderContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', paddingVertical: offsetPadding, width: '100%' },
 	deleteOrderBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', padding: 10, width: '80%' },
-	deleteOrderBoxHeader: { fontSize: 20 },
+	deleteOrderBoxHeader: { fontSize: fsize(0.05) },
 	deleteOrderImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 	deleteOrderImage: { height: 80, width: 80 },
 	deleteOrderName: { fontWeight: 'bold' },
 	deleteOrderQuantity: {  },
 	deleteOrderPrice: {  },
 	deleteOrderOrderers: { fontWeight: 'bold' },
-	deleteOrderHeader: { fontSize: 15, paddingHorizontal: 10, textAlign: 'center' },
+	deleteOrderHeader: { fontSize: fsize(0.04), paddingHorizontal: 10, textAlign: 'center' },
 	deleteOrderActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	deleteOrderAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 10, padding: 5, width: 70 },
 	deleteOrderActionHeader: { textAlign: 'center' },
@@ -2216,29 +2222,30 @@ const style = StyleSheet.create({
 	selectedUsersHeader: { fontWeight: 'bold', textAlign: 'center' },
 	usersHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	userRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
-	user: { alignItems: 'center', marginHorizontal: 5, width: width * 0.2 },
-	userDisabled: { alignItems: 'center', marginHorizontal: 5, opacity: 0.3, width: width * 0.2 },
-	userDelete: { marginBottom: -5, marginLeft: 60 },
-	userProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
-	userName: { fontWeight: 'bold', textAlign: 'center' },
+	user: { alignItems: 'center', width: fsize(0.2) },
+	userDisabled: { alignItems: 'center', marginHorizontal: 5, opacity: 0.3, width: fsize(0.2) },
+	userDelete: { marginBottom: -5, marginLeft: fsize(0.15) },
+	userProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: fsize(0.15) / 2, height: fsize(0.15), overflow: 'hidden', width: fsize(0.15) },
+	userName: { fontSize: fsize(0.03), fontWeight: 'bold', textAlign: 'center' },
+	userStatus: { fontSize: fsize(0.03) },
 
 	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.1)', borderRadius: 10, flexDirection: 'row', height: 100, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
 	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
-	itemInfo: { fontSize: 15, flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
-	itemHeader: { fontSize: 15 },
+	itemInfo: { fontSize: fsize(0.04), flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
+	itemHeader: { fontSize: fsize(0.04) },
 	locationImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
-	locationName: { fontSize: 20, marginVertical: 30, textAlign: 'center' },
+	locationName: { fontSize: fsize(0.05), marginVertical: 30, textAlign: 'center' },
 
 	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
 	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
-	actionHeader: { textAlign: 'center' },
+	actionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	errorBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	errorContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	errorHeader: { fontFamily: 'appFont', fontSize: 20, fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	errorHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	errorActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	errorAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	errorActionHeader: { },

@@ -23,8 +23,10 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
 const screenHeight = height - (offsetPadding * 2)
-const itemSize = (width / 2) - 50
-const imageSize = itemSize - 30
+
+const fsize = p => {
+	return width * p
+}
 
 export default function menu(props) {
 	const { locationid, menuid } = props.route.params
@@ -253,7 +255,7 @@ export default function menu(props) {
 														menu.name ? 
 															<TouchableOpacity key={menu.key} style={style.menu}>
 																<View style={style.menuImageHolder}>
-																	<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
+																	<Image source={{ uri: logo_url + menu.image }} style={{ height: fsize(0.3), width: fsize(0.3) }}/>
 																</View>
 																<Text style={style.menuName}>({menu.numCategories}) {menu.name}</Text>
 																<TouchableOpacity style={style.seeMenu} onPress={() => props.navigation.push("menu", { locationid: locationid, menuid: menu.id })}>
@@ -318,7 +320,7 @@ export default function menu(props) {
 													serviceid: item.id, initialize: () => initialize()
 												})}>
 													<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
-													<View style={{ marginLeft: 10, width: (width - imageSize) - 30 }}>
+													<View style={{ marginLeft: 10, width: (width - fsize(0.3)) - 30 }}>
 														<Text style={style.serviceName}>{item.name}</Text>
 														<Text style={style.serviceInfo}><Text style={{ fontWeight: 'bold' }}>Information</Text>: {item.info}</Text>
 														<Text style={style.serviceDetail}><Text style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
@@ -390,7 +392,7 @@ export default function menu(props) {
 					</View>
 				</View>
 
-				{openCart && <Modal><Cart close={() => {
+				{openCart && <Modal><Cart navigation={props.navigation} close={() => {
 					getTheNumCartItems()
 					setOpencart(false)
 				}}/></Modal>}
@@ -447,49 +449,49 @@ const style = StyleSheet.create({
 	boxContainer: { backgroundColor: 'white' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: 20 },
+	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
 	moreInfo: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 160 },
-	moreInfoHeader: { fontFamily: 'appFont', fontSize: 20, textAlign: 'center' },
+	moreInfoHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 
 	body: { height: screenHeight - 85 },
 	headers: { height: 56 },
-	header: { fontSize: 20, textAlign: 'center' },
-	bodyHeader: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+	header: { fontSize: fsize(0.05), textAlign: 'center' },
+	bodyHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
 
 	row: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 
 	// menu
-	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 2, width: itemSize },
-	menuDisabled: { height: itemSize, width: itemSize },
-	menuImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
-	menuName: { fontSize: 10, fontWeight: 'bold', textAlign: 'center' },
+	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 2, width: fsize(0.3) },
+	menuDisabled: { height: fsize(0.3), width: fsize(0.3) },
+	menuImageHolder: { alignItems: 'center', borderRadius: fsize(0.3) / 2, flexDirection: 'column', height: fsize(0.3), justifyContent: 'space-around', overflow: 'hidden', width: fsize(0.3) },
+	menuName: { fontSize: fsize(0.03), fontWeight: 'bold', textAlign: 'center' },
 	seeMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	seeMenuHeader: { fontSize: 20 },
+	seeMenuHeader: { fontSize: fsize(0.05) },
 
 	// product
-	product: { alignItems: 'center', marginBottom: 30, marginHorizontal: 10, width: itemSize },
-	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
-	productName: { fontSize: 20, fontWeight: 'bold' },
-	productInfo: { fontSize: 15 },
-	productPrice: { fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 5 },
+	product: { alignItems: 'center', marginBottom: 30, marginHorizontal: 10, width: fsize(0.3) },
+	productImage: { borderRadius: fsize(0.3) / 2, height: fsize(0.3), width: fsize(0.3) },
+	productName: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	productInfo: { fontSize: fsize(0.04) },
+	productPrice: { fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 5 },
 	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
-	productBuyHeader: { fontSize: 20, textAlign: 'center' },
+	productBuyHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	// service
 	service: { alignItems: 'center', flexDirection: 'row', marginVertical: 30, marginHorizontal: 10 },
-	serviceImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
-	serviceName: { fontSize: 15, fontWeight: 'bold', marginBottom: 10 },
-	serviceInfo: { fontSize: 15, marginBottom: 10 },
-	serviceDetail: { fontSize: 15, marginBottom: 20 },
-	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
-	serviceBookHeader: { fontSize: 20 },
+	serviceImage: { borderRadius: fsize(0.3) / 2, height: fsize(0.3), width: fsize(0.3) },
+	serviceName: { fontSize: fsize(0.04), fontWeight: 'bold', marginBottom: 10 },
+	serviceInfo: { fontSize: fsize(0.04), marginBottom: 10 },
+	serviceDetail: { fontSize: fsize(0.04), marginBottom: 20 },
+	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: fsize(0.35) },
+	serviceBookHeader: { fontSize: fsize(0.05) },
 
-	noResults: { fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+	noResults: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
-	bottomNavsRow: { flexDirection: 'row' },
-	bottomNav: { flexDirection: 'row', height: 30, justifyContent: 'space-around', marginHorizontal: 20, marginVertical: 5 },
+	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 
@@ -498,6 +500,6 @@ const style = StyleSheet.create({
 	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, width: 44 },
 	logoHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
 	logo: { height: 100, width: 100 },
-	showInfoHeader: { fontSize: 20, fontWeight: 'bold', margin: 10 },
-	phonenumber: { fontSize: 20, fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+	showInfoHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 10 },
+	phonenumber: { fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 })
