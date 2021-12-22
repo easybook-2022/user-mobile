@@ -55,7 +55,7 @@ export default function setup({ navigation }) {
 						navigation.dispatch(
 							CommonActions.reset({
 								index: 0,
-								routes: [{ name: "main" }]
+								routes: [{ name: "main", params: { firstTime: true } }]
 							})
 						)
 					}
@@ -196,7 +196,7 @@ export default function setup({ navigation }) {
 
 						<View style={style.inputsBox}>
 							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Enter a nickname you like (example: therock):</Text>
+								<Text style={style.inputHeader}>Enter a name you like:</Text>
 								<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
 							</View>
 

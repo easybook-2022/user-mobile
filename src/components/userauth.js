@@ -229,7 +229,13 @@ export default function userauth(props) {
 								</View>
 								<View style={style.authInputContainer}>
 									<Text style={style.authInputHeader}>Confirm password:</Text>
-									<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})} value={authInfo.info.confirmPassword} autoCorrect={false}/>
+									<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => {
+										setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})
+
+										if (password.length == authInfo.info.password.length) {
+											Keyboard.dismiss()
+										}
+									}} value={authInfo.info.confirmPassword} autoCorrect={false}/>
 								</View>
 							</>
 						)}
@@ -238,7 +244,13 @@ export default function userauth(props) {
 							authInfo.verifycode ? 
 								<View style={style.authInputContainer}>
 									<Text style={style.authInputHeader}>Please enter verify code from your message:</Text>
-									<TextInput style={style.authInput} onChangeText={(resetcode) => setAuthinfo({ ...authInfo, info: {...authInfo.info, resetcode }})} value={authInfo.info.resetcode} keyboardType="numeric" autoCorrect={false}/>
+									<TextInput style={style.authInput} onChangeText={(resetcode) => {
+										setAuthinfo({ ...authInfo, info: {...authInfo.info, resetcode }})
+
+										if (resetcode.length == 6) {
+											Keyboard.dismiss()
+										}
+									}} value={authInfo.info.resetcode} keyboardType="numeric" autoCorrect={false}/>
 								</View>
 								:
 								<View style={style.authInputContainer}>
@@ -381,7 +393,7 @@ const style = StyleSheet.create({
 	resend: { alignItems: 'center', backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
 	resendHeader: { fontWeight: 'bold' },
 
-	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 
 	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10, width: 100 },
 	submitHeader: { fontFamily: 'appFont', fontWeight: 'bold', textAlign: 'center' },
@@ -394,7 +406,6 @@ const style = StyleSheet.create({
 	boxAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: 100 },
 	boxActionHeader: { fontSize: fsize(0.05) },
 
-	options: {  },
 	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },
 	optionHeader: { fontSize: fsize(0.04) },
 })

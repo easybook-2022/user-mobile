@@ -35,6 +35,7 @@ const fsize = p => {
 
 export default function main(props) {
 	let updateTrackUser
+	const firstTime = props.route.params ? props.route.params.firstTime ? true : false : false
 	const openNotif = props.route.params ? props.route.params.showNotif ? props.route.params.showNotif : false : false
 
 	const [locationPermission, setLocationpermission] = useState(false)
@@ -363,7 +364,7 @@ export default function main(props) {
 			isMounted.current = false
 		}
 	}, [numNotifications])
-	
+
 	return (
 		<View style={style.main}>
 			<View style={{ paddingVertical: offsetPadding }}>
@@ -499,16 +500,8 @@ export default function main(props) {
 					</Modal>
 				}
 				{openCart && <Modal><Cart showNotif={() => {
-					
 					setOpencart(false)
 					setOpenNotifications(true)
-
-					// props.navigation.dispatch(
-					// 	CommonActions.reset({
-					// 		index: 0,
-					// 		routes: [{ name: "main", params: { showNotif: true } }]
-					// 	})
-					// )
 				}} close={() => {
 					getTheNumCartItems()
 					setOpencart(false)

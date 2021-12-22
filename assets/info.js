@@ -1,8 +1,8 @@
 import io from 'socket.io-client'
 
-const local_url = true
-const test_stripe = true
-const test_input = true
+const local_url = false
+const test_stripe = false
+const test_input = false
 
 const users = [
 	{ id: 0, username: "robogram", cellnumber: "0000000000", password: "password", confirmPassword: "password" },

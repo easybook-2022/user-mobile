@@ -843,7 +843,7 @@ export default function notifications(props) {
 			isMounted.current = false
 		}
 	}, [items.length])
-
+	
 	return (
 		<View style={style.notifications}>
 			<View style={{ paddingTop: offsetPadding }}>
@@ -1640,13 +1640,11 @@ const style = StyleSheet.create({
 	itemServiceOrderTouchDisabled: { backgroundColor: 'grey', borderColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, padding: 5, width: fsize(0.3) },
 	itemServiceOrderActionHeader: { fontSize: fsize(0.035), textAlign: 'center' },
 	storeRequested: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 3, padding: 5 },
-	itemServiceNewTimeHeader: {  },
 	itemServiceNewTimeActions: { flexDirection: 'row' },
 	itemServiceNewTimeAction: { borderRadius: 5, margin: 10 },
 	itemServiceNewTimeActionHeader: { },
 
 	// order
-	itemInfos: {  },
 	itemName: { fontSize: fsize(0.05), marginBottom: 10 },
 	itemInfo: { fontSize: fsize(0.04) },
 	itemInfoHeader: { fontSize: fsize(0.04) },
@@ -1693,6 +1691,5 @@ const style = StyleSheet.create({
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
 	disabledContainer: { alignItems: 'center', width: '100%' },
 	disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
-	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
-	disabledCloseHeader: {  }
+	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 }
 })
