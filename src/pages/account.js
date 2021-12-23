@@ -83,6 +83,8 @@ export default function account(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -154,6 +156,8 @@ export default function account(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -186,6 +190,8 @@ export default function account(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -219,6 +225,8 @@ export default function account(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -281,6 +289,8 @@ export default function account(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -306,6 +316,8 @@ export default function account(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -363,6 +375,8 @@ export default function account(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -407,6 +421,8 @@ export default function account(props) {
 								break
 							default:
 						}
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		} else {
@@ -662,9 +678,9 @@ export default function account(props) {
 										}}>
 											<AntDesign name="closecircleo" size={30}/>
 										</TouchableOpacity>
-									</View>
 
-									<Text style={style.formHeader}>Enter card information</Text>
+										<Text style={style.formHeader}>Enter card information</Text>
+									</View>
 
 									<View style={style.formInputBox}>
 										<View style={style.formInputField}>
@@ -681,20 +697,28 @@ export default function account(props) {
 												expMonth
 											})} value={paymentMethodForm.expMonth.toString()} keyboardType="numeric" placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="MM" maxLength={2} autoCorrect={false}/>
 										</View>
-										<View style={style.formInputField}>
-											<Text style={style.formInputHeader}>Expiry Year</Text>
-											<TextInput style={style.formInputInput} onChangeText={(expYear) => setPaymentmethodform({
-												...paymentMethodForm,
-												expYear
-											})} value={paymentMethodForm.expYear.toString()} keyboardType="numeric" placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="YYYY" maxLength={4} autoCorrect={false}/>
+
+										<View style={{ flexDirection: 'row' }}>
+											<View style={{ width: '50%' }}>
+												<View style={style.formInputField}>
+													<Text style={style.formInputHeader}>Expiry Year</Text>
+													<TextInput style={style.formInputInput} onChangeText={(expYear) => setPaymentmethodform({
+														...paymentMethodForm,
+														expYear
+													})} value={paymentMethodForm.expYear.toString()} keyboardType="numeric" placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="YYYY" maxLength={4} autoCorrect={false}/>
+												</View>
+											</View>
+											<View style={{ width: '50%' }}>
+												<View style={style.formInputField}>
+													<Text style={style.formInputHeader}>Security Code</Text>
+													<TextInput style={style.formInputInput} onChangeText={(cvc) => setPaymentmethodform({
+														...paymentMethodForm,
+														cvc
+													})} value={paymentMethodForm.cvc.toString()} keyboardType="numeric" autoCorrect={false}/>
+												</View>
+											</View>
 										</View>
-										<View style={style.formInputField}>
-											<Text style={style.formInputHeader}>Security Code</Text>
-											<TextInput style={style.formInputInput} onChangeText={(cvc) => setPaymentmethodform({
-												...paymentMethodForm,
-												cvc
-											})} value={paymentMethodForm.cvc.toString()} keyboardType="numeric" autoCorrect={false}/>
-										</View>
+											
 									</View>
 
 									{paymentMethodForm.loading ? <ActivityIndicator size="small"/> : null}
@@ -759,11 +783,11 @@ const style = StyleSheet.create({
 
 	// form
 	form: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	formContainer: { backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-between', paddingVertical: 10, width: '90%' },
+	formContainer: { backgroundColor: 'white', height: '90%', paddingVertical: 10, width: '90%' },
 	formHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	formInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
-	formInputHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
-	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.05), padding: 5, width: '100%' },
+	formInputHeader: { fontSize: fsize(0.04), fontWeight: 'bold' },
+	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.04), padding: 5, width: '100%' },
 	formSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
 	formSubmitHeader: {  },
 

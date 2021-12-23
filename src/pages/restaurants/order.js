@@ -124,6 +124,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -154,6 +156,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -200,6 +204,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -224,6 +230,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -248,6 +256,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -271,6 +281,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -292,6 +304,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -326,6 +340,8 @@ export default function order(props) {
 						case "unconfirmedorders":
 							setShowunconfirmedorders(true)
 					}
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -357,6 +373,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -408,6 +426,8 @@ export default function order(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		}
@@ -450,6 +470,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -618,6 +640,8 @@ export default function order(props) {
 						const { errormsg, status } = err.response.data
 
 						setIteminfo({ ...itemInfo, errorMsg: errormsg })
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		}
@@ -686,6 +710,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -707,6 +733,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -841,6 +869,8 @@ export default function order(props) {
 						case "activediner":
 							setShowunconfirmedorders(true)
 					}
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -882,6 +912,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -908,6 +940,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -946,6 +980,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -983,6 +1019,8 @@ export default function order(props) {
 					const { errormsg, status } = err.response.data
 
 					setOrderingitem({ ...orderingItem, errorMsg: errormsg })
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -1004,6 +1042,8 @@ export default function order(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -1105,6 +1145,8 @@ export default function order(props) {
 							break
 						default:
 					}
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}

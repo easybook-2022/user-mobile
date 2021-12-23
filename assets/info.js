@@ -3,6 +3,7 @@ import io from 'socket.io-client'
 const local_url = false
 const test_stripe = false
 const test_input = false
+const test_card = false
 
 const users = [
 	{ id: 0, username: "robogram", cellnumber: "0000000000", password: "password", confirmPassword: "password" },
@@ -38,7 +39,7 @@ const realCards = [
 ]
 const emptyCard = { number: "", expMonth: "", expYear: "", cvc: "" }
 const { number, expMonth, expYear, cvc } = 
-	test_input ? 
+	test_card ? 
 		test_stripe ? 
 			testCards[0]
 			:

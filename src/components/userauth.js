@@ -51,6 +51,8 @@ export default function userauth(props) {
 					const { errormsg, status } = err.response.data
 
 					setAuthinfo({ ...authInfo, loading: false, errormsg })
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -80,6 +82,8 @@ export default function userauth(props) {
 					const { errormsg, status } = err.response.data
 
 					setAuthinfo({ ...authInfo, loading: false, errormsg })
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -114,6 +118,8 @@ export default function userauth(props) {
 					const { errormsg, status } = err.response.data
 
 					setAuthinfo({ ...authInfo, loading: false, errormsg })
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -142,6 +148,8 @@ export default function userauth(props) {
 					const { errormsg, status } = err.response.data
 
 					setAuthinfo({ ...authInfo, errormsg })
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}
@@ -194,6 +202,8 @@ export default function userauth(props) {
 					const { errormsg, status } = err.response.data
 
 					setAuthinfo({ type: 'login', info: {}, loading: false, verifycode: null, codesent: false })
+				} else {
+					alert("an error has occurred in server")
 				}
 			})
 	}

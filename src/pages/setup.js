@@ -66,6 +66,8 @@ export default function setup({ navigation }) {
 
 						setLoading(false)
 						setErrormsg(errormsg)
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		} else {

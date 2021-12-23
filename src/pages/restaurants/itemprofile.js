@@ -78,6 +78,8 @@ export default function itemProfile(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		}
@@ -230,6 +232,8 @@ export default function itemProfile(props) {
 									break;
 								default:
 							}
+						} else {
+							setErrormsg("an error has occurred in server")
 						}
 					})
 			}
@@ -269,6 +273,8 @@ export default function itemProfile(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -290,6 +296,8 @@ export default function itemProfile(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -383,6 +391,8 @@ export default function itemProfile(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}

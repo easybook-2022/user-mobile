@@ -181,6 +181,8 @@ export default function cart(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -208,6 +210,8 @@ export default function cart(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -249,6 +253,8 @@ export default function cart(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -290,6 +296,8 @@ export default function cart(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -383,6 +391,8 @@ export default function cart(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -489,6 +499,8 @@ export default function cart(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
@@ -529,6 +541,8 @@ export default function cart(props) {
 						const { errormsg, status } = err.response.data
 
 						setErrormsg(errormsg)
+					} else {
+						setErrormsg("an error has occurred in server")
 					}
 				})
 		}
@@ -586,6 +600,8 @@ export default function cart(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
+				} else {
+					setErrormsg("an error has occurred in server")
 				}
 			})
 	}
