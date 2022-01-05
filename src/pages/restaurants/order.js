@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { socket, logo_url } from '../../../assets/info'
 import { searchFriends, searchDiners } from '../../apis/users'
-import { getLocationProfile, getInfo } from '../../apis/locations'
+import { getLocationProfile } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
 import { getProducts, getProductInfo } from '../../apis/products'
 import { getScheduleInfo, addItemtoorder, seeDiningOrders, editDiners, sendOrders, editOrder, deleteOrder, updateOrder, addDiners, editOrderCallfor, dinerIsRemovable, dinerIsSelectable, confirmDiningOrder, updateOrderCallfor } from '../../apis/schedules'
@@ -16,7 +16,6 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 const itemSize = (width / 2) - 50
 const imageSize = 100
 const orderImageSize = 130
@@ -33,7 +32,6 @@ export default function order(props) {
 	const [name, setName] = useState('')
 	const [totalDiners, setTotaldiners] = useState(0)
 	const [seated, setSeated] = useState(false)
-	const [menuTrack, setMenutrack] = useState([])
 	const [menuId, setMenuid] = useState('')
 	const [menuName, setMenuname] = useState('')
 	const [menuInfo, setMenuinfo] = useState('')
@@ -54,13 +52,7 @@ export default function order(props) {
 
 	const [showMenus, setShowmenus] = useState(true)
 	const [menus, setMenus] = useState([])
-	const [numMenus, setNummenus] = useState(0)
 
-	const [showProducts, setShowproducts] = useState(false)
-	const [products, setProducts] = useState([])
-	const [numProducts, setNumproducts] = useState(0)
-
-	const [viewType, setViewtype] = useState('')
 	const [loaded, setLoaded] = useState(false)
 	const [showPaymentRequired, setShowpaymentrequired] = useState({ show: false, username: "" })
 	const [showUnconfirmeddiner, setShowunconfirmeddiner] = useState({ show: false, username: "" })
@@ -142,15 +134,10 @@ export default function order(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { msg, locationInfo } = res
+					const { name, logo } = res.info
 
-					setLocationinfo({ name: locationInfo.name, logo: locationInfo.logo })
-
-					if (msg == "menus") {
-						getAllMenus("")
-					} else if (msg == "products") {
-						getAllProducts("")
-					}
+					setLocationinfo({ name, logo })
+					getAllMenus()
 				}
 			})
 			.catch((err) => {
@@ -161,58 +148,8 @@ export default function order(props) {
 				}
 			})
 	}
-	const goBack = () => {
-		let newMenutrack = [...menuTrack]
-
-		newMenutrack.pop()
-		setMenutrack(newMenutrack)
-
-		if (newMenutrack.length == 0) {
-			getTheInfo("")
-		} else {
-			getTheInfo(newMenutrack[newMenutrack.length - 1])
-		}
-	}
-	const getTheInfo = async(menuid) => {
-		const data = { locationid, menuid }
-
-		setLoaded(false)
-		setViewtype('')
-
-		getInfo(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const { msg, menuName, menuInfo } = res
-
-					setMenuid(menuid)
-					setMenuname(menuName)
-					setMenuinfo(menuInfo)
-					setMenutrack([...menuTrack, menuid.toString()])
-
-					if (msg == "menus") {
-						getAllMenus(menuid)
-					} else if (msg == "products") {
-						getAllProducts(menuid)
-					}
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					setErrormsg("an error has occurred in server")
-				}
-			})
-	}
-	const getAllMenus = async(parentmenuid) => {
-		const data = { locationid, parentmenuid }
-
-		getMenus(data)
+	const getAllMenus = () => {
+		getMenus(locationid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -221,35 +158,6 @@ export default function order(props) {
 			.then((res) => {
 				if (res) {
 					setMenus(res.menus)
-					setNummenus(res.nummenus)
-					setShowmenus(true)
-					setViewtype('menus')
-					setLoaded(true)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					setErrormsg("an error has occurred in server")
-				}
-			})
-	}
-	const getAllProducts = async(menuid) => {
-		const data = { locationid, menuid }
-
-		getProducts(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setProducts(res.products)
-					setNumproducts(res.numproducts)
-					setShowproducts(true)
-					setViewtype('products')
 					setLoaded(true)
 				}
 			})
@@ -1194,6 +1102,76 @@ export default function order(props) {
 		setNumselectedcallfor(0)
 	}
 
+	const displayList = info => {
+		let { id, image, name, list, listType, left } = info
+		let add = name ? true : false
+
+		return (
+			<View style={{ marginLeft: left }}>
+				{name ?
+					<View style={style.menu}>
+						<View style={{ flexDirection: 'row' }}>
+							<View style={style.menuImageHolder}>
+								<Image style={style.menuImage} source={{ uri: logo_url + image }}/>
+							</View>
+							<Text style={style.menuName}>{name} (Menu)</Text>
+						</View>
+						{info.info ? <Text style={style.menuItemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+						{list.length > 0 && list.map((info, index) => (
+							<View key={"list-" + index} style={{ marginBottom: (list.length - 1 == index && info.listType != "list") ? 50 : 0 }}>
+								{info.listType == "list" ? 
+									displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
+									:
+									<View style={style.item}>
+										<View style={{ flexDirection: 'row', }}>
+											<View style={style.itemImageHolder}>
+												<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+											</View>
+											<Text style={style.menuItemHeader}>{info.name}</Text>
+											<Text style={style.menuItemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+											{info.listType == "service" && <Text style={style.menuItemHeader}>{info.duration}</Text>}
+										</View>
+										{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+										<View style={style.menuItemActions}>
+											<TouchableOpacity style={style.menuItemAction} onPress={() => getTheProductInfo(info.id)}>
+												<Text style={style.menuItemActionHeader}>See / Buy</Text>
+											</TouchableOpacity>
+										</View>
+									</View>
+								}
+							</View>
+						))}
+					</View>
+					:
+					list.map((info, index) => (
+						<View key={"list-" + index} style={{ marginBottom: (list.length - 1 == index && info.listType != "list") ? 50 : 0 }}>
+							{info.listType == "list" ? 
+								displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
+								:
+								<View style={style.item}>
+									<View style={{ flexDirection: 'row', }}>
+										<View style={style.itemImageHolder}>
+											<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+										</View>
+										<Text style={style.menuItemHeader}>{info.name}</Text>
+										<Text style={style.menuItemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+										{info.listType == "service" && <Text style={style.menuItemHeader}>{info.duration}</Text>}
+									</View>
+									{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+									<View style={style.menuItemActions}>
+										<TouchableOpacity style={style.menuItemAction} onPress={() => getTheProductInfo(info.id)}>
+											<Text style={style.menuItemActionHeader}>See / Buy</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							}
+						</View>
+					))
+				}
+			</View>
+		)
+	}
+
 	const startWebsocket = () => {
 		socket.on("updateDiners", data => {
 			if (data.type == "acceptReservationJoining") {
@@ -1317,21 +1295,16 @@ export default function order(props) {
 	}, [searchedFriends.length, selectedDiners.length, rounds.length])
 
 	return (
-		<View style={style.boxContainer}>
-			<View style={{ paddingVertical: offsetPadding }}>
+		<View style={style.order}>
+			{loaded ? 
 				<View style={style.box}>
-					<TouchableOpacity style={style.back} onPress={() => props.navigation.goBack()}>
-						<Text style={style.backHeader}>Back</Text>
-					</TouchableOpacity>
+					<View style={style.headers}>
+						<Text style={style.boxHeader}>
+							Order your meals {'\n'} for your {''}
+							<Text style={{ fontWeight: 'bold' }}>{timeStr}</Text> 
+							{''} feast {'\n'} at <Text style={{ fontWeight: 'bold' }}>{name}</Text>
+						</Text>
 
-					<Text style={style.boxHeader}>
-						Order your meals {'\n'} 
-						for your {''}
-						<Text style={{ fontWeight: 'bold' }}>{timeStr}</Text> 
-						{''} feast {'\n'} at <Text style={{ fontWeight: 'bold' }}>{name}</Text>
-					</Text>
-
-					<View style={{ alignItems: 'center', marginTop: 20 }}>
 						<View style={style.orderActions}>
 							<TouchableOpacity style={style.orderAction} onPress={() => seeTheDiningOrders()}>
 								<Text style={style.orderActionHeader}>See Order(s)</Text>
@@ -1343,756 +1316,694 @@ export default function order(props) {
 					</View>
 
 					<View style={style.body}>
-						{loaded ? 
-							<>
-								{menuTrack.length > 0 && (
-									<View style={{ alignItems: 'center', marginTop: 20 }}>
-										<TouchableOpacity style={style.goBack} onPress={() => goBack()}>
-											<Text>Back</Text>
-										</TouchableOpacity>
-									</View>
-								)}
-
-								{(showMenus && viewType == "menus") && (
-									<FlatList
-										showsVerticalScrollIndicator={false}
-										style={{ marginHorizontal: 20, marginTop: 20 }}
-										data={menus}
-										renderItem={({ item, index }) => 
-											<View key={item.key} style={style.row}>
-												{item.row.map(( menu, index ) => (
-													menu.id ? 
-														<View key={menu.key} style={style.menu}>
-															<View style={style.menuImageHolder}>
-																<Image source={{ uri: logo_url + menu.image }} style={{ height: imageSize, width: imageSize }}/>
-															</View>
-															<Text style={style.menuName}>{menu.name} ({menu.numCategories})</Text>
-															<TouchableOpacity style={style.seeMenu} onPress={() => getTheInfo(menu.id)}>
-																<Text style={style.seeMenuHeader}>See Menu</Text>
-															</TouchableOpacity>
-														</View>
-														:
-														<View key={menu.key} style={style.menuDisabled}></View>
-												))}
-											</View>
-										}i
-									/>
-								)}
-
-								{(showProducts && viewType == "products") && (
-									<FlatList
-										showsVerticalScrollIndicator={false}
-										data={products}
-										style={{ height: height - 386 }}
-										renderItem={({ item, index }) => 
-											<View key={item.key} style={style.row}>
-												{item.row.map(product => (
-													product.name ? 
-														<View key={product.key} style={style.product}>
-															<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
-															<Text style={style.productName}>{product.name}</Text>
-															{product.info && <Text style={style.productInfo}>{product.info}</Text>}
-
-															<Text style={style.productPrice}>$ {product.price}</Text>
-
-															<TouchableOpacity style={style.productBuy} onPress={() => getTheProductInfo(product.id)}>
-																<Text style={style.productBuyHeader}>See / Buy</Text>
-															</TouchableOpacity>
-														</View>
-														:
-														<View key={product.key} style={style.product}></View>
-												))}
-											</View>
-										}
-									/>
-								)}
-							</>
-							:
-							<ActivityIndicator size="small"/>
-						}
+						<ScrollView style={{ height: '100%' }}>
+							{displayList({ name: "", list: menus, listType: "list", left: 0 })}
+						</ScrollView>
 					</View>
 				</View>
+				:
+				<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
+					<ActivityIndicator color="black" size="large"/>
+				</View>
+			}
 
-				{itemInfo.show && (
-					<Modal>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={{ alignItems: 'center', marginVertical: 20 }}>
-								<TouchableOpacity style={style.itemClose} onPress={() => {
-									setIteminfo({ ...itemInfo, show: false, orderid: "" })
-								}}>
-									<AntDesign name="close" size={20}/>
-								</TouchableOpacity>
+			{itemInfo.show && (
+				<Modal>
+					<View style={style.itemInfoBox}>
+						<View style={style.itemInfoHeader}>
+							<TouchableOpacity style={style.itemClose} onPress={() => setIteminfo({ ...itemInfo, show: false, orderid: "" })}>
+								<AntDesign name="close" size={20}/>
+							</TouchableOpacity>
+						</View>
+						<ScrollView style={{ height: '90%' }}>
+							<View style={{ alignItems: 'center', marginBottom: 20 }}>
+								<View style={style.imageHolder}>
+									<Image source={{ uri: logo_url + itemInfo.image }} style={style.image}/>
+								</View>
 							</View>
-							<ScrollView style={{ height: screenHeight - 68 }}>
-								<View style={{ alignItems: 'center', marginBottom: 20 }}>
-									<View style={style.imageHolder}>
-										<Image source={{ uri: logo_url + itemInfo.image }} style={style.image}/>
-									</View>
-								</View>
-								<Text style={style.boxItemHeader}>{itemInfo.name}</Text>
-								<Text style={style.boxItemHeaderInfo}>{itemInfo.info}</Text>
+							<Text style={style.boxItemHeader}>{itemInfo.name}</Text>
+							<Text style={style.boxItemHeaderInfo}>{itemInfo.info}</Text>
 
-								{itemInfo.options.map((option, index) => (
-									<View key={option.key} style={{ alignItems: 'center' }}>
-										<View style={style.info}>
-											<Text style={style.infoHeader}>{option.header}:</Text>
+							{itemInfo.options.map((option, index) => (
+								<View key={option.key} style={{ alignItems: 'center' }}>
+									<View style={style.info}>
+										<Text style={style.infoHeader}>{option.header}:</Text>
 
-											{option.type == "amount" && (
-												<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-													<View style={style.amount}>
-														<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
-															<Text style={style.amountActionHeader}>-</Text>
-														</TouchableOpacity>
-														<Text style={style.amountHeader}>{option.selected}</Text>
-														<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
-															<Text style={style.amountActionHeader}>+</Text>
-														</TouchableOpacity>
-													</View>
-												</View>
-											)}
-
-											{option.type == "percentage" && (
-												<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-													<View style={style.percentage}>
-														<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
-															<Text style={style.percentageActionHeader}>-</Text>
-														</TouchableOpacity>
-														<Text style={style.percentageHeader}>{option.selected}%</Text>
-														<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
-															<Text style={style.percentageActionHeader}>+</Text>
-														</TouchableOpacity>
-													</View>
-												</View>
-											)}
-										</View>
-									</View>
-								))}
-
-								{itemInfo.others.length > 0 && (
-									<View style={style.othersBox}>
-										<Text style={style.othersHeader}>Other options</Text>
-
-										<View style={style.others}>
-											{itemInfo.others.map((other, index) => (
-												<View key={other.key} style={{ alignItems: 'center' }}>
-													<View style={style.other}>
-														<View style={{ flexDirection: 'row' }}>
-															<Text style={style.otherName}># {other.name}:</Text>
-															<Text style={style.otherInput}>{other.input}</Text>
-														</View>
-														<View style={{ flexDirection: 'row', marginTop: 10 }}>
-															<Text style={style.otherPrice}>$ {other.price}</Text>
-
-															<View style={style.otherActions}>
-																<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
-																	<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
-																</TouchableOpacity>
-																<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
-																	<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
-																</TouchableOpacity>
-															</View>
-														</View>
-													</View>
-												</View>
-											))}
-										</View>
-									</View>
-								)}
-
-								{itemInfo.sizes.length > 0 && (
-									<View style={style.sizesBox}>
-										<Text style={style.sizesHeader}>Select a Size</Text>
-
-										<View style={style.sizes}>
-											{itemInfo.sizes.map((size, index) => (
-												<View key={size.key} style={style.size}>
-													<TouchableOpacity style={size.selected ? style.sizeTouchDisabled : style.sizeTouch} onPress={() => selectSize(index)}>
-														<Text style={size.selected ? style.sizeTouchHeaderDisabled : style.sizeTouchHeader}>{size.name}</Text>
+										{option.type == "amount" && (
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={style.amount}>
+													<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
+														<Text style={style.amountActionHeader}>-</Text>
 													</TouchableOpacity>
-													<Text style={style.sizePrice}>$ {size.price}</Text>
+													<Text style={style.amountHeader}>{option.selected}</Text>
+													<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
+														<Text style={style.amountActionHeader}>+</Text>
+													</TouchableOpacity>
 												</View>
-											))}
-										</View>
-									</View>
-								)}
+											</View>
+										)}
 
-								<View style={style.note}>
-									<TextInput 
-										style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
-										placeholder="Leave a note if you want" maxLength={100} 
-										onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} 
-										autoCorrect={false} autoCapitalize="none"
-									/>
-								</View>
-
-								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-									<View style={{ flexDirection: 'row' }}>
-										<Text style={style.quantityHeader}>Quantity</Text>
-										<View style={style.quantity}>
-											<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("-")}>
-												<Text style={style.quantityActionHeader}>-</Text>
-											</TouchableOpacity>
-											<Text style={style.quantityHeader}>{itemInfo.quantity}</Text>
-											<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("+")}>
-												<Text style={style.quantityActionHeader}>+</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								</View>
-
-								<Text style={style.price}>Cost: $ {(itemInfo.cost).toFixed(2)}</Text>
-								<Text style={style.errorMsg}>{itemInfo.errorMsg}</Text>
-
-								<View style={style.itemActions}>
-									<View style={{ flexDirection: 'row' }}>
-										{itemInfo.orderid ? 
-											<TouchableOpacity style={style.itemAction} onPress={() => updateTheOrder()}>
-												<Text style={style.itemActionHeader}>Update to your order</Text>
-											</TouchableOpacity>
-											:
-											<TouchableOpacity style={style.itemAction} onPress={() => addOrder()}>
-												<Text style={style.itemActionHeader}>Add to your order</Text>
-											</TouchableOpacity>
-										}
-
-										{(!itemInfo.orderid && totalDiners > 0) && (
-											<TouchableOpacity style={style.itemAction} onPress={() => addToDinersOrder()}>
-												<Text style={style.itemActionHeader}>Add to a diner's order</Text>
-											</TouchableOpacity>
+										{option.type == "percentage" && (
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={style.percentage}>
+													<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
+														<Text style={style.percentageActionHeader}>-</Text>
+													</TouchableOpacity>
+													<Text style={style.percentageHeader}>{option.selected}%</Text>
+													<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
+														<Text style={style.percentageActionHeader}>+</Text>
+													</TouchableOpacity>
+												</View>
+											</View>
 										)}
 									</View>
 								</View>
-							</ScrollView>
-						</View>
-					</Modal>
-				)}
+							))}
 
-				{openRounds && (
-					<Modal>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={{ alignItems: 'center', height: 75 }}>
-								<TouchableOpacity style={style.closeRounds} onPress={() => setOpenrounds(false)}>
-									<AntDesign name="close" size={20}/>
-								</TouchableOpacity>
+							{itemInfo.others.length > 0 && (
+								<View style={style.othersBox}>
+									<Text style={style.othersHeader}>Other options</Text>
 
-								<Text style={style.boxHeader}>Order(s)</Text>
+									<View style={style.others}>
+										{itemInfo.others.map((other, index) => (
+											<View key={other.key} style={{ alignItems: 'center' }}>
+												<View style={style.other}>
+													<View style={{ flexDirection: 'row' }}>
+														<Text style={style.otherName}># {other.name}:</Text>
+														<Text style={style.otherInput}>{other.input}</Text>
+													</View>
+													<View style={{ flexDirection: 'row', marginTop: 10 }}>
+														<Text style={style.otherPrice}>$ {other.price}</Text>
+
+														<View style={style.otherActions}>
+															<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
+																<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+															</TouchableOpacity>
+															<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
+																<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+															</TouchableOpacity>
+														</View>
+													</View>
+												</View>
+											</View>
+										))}
+									</View>
+								</View>
+							)}
+
+							{itemInfo.sizes.length > 0 && (
+								<View style={style.sizesBox}>
+									<Text style={style.sizesHeader}>Select a Size</Text>
+
+									<View style={style.sizes}>
+										{itemInfo.sizes.map((size, index) => (
+											<View key={size.key} style={style.size}>
+												<TouchableOpacity style={size.selected ? style.sizeTouchDisabled : style.sizeTouch} onPress={() => selectSize(index)}>
+													<Text style={size.selected ? style.sizeTouchHeaderDisabled : style.sizeTouchHeader}>{size.name}</Text>
+												</TouchableOpacity>
+												<Text style={style.sizePrice}>$ {size.price}</Text>
+											</View>
+										))}
+									</View>
+								</View>
+							)}
+
+							<View style={style.note}>
+								<TextInput 
+									style={style.noteInput} multiline textAlignVertical="top" placeholderTextColor="rgba(127, 127, 127, 0.5)" 
+									placeholder="Leave a note if you want" maxLength={100} 
+									onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} 
+									autoCorrect={false} autoCapitalize="none"
+								/>
 							</View>
-							{rounds.length > 0 ? 
-								<ScrollView style={style.roundList}>
-									{rounds.map((round, roundIndex) => (
-										<View style={style.round} key={round.key}>
-											{round.status == "ordering" ? 
-												<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-													{seated ? 
-														<View style={{ alignItems: 'center', flexDirection: 'row' }}>
-															<Text>Ready ?</Text>
-															<TouchableOpacity style={style.roundTouch} onPress={() => sendTheOrders()}>
-																<Text>Send to Kitchen</Text>
-															</TouchableOpacity>
+
+							<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+								<View style={{ flexDirection: 'row' }}>
+									<Text style={style.quantityHeader}>Quantity</Text>
+									<View style={style.quantity}>
+										<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("-")}>
+											<Text style={style.quantityActionHeader}>-</Text>
+										</TouchableOpacity>
+										<Text style={style.quantityHeader}>{itemInfo.quantity}</Text>
+										<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("+")}>
+											<Text style={style.quantityActionHeader}>+</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+
+							<Text style={style.price}>Cost: $ {(itemInfo.cost).toFixed(2)}</Text>
+							<Text style={style.errorMsg}>{itemInfo.errorMsg}</Text>
+
+							<View style={style.itemActions}>
+								<View style={{ flexDirection: 'row' }}>
+									{itemInfo.orderid ? 
+										<TouchableOpacity style={style.itemAction} onPress={() => updateTheOrder()}>
+											<Text style={style.itemActionHeader}>Update{'\n'}to your order</Text>
+										</TouchableOpacity>
+										:
+										<TouchableOpacity style={style.itemAction} onPress={() => addOrder()}>
+											<Text style={style.itemActionHeader}>Add{'\n'}to your order</Text>
+										</TouchableOpacity>
+									}
+
+									{(!itemInfo.orderid && totalDiners > 0) && (
+										<TouchableOpacity style={style.itemAction} onPress={() => addToDinersOrder()}>
+											<Text style={style.itemActionHeader}>Add{'\n'}to a diner's order</Text>
+										</TouchableOpacity>
+									)}
+								</View>
+							</View>
+						</ScrollView>
+					</View>
+				</Modal>
+			)}
+			{openRounds && (
+				<Modal>
+					<View style={style.roundsBox}>
+						<View style={style.roundsHeader}>
+							<TouchableOpacity style={style.closeRounds} onPress={() => setOpenrounds(false)}>
+								<AntDesign name="close" size={20}/>
+							</TouchableOpacity>
+
+							<Text style={style.boxHeader}>Order(s)</Text>
+						</View>
+						{rounds.length > 0 ? 
+							<ScrollView style={style.roundList}>
+								{rounds.map((round, roundIndex) => (
+									<View style={style.round} key={round.key}>
+										{round.status == "ordering" ? 
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												{seated ? 
+													<View style={{ alignItems: 'center', flexDirection: 'row' }}>
+														<Text>Ready ?</Text>
+														<TouchableOpacity style={style.roundTouch} onPress={() => sendTheOrders()}>
+															<Text>Send to Kitchen</Text>
+														</TouchableOpacity>
+													</View>
+													:
+													<View style={{ alignItems: 'center' }}>
+														<Text style={{ marginVertical: 5 }}>You need to be seated first to submit your order(s)</Text>
+														<TouchableOpacity style={style.roundTouchDisabled} disabled={true} onPress={() => {}}>
+															<Text>Send to Kitchen</Text>
+														</TouchableOpacity>
+													</View>
+												}
+											</View>
+											:
+											<Text style={style.roundHeader}>This round {round.status == 'making' ? 'is already sent' : 'has been served'}</Text>
+										}
+										{round.round.map((orders, ordersIndex) => (
+											orders.orders.map((order, orderIndex) => (
+												<View style={style.roundOrder} key={order.key}>
+													<View style={{ alignItems: 'center' }}>
+														<View style={style.orderItem} key={order.key}>
+															<Text style={style.orderInfo}>Orderer: {order.orderer.username}</Text>
+
+															<View style={style.orderItemImageHolder}>
+																<Image source={{ uri: logo_url + order.image }} style={style.orderItemImage}/>
+															</View>
+
+															<View style={style.orderItemInfos}>
+																<Text style={style.orderItemInfo}>{order.name}</Text>
+
+																{order.options.map((option, infoindex) => (
+																	<Text key={option.key} style={style.itemInfo}>
+																		<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+																		{option.selected}
+																		{option.type == 'percentage' && '%'}
+																	</Text>
+																))}
+
+																{order.others.map((other, otherindex) => (
+																	other.selected ? 
+																		<Text key={other.key} style={style.itemInfo}>
+																			<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+																			<Text>{other.input}</Text>
+																		</Text>
+																	: null
+																))}
+
+																{order.sizes.map((size, sizeindex) => (
+																	size.selected ? 
+																		<Text key={size.key} style={style.itemInfo}>
+																			<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+																			<Text>{size.name}</Text>
+																		</Text>
+																	: null
+																))}
+
+																<Text style={style.orderItemInfo}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{order.quantity}</Text>
+																<Text style={style.orderItemInfo}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(order.cost).toFixed(2)}</Text>
+															</View>
 														</View>
-														:
+													</View>
+
+													{(round.status == "ordering" && order.orderer.id == userId) && (
 														<View style={{ alignItems: 'center' }}>
-															<Text style={{ marginVertical: 5 }}>You need to be seated first to submit your order(s)</Text>
-															<TouchableOpacity style={style.roundTouchDisabled} disabled={true} onPress={() => {}}>
-																<Text>Send to Kitchen</Text>
-															</TouchableOpacity>
+															<View style={{ flexDirection: 'row' }}>
+																<TouchableOpacity style={style.orderItemAction} onPress={() => editTheOrder(order.id)}>
+																	<Text style={style.orderItemActionHeader}>Edit Order</Text>
+																</TouchableOpacity>
+																<TouchableOpacity style={style.orderItemAction} onPress={() => deleteTheOrder(order.id)}>
+																	<Text style={style.orderItemActionHeader}>Delete Order</Text>
+																</TouchableOpacity>
+															</View>
 														</View>
+													)}
+
+													<View style={{ alignItems: 'center', marginVertical: 10 }}>
+														<View style={style.orderersEdit}>
+															<Text style={style.orderersEditHeader}>Calling for {order.numorderers} {order.numorderers > 1 ? 'people' : 'person'}</Text>
+															{(round.status == "ordering" && order.orderer.id == userId) && (
+																<TouchableOpacity style={style.orderersEditTouch} onPress={() => editTheOrderCallfor(order.id)}>
+																	<Text style={style.orderersEditTouchHeader}>{order.orderers.length > 0 ? 'Edit' : 'Add'}</Text>
+																</TouchableOpacity>
+															)}
+														</View>
+													</View>
+
+													{order.orderers.length > 0 ? 
+														order.orderers.map((info, infoIndex) => (
+															<View style={style.orderCallfor} key={info.key}>
+																{info.row.map((orderer, ordererIndex) => (
+																	orderer.username ?
+																		<View style={style.orderer} key={orderer.key}>
+																			<View style={style.ordererProfile}>
+																				<Image source={{ uri: logo_url + orderer.profile }} style={{ height: 50, width: 50 }}/>
+																			</View>
+																			<Text style={style.ordererUsername}>{orderer.username}</Text>
+
+																			{round.status == "ordering" ?
+																				userId == orderer.id ? 
+																					orderer.status == "confirmawaits" ?
+																						<TouchableOpacity style={style.ordererConfirm} onPress={() => confirmTheDiningOrder(order.id, orderer.id)}>
+																							<Text style={style.ordererConfirmHeader}>Confirm Order</Text>
+																						</TouchableOpacity>
+																						:
+																						<Text style={style.ordererStatus}>confirmed</Text>
+																					:
+																					orderer.status == "confirmawaits" ? 
+																						<Text style={style.ordererStatus}>confirm awaits</Text>
+																						:
+																						<Text style={style.ordererStatus}>confirmed</Text>
+																				:
+																				null
+																			}
+																		</View>
+																		:
+																		<View style={style.orderer} key={orderer.key}></View>
+																))}
+															</View>
+														))
+														:
+														<Text style={style.orderCallforHeader}>{order.orderer.id == userId ? "Your" : "Self"} order</Text>
 													}
 												</View>
-												:
-												<Text style={style.roundHeader}>This round {round.status == 'making' ? 'is already sent' : 'has been served'}</Text>
-											}
-											{round.round.map((orders, ordersIndex) => (
-												orders.orders.map((order, orderIndex) => (
-													<View style={style.order} key={order.key}>
-														<View style={{ alignItems: 'center' }}>
-															<View style={style.orderItem} key={order.key}>
-																<Text style={style.orderInfo}>Orderer: {order.orderer.username}</Text>
+											))
+										))}
+									</View>
+								))}
+							</ScrollView>
+							:
+							<View style={{ alignItems: 'center', flexDirection: 'column', height: '90%', justifyContent: 'space-around' }}>
+								<Text>No rounds yet</Text>
+							</View>
+						}
+					</View>
 
-																<View style={style.orderItemImageHolder}>
-																	<Image source={{ uri: logo_url + order.image }} style={style.orderItemImage}/>
-																</View>
+					{deleteRequestInfo.show && (
+						<Modal transparent={true}>
+							<View style={style.deleteOrderContainer}>
+								<View style={style.deleteOrderBox}>
+									<Text style={style.deleteOrderBoxHeader}>Delete order confirmation</Text>
 
-																<View style={style.orderItemInfos}>
-																	<Text style={style.orderItemInfo}>{order.name}</Text>
+									<View style={style.deleteOrderImageHolder}>
+										<Image source={{ uri: logo_url + deleteRequestInfo.image }} style={style.deleteOrderImage}/>
+									</View>
+									<Text style={style.deleteOrderName}>{deleteRequestInfo.name}</Text>
 
-																	{order.options.map((option, infoindex) => (
-																		<Text key={option.key} style={style.itemInfo}>
-																			<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-																			{option.selected}
-																			{option.type == 'percentage' && '%'}
-																		</Text>
-																	))}
+									<View>
+										{deleteRequestInfo.options.map((option, infoindex) => (
+											<Text key={option.key} style={style.itemInfo}>
+												<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+												{option.selected}
+												{option.type == 'percentage' && '%'}
+											</Text>
+										))}
 
-																	{order.others.map((other, otherindex) => (
-																		other.selected ? 
-																			<Text key={other.key} style={style.itemInfo}>
-																				<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-																				<Text>{other.input}</Text>
-																			</Text>
-																		: null
-																	))}
+										{deleteRequestInfo.others.map((other, otherindex) => (
+											other.selected ? 
+												<Text key={other.key} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+													<Text>{other.input}</Text>
+													<Text> ($ {other.price.toFixed(2)})</Text>
+												</Text>
+											: null
+										))}
 
-																	{order.sizes.map((size, sizeindex) => (
-																		size.selected ? 
-																			<Text key={size.key} style={style.itemInfo}>
-																				<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-																				<Text>{size.name}</Text>
-																			</Text>
-																		: null
-																	))}
+										{deleteRequestInfo.sizes.map((size, sizeindex) => (
+											size.selected ? 
+												<Text key={size.key} style={style.itemInfo}>
+													<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+													<Text>{size.name}</Text>
+												</Text>
+											: null
+										))}
+									</View>
 
-																	<Text style={style.orderItemInfo}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{order.quantity}</Text>
-																	<Text style={style.orderItemInfo}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(order.cost).toFixed(2)}</Text>
-																</View>
-															</View>
-														</View>
+									<View>
+										<Text style={style.deleteOrderQuantity}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{deleteRequestInfo.quantity}</Text>
+										<Text style={style.deleteOrderPrice}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(deleteRequestInfo.cost).toFixed(2)}</Text>
+									</View>
 
-														{(round.status == "ordering" && order.orderer.id == userId) && (
-															<View style={{ alignItems: 'center' }}>
-																<View style={{ flexDirection: 'row' }}>
-																	<TouchableOpacity style={style.orderItemAction} onPress={() => editTheOrder(order.id)}>
-																		<Text style={style.orderItemActionHeader}>Edit Order</Text>
-																	</TouchableOpacity>
-																	<TouchableOpacity style={style.orderItemAction} onPress={() => deleteTheOrder(order.id)}>
-																		<Text style={style.orderItemActionHeader}>Delete Order</Text>
-																	</TouchableOpacity>
-																</View>
-															</View>
-														)}
+									{deleteRequestInfo.numorderers > 0 && <Text style={style.deleteOrderOrderers}>Calling for {deleteRequestInfo.numorderers} {deleteRequestInfo.numorderers == 1 ? 'person' : 'people'}</Text>}
 
-														<View style={{ alignItems: 'center', marginVertical: 10 }}>
-															<View style={style.orderersEdit}>
-																<Text style={style.orderersEditHeader}>Calling for {order.numorderers} {order.numorderers > 1 ? 'people' : 'person'}</Text>
-																{(round.status == "ordering" && order.orderer.id == userId) && (
-																	<TouchableOpacity style={style.orderersEditTouch} onPress={() => editTheOrderCallfor(order.id)}>
-																		<Text style={style.orderersEditTouchHeader}>{order.orderers.length > 0 ? 'Edit' : 'Add'}</Text>
-																	</TouchableOpacity>
-																)}
-															</View>
-														</View>
+									<Text style={style.deleteOrderHeader}>Are you sure you want to delete this order</Text>
 
-														{order.orderers.length > 0 ? 
-															order.orderers.map((info, infoIndex) => (
-																<View style={style.orderCallfor} key={info.key}>
-																	{info.row.map((orderer, ordererIndex) => (
-																		orderer.username ?
-																			<View style={style.orderer} key={orderer.key}>
-																				<View style={style.ordererProfile}>
-																					<Image source={{ uri: logo_url + orderer.profile }} style={{ height: 50, width: 50 }}/>
-																				</View>
-																				<Text style={style.ordererUsername}>{orderer.username}</Text>
-
-																				{round.status == "ordering" ?
-																					userId == orderer.id ? 
-																						orderer.status == "confirmawaits" ?
-																							<TouchableOpacity style={style.ordererConfirm} onPress={() => confirmTheDiningOrder(order.id, orderer.id)}>
-																								<Text style={style.ordererConfirmHeader}>Confirm Order</Text>
-																							</TouchableOpacity>
-																							:
-																							<Text style={style.ordererStatus}>confirmed</Text>
-																						:
-																						orderer.status == "confirmawaits" ? 
-																							<Text style={style.ordererStatus}>confirm awaits</Text>
-																							:
-																							<Text style={style.ordererStatus}>confirmed</Text>
-																					:
-																					null
-																				}
-																			</View>
-																			:
-																			<View style={style.orderer} key={orderer.key}></View>
-																	))}
-																</View>
-															))
-															:
-															<Text style={style.orderCallforHeader}>{order.orderer.id == userId ? "Your" : "Self"} order</Text>
-														}
-													</View>
-												))
-											))}
-										</View>
-									))}
-								</ScrollView>
-								:
-								<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 86, justifyContent: 'space-around' }}>
-									<Text>No rounds yet</Text>
+									<View style={style.deleteOrderActions}>
+										<TouchableOpacity style={style.deleteOrderAction} onPress={() => setDeleterequestinfo({ ...deleteRequestInfo, show: false })}>
+											<Text style={style.deleteOrderActionHeader}>Cancel</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.deleteOrderAction} onPress={() => deleteTheOrder()}>
+											<Text style={style.deleteOrderActionHeader}>Yes</Text>
+										</TouchableOpacity>
+									</View>
 								</View>
-							}
+							</View>
+						</Modal>
+					)}
+
+					{showUnconfirmedorders && (
+						<Modal transparent={true}>
+							<View style={{ paddingVertical: offsetPadding }}>
+								<View style={style.errorBox}>
+									<View style={style.errorContainer}>
+										<Text style={style.errorHeader}>
+											There is one or more unconfirmed orders.
+											{'\n\n'}
+											Please tell your diners to confirm their order before it
+											{'\n'}
+											can be sent to the kitchen
+										</Text>
+
+										<View style={style.errorActions}>
+											<TouchableOpacity style={style.errorAction} onPress={() => setShowunconfirmedorders(false)}>
+												<Text style={style.errorActionHeader}>Ok</Text>
+											</TouchableOpacity>
+										</View>
+									</View>
+								</View>
+							</View>
+						</Modal>
+					)}
+				</Modal>
+			)}
+			{openEditdiners.show && (
+				<Modal>
+					<View style={style.usersList}>
+						<View style={style.userNameContainer}>
+							<TextInput 
+								style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friends to add" 
+								onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"
+							/>
 						</View>
 
-						{deleteRequestInfo.show && (
-							<Modal transparent={true}>
-								<View style={style.deleteOrderContainer}>
-									<View style={style.deleteOrderBox}>
-										<Text style={style.deleteOrderBoxHeader}>Delete order confirmation</Text>
+						<View style={style.usersListContainer}>
+							<View style={style.usersListSearched}>
+								<Text style={style.usersHeader}>{numSearchedfriends} Searched Friend(s)</Text>
 
-										<View style={style.deleteOrderImageHolder}>
-											<Image source={{ uri: logo_url + deleteRequestInfo.image }} style={style.deleteOrderImage}/>
-										</View>
-										<Text style={style.deleteOrderName}>{deleteRequestInfo.name}</Text>
-
-										<View>
-											{deleteRequestInfo.options.map((option, infoindex) => (
-												<Text key={option.key} style={style.itemInfo}>
-													<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-													{option.selected}
-													{option.type == 'percentage' && '%'}
-												</Text>
-											))}
-
-											{deleteRequestInfo.others.map((other, otherindex) => (
-												other.selected ? 
-													<Text key={other.key} style={style.itemInfo}>
-														<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-														<Text>{other.input}</Text>
-														<Text> ($ {other.price.toFixed(2)})</Text>
-													</Text>
-												: null
-											))}
-
-											{deleteRequestInfo.sizes.map((size, sizeindex) => (
-												size.selected ? 
-													<Text key={size.key} style={style.itemInfo}>
-														<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-														<Text>{size.name}</Text>
-													</Text>
-												: null
+								<FlatList
+									data={searchedFriends}
+									renderItem={({ item, index }) => 
+										<View key={item.key} style={style.userRow}>
+											{item.row.map(friend => (
+												friend.username ? 
+													<TouchableOpacity key={friend.key} style={style.user} onPress={() => selectFriend(friend.id)}>
+														<View style={style.userProfileHolder}>
+															<Image source={{ uri: logo_url + friend.profile }} style={{ height: fsize(0.15), width: fsize(0.15) }}/>
+														</View>
+														<Text style={style.userName}>{friend.username}</Text>
+													</TouchableOpacity>
+													:
+													<View key={friend.key} style={style.user}></View>
 											))}
 										</View>
+									}
+								/>
+							</View>
+						
+							<View style={style.usersListSelected}>
+								{numSelecteddiners > 0 && (
+									<>
+										<Text style={style.selectedUsersHeader}>{numSelecteddiners} Selected Diner(s)</Text>
 
-										<View>
-											<Text style={style.deleteOrderQuantity}><Text style={{ fontWeight: 'bold' }}>Quantity: </Text>{deleteRequestInfo.quantity}</Text>
-											<Text style={style.deleteOrderPrice}><Text style={{ fontWeight: 'bold' }}>Cost: </Text>$ {(deleteRequestInfo.cost).toFixed(2)}</Text>
-										</View>
-
-										{deleteRequestInfo.numorderers > 0 && <Text style={style.deleteOrderOrderers}>Calling for {deleteRequestInfo.numorderers} {deleteRequestInfo.numorderers == 1 ? 'person' : 'people'}</Text>}
-
-										<Text style={style.deleteOrderHeader}>Are you sure you want to delete this order</Text>
-
-										<View style={style.deleteOrderActions}>
-											<TouchableOpacity style={style.deleteOrderAction} onPress={() => setDeleterequestinfo({ ...deleteRequestInfo, show: false })}>
-												<Text style={style.deleteOrderActionHeader}>Cancel</Text>
+										{openEditdiners.changes > 0 && (
+											<TouchableOpacity onPress={() => editTheDiners()}>
+												<Text>Refresh {openEditdiners.changes > 1 ? "(" + openEditdiners.changes + ")" : null}</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={style.deleteOrderAction} onPress={() => deleteTheOrder()}>
-												<Text style={style.deleteOrderActionHeader}>Yes</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								</View>
-							</Modal>
-						)}
-
-						{showUnconfirmedorders && (
-							<Modal transparent={true}>
-								<View style={{ paddingVertical: offsetPadding }}>
-									<View style={style.errorBox}>
-										<View style={style.errorContainer}>
-											<Text style={style.errorHeader}>
-												There is one or more unconfirmed orders.
-												{'\n\n'}
-												Please tell your diners to confirm their order before it
-												{'\n'}
-												can be sent to the kitchen
-											</Text>
-
-											<View style={style.errorActions}>
-												<TouchableOpacity style={style.errorAction} onPress={() => setShowunconfirmedorders(false)}>
-													<Text style={style.errorActionHeader}>Ok</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									</View>
-								</View>
-							</Modal>
-						)}
-					</Modal>
-				)}
-
-				{openEditdiners.show && (
-					<Modal>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.usersList}>
-								<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friends to add" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"/>
-
-								<View style={style.usersListContainer}>
-									<View style={style.usersListSearched}>
-										<Text style={style.usersHeader}>{numSearchedfriends} Searched Friend(s)</Text>
+										)}
 
 										<FlatList
-											data={searchedFriends}
+											data={selectedDiners}
 											renderItem={({ item, index }) => 
 												<View key={item.key} style={style.userRow}>
 													{item.row.map(friend => (
 														friend.username ? 
-															<TouchableOpacity key={friend.key} style={style.user} onPress={() => selectFriend(friend.id)}>
+															<View key={friend.key} style={style.user}>
+																<TouchableOpacity style={style.userDelete} onPress={() => deselectTheFriend(friend.id)}>
+																	<AntDesign name="closecircleo" size={15}/>
+																</TouchableOpacity>
 																<View style={style.userProfileHolder}>
-																	<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+																	<Image source={{ uri: logo_url + friend.profile }} style={{ height: fsize(0.15), width: fsize(0.15) }}/>
 																</View>
 																<Text style={style.userName}>{friend.username}</Text>
-															</TouchableOpacity>
+																{friend.status && <Text style={style.userStatus}>{friend.status}</Text>}
+																{(userId == friend.id) && <Text style={style.userStatus}>(you)</Text>}
+															</View>
 															:
 															<View key={friend.key} style={style.user}></View>
 													))}
 												</View>
 											}
 										/>
-									</View>
-								
-									<View style={style.usersListSelected}>
-										{numSelecteddiners > 0 && (
-											<>
-												<Text style={style.selectedUsersHeader}>{numSelecteddiners} Selected Diner(s)</Text>
-
-												{openEditdiners.changes > 0 && (
-													<TouchableOpacity onPress={() => editTheDiners()}>
-														<Text>Refresh {openEditdiners.changes > 1 ? "(" + openEditdiners.changes + ")" : null}</Text>
-													</TouchableOpacity>
-												)}
-
-												<FlatList
-													data={selectedDiners}
-													renderItem={({ item, index }) => 
-														<View key={item.key} style={style.userRow}>
-															{item.row.map(friend => (
-																friend.username ? 
-																	<View key={friend.key} style={style.user}>
-																		<TouchableOpacity style={style.userDelete} onPress={() => deselectTheFriend(friend.id)}>
-																			<AntDesign name="closecircleo" size={15}/>
-																		</TouchableOpacity>
-																		<View style={style.userProfileHolder}>
-																			<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																		</View>
-																		<Text style={style.userName}>{friend.username}</Text>
-																		{friend.status && <Text style={style.userStatus}>{friend.status}</Text>}
-																		{(userId == friend.id) && <Text style={style.userStatus}>(you)</Text>}
-																	</View>
-																	:
-																	<View key={friend.key} style={style.user}></View>
-															))}
-														</View>
-													}
-												/>
-											</>
-										)}
-									</View>
-								</View>
-
-								<View style={style.itemContainer}>
-									<View style={style.locationImageHolder}>
-										<Image style={{ height: 80, width: 80 }} source={{ uri: logo_url + locationInfo.logo }}/>
-									</View>
-									<Text style={style.locationName}>{locationInfo.name}</Text>
-								</View>
-
-								<Text style={style.errorMsg}>{dinersErrormsg}</Text>
-
-								<View style={{ alignItems: 'center' }}>
-									<View style={style.actions}>
-										<TouchableOpacity style={style.action} onPress={() => closeEditTheDiners()}>
-											<Text style={style.actionHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.action} onPress={() => addFriendsToDining()}>
-											<Text style={style.actionHeader}>Done</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
+									</>
+								)}
 							</View>
 						</View>
 
-						{showActiveDiner.show && (
-							<Modal transparent={true}>
-								<View style={{ paddingVertical: offsetPadding }}>
-									<View style={style.errorBox}>
-										<View style={style.errorContainer}>
-											<Text style={style.errorHeader}>
-												{showActiveDiner.username} has made some orders
-												{'\n\n'}
-												Therefore cannot be removed as diner
-											</Text>
+						<View style={style.itemContainer}>
+							<View style={style.locationImageHolder}>
+								<Image style={{ height: 80, width: 80 }} source={{ uri: logo_url + locationInfo.logo }}/>
+							</View>
+							<Text style={style.locationName}>{locationInfo.name}</Text>
+						</View>
 
-											<View style={style.errorActions}>
-												<TouchableOpacity style={style.errorAction} onPress={() => setShowactivediner({ show: false, username: "" })}>
-													<Text style={style.errorActionHeader}>Close</Text>
-												</TouchableOpacity>
-											</View>
+						<View style={style.usersListActionContainer}>
+							<Text style={style.errorMsg}>{dinersErrormsg}</Text>
+
+							<View style={style.usersListActions}>
+								<TouchableOpacity style={style.usersListAction} onPress={() => closeEditTheDiners()}>
+									<Text style={style.usersListActionHeader}>Close</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.usersListAction} onPress={() => addFriendsToDining()}>
+									<Text style={style.usersListActionHeader}>Done</Text>
+								</TouchableOpacity>
+							</View>
+						</View>
+					</View>
+
+					{showActiveDiner.show && (
+						<Modal transparent={true}>
+							<View style={{ paddingVertical: offsetPadding }}>
+								<View style={style.errorBox}>
+									<View style={style.errorContainer}>
+										<Text style={style.errorHeader}>
+											{showActiveDiner.username} has made some orders
+											{'\n\n'}
+											Therefore cannot be removed as diner
+										</Text>
+
+										<View style={style.errorActions}>
+											<TouchableOpacity style={style.errorAction} onPress={() => setShowactivediner({ show: false, username: "" })}>
+												<Text style={style.errorActionHeader}>Close</Text>
+											</TouchableOpacity>
 										</View>
 									</View>
 								</View>
-							</Modal>
-						)}
-					</Modal>
-				)}
+							</View>
+						</Modal>
+					)}
+				</Modal>
+			)}
+			{openEditcallfor && (
+				<Modal>
+					<View style={style.usersList}>
+						<View style={style.userNameContainer}>
+							<TextInput 
+								style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner to order for" 
+								onChangeText={(username) => getDinersList(username)} autoCorrect={false} autoCapitalize="none"
+							/>
+						</View>
 
-				{openEditcallfor && (
-					<Modal>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.usersList}>
-								<TextInput style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner to order for" onChangeText={(username) => getDinersList(username)} autoCorrect={false} autoCapitalize="none"/>
+						<View style={style.usersListContainer}>
+							<View style={style.usersListSearched}>
+								<Text style={style.usersHeader}>{numDiners} Searched Diner(s)</Text>
 
-								<View style={style.usersListContainer}>
-									<View style={style.usersListSearched}>
-										<Text style={style.usersHeader}>{numDiners} Searched Diner(s)</Text>
+								<FlatList
+									data={diners}
+									renderItem={({ item, index }) => 
+										<View key={item.key} style={style.userRow}>
+											{item.row.map(diner => (
+												diner.username ? 
+													<TouchableOpacity key={diner.key} style={style.user} onPress={() => selectDiner(diner.id)}>
+														<View style={style.userProfileHolder}>
+															<Image source={{ uri: logo_url + diner.profile }} style={{ height: fsize(0.15), width: fsize(0.15) }}/>
+														</View>
+														<Text style={style.userName}>{diner.username}</Text>
+													</TouchableOpacity>
+													:
+													<View key={diner.key} style={style.user}></View>
+											))}
+										</View>
+									}
+								/>
+							</View>
+
+							<View style={style.usersListSelected}>
+								{selectedCallfor.length > 0 && (
+									<>
+										<Text style={style.selectedUsersHeader}>{numSelectedcallfor} Selected Diner(s) to order this item</Text>
 
 										<FlatList
-											data={diners}
+											data={selectedCallfor}
 											renderItem={({ item, index }) => 
 												<View key={item.key} style={style.userRow}>
 													{item.row.map(diner => (
 														diner.username ? 
-															<TouchableOpacity key={diner.key} style={style.user} onPress={() => selectDiner(diner.id)}>
+															<View key={diner.key} style={style.user}>
+																<TouchableOpacity style={style.userDelete} onPress={() => deselectDiner(diner.id)}>
+																	<AntDesign name="closecircleo" size={15}/>
+																</TouchableOpacity>
 																<View style={style.userProfileHolder}>
-																	<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
+																	<Image source={{ uri: logo_url + diner.profile }} style={{ height: fsize(0.15), width: fsize(0.15) }}/>
 																</View>
 																<Text style={style.userName}>{diner.username}</Text>
-															</TouchableOpacity>
+															</View>
 															:
 															<View key={diner.key} style={style.user}></View>
 													))}
 												</View>
 											}
 										/>
-									</View>
+									</>
+								)}
+							</View>
+						</View>
 
-									<View style={style.usersListSelected}>
-										{selectedCallfor.length > 0 && (
-											<>
-												<Text style={style.selectedUsersHeader}>{numSelectedcallfor} Selected Diner(s) to order this item</Text>
+						<View style={style.itemContainer}>
+							<View style={style.orderingItemImageHolder}>
+								<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
+							</View>
+							<View style={style.itemInfos}>
+								<Text style={style.orderingItemName}>{orderingItem.name}</Text>
 
-												<FlatList
-													data={selectedCallfor}
-													renderItem={({ item, index }) => 
-														<View key={item.key} style={style.userRow}>
-															{item.row.map(diner => (
-																diner.username ? 
-																	<View key={diner.key} style={style.user}>
-																		<TouchableOpacity style={style.userDelete} onPress={() => deselectDiner(diner.id)}>
-																			<AntDesign name="closecircleo" size={15}/>
-																		</TouchableOpacity>
-																		<View style={style.userProfileHolder}>
-																			<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
-																		</View>
-																		<Text style={style.userName}>{diner.username}</Text>
-																	</View>
-																	:
-																	<View key={diner.key} style={style.user}></View>
-															))}
-														</View>
-													}
-												/>
-											</>
-										)}
-									</View>
-								</View>
+								{orderingItem.options.map((option, infoindex) => (
+									<Text key={option.key} style={style.itemInfo}>
+										<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+										{option.selected}
+										{option.type == 'percentage' && '%'}
+									</Text>
+								))}
 
-								<View>
-									<View style={style.itemContainer}>
-										<View style={style.orderingItemImageHolder}>
-											<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
-										</View>
-										<View style={style.itemInfos}>
-											<Text style={style.orderingItemName}>{orderingItem.name}</Text>
+								{orderingItem.others.map((other, otherindex) => (
+									other.selected ? 
+										<Text key={other.key} style={style.itemInfo}>
+											<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+											<Text>{other.input}</Text>
+										</Text>
+									: null
+								))}
 
-											{orderingItem.options.map((option, infoindex) => (
-												<Text key={option.key} style={style.itemInfo}>
-													<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-													{option.selected}
-													{option.type == 'percentage' && '%'}
-												</Text>
-											))}
+								{orderingItem.sizes.map((size, sizeindex) => (
+									size.selected ? 
+										<Text key={size.key} style={style.itemInfo}>
+											<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+											<Text>{size.name}</Text>
+										</Text>
+									: null
+								))}
+							</View>
+							<View>
+								<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {orderingItem.quantity}</Text>
+								<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>Cost:</Text> $ {orderingItem.cost}</Text>
+							</View>
+						</View>
 
-											{orderingItem.others.map((other, otherindex) => (
-												other.selected ? 
-													<Text key={other.key} style={style.itemInfo}>
-														<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-														<Text>{other.input}</Text>
-													</Text>
-												: null
-											))}
+						<View style={style.usersListActionContainer}>
+							<Text style={style.errorMsg}>{orderingItem.errorMsg}</Text>
 
-											{orderingItem.sizes.map((size, sizeindex) => (
-												size.selected ? 
-													<Text key={size.key} style={style.itemInfo}>
-														<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-														<Text>{size.name}</Text>
-													</Text>
-												: null
-											))}
-										</View>
-										<View>
-											<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {orderingItem.quantity}</Text>
-											<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>Cost:</Text> $ {orderingItem.cost}</Text>
-										</View>
-									</View>
+							<View style={style.usersListActions}>
+								<TouchableOpacity style={style.usersListAction} onPress={() => closeEditTheCallfor()}>
+									<Text style={style.usersListActionHeader}>Close</Text>
+								</TouchableOpacity>
+								{itemInfo.orderid ? 
+									<TouchableOpacity style={style.usersListAction} onPress={() => updateTheOrderCallfor()}>
+										<Text style={style.usersListActionHeader}>Update</Text>
+									</TouchableOpacity>
+									:
+									<TouchableOpacity style={style.usersListAction} onPress={() => addOrder()}>
+										<Text style={style.usersListActionHeader}>Add to Order</Text>
+									</TouchableOpacity>
+								}
+							</View>
+						</View>
+					</View>
 
-									<Text style={style.errorMsg}>{orderingItem.errorMsg}</Text>
+					{showPaymentRequired.show && (
+						<Modal transparent={true}>
+							<View style={{ paddingVertical: offsetPadding }}>
+								<View style={style.errorBox}>
+									<View style={style.errorContainer}>
+										<Text style={style.errorHeader}>
+											{showPaymentRequired.username} hasn't provided a payment method yet.
+										</Text>
 
-									<View style={{ alignItems: 'center' }}>
-										<View style={style.actions}>
-											<TouchableOpacity style={style.action} onPress={() => closeEditTheCallfor()}>
-												<Text style={style.actionHeader}>Close</Text>
+										<View style={style.errorActions}>
+											<TouchableOpacity style={style.errorAction} onPress={() => setShowpaymentrequired({ show: false, username: "" })}>
+												<Text style={style.errorActionHeader}>Close</Text>
 											</TouchableOpacity>
-											{itemInfo.orderid ? 
-												<TouchableOpacity style={style.action} onPress={() => updateTheOrderCallfor()}>
-													<Text style={style.actionHeader}>Update</Text>
-												</TouchableOpacity>
-												:
-												<TouchableOpacity style={style.action} onPress={() => addOrder()}>
-													<Text style={style.actionHeader}>Add to Order</Text>
-												</TouchableOpacity>
-											}
 										</View>
 									</View>
 								</View>
 							</View>
-						</View>
+						</Modal>
+					)}
 
-						{showPaymentRequired.show && (
-							<Modal transparent={true}>
-								<View style={{ paddingVertical: offsetPadding }}>
-									<View style={style.errorBox}>
-										<View style={style.errorContainer}>
-											<Text style={style.errorHeader}>
-												{showPaymentRequired.username} hasn't provided a payment method yet.
-											</Text>
+					{showUnconfirmeddiner.show && (
+						<Modal transparent={true}>
+							<View style={{ paddingVertical: offsetPadding }}>
+								<View style={style.errorBox}>
+									<View style={style.errorContainer}>
+										<Text style={style.errorHeader}>
+											{showUnconfirmeddiner.username} hasn't accepted the reservation.
+											{'\n\n'}
+											Please tell {showUnconfirmeddiner.username} to accept it so that you
+											can continue your order
+										</Text>
 
-											<View style={style.errorActions}>
-												<TouchableOpacity style={style.errorAction} onPress={() => setShowpaymentrequired({ show: false, username: "" })}>
-													<Text style={style.errorActionHeader}>Close</Text>
-												</TouchableOpacity>
-											</View>
+										<View style={style.errorActions}>
+											<TouchableOpacity style={style.errorAction} onPress={() => setShowunconfirmeddiner({ show: false, username: "" })}>
+												<Text style={style.errorActionHeader}>Close</Text>
+											</TouchableOpacity>
 										</View>
 									</View>
 								</View>
-							</Modal>
-						)}
-
-						{showUnconfirmeddiner.show && (
-							<Modal transparent={true}>
-								<View style={{ paddingVertical: offsetPadding }}>
-									<View style={style.errorBox}>
-										<View style={style.errorContainer}>
-											<Text style={style.errorHeader}>
-												{showUnconfirmeddiner.username} hasn't accepted the reservation.
-												{'\n\n'}
-												Please tell {showUnconfirmeddiner.username} to accept it so that you
-												can continue your order
-											</Text>
-
-											<View style={style.errorActions}>
-												<TouchableOpacity style={style.errorAction} onPress={() => setShowunconfirmeddiner({ show: false, username: "" })}>
-													<Text style={style.errorActionHeader}>Close</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									</View>
-								</View>
-							</Modal>
-						)}
-					</Modal>
-				)}
-			</View>
-
+							</View>
+						</Modal>
+					)}
+				</Modal>
+			)}
 			{showDisabledScreen && (
 				<Modal transparent={true}>
 					<View style={style.disabled}>
@@ -2117,39 +2028,37 @@ export default function order(props) {
 }
 
 const style = StyleSheet.create({
-	boxContainer: { backgroundColor: 'white' },
+	order: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
-	boxHeader: { fontSize: fsize(0.07), height: 54, textAlign: 'center' },
+	headers: { alignItems: 'center', flexDirection: 'column', height: '20%', justifyContent: 'space-around' },
+	boxHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	orderActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	orderAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 130 },
 	orderActionHeader: { textAlign: 'center' },
 
-	body: { flexDirection: 'column', height: screenHeight - 70, justifyContent: 'space-around' },
-	goBack: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-	row: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10, width: '100%' },
+	body: { height: '80%' },
 
 	// menu
-	menu: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, padding: 5, width: itemSize },
-	menuDisabled: { height: itemSize, width: itemSize },
-	menuImageHolder: { alignItems: 'center', borderRadius: imageSize / 2, flexDirection: 'column', height: imageSize, justifyContent: 'space-around', overflow: 'hidden', width: imageSize },
-	menuName: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
-	seeMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	seeMenuHeader: { fontSize: fsize(0.05) },
-
-	// product
-	product: { alignItems: 'center', marginBottom: 50, width: itemSize },
-	productImage: { borderRadius: imageSize / 2, height: imageSize, width: imageSize },
-	productName: { fontSize: fsize(0.05), fontWeight: 'bold' },
-	productInfo: { fontSize: fsize(0.04) },
-	productPrice: { fontSize: fsize(0.05), marginVertical: 5 },
-	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
-	productBuyHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3, width: '98%' },
+	menuImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), overflow: 'hidden', width: fsize(0.1) },
+	menuImage: { height: fsize(0.1), width: fsize(0.1) },
+	menuName: { fontSize: fsize(0.05), fontWeight: 'bold', marginLeft: 5, marginTop: fsize(0.04) / 2, textDecorationLine: 'underline' },
+	menuItemActions: { flexDirection: 'row', marginTop: 0 },
+	menuItemAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5 },
+	menuItemActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	item: { backgroundColor: 'white', paddingHorizontal: 3, paddingBottom: 30, width: '98%' },
+	itemImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), margin: 5, overflow: 'hidden', width: fsize(0.1) },
+	itemImage: { height: fsize(0.1), width: fsize(0.1) },
+	menuItemHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginRight: 20, paddingTop: fsize(0.04), textDecorationStyle: 'solid' },
+	menuItemInfo: { fontSize: fsize(0.05), marginLeft: 10, marginVertical: 10 },
 
 	// hidden boxes
+	row: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10, width: '100%' },
+
 	// item info
+	itemInfoBox: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
+	itemInfoHeader: { alignItems: 'center', flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
 	itemClose: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: 28, justifyContent: 'space-around', marginVertical: 10, padding: 2 },
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	image: { height: 200, width: 200 },
@@ -2206,18 +2115,20 @@ const style = StyleSheet.create({
 	price: { fontSize: fsize(0.05), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	itemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
+	itemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10 },
 	itemActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 
 	// rounds
+	roundsBox: { height: '100%', paddingVertical: offsetPadding, width: '100%' },
+	roundsHeader: { alignItems: 'center', flexDirection: 'column', height: '15%' },
 	closeRounds: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: 28, justifyContent: 'space-around', marginVertical: 10, padding: 2 },
-	roundList: { height: screenHeight - 75 },
+	roundList: { height: '85%' },
 	roundTouch: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5, width: 120 },
 	roundTouchDisabled: { alignItems: 'center', backgroundColor: 'grey', borderColor: 'grey', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5, width: 120 },
 	roundTouchHeader: {  },
 	round: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5 },
 	roundHeader: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
-	order: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 5, margin: 5 },
+	roundOrder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 5, margin: 5 },
 	orderItem: { alignItems: 'center', marginTop: 20 },
 	orderInfo: { fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 20 },
 	orderItemImageHolder: { borderRadius: orderImageSize / 2, height: orderImageSize, overflow: 'hidden', width: orderImageSize },
@@ -2256,11 +2167,12 @@ const style = StyleSheet.create({
 	deleteOrderActionHeader: { textAlign: 'center' },
 
 	// users list
-	usersList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	usersList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
+	userName: { height: '10%' },
 	userNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
-	usersListContainer: { flexDirection: 'column', height: screenHeight - 230, justifyContent: 'space-between', overflow: 'hidden' },
-	usersListSearched: { borderRadius: 5, height: '50%', overflow: 'hidden' },
-	usersListSelected: { borderRadius: 5, height: '50%', overflow: 'hidden' },
+	usersListContainer: { flexDirection: 'column', height: '60%', justifyContent: 'space-between' },
+	usersListSearched: { height: '50%', overflow: 'hidden' },
+	usersListSelected: { height: '50%', overflow: 'hidden' },
 	selectedUsersHeader: { fontWeight: 'bold', textAlign: 'center' },
 	usersHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 	userRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
@@ -2270,20 +2182,18 @@ const style = StyleSheet.create({
 	userProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: fsize(0.15) / 2, height: fsize(0.15), overflow: 'hidden', width: fsize(0.15) },
 	userName: { fontSize: fsize(0.03), fontWeight: 'bold', textAlign: 'center' },
 	userStatus: { fontSize: fsize(0.03) },
-
-	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.1)', borderRadius: 10, flexDirection: 'row', height: 100, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
+	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: '20%', justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
 	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
 	itemInfo: { fontSize: fsize(0.04), flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
 	itemHeader: { fontSize: fsize(0.04) },
+	usersListActionContainer: { alignItems: 'center', height: '10%' },
 	locationImageHolder: { borderRadius: 40, height: 80, overflow: 'hidden', width: 80 },
 	locationName: { fontSize: fsize(0.05), marginVertical: 30, textAlign: 'center' },
-
-	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
-
-	actions: { flexDirection: 'row', justifyContent: 'space-around' },
-	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
-	actionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontSize: fsize(0.04), fontWeight: 'bold', textAlign: 'center' },
+	usersListActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	usersListAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 100 },
+	usersListActionHeader: { fontSize: fsize(0.05), textAlign: 'center' },
 
 	errorBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	errorContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },

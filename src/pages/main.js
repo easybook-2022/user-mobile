@@ -26,7 +26,6 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 const imageSize = 100
 
 const fsize = p => {
@@ -377,166 +376,168 @@ export default function main(props) {
 
 	return (
 		<View style={style.main}>
-			<View style={{ paddingVertical: offsetPadding }}>
-				<View style={style.box}>
-					<View style={style.headers}>
-						<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-							<TextInput style={style.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search name" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} autoCorrect={false}/>
-							{userId && (
-								<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
-									<FontAwesome name="bell" size={40}/>
-									{numNotifications > 0 && <Text style={style.notificationHeader}>{numNotifications}</Text>}
-								</TouchableOpacity>
-							)}
-						</View>
-					</View>
+			<View style={style.box}>
+				<View style={style.headers}>
+					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+						<TextInput 
+							style={style.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
+							placeholder="Search name" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} 
+							autoCorrect={false}
+						/>
 
-					<View style={style.refresh}>
-						<TouchableOpacity style={style.refreshTouch} onPress={() => getLocationPermission()}>
-							<Text style={style.refreshTouchHeader}>Refresh</Text>
-						</TouchableOpacity>
-					</View>
-
-					<View style={style.body}>
-						{geolocation.longitude && geolocation.latitude && loaded ? 
-							<FlatList
-								showsVerticalScrollIndicator={false}
-								data={locations}
-								renderItem={({ item, index }) => 
-									<View key={item.key} style={style.service}>
-										<Text style={style.rowHeader}>{item.locations.length} {item.header} near you</Text>
-
-										{item.index < item.max && (
-											<TouchableOpacity style={style.seeMore} onPress={() => {
-												clearInterval(updateTrackUser)
-												props.navigation.navigate(item.service, { initialize: () => initialize() })
-											}}>
-												<Text style={style.seeMoreHeader}>See More</Text>
-											</TouchableOpacity>
-										)}
-
-										<View style={style.row}>
-											<FlatList
-												ListFooterComponent={() => {
-													if (item.loading && item.index < item.max) {
-														return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
-													}
-
-													return null
-												}}
-												horizontal
-												onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
-												onEndReachedThreshold={0}
-												showsHorizontalScrollIndicator={false}
-												data={item.locations}
-												renderItem={({ item }) => 
-													<View style={style.location}>
-														<View style={style.locationPhotoHolder}>
-															<Image source={{ uri: logo_url + item.logo }} style={{ height: imageSize, width: imageSize }}/>
-														</View>
-
-														<Text style={style.locationName}>{item.name}</Text>
-														<Text style={style.locationDistance}>{item.distance}</Text>
-
-														<TouchableOpacity style={style.locationMenu} onPress={() => {
-															clearInterval(updateTrackUser)
-															props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
-														}}>
-															<Text style={style.locationMenuHeader}>See menu</Text>
-														</TouchableOpacity>
-
-														{displayLocationStatus(item.opentime, item.closetime) ? <Text style={style.locationHours}>{displayLocationStatus(item.opentime, item.closetime)}</Text> : null}
-													</View>
-												}
-											/>
-										</View>
-									</View>
-								}
-							/>
-							:
-							<ActivityIndicator size="large"/>
-						}
-					</View>
-
-					<View style={style.bottomNavs}>
-						<View style={style.bottomNavsRow}>
-							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => {
-									clearInterval(updateTrackUser)
-									props.navigation.navigate("account", { refetch: () => initialize() })
-								}}>
-									<FontAwesome5 name="user-circle" size={30}/>
-								</TouchableOpacity>
-							)}
-
-							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => {
-									clearInterval(updateTrackUser)
-									props.navigation.navigate("recent", { refetch: () => initialize() })
-								}}>
-									<FontAwesome name="history" size={30}/>
-								</TouchableOpacity>
-							)}
-
-							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-									<Entypo name="shopping-cart" size={30}/>
-									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-								</TouchableOpacity>
-							)}
-
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
-								if (userId) {
-									socket.emit("socket/user/logout", userId, () => {
-										clearInterval(updateTrackUser)
-										AsyncStorage.clear()
-										setUserid(null)
-									})
-								} else {
-									setShowauth(true)
-								}
-							}}>
-								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+						{userId && (
+							<TouchableOpacity style={style.notification} onPress={() => setOpenNotifications(true)}>
+								<FontAwesome name="bell" size={30}/>
+								{numNotifications > 0 && <Text style={style.notificationHeader}>{numNotifications}</Text>}
 							</TouchableOpacity>
-						</View>
+						)}
 					</View>
 				</View>
 
-				{openNotifications && 
-					<Modal><NotificationsBox navigation={props.navigation} close={() => {
-						fetchTheNumNotifications()
-						setOpenNotifications(false)
-					}}/>
-					</Modal>
-				}
-				{openCart && <Modal><Cart showNotif={() => {
-					setOpencart(false)
-					setOpenNotifications(true)
-				}} close={() => {
-					getTheNumCartItems()
-					setOpencart(false)
-				}}/></Modal>}
-				{showAuth && (
-					<Modal transparent={true}>
-						<Userauth close={() => setShowauth(false)} done={(id, msg) => {
-							if (msg == "setup") {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: "setup" }]
-									})
-								);
-							} else {
-								socket.emit("socket/user/login", "user" + id, () => setUserid(id))
-							}
+				<View style={style.refresh}>
+					<TouchableOpacity style={style.refreshTouch} onPress={() => getLocationPermission()}>
+						<Text style={style.refreshTouchHeader}>Refresh</Text>
+					</TouchableOpacity>
+				</View>
 
-							setShowauth(false)
-							initialize()
-						}} navigate={props.navigation.navigate}/>
-					</Modal>
-				)}
+				<View style={style.body}>
+					{geolocation.longitude && geolocation.latitude && loaded ? 
+						<FlatList
+							showsVerticalScrollIndicator={false}
+							data={locations}
+							renderItem={({ item, index }) => 
+								<View key={item.key} style={style.service}>
+									<Text style={style.rowHeader}>{item.locations.length} {item.header} near you</Text>
+
+									{item.index < item.max && (
+										<TouchableOpacity style={style.seeMore} onPress={() => {
+											clearInterval(updateTrackUser)
+											props.navigation.navigate(item.service, { initialize: () => initialize() })
+										}}>
+											<Text style={style.seeMoreHeader}>See More</Text>
+										</TouchableOpacity>
+									)}
+
+									<View style={style.row}>
+										<FlatList
+											ListFooterComponent={() => {
+												if (item.loading && item.index < item.max) {
+													return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
+												}
+
+												return null
+											}}
+											horizontal
+											onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
+											onEndReachedThreshold={0}
+											showsHorizontalScrollIndicator={false}
+											data={item.locations}
+											renderItem={({ item }) => 
+												<View style={style.location}>
+													<View style={style.locationPhotoHolder}>
+														<Image source={{ uri: logo_url + item.logo }} style={{ height: imageSize, width: imageSize }}/>
+													</View>
+
+													<Text style={style.locationName}>{item.name}</Text>
+													<Text style={style.locationDistance}>{item.distance}</Text>
+
+													<TouchableOpacity style={style.locationMenu} onPress={() => {
+														clearInterval(updateTrackUser)
+														props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
+													}}>
+														<Text style={style.locationMenuHeader}>See menu</Text>
+													</TouchableOpacity>
+
+													{displayLocationStatus(item.opentime, item.closetime) ? <Text style={style.locationHours}>{displayLocationStatus(item.opentime, item.closetime)}</Text> : null}
+												</View>
+											}
+										/>
+									</View>
+								</View>
+							}
+						/>
+						:
+						<ActivityIndicator size="large"/>
+					}
+				</View>
+
+				<View style={style.bottomNavs}>
+					<View style={style.bottomNavsRow}>
+						{userId && (
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								clearInterval(updateTrackUser)
+								props.navigation.navigate("account", { refetch: () => initialize() })
+							}}>
+								<FontAwesome5 name="user-circle" size={30}/>
+							</TouchableOpacity>
+						)}
+
+						{userId && (
+							<TouchableOpacity style={style.bottomNav} onPress={() => {
+								clearInterval(updateTrackUser)
+								props.navigation.navigate("recent", { refetch: () => initialize() })
+							}}>
+								<FontAwesome name="history" size={30}/>
+							</TouchableOpacity>
+						)}
+
+						{userId && (
+							<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+								<Entypo name="shopping-cart" size={30}/>
+								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+							</TouchableOpacity>
+						)}
+
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							if (userId) {
+								socket.emit("socket/user/logout", userId, () => {
+									clearInterval(updateTrackUser)
+									AsyncStorage.clear()
+									setUserid(null)
+								})
+							} else {
+								setShowauth(true)
+							}
+						}}>
+							<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
 			</View>
 
+			{openNotifications && 
+				<Modal><NotificationsBox navigation={props.navigation} close={() => {
+					fetchTheNumNotifications()
+					setOpenNotifications(false)
+				}}/>
+				</Modal>
+			}
+			{openCart && <Modal><Cart showNotif={() => {
+				setOpencart(false)
+				setOpenNotifications(true)
+			}} close={() => {
+				getTheNumCartItems()
+				setOpencart(false)
+			}}/></Modal>}
+			{showAuth && (
+				<Modal transparent={true}>
+					<Userauth close={() => setShowauth(false)} done={(id, msg) => {
+						if (msg == "setup") {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: "setup" }]
+								})
+							);
+						} else {
+							socket.emit("socket/user/login", "user" + id, () => setUserid(id))
+						}
+
+						setShowauth(false)
+						initialize()
+					}} navigate={props.navigation.navigate}/>
+				</Modal>
+			)}
 			{showDisabledScreen && (
 				<Modal transparent={true}>
 					<View style={style.disabled}>
@@ -561,18 +562,19 @@ export default function main(props) {
 }
 
 const style = StyleSheet.create({
-	main: { backgroundColor: 'white' },
+	main: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	headers: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: 70, justifyContent: 'space-between', padding: 5, width: '100%' },
-	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: fsize(0.05), margin: 10, padding: 10, width: width - 100 },
-	notification: { flexDirection: 'row', marginRight: 10, marginVertical: 10 },
+	
+	headers: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
+	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: fsize(0.05), height: '80%', margin: 10, paddingLeft: 5, width: width - 100 },
+	notification: { flexDirection: 'row', marginVertical: 10 },
 	notificationHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
 
-	refresh: { alignItems: 'center', height: 53 },
-	refreshTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, marginVertical: 10, padding: 5, width: 100 },
+	refresh: { alignItems: 'center', flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
+	refreshTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 3, padding: 5, width: 100 },
 	refreshTouchHeader: { fontSize: fsize(0.04), textAlign: 'center' },
-	body: { flexDirection: 'column', height: screenHeight - 163, justifyContent: 'space-around' },
-
+	
+	body: { flexDirection: 'column', height: '70%', justifyContent: 'space-around' },
 	service: { marginBottom: 10 },
 	rowHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 10 },
 	seeMore: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
@@ -585,11 +587,11 @@ const style = StyleSheet.create({
 	locationMenuHeader: { fontSize: fsize(0.04), textAlign: 'center' },
 	locationHours: { fontWeight: 'bold', textAlign: 'center' },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	numCartItemsHeader: { fontWeight: 'bold' },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around' },
+	bottomNavHeader: { fontWeight: 'bold' },
+	numCartItemsHeader: {  },
 
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
 	disabledContainer: { alignItems: 'center', width: '100%' },

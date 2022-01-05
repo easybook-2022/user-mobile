@@ -9,7 +9,7 @@ import { getCode, verifyUser, resetPassword, registerUser, loginUser } from '../
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
-const { username, cellnumber, password, confirmPassword } = loginInfo
+const { cellnumber, password, confirmPassword } = loginInfo
 
 const fsize = p => {
 	return width * p
@@ -19,7 +19,7 @@ export default function userauth(props) {
 	const offsetPadding = Constants.statusBarHeight
 	const screenHeight = height - (offsetPadding * 2)
 
-	const [authInfo, setAuthinfo] = useState({ type: '', info: { cellnumber, password }, loading: false, verifycode: null, codesent: false, errormsg: "" })
+	const [authInfo, setAuthinfo] = useState({ type: '', info: { cellnumber, password, confirmPassword }, loading: false, verifycode: null, codesent: false, errormsg: "" })
 
 	const login = () => {
 		const { info } = authInfo

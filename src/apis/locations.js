@@ -29,13 +29,6 @@ export const makeReservation = data => {
 	)
 }
 
-export const getInfo = data => {
-	return axios.post(
-		`${url}/locations/get_info`,
-		data
-	)
-}
-
 export const getLocationHours = data => {
 	return axios.post(
 		`${url}/locations/get_hours`,

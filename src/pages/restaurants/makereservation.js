@@ -23,7 +23,6 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 const imageSize = 50
 
 const fsize = p => {
@@ -137,7 +136,7 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					const { name } = res.locationInfo
+					const { name } = res.info
 
 					setName(name)
 					getTheLocationHours()
@@ -654,32 +653,22 @@ export default function booktime(props) {
 
 	return (
 		<View style={style.makereservation}>
-			<View style={{ paddingVertical: offsetPadding }}>
+			{loaded ? 
 				<View style={style.box}>
-					<TouchableOpacity style={style.back} onPress={() => {
-						if (func.initialize) {
-							func.initialize()
-						}
-
-						props.navigation.goBack()
-					}}>
-						<Text style={style.backHeader}>Back</Text>
-					</TouchableOpacity>
-
-					<View style={style.headers}>
-						<Text style={style.boxHeader}>{!scheduleid ? 'Make a' : 'Remake the' } reservation {scheduleid ? 'for ' : 'at '}</Text>
-
-						{scheduleid && <Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' }}>{numSelectedDiners} {numSelectedDiners == 1 ? 'person' : 'people'}</Text>}
-						{scheduleid && <Text style={style.boxHeader}>at</Text>}
-
-						<Text style={style.serviceHeader}>{name}</Text>
-					</View>
-
-					{!loaded ? 
-						<ActivityIndicator size="small"/>
+					{scheduleid ? 
+						<View style={style.headers}>
+							<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>for</Text></Text>
+							<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' }}>{numSelectedDiners} {numSelectedDiners == 1 ? 'person' : 'people'} at</Text>
+						</View>
 						:
-						times.length > 0 ?
-							<ScrollView>
+						<View style={style.headers}>
+							<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>at</Text> {name}</Text>
+						</View>
+					}
+
+					<View style={style.body}>
+						{times.length > 0 ?
+							<ScrollView style={{ height: '100%' }}>
 								<View style={{ alignItems: 'center', marginBottom: 30, marginTop: 0 }}>
 									<View style={style.dinersBox}>
 										{!scheduleid && (
@@ -787,10 +776,11 @@ export default function booktime(props) {
 								</View>
 							</ScrollView>
 							:
-							<View style={style.noTime}>
+							<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
 								<Text style={style.noTimeHeader}>Currently closed</Text>
 							</View>
-					}
+						}
+					</View>
 
 					<View style={style.bottomNavs}>
 						<View style={style.bottomNavsRow}>
@@ -840,262 +830,265 @@ export default function booktime(props) {
 						</View>
 					</View>
 				</View>
+				:
+				<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
+					<ActivityIndicator color="black" size="large"/>
+				</View>
+			}
 
-				{confirmRequest.show && (
-					<Modal transparent={true}>
-						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
-							<View style={style.confirmBox}>
-								<View style={style.confirmContainer}>
-									{!confirmRequest.requested ? 
-										<>
-											{confirmRequest.oldtime == 0 ? 
-												<Text style={style.confirmHeader}>
-													<Text style={{ fontFamily: 'appFont' }}>{!scheduleid ? 'Request' : 'Re-request'} a reservation for {'\n'}</Text>
-													{numSelectedDiners > 0 ? 
-														" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
-														: 
-														" yourself"
-													}
-													<Text style={{ fontFamily: 'appFont' }}>{'\n\nat ' + confirmRequest.service + '\n'}</Text>
-													<Text style={{ fontFamily: 'appFont' }}>{'\n' + displayTime(confirmRequest.time)}</Text>
-												</Text>
-												:
-												<Text style={style.confirmHeader}>
-													<Text style={{ fontFamily: 'appFont' }}>You already requested a reservation for {'\n'}</Text>
-													{numSelectedDiners > 0 ? 
-														" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
-														: 
-														" yourself"
-													}
-													<Text style={{ fontFamily: 'appFont' }}>{'\nat ' + confirmRequest.service + '\n'}</Text>
-													{displayTime(confirmRequest.oldtime) + '\n\n'}
-													<Text style={{ fontFamily: 'appFont' }}>Are you sure you want to change it to</Text>
-													{'\n' + displayTime(confirmRequest.time) + '\n'}
-												</Text>
-											}
+			{confirmRequest.show && (
+				<Modal transparent={true}>
+					<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
+						<View style={style.confirmBox}>
+							<View style={style.confirmContainer}>
+								{!confirmRequest.requested ? 
+									<>
+										{confirmRequest.oldtime == 0 ? 
+											<Text style={style.confirmHeader}>
+												<Text style={{ fontFamily: 'appFont' }}>{!scheduleid ? 'Request' : 'Re-request'} a reservation for {'\n'}</Text>
+												{numSelectedDiners > 0 ? 
+													" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
+													: 
+													" yourself"
+												}
+												<Text style={{ fontFamily: 'appFont' }}>{'\n\nat ' + confirmRequest.service + '\n'}</Text>
+												<Text style={{ fontFamily: 'appFont' }}>{'\n' + displayTime(confirmRequest.time)}</Text>
+											</Text>
+											:
+											<Text style={style.confirmHeader}>
+												<Text style={{ fontFamily: 'appFont' }}>You already requested a reservation for {'\n'}</Text>
+												{numSelectedDiners > 0 ? 
+													" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
+													: 
+													" yourself"
+												}
+												<Text style={{ fontFamily: 'appFont' }}>{'\nat ' + confirmRequest.service + '\n'}</Text>
+												{displayTime(confirmRequest.oldtime) + '\n\n'}
+												<Text style={{ fontFamily: 'appFont' }}>Are you sure you want to change it to</Text>
+												{'\n' + displayTime(confirmRequest.time) + '\n'}
+											</Text>
+										}
 
-											<View style={style.note}>
-												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirmrequest({...confirmRequest, note })} value={confirmRequest.note} autoCorrect={false} autoCapitalize="none"/>
-											</View>
+										<View style={style.note}>
+											<TextInput style={style.noteInput} multiline textAlignVertical="top" placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirmrequest({...confirmRequest, note })} value={confirmRequest.note} autoCorrect={false} autoCapitalize="none"/>
+										</View>
 
-											{confirmRequest.errormsg ? <Text style={style.errorMsg}>You already requested a reservation for this restaurant</Text> : null}
+										{confirmRequest.errormsg ? <Text style={style.errorMsg}>You already requested a reservation for this restaurant</Text> : null}
 
-											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-												<View style={style.confirmOptions}>
-													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })}>
-														<Text style={style.confirmOptionHeader}>No</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={style.confirmOption} onPress={() => makeTheReservation()}>
-														<Text style={style.confirmOptionHeader}>Yes</Text>
-													</TouchableOpacity>
-												</View>
-											</View>
-										</>
-										:
-										<>
-											<View style={style.requestedHeaders}>
-												<Text style={style.requestedHeader}>Reservation requested</Text>
-												<Text style={style.requestedHeader}>at</Text>
-												<Text style={style.requestedHeaderInfos}>
-													<Text style={style.requestedHeaderInfo}>{confirmRequest.service} {'\n'}</Text>
-													<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
-													<Text style={style.requestedHeaderInfo}>
-														{'\n'}for 
-														{numSelectedDiners > 0 ? 
-															" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
-															: 
-															" yourself"
-														}
-													</Text>
-												</Text>
-												<Text style={{ textAlign: 'center' }}>You will get notify by the restaurant in your notification very soon</Text>
-												<TouchableOpacity style={style.requestedClose} onPress={() => {
-													setConfirmrequest({ ...confirmRequest, show: false, requested: false })
-
-													if (func.initialize) {
-														func.initialize()
-													}
-
-													props.navigation.dispatch(
-														CommonActions.reset({
-															index: 0,
-															routes: [{ name: "main", params: { showNotif: true } }]
-														})
-													)
-												}}>
-													<Text style={style.requestedCloseHeader}>Ok</Text>
+										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+											<View style={style.confirmOptions}>
+												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })}>
+													<Text style={style.confirmOptionHeader}>No</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={style.confirmOption} onPress={() => makeTheReservation()}>
+													<Text style={style.confirmOptionHeader}>Yes</Text>
 												</TouchableOpacity>
 											</View>
-										</>
-									}
-								</View>
-							</View>
-						</TouchableWithoutFeedback>
-					</Modal>
-				)}
-				{openCart && <Modal><Cart navigation={props.navigation} close={() => {
-					getTheNumCartItems()
-					setOpencart(false)
-				}}/></Modal>}
-				{openList && (
-					<Modal>
-						<View style={style.dinersListBox}>
-							<View style={{ paddingVertical: offsetPadding }}>
-								<View style={style.dinersList}>
-									<TextInput style={style.dinerNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner(s) to add to reservation" onChangeText={(username) => getDinersList(username)} autoCorrect={false} autoCapitalize="none"/>
+										</View>
+									</>
+									:
+									<>
+										<View style={style.requestedHeaders}>
+											<Text style={style.requestedHeader}>Reservation requested</Text>
+											<Text style={style.requestedHeader}>at</Text>
+											<Text style={style.requestedHeaderInfos}>
+												<Text style={style.requestedHeaderInfo}>{confirmRequest.service} {'\n'}</Text>
+												<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)}</Text>
+												<Text style={style.requestedHeaderInfo}>
+													{'\n'}for 
+													{numSelectedDiners > 0 ? 
+														" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
+														: 
+														" yourself"
+													}
+												</Text>
+											</Text>
+											<Text style={{ textAlign: 'center' }}>You will get notify by the restaurant in your notification very soon</Text>
+											<TouchableOpacity style={style.requestedClose} onPress={() => {
+												setConfirmrequest({ ...confirmRequest, show: false, requested: false })
 
-									<View style={style.dinersListContainer}>
-										<View style={style.dinersListSearched}>
-											<Text style={style.dinersHeader}>{numDiners} Searched Diner(s)</Text>
-
-											<FlatList
-												data={diners}
-												renderItem={({ item, index }) => 
-													<View key={item.key} style={style.row}>
-														{item.row.map(diner => (
-															diner.username ? 
-																<TouchableOpacity key={diner.key} style={style.diner} onPress={() => selectDiner(diner.id)}>
-																	<View style={style.dinerProfileHolder}>
-																		<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
-																	</View>
-																	<Text style={style.dinerName}>{diner.username}</Text>
-																</TouchableOpacity>
-																:
-																<View key={diner.key} style={style.diner}></View>
-														))}
-													</View>
+												if (func.initialize) {
+													func.initialize()
 												}
-											/>
-										</View>
-									
-										<View style={style.dinersListSelected}>
-											{selectedDiners.length > 0 && (
-												<>
-													<Text style={style.selectedDinersHeader}>{numSelectedDiners} Selected Diner(s) to this reservation</Text>
 
-													<FlatList
-														data={selectedDiners}
-														renderItem={({ item, index }) => 
-															<View key={item.key} style={style.row}>
-																{item.row.map(diner => (
-																	diner.username ? 
-																		<View key={diner.key} style={style.diner}>
-																			{diner.id != userId ? 
-																				<TouchableOpacity style={style.dinerDelete} onPress={() => deselectDiner(diner.id)}>
-																					<AntDesign name="closecircleo" size={15}/>
-																				</TouchableOpacity>
-																				:
-																				<View style={style.dinerDelete}></View>
-																			}
-																			<View style={style.dinerProfileHolder}>
-																				<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
-																			</View>
-																			<Text style={style.dinerName}>{diner.username}</Text>
-																		</View>
-																		:
-																		<View key={diner.key} style={style.diner}></View>
-																))}
-															</View>
-														}
-													/>
-												</>
-											)}
-										</View>
-									</View>
-
-									<View style={style.itemContainer}>
-										<View style={style.itemImageHolder}>
-											<Image style={{ height: imageSize, width: imageSize }} source={{ uri: logo_url + locationInfo.logo }}/>
-										</View>
-										<Text style={style.itemName}>{locationInfo.name}</Text>
-									</View>
-
-									<Text style={style.errorMsg}>{errorMsg}</Text>
-
-									<View style={{ alignItems: 'center' }}>
-										<View style={style.actions}>
-											<TouchableOpacity style={style.action} onPress={() => finish()}>
-												<Text style={style.actionHeader}>Finish</Text>
+												props.navigation.dispatch(
+													CommonActions.reset({
+														index: 0,
+														routes: [{ name: "main", params: { showNotif: true } }]
+													})
+												)
+											}}>
+												<Text style={style.requestedCloseHeader}>Ok</Text>
 											</TouchableOpacity>
 										</View>
-									</View>
-								</View>
+									</>
+								}
 							</View>
 						</View>
-					</Modal>
-				)}
-				{showPaymentRequired && (
-					<Modal transparent={true}>
+					</TouchableWithoutFeedback>
+				</Modal>
+			)}
+			{openCart && <Modal><Cart navigation={props.navigation} close={() => {
+				getTheNumCartItems()
+				setOpencart(false)
+			}}/></Modal>}
+			{openList && (
+				<Modal>
+					<View style={style.dinersListBox}>
 						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.cardRequiredBox}>
-								<View style={style.cardRequiredContainer}>
-									<Text style={style.cardRequiredHeader}>
-										You need to provide a payment method to request
-										a reservation
-									</Text>
+							<View style={style.dinersList}>
+								<TextInput style={style.dinerNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search diner(s) to add to reservation" onChangeText={(username) => getDinersList(username)} autoCorrect={false} autoCapitalize="none"/>
 
-									<View style={style.cardRequiredActions}>
-										<TouchableOpacity style={style.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
-											<Text style={style.cardRequiredActionHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.cardRequiredAction} onPress={() => {
-											setShowpaymentrequired(false)
-											props.navigation.navigate("account", { required: "card" })
-										}}>
-											<Text style={style.cardRequiredActionHeader}>Ok</Text>
+								<View style={style.dinersListContainer}>
+									<View style={style.dinersListSearched}>
+										<Text style={style.dinersHeader}>{numDiners} Searched Diner(s)</Text>
+
+										<FlatList
+											data={diners}
+											renderItem={({ item, index }) => 
+												<View key={item.key} style={style.row}>
+													{item.row.map(diner => (
+														diner.username ? 
+															<TouchableOpacity key={diner.key} style={style.diner} onPress={() => selectDiner(diner.id)}>
+																<View style={style.dinerProfileHolder}>
+																	<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
+																</View>
+																<Text style={style.dinerName}>{diner.username}</Text>
+															</TouchableOpacity>
+															:
+															<View key={diner.key} style={style.diner}></View>
+													))}
+												</View>
+											}
+										/>
+									</View>
+								
+									<View style={style.dinersListSelected}>
+										{selectedDiners.length > 0 && (
+											<>
+												<Text style={style.selectedDinersHeader}>{numSelectedDiners} Selected Diner(s) to this reservation</Text>
+
+												<FlatList
+													data={selectedDiners}
+													renderItem={({ item, index }) => 
+														<View key={item.key} style={style.row}>
+															{item.row.map(diner => (
+																diner.username ? 
+																	<View key={diner.key} style={style.diner}>
+																		{diner.id != userId ? 
+																			<TouchableOpacity style={style.dinerDelete} onPress={() => deselectDiner(diner.id)}>
+																				<AntDesign name="closecircleo" size={15}/>
+																			</TouchableOpacity>
+																			:
+																			<View style={style.dinerDelete}></View>
+																		}
+																		<View style={style.dinerProfileHolder}>
+																			<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
+																		</View>
+																		<Text style={style.dinerName}>{diner.username}</Text>
+																	</View>
+																	:
+																	<View key={diner.key} style={style.diner}></View>
+															))}
+														</View>
+													}
+												/>
+											</>
+										)}
+									</View>
+								</View>
+
+								<View style={style.itemContainer}>
+									<View style={style.itemImageHolder}>
+										<Image style={{ height: imageSize, width: imageSize }} source={{ uri: logo_url + locationInfo.logo }}/>
+									</View>
+									<Text style={style.itemName}>{locationInfo.name}</Text>
+								</View>
+
+								<View style={{ alignItems: 'center' }}>
+									<Text style={style.errorMsg}>{errorMsg}</Text>
+
+									<View style={style.actions}>
+										<TouchableOpacity style={style.action} onPress={() => finish()}>
+											<Text style={style.actionHeader}>Finish</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
-				{showAuth.show && (
-					<Modal transparent={true}>
-						<Userauth close={() => setShowauth({ show: false, action: "" })} done={(id, msg) => {
-							if (msg == "setup") {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: "setup" }]
-									})
-								);
-							} else {
-								socket.emit("socket/user/login", "user" + id, () => {
-									setUserid(id)
+					</View>
+				</Modal>
+			)}
+			{showPaymentRequired && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertical: offsetPadding }}>
+						<View style={style.cardRequiredBox}>
+							<View style={style.cardRequiredContainer}>
+								<Text style={style.cardRequiredHeader}>
+									You need to provide a payment method to request
+									a reservation
+								</Text>
 
-									if (showAuth.action == "makereservation") {
-										makeTheReservation()
-									} else if (showAuth.action == "opendinerslist") {
-										openDinersList()
-									} else {
-										if (scheduleid) {
-											getTheReservationInfo()
-										} else {
-											getTheUserInfo()
-										}
-									}
-
-									setShowauth({ show: false, action: "" })
+								<View style={style.cardRequiredActions}>
+									<TouchableOpacity style={style.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
+										<Text style={style.cardRequiredActionHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.cardRequiredAction} onPress={() => {
+										setShowpaymentrequired(false)
+										props.navigation.navigate("account", { required: "card" })
+									}}>
+										<Text style={style.cardRequiredActionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showAuth.show && (
+				<Modal transparent={true}>
+					<Userauth close={() => setShowauth({ show: false, action: "" })} done={(id, msg) => {
+						if (msg == "setup") {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: "setup" }]
 								})
-							}
-						}} navigate={props.navigation.navigate}/>
-					</Modal>
-				)}
-			</View>
+							);
+						} else {
+							socket.emit("socket/user/login", "user" + id, () => {
+								setUserid(id)
+
+								if (showAuth.action == "makereservation") {
+									makeTheReservation()
+								} else if (showAuth.action == "opendinerslist") {
+									openDinersList()
+								} else {
+									if (scheduleid) {
+										getTheReservationInfo()
+									} else {
+										getTheUserInfo()
+									}
+								}
+
+								setShowauth({ show: false, action: "" })
+							})
+						}
+					}} navigate={props.navigation.navigate}/>
+				</Modal>
+			)}
 		</View>
 	)
 }
 
 const style = StyleSheet.create({
-	makereservation: { backgroundColor: 'white' },
+	makereservation: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
-	headers: { height: 100, marginVertical: 10 },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
+	headers: { height: '10%' },
 	serviceHeader: { fontSize: fsize(0.06), fontWeight: 'bold', textAlign: 'center' },
+
+	body: { height: '80%' },
 
 	dinersBox: { alignItems: 'center' },
 	dinersAdd: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
@@ -1137,10 +1130,9 @@ const style = StyleSheet.create({
 	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
 	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
 
-	noTime: { flexDirection: 'column', height: screenHeight - 191, justifyContent: 'space-around', width: '100%' },
 	noTimeHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
@@ -1165,9 +1157,9 @@ const style = StyleSheet.create({
 
 	// friends list
 	dinersListBox: { backgroundColor: 'white' },
-	dinersList: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: screenHeight, justifyContent: 'space-between', width: '100%' },
+	dinersList: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	dinerNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, margin: 10, padding: 10 },
-	dinersListContainer: { flexDirection: 'column', height: screenHeight - 180, justifyContent: 'space-between' },
+	dinersListContainer: { flexDirection: 'column', height: '60%', justifyContent: 'space-between' },
 	dinersListSearched: { height: '50%', overflow: 'hidden' },
 	dinersHeader: { fontWeight: 'bold', textAlign: 'center' },
 	dinersListSelected: { height: '50%', overflow: 'hidden' },
@@ -1194,5 +1186,5 @@ const style = StyleSheet.create({
 	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	cardRequiredActionHeader: { },
 
-	errorMsg: { color: 'darkred', marginVertical: 0, textAlign: 'center' },
+	errorMsg: { color: 'darkred', textAlign: 'center' },
 })

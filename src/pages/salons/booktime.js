@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { 
-	ActivityIndicator, Dimensions, ScrollView, View, FlatList, Text, Image, TextInput, 
+	ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TextInput, 
 	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { socket, url, logo_url, displayTime } from '../../../assets/info'
-import { getTrialInfo } from '../../apis/users'
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours } from '../../apis/locations'
 import { getWorkers, getWorkerInfo } from '../../apis/owners'
@@ -38,8 +37,8 @@ export default function booktime(props) {
 	const func = props.route.params
 	const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
-	const [name, setName] = useState('')
-	const [trialStatus, setTrialstatus] = useState('')
+	const [name, setName] = useState()
+	const [trialStatus, setTrialstatus] = useState()
 	const [scheduledTimes, setScheduledtimes] = useState([])
 	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
 	const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
@@ -77,7 +76,7 @@ export default function booktime(props) {
 	    ]}
 	]})
 	const [times, setTimes] = useState([])
-	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ show: false, worker: null, workers: [] })
+	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ show: false, worker: null, workers: [], numWorkers: 0 })
 	const [loaded, setLoaded] = useState(false)
 	const [showPaymentrequired, setShowpaymentrequired] = useState(false)
 	const [showTrialover, setShowtrialover] = useState(false)
@@ -134,38 +133,6 @@ export default function booktime(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
-				} else {
-					alert("an error has occurred in server")
-				}
-			})
-	}
-	const getTheTrialInfo = async() => {
-		const userid = await AsyncStorage.getItem("userid")
-		const time = Date.now()
-		const data = { userid, time }
-
-		getTrialInfo(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const { msg } = res
-
-					if (msg == "trialover") {
-
-					} else {
-
-					}
-
-					setTrialstatus()
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-
 				} else {
 					alert("an error has occurred in server")
 				}
@@ -260,7 +227,30 @@ export default function booktime(props) {
 			})
 	}
 	const getTheWorkers = async() => {
-		getWorkers(locationid)
+		let date = new Date()
+		let currDate = date.getDate()
+		let day = date.getDay()
+		let month = date.getMonth() + 1
+		let year = date.getFullYear()
+
+		let hour = date.getHours()
+		let minute = date.getMinutes()
+		let second = date.getSeconds()
+		let dateStr = "", timeStr = ""
+
+		currDate = currDate < 10 ? '0' + currDate : currDate
+		month = month < 10 ? '0' + month : month
+
+		hour = hour < 10 ? '0' + hour : hour
+		minute = minute < 10 ? '0' + minute : minute
+		second = second < 10 ? '0' + second : second
+
+		dateStr = currDate + "." + month + "." + year + " "
+		timeStr = hour + ":" + minute + ":" + second
+
+		const data = { locationid, dateStr, timeStr, day }
+
+		getWorkers(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -268,7 +258,14 @@ export default function booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setSelectedworkerinfo({ show: true, worker: null, workers: res.owners })
+					setSelectedworkerinfo({ show: true, worker: null, workers: res.owners, numWorkers: res.numWorkers })
+				}
+			})
+			.catch((err) => {
+				if (err.response && err.response.status == 400) {
+
+				} else {
+
 				}
 			})
 	}
@@ -497,367 +494,354 @@ export default function booktime(props) {
 
 		getTheNumCartItems()
 		getTheServiceInfo()
-		getTheTrialInfo()
 
 		return () => isMounted.current = false
 	}, [])
 
 	return (
 		<View style={style.booktime}>
-			<View style={{ paddingVertical: offsetPadding }}>
-				<View style={style.box}>
-					<TouchableOpacity style={style.back} onPress={() => {
-						if (func.initialize) {
-							func.initialize()
-						}
-						
-						props.navigation.goBack()
-					}}>
-						<Text style={style.backHeader}>Back</Text>
-					</TouchableOpacity>
+			<View style={style.box}>
+				<View style={style.headers}>
+					<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>for</Text> {name}</Text>
+				</View>
 
-					<View style={style.headers}>
-						<Text style={style.boxHeader}>{!scheduleid ? 'Book' : 'Re-book'} for</Text>
-						<Text style={style.serviceHeader}>{name}</Text>
-					</View>
-
-					{!loaded ? 
+				{!loaded ? 
+					<View style={{ height: '80%' }}>
 						<ActivityIndicator size="small"/>
-						:
-						times.length > 0 ? 
-							<ScrollView style={{ height: screenHeight - 191 }}>
-								<View style={style.chooseWorker}>
-									<Text style={style.timesHeader}>Pick a worker</Text>
-									<Text style={style.chooseWorkerHeader}>(Optional, random by default)</Text>
+					</View>
+					:
+					times.length > 0 ? 
+						<ScrollView style={{ height: '80%' }}>
+							<View style={style.chooseWorker}>
+								<Text style={style.timesHeader}>Pick a worker</Text>
+								<Text style={style.chooseWorkerHeader}>(Optional, random by default)</Text>
 
-									<View style={style.chooseWorkerActions}>
-										{selectedWorkerinfo.worker != null && (
-											<TouchableOpacity style={style.chooseWorkerAction} onPress={() => {
-												setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
-												selectDate(selectedDateinfo.date)
-											}}>
-												<Text style={style.chooseWorkerActionHeader}>Cancel Worker</Text>
-											</TouchableOpacity>
-										)}
-											
-										<TouchableOpacity style={style.chooseWorkerAction} onPress={() => getTheWorkers()}>
-											<Text style={style.chooseWorkerActionHeader}>{selectedWorkerinfo.worker == null ? 'Choose your worker' : 'Choose a different worker'}</Text>
-										</TouchableOpacity>
-									</View>
-										
-
+								<View style={style.chooseWorkerActions}>
 									{selectedWorkerinfo.worker != null && (
-										<View style={style.selectedWorker}>
-											<Image style={style.selectedWorkerImage} source={{ uri: logo_url + selectedWorkerinfo.worker.profile }}/>
-											<Text style={style.selectedWorkerHeader}>{selectedWorkerinfo.worker.username}</Text>
-										</View>
+										<TouchableOpacity style={style.chooseWorkerAction} onPress={() => {
+											setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
+											selectDate(selectedDateinfo.date)
+										}}>
+											<Text style={style.chooseWorkerActionHeader}>Cancel Worker</Text>
+										</TouchableOpacity>
 									)}
+										
+									<TouchableOpacity style={style.chooseWorkerAction} onPress={() => getTheWorkers()}>
+										<Text style={style.chooseWorkerActionHeader}>{selectedWorkerinfo.worker == null ? 'Choose your worker' : 'Choose a different worker'}</Text>
+									</TouchableOpacity>
+								</View>
+									
+
+								{selectedWorkerinfo.worker != null && (
+									<View style={style.selectedWorker}>
+										<Image style={style.selectedWorkerImage} source={{ uri: logo_url + selectedWorkerinfo.worker.profile }}/>
+										<Text style={style.selectedWorkerHeader}>{selectedWorkerinfo.worker.username}</Text>
+									</View>
+								)}
+							</View>
+
+							<View style={style.dateHeaders}>
+								<Text style={style.timesHeader}>Pick a date</Text>
+								
+								<View style={style.date}>
+									<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
+									<Text style={style.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
+									<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
 								</View>
 
-								<View style={style.dateHeaders}>
-									<Text style={style.timesHeader}>Pick a date</Text>
-									
-									<View style={style.date}>
-										<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
-										<Text style={style.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
-										<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
+								<View style={style.dateDays}>
+									<View style={style.dateDaysRow}>
+										{days.map((day, index) => (
+											<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
+												<Text style={style.dateDayTouchDisabledHeader}>{day.substr(0, 3)}</Text>
+											</TouchableOpacity>
+										))}
 									</View>
-
-									<View style={style.dateDays}>
-										<View style={style.dateDaysRow}>
-											{days.map((day, index) => (
-												<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
-													<Text style={style.dateDayTouchDisabledHeader}>{day.substr(0, 3)}</Text>
-												</TouchableOpacity>
-											))}
-										</View>
-										{calendar.data.map((info, rowindex) => (
-											<View key={info.key} style={style.dateDaysRow}>
-												{info.row.map((day, dayindex) => (
-													day.num > 0 ?
-														day.passed ? 
-															<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
-																<Text style={style.dateDayTouchPassedHeader}>{day.num}</Text>
+									{calendar.data.map((info, rowindex) => (
+										<View key={info.key} style={style.dateDaysRow}>
+											{info.row.map((day, dayindex) => (
+												day.num > 0 ?
+													day.passed ? 
+														<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
+															<Text style={style.dateDayTouchPassedHeader}>{day.num}</Text>
+														</TouchableOpacity>
+														:
+														selectedDateinfo.date == day.num ?
+															<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
+																<Text style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
 															</TouchableOpacity>
 															:
-															selectedDateinfo.date == day.num ?
-																<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
-																	<Text style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
-																</TouchableOpacity>
-																:
-																<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
-																	<Text style={style.dateDayTouchHeader}>{day.num}</Text>
-																</TouchableOpacity>
-														:
-														<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={style.dateDayTouchDisabled}></TouchableOpacity>
-												))}
-											</View>
-										))}
-									</View>
+															<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
+																<Text style={style.dateDayTouchHeader}>{day.num}</Text>
+															</TouchableOpacity>
+													:
+													<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={style.dateDayTouchDisabled}></TouchableOpacity>
+											))}
+										</View>
+									))}
 								</View>
-								<Text style={style.timesHeader}>Pick a time</Text>
-								<View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
-									<View style={style.times}>
-										{times.map(info => (
-											<View key={info.key}>
-												{(!info.timetaken && !info.timepassed && info.working) && (
-													<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-														<Text style={style.unselectHeader}>{info.header}</Text>
-													</TouchableOpacity>
-												)}
-
-												{(info.timetaken || info.timepassed || !info.working) && (
-													info.timetaken ? 
-														<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-															<Text style={style.selectedHeader}>{info.header}</Text>
-														</TouchableOpacity>
-														:
-														<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-															<Text style={style.selectedPassedHeader}>{info.header}</Text>
-														</TouchableOpacity>
-												)}
-											</View>
-										))}
-									</View>
-								</View>
-							</ScrollView>
-							:
-							<View style={style.noTime}>
-								<Text style={style.noTimeHeader}>Currently closed</Text>
 							</View>
-					}
+							<Text style={style.timesHeader}>Pick a time</Text>
+							<View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
+								<View style={style.times}>
+									{times.map(info => (
+										<View key={info.key}>
+											{(!info.timetaken && !info.timepassed && info.working) && (
+												<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
+													<Text style={style.unselectHeader}>{info.header}</Text>
+												</TouchableOpacity>
+											)}
 
-					<View style={style.bottomNavs}>
-						<View style={style.bottomNavsRow}>
-							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-									<Entypo name="shopping-cart" size={30}/>
-									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
-								</TouchableOpacity>
-							)}
+											{(info.timetaken || info.timepassed || !info.working) && (
+												info.timetaken ? 
+													<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
+														<Text style={style.selectedHeader}>{info.header}</Text>
+													</TouchableOpacity>
+													:
+													<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
+														<Text style={style.selectedPassedHeader}>{info.header}</Text>
+													</TouchableOpacity>
+											)}
+										</View>
+									))}
+								</View>
+							</View>
+						</ScrollView>
+						:
+						<View style={style.noTime}>
+							<Text style={style.noTimeHeader}>Currently closed</Text>
+						</View>
+				}
 
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 0,
-										routes: [{ name: "main" }]
-									})
-								)
-							}}>
-								<Entypo name="home" size={30}/>
+				<View style={style.bottomNavs}>
+					<View style={style.bottomNavsRow}>
+						{userId && (
+							<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+								<Entypo name="shopping-cart" size={30}/>
+								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
 							</TouchableOpacity>
+						)}
 
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
-								if (userId) {
-									AsyncStorage.clear()
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 0,
+									routes: [{ name: "main" }]
+								})
+							)
+						}}>
+							<Entypo name="home" size={30}/>
+						</TouchableOpacity>
 
-									setUserid(null)
-								} else {
-									setShowauth(true)
+						<TouchableOpacity style={style.bottomNav} onPress={() => {
+							if (userId) {
+								AsyncStorage.clear()
+
+								setUserid(null)
+							} else {
+								setShowauth(true)
+							}
+						}}>
+							<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</View>
+
+			{confirmRequest.show && (
+				<Modal transparent={true}>
+					<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
+						<View style={style.confirmBox}>
+							<View style={style.confirmContainer}>
+								{!confirmRequest.requested ? 
+									<>
+										{confirmRequest.oldtime == 0 ? 
+											<Text style={style.confirmHeader}>
+												<Text style={{ fontFamily: 'appFont' }}>Request an appointment for</Text>
+												{'\n' + confirmRequest.service + '\n'}
+												{displayTime(confirmRequest.time) + '\n'}
+											</Text>
+											:
+											<Text style={style.confirmHeader}>
+												<Text style={{ fontFamily: 'appFont' }}>You already requested an appointment for</Text>
+												{'\n' + confirmRequest.service + '\n'}
+												{displayTime(confirmRequest.oldtime) + '\n\n'}
+												<Text style={{ fontFamily: 'appFont' }}>Are you sure you want to change it to</Text>
+												{'\n' + displayTime(confirmRequest.time) + '\n'}
+											</Text>
+										}
+
+										<View style={style.note}>
+											<TextInput 
+												style={style.noteInput} multiline textAlignVertical="top" 
+												placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" 
+												maxLength={100} onChangeText={(note) => setConfirmrequest({...confirmRequest, note })} autoCorrect={false}
+											/>
+										</View>
+
+										{confirmRequest.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
+
+										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+											<View style={style.confirmOptions}>
+												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })}>
+													<Text style={style.confirmOptionHeader}>No</Text>
+												</TouchableOpacity>
+												<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
+													<Text style={style.confirmOptionHeader}>Yes</Text>
+												</TouchableOpacity>
+											</View>
+										</View>
+									</>
+									:
+									<>
+										<View style={style.requestedHeaders}>
+											<Text style={style.requestedHeader}>Appointment requested for{'\n'}</Text>
+											<Text style={style.requestedHeaderInfo}>{confirmRequest.service} {'\n'}</Text>
+											<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)} {'\n'}</Text>
+											<Text style={style.requestedHeaderInfo}>You will get notify by the salon in your notification very soon</Text>
+											<TouchableOpacity style={style.requestedClose} onPress={() => {
+												setConfirmrequest({ ...confirmRequest, show: false, requested: false })
+												
+												if (func.initialize) {
+													func.initialize()
+												}
+
+												props.navigation.dispatch(
+													CommonActions.reset({
+														index: 0,
+														routes: [{ name: "main", params: { showNotif: true } }]
+													})
+												)
+											}}>
+												<Text style={style.requestedCloseHeader}>Ok</Text>
+											</TouchableOpacity>
+										</View>
+									</>
 								}
-							}}>
-								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+							</View>
+						</View>
+					</TouchableWithoutFeedback>
+				</Modal>
+			)}
+			{selectedWorkerinfo.show && (
+				<Modal transparent={true}>
+					<View style={style.workersContainer}>
+						<View style={style.workersBox}>
+							<Text style={style.workersHeader}>Book the worker you want</Text>
+
+							<View style={style.workersList}>
+								<FlatList
+									data={selectedWorkerinfo.workers}
+									renderItem={({ item, index }) => 
+										<View key={item.key} style={style.workersRow}>
+											{item.row.map(info => (
+												info.id ? 
+													<TouchableOpacity key={info.key} style={!info.selected ? style.worker : style.workerDisabled} onPress={() => selectWorker(info.id)}>
+														<View style={style.workerProfile}>
+															<Image source={{ uri: logo_url + info.profile }} style={{ height: workerImage, width: workerImage }}/>
+														</View>
+														<Text style={style.workerHeader}>{info.username}</Text>
+													</TouchableOpacity>
+													:
+													<View key={info.key} style={style.worker}></View>
+											))}
+										</View>
+									}
+								/>
+							</View>
+
+							<TouchableOpacity style={style.workersClose} onPress={() => setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, workers: [] })}>
+								<Text style={style.workersCloseHeader}>Cancel</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
-				</View>
+				</Modal>
+			)}
+			{openCart && <Modal><Cart navigation={props.navigation} close={() => {
+				getTheNumCartItems()
+				setOpencart(false)
+			}}/></Modal>}
+			{showPaymentrequired && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertical: offsetPadding }}>
+						<View style={style.requiredBox}>
+							<View style={style.requiredContainer}>
+								<Text style={style.requiredHeader}>
+									You need to provide a payment method to book
+									an appointment
+								</Text>
 
-				{confirmRequest.show && (
-					<Modal transparent={true}>
-						<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
-							<View style={style.confirmBox}>
-								<View style={style.confirmContainer}>
-									{!confirmRequest.requested ? 
-										<>
-											{confirmRequest.oldtime == 0 ? 
-												<Text style={style.confirmHeader}>
-													<Text style={{ fontFamily: 'appFont' }}>Request an appointment for</Text>
-													{'\n' + confirmRequest.service + '\n'}
-													{displayTime(confirmRequest.time) + '\n'}
-												</Text>
-												:
-												<Text style={style.confirmHeader}>
-													<Text style={{ fontFamily: 'appFont' }}>You already requested an appointment for</Text>
-													{'\n' + confirmRequest.service + '\n'}
-													{displayTime(confirmRequest.oldtime) + '\n\n'}
-													<Text style={{ fontFamily: 'appFont' }}>Are you sure you want to change it to</Text>
-													{'\n' + displayTime(confirmRequest.time) + '\n'}
-												</Text>
-											}
-
-											<View style={style.note}>
-												<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirmrequest({...confirmRequest, note })} autoCorrect={false}/>
-											</View>
-
-											{confirmRequest.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
-
-											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-												<View style={style.confirmOptions}>
-													<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })}>
-														<Text style={style.confirmOptionHeader}>No</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
-														<Text style={style.confirmOptionHeader}>Yes</Text>
-													</TouchableOpacity>
-												</View>
-											</View>
-										</>
-										:
-										<>
-											<View style={style.requestedHeaders}>
-												<Text style={style.requestedHeader}>Appointment requested for{'\n'}</Text>
-												<Text style={style.requestedHeaderInfo}>{confirmRequest.service} {'\n'}</Text>
-												<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)} {'\n'}</Text>
-												<Text style={style.requestedHeaderInfo}>You will get notify by the salon in your notification very soon</Text>
-												<TouchableOpacity style={style.requestedClose} onPress={() => {
-													setConfirmrequest({ ...confirmRequest, show: false, requested: false })
-													
-													if (func.initialize) {
-														func.initialize()
-													}
-
-													props.navigation.dispatch(
-														CommonActions.reset({
-															index: 0,
-															routes: [{ name: "main", params: { showNotif: true } }]
-														})
-													)
-												}}>
-													<Text style={style.requestedCloseHeader}>Ok</Text>
-												</TouchableOpacity>
-											</View>
-										</>
-									}
-								</View>
-							</View>
-						</TouchableWithoutFeedback>
-					</Modal>
-				)}
-				{selectedWorkerinfo.show && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.workersContainer}>
-								<View style={style.workersBox}>
-									<Text style={style.workersHeader}>Book the worker you want</Text>
-
-									<View style={style.workersList}>
-										<FlatList
-											data={selectedWorkerinfo.workers}
-											renderItem={({ item, index }) => 
-												<View key={item.key} style={style.workersRow}>
-													{item.row.map(info => (
-														info.id ? 
-															<TouchableOpacity key={info.key} style={!info.selected ? style.worker : style.workerDisabled} onPress={() => selectWorker(info.id)}>
-																<View style={style.workerProfile}>
-																	<Image source={{ uri: logo_url + info.profile }} style={{ height: workerImage, width: workerImage }}/>
-																</View>
-																<Text style={style.workerHeader}>{info.username}</Text>
-															</TouchableOpacity>
-															:
-															<View key={info.key} style={style.worker}></View>
-													))}
-												</View>
-											}
-										/>
-									</View>
-
-									<TouchableOpacity style={style.workersClose} onPress={() => setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, workers: [] })}>
-										<Text style={style.workersCloseHeader}>Cancel</Text>
+								<View style={style.requiredActions}>
+									<TouchableOpacity style={style.requiredAction} onPress={() => setShowpaymentrequired(false)}>
+										<Text style={style.requiredActionHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.requiredAction} onPress={() => {
+										setShowpaymentrequired(false)
+										props.navigation.navigate("account", { required: "card" })
+									}}>
+										<Text style={style.requiredActionHeader}>Ok</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
-				{openCart && <Modal><Cart navigation={props.navigation} close={() => {
-					getTheNumCartItems()
-					setOpencart(false)
-				}}/></Modal>}
-				{showPaymentrequired && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.requiredBox}>
-								<View style={style.requiredContainer}>
-									<Text style={style.requiredHeader}>
-										You need to provide a payment method to book
-										an appointment
-									</Text>
+					</View>
+				</Modal>
+			)}
+			{showTrialover && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertical: offsetPadding }}>
+						<View style={style.requiredBox}>
+							<View style={style.requiredContainer}>
+								<Text style={style.requiredHeader}>
+									Your 30 days trial period is up. A cost of $0.50
+									will be charged from you if any of your future appointment
+									is accepted by a salon
+								</Text>
 
-									<View style={style.requiredActions}>
-										<TouchableOpacity style={style.requiredAction} onPress={() => setShowpaymentrequired(false)}>
-											<Text style={style.requiredActionHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.requiredAction} onPress={() => {
-											setShowpaymentrequired(false)
-											props.navigation.navigate("account", { required: "card" })
-										}}>
-											<Text style={style.requiredActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
+								<View style={style.requiredActions}>
+									<TouchableOpacity style={style.requiredAction} onPress={() => setShowtrialover(false)}>
+										<Text style={style.requiredActionHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.requiredAction} onPress={() => {
+										setShowpaymentrequired(true)
+										setShowtrialover(false)
+									}}>
+										<Text style={style.requiredActionHeader}>Ok</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
-				{showTrialover && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.requiredBox}>
-								<View style={style.requiredContainer}>
-									<Text style={style.requiredHeader}>
-										Your 30 days trial period is up. A cost of $0.50
-										will be charged from you if any of your future appointment
-										is accepted by a salon
-									</Text>
+					</View>
+				</Modal>
+			)}
+			{showAuth && (
+				<Modal transparent={true}>
+					<Userauth close={() => setShowauth(false)} done={(id, msg) => {
+						if (msg == "setup") {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: "setup" }]
+								})
+							);
+						} else {
+							socket.emit("socket/user/login", "user" + id, () => setUserid(id))
+						}
 
-									<View style={style.requiredActions}>
-										<TouchableOpacity style={style.requiredAction} onPress={() => setShowtrialover(false)}>
-											<Text style={style.requiredActionHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.requiredAction} onPress={() => {
-											setShowpaymentrequired(true)
-											setShowtrialover(false)
-										}}>
-											<Text style={style.requiredActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-				{showAuth && (
-					<Modal transparent={true}>
-						<Userauth close={() => setShowauth(false)} done={(id, msg) => {
-							if (msg == "setup") {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: "setup" }]
-									})
-								);
-							} else {
-								socket.emit("socket/user/login", "user" + id, () => setUserid(id))
-							}
-
-							setShowauth(false)
-						}} navigate={props.navigation.navigate}/>
-					</Modal>
-				)}
-			</View>
+						setShowauth(false)
+					}} navigate={props.navigation.navigate}/>
+				</Modal>
+			)}
 		</View>
 	)
 }
 
 const style = StyleSheet.create({
-	booktime: { backgroundColor: 'white' },
+	booktime: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
-	headers: { marginBottom: 10 },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
-	serviceHeader: { fontSize: fsize(0.06), fontWeight: 'bold', textAlign: 'center' },
+	headers: { height: '10%' },
+	serviceHeader: { fontSize: fsize(0.08), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 
 	chooseWorker: { alignItems: 'center', marginBottom: 50, marginTop: 50 },
 	chooseWorkerHeader: { fontSize: fsize(0.05) },
@@ -900,10 +884,10 @@ const style = StyleSheet.create({
 	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
 	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
 
-	noTime: { flexDirection: 'column', height: screenHeight - 191, justifyContent: 'space-around', width: '100%' },
-	noTimeHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	noTime: { alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '100%' },
+	noTimeHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
@@ -925,7 +909,7 @@ const style = StyleSheet.create({
 	requestedHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
 	requestedHeaderInfo: { fontSize: fsize(0.05), textAlign: 'center' },
 
-	workersContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	workersContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	workersBox: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
 	workersHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), paddingVertical: 20, textAlign: 'center' },
 	workersRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },

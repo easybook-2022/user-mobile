@@ -7,7 +7,6 @@ import { getTransactions } from '../apis/transactions'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - offsetPadding
 
 const fsize = p => {
 	return width * p
@@ -78,104 +77,91 @@ export default function recent(props) {
 
 	return (
 		<View style={style.recent}>
-			<View style={{ paddingVertical: offsetPadding }}>
-				<View style={style.box}>
-					<TouchableOpacity style={style.back} onPress={() => {
-						if (refetch) refetch()
-						props.navigation.goBack()
-					}}>
-						<Text style={style.backHeader}>Back</Text>
-					</TouchableOpacity>
-					<Text style={style.boxHeader}>Recent(s)</Text>
-					
-					{loaded ? 
-						items.length > 0 ?
-							<FlatList
-								showsVerticalScrollIndicator={false}
-								data={items}
-								renderItem={({ item, index }) => 
-									<View key={item.key} style={style.group}>
-										<Text style={style.dateHeader}>
-											{item.items[0].type == "service" ? 
-												<><Text style={{ fontWeight: 'bold' }}>Appointment on</Text> {displayDateStr(item.time)}</>
-												:
-												<><Text style={{ fontWeight: 'bold' }}>Purchased on</Text> {displayDateStr(item.time)}</>
-											}
-										</Text>
+			<View style={style.box}>
+				{loaded ? 
+					items.length > 0 ?
+						<FlatList
+							showsVerticalScrollIndicator={false}
+							data={items}
+							renderItem={({ item, index }) => 
+								<View key={item.key} style={style.group}>
+									<Text style={style.dateHeader}>
+										{item.items[0].type == "service" ? 
+											<><Text style={{ fontWeight: 'bold' }}>Appointment on</Text> {displayDateStr(item.time)}</>
+											:
+											<><Text style={{ fontWeight: 'bold' }}>Purchased on</Text> {displayDateStr(item.time)}</>
+										}
+									</Text>
 
-										{item.items.map(recent => (
-											<View style={style.item} key={recent.key}>
-												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-													<View style={{ alignItems: 'center' }}>
-														<Text style={style.itemName}>{recent.name}</Text>
-														<View style={style.itemImageHolder}>
-															<Image source={{ uri: logo_url + recent.image }} style={style.itemImage}/>
-														</View>
-													</View>
-													<View style={style.itemInfos}>
-														{recent.type == "product" && (
-															<>
-																{recent.options.map(option => (
-																	<Text key={option.key} style={style.itemInfo}>
-																		<Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> 
-																		{option.selected}
-																	</Text>
-																))}
-
-																{recent.others.map(other => (
-																	other.selected ? 
-																		<Text key={other.key} style={style.itemInfo}>
-																			<Text style={{ fontWeight: 'bold' }}>{other.name}:</Text>
-																			<Text>{other.input}</Text>
-																		</Text>
-																	: null
-																))}
-
-																{recent.sizes.map(size => (
-																	size.selected ? 
-																		<Text key={size.key} style={style.itemInfo}>
-																			<Text style={{ fontWeight: 'bold' }}>Size:</Text>
-																			<Text>{size.name}</Text>
-																		</Text>
-																	: null
-																))}
-															</>
-														)}	
-													</View>
-													<View>
-														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Service cost:</Text> ${recent.cost.toFixed(2)}</Text>
-														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${recent.fee.toFixed(2)}</Text>
-														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${recent.pst.toFixed(2)}</Text>
-														<Text style={[style.header, { marginBottom: 10 }]}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${recent.hst.toFixed(2)}</Text>
-														<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total:</Text> ${recent.total.toFixed(2)}</Text>
+									{item.items.map(recent => (
+										<View style={style.item} key={recent.key}>
+											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+												<View style={{ alignItems: 'center' }}>
+													<Text style={style.itemName}>{recent.name}</Text>
+													<View style={style.itemImageHolder}>
+														<Image source={{ uri: logo_url + recent.image }} style={style.itemImage}/>
 													</View>
 												</View>
+												<View style={style.itemInfos}>
+													{recent.type == "product" && (
+														<>
+															{recent.options.map(option => (
+																<Text key={option.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>{option.header}:</Text> 
+																	{option.selected}
+																</Text>
+															))}
+
+															{recent.others.map(other => (
+																other.selected ? 
+																	<Text key={other.key} style={style.itemInfo}>
+																		<Text style={{ fontWeight: 'bold' }}>{other.name}:</Text>
+																		<Text>{other.input}</Text>
+																	</Text>
+																: null
+															))}
+
+															{recent.sizes.map(size => (
+																size.selected ? 
+																	<Text key={size.key} style={style.itemInfo}>
+																		<Text style={{ fontWeight: 'bold' }}>Size:</Text>
+																		<Text>{size.name}</Text>
+																	</Text>
+																: null
+															))}
+														</>
+													)}	
+												</View>
+												<View>
+													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Service cost:</Text> ${recent.cost.toFixed(2)}</Text>
+													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${recent.fee.toFixed(2)}</Text>
+													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${recent.pst.toFixed(2)}</Text>
+													<Text style={[style.header, { marginBottom: 10 }]}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${recent.hst.toFixed(2)}</Text>
+													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total:</Text> ${recent.total.toFixed(2)}</Text>
+												</View>
 											</View>
-										))}
-									</View>
-								}
-							/>
-							:
-							<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
-								<Text style={{ fontSize: fsize(0.05) }}>You don't have any recents</Text>
-							</View>
+										</View>
+									))}
+								</View>
+							}
+						/>
 						:
-						<View style={{ flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
-							<ActivityIndicator size="small"/>
+						<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
+							<Text style={{ fontSize: fsize(0.05) }}>You don't have any recents</Text>
 						</View>
-					}
-				</View>
+					:
+					<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
+						<ActivityIndicator size="small"/>
+					</View>
+				}
 			</View>
 		</View>
 	);
 }
 
 const style = StyleSheet.create({
-	recent: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	recent: { backgroundColor: '#EAEAEA', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	box: { height: '100%', width: '100%' },
 
 	group: { borderRadius: 10, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10 },
 	dateHeader: { fontSize: fsize(0.04), marginBottom: 20 },

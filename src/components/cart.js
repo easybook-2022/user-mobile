@@ -11,7 +11,6 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
 
 const fsize = p => {
 	return width * p
@@ -39,7 +38,6 @@ export default function cart(props) {
 	const [numSelectedFriends, setNumselectedfriends] = useState(0)
 	const [orderingItem, setOrderingItem] = useState({ name: "", image: "", options: [], quantity: 0, cost: 0, price: 0 })
 	const [errorMsg, setErrormsg] = useState('')
-	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 	const [showNotifyUser, setShownotifyuser] = useState({ show: false, userid: 0, username: "" })
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
 	
@@ -692,16 +690,18 @@ export default function cart(props) {
 	}, [items.length])
 
 	return (
-		<View style={style.cart}>
-			<View style={{ paddingVertical: offsetPadding }}>
-				<View style={[style.box, { opacity: loading ? 0.5 : 1 }]}>
+		<View style={[style.cart, { opacity: loading ? 0.5 : 1 }]}>
+			<View style={style.box}>
+				<View style={style.headers}>
 					<View style={{ alignItems: 'center', width: '100%' }}>
-						<TouchableOpacity style={style.close} onPress={() => props.close()}>
+						<TouchableOpacity onPress={() => props.close()}>
 							<AntDesign name="closecircleo" size={30}/>
 						</TouchableOpacity>
 					</View>
 					<Text style={style.boxHeader}>Cart</Text>
+				</View>
 
+				<View style={style.body}>
 					{loaded ? 
 						items.length > 0 ?
 							<>
@@ -809,397 +809,355 @@ export default function cart(props) {
 								/>
 
 								<View style={{ alignItems: 'center' }}>
-									{showPaymentdetails.info != null && (
-										<TouchableOpacity style={style.viewPaymentDetails} onPress={() => getPaymentDetails()}>
-											<Text style={style.viewPaymentDetailsHeader}>View Payment Detail</Text>
+									<View style={style.cartActions}>
+										{showPaymentdetails.info != null && (
+											<TouchableOpacity style={style.cartAction} onPress={() => getPaymentDetails()}>
+												<Text style={style.cartActionHeader}>See Payment{'\n'}Detail</Text>
+											</TouchableOpacity>
+										)}
+										
+										<TouchableOpacity style={[style.cartAction, { opacity: activeCheckout && !loading ? 1 : 0.3 }]} disabled={!activeCheckout || loading} onPress={() => checkout()}>
+											<Text style={style.cartActionHeader}>Checkout</Text>
 										</TouchableOpacity>
-									)}
-									
-									<TouchableOpacity style={activeCheckout && !loading ? style.checkout : style.checkoutDisabled} disabled={!activeCheckout || loading} onPress={() => checkout()}>
-										<Text style={style.checkoutHeader}>Checkout</Text>
-									</TouchableOpacity>
+									</View>
 
 									{loading && <ActivityIndicator size="small"/>}
 								</View>
 							</>
 							:
-							<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 117, justifyContent: 'space-around' }}>
+							<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
 								<Text style={{ fontSize: fsize(0.05) }}>Your cart is empty</Text>
 							</View>
 						:
-						<View style={{ flexDirection: 'column', height: screenHeight - 113, justifyContent: 'space-around' }}>
-							<ActivityIndicator size="small"/>
+						<View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
+							<ActivityIndicator color="black" size="large"/>
 						</View>
 					}
 				</View>
-				
-				{showConfirm && (
-					<Modal transparent={true}>
-						<View style={style.confirm}>
-							<View style={{ paddingVertical: offsetPadding }}>
-								<View style={style.confirmBox}>
-									<View style={style.confirmContainer}>
-										<Text style={style.confirmHeader}>Orders sent</Text>
+			</View>
+			
+			{showConfirm && (
+				<Modal transparent={true}>
+					<View style={style.confirmBox}>
+						<View style={style.confirmContainer}>
+							<Text style={style.confirmHeader}>Orders sent</Text>
 
-										<View style={style.confirmOptions}>
-											<TouchableOpacity style={style.confirmOption} onPress={() => {
-												setShowconfirm(false)
-												props.showNotif()
-												
-											}}>
-												<Text style={style.confirmOptionHeader}>Ok</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								</View>
+							<View style={style.confirmOptions}>
+								<TouchableOpacity style={style.confirmOption} onPress={() => {
+									setShowconfirm(false)
+									props.showNotif()
+									
+								}}>
+									<Text style={style.confirmOptionHeader}>Ok</Text>
+								</TouchableOpacity>
 							</View>
 						</View>
-					</Modal>
-				)}
+					</View>
+				</Modal>
+			)}
+			{itemInfo.show && (
+				<Modal>
+					<View style={style.itemInfoBox}>
+						<View style={style.itemInfoHeader}>
+							<TouchableOpacity style={style.itemClose} onPress={() => setIteminfo({ ...itemInfo, show: false })}>
+								<AntDesign name="close" size={20}/>
+							</TouchableOpacity>
+						</View>
+						<ScrollView style={style.itemInfoContainer}>
+							<View style={{ alignItems: 'center', marginBottom: 20 }}>
+								<View style={style.imageHolder}>
+									<Image source={{ uri: logo_url + itemInfo.image }} style={style.image}/>
+								</View>
+							</View>
+							<Text style={style.boxItemHeader}>{itemInfo.name}</Text>
+							<Text style={style.boxItemHeaderInfo}>{itemInfo.info}</Text>
 
-				{itemInfo.show && (
-					<Modal transparent={true}>
-						<View style={style.itemInfoBox}>
-							<View style={{ paddingVertical: offsetPadding }}>
-								<View style={style.itemInfoContainer}>
-									<View style={{ alignItems: 'center', marginVertical: 20 }}>
-										<TouchableOpacity style={style.itemClose} onPress={() => setIteminfo({ ...itemInfo, show: false })}>
-											<AntDesign name="close" size={20}/>
-										</TouchableOpacity>
-									</View>
-									<ScrollView style={{ height: screenHeight - 68 }}>
-										<View style={{ alignItems: 'center', marginBottom: 20 }}>
-											<View style={style.imageHolder}>
-												<Image source={{ uri: logo_url + itemInfo.image }} style={style.image}/>
+							{itemInfo.options.map((option, index) => (
+								<View key={option.key} style={{ alignItems: 'center' }}>
+									<View style={style.info}>
+										<Text style={style.infoHeader}>{option.header}:</Text>
+
+										{option.type == "amount" && (
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={style.amount}>
+													<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
+														<Text style={style.amountActionHeader}>-</Text>
+													</TouchableOpacity>
+													<Text style={style.amountHeader}>{option.selected}</Text>
+													<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
+														<Text style={style.amountActionHeader}>+</Text>
+													</TouchableOpacity>
+												</View>
 											</View>
-										</View>
-										<Text style={style.boxItemHeader}>{itemInfo.name}</Text>
-										<Text style={style.boxItemHeaderInfo}>{itemInfo.info}</Text>
+										)}
 
-										{itemInfo.options.map((option, index) => (
-											<View key={option.key} style={{ alignItems: 'center' }}>
-												<View style={style.info}>
-													<Text style={style.infoHeader}>{option.header}:</Text>
+										{option.type == "percentage" && (
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={style.percentage}>
+													<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
+														<Text style={style.percentageActionHeader}>-</Text>
+													</TouchableOpacity>
+													<Text style={style.percentageHeader}>{option.selected}%</Text>
+													<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
+														<Text style={style.percentageActionHeader}>+</Text>
+													</TouchableOpacity>
+												</View>
+											</View>
+										)}
+									</View>
+								</View>
+							))}
 
-													{option.type == "amount" && (
-														<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-															<View style={style.amount}>
-																<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
-																	<Text style={style.amountActionHeader}>-</Text>
-																</TouchableOpacity>
-																<Text style={style.amountHeader}>{option.selected}</Text>
-																<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
-																	<Text style={style.amountActionHeader}>+</Text>
-																</TouchableOpacity>
-															</View>
+							{itemInfo.others.length > 0 && (
+								<View style={style.othersBox}>
+									<Text style={style.othersHeader}>Other options</Text>
+
+									<View style={style.others}>
+										{itemInfo.others.map((other, index) => (
+											<View key={other.key} style={{ alignItems: 'center' }}>
+												<View style={style.other}>
+													<View style={{ flexDirection: 'row' }}>
+														<Text style={style.otherName}># {other.name}:</Text>
+														<Text style={style.otherInput}>{other.input}</Text>
+													</View>
+													<View style={{ flexDirection: 'row', marginTop: 10 }}>
+														<Text style={style.otherPrice}>$ {other.price}</Text>
+
+														<View style={style.otherActions}>
+															<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
+																<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+															</TouchableOpacity>
+															<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
+																<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+															</TouchableOpacity>
 														</View>
-													)}
-
-													{option.type == "percentage" && (
-														<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-															<View style={style.percentage}>
-																<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
-																	<Text style={style.percentageActionHeader}>-</Text>
-																</TouchableOpacity>
-																<Text style={style.percentageHeader}>{option.selected}%</Text>
-																<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
-																	<Text style={style.percentageActionHeader}>+</Text>
-																</TouchableOpacity>
-															</View>
-														</View>
-													)}
+													</View>
 												</View>
 											</View>
 										))}
-
-										{itemInfo.others.length > 0 && (
-											<View style={style.othersBox}>
-												<Text style={style.othersHeader}>Other options</Text>
-
-												<View style={style.others}>
-													{itemInfo.others.map((other, index) => (
-														<View key={other.key} style={{ alignItems: 'center' }}>
-															<View style={style.other}>
-																<View style={{ flexDirection: 'row' }}>
-																	<Text style={style.otherName}># {other.name}:</Text>
-																	<Text style={style.otherInput}>{other.input}</Text>
-																</View>
-																<View style={{ flexDirection: 'row', marginTop: 10 }}>
-																	<Text style={style.otherPrice}>$ {other.price}</Text>
-
-																	<View style={style.otherActions}>
-																		<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
-																			<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
-																		</TouchableOpacity>
-																		<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
-																			<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
-																		</TouchableOpacity>
-																	</View>
-																</View>
-															</View>
-														</View>
-													))}
-												</View>
-											</View>
-										)}
-
-										{itemInfo.sizes.length > 0 && (
-											<View style={style.sizesBox}>
-												<Text style={style.sizesHeader}>Select a Size</Text>
-
-												<View style={style.sizes}>
-													{itemInfo.sizes.map((size, index) => (
-														<View key={size.key} style={style.size}>
-															<TouchableOpacity style={size.selected ? style.sizeTouchDisabled : style.sizeTouch} onPress={() => selectSize(index)}>
-																<Text style={size.selected ? style.sizeTouchHeaderDisabled : style.sizeTouchHeader}>{size.name}</Text>
-															</TouchableOpacity>
-															<Text style={style.sizePrice}>$ {size.price}</Text>
-														</View>
-													))}
-												</View>
-											</View>
-										)}
-
-										<View style={style.note}>
-											<TextInput style={style.noteInput} multiline={true} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false} autoCapitalize="none"/>
-										</View>
-
-										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-											<View style={{ flexDirection: 'row' }}>
-												<Text style={style.quantityHeader}>Quantity</Text>
-												<View style={style.quantity}>
-													<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("-")}>
-														<Text style={style.quantityActionHeader}>-</Text>
-													</TouchableOpacity>
-													<Text style={style.quantityHeader}>{itemInfo.quantity}</Text>
-													<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("+")}>
-														<Text style={style.quantityActionHeader}>+</Text>
-													</TouchableOpacity>
-												</View>
-											</View>
-										</View>
-
-										<Text style={style.price}>Cost: $ {itemInfo.cost.toFixed(2)}</Text>
-
-										{itemInfo.errorMsg ? <Text style={style.errorMsg}>{itemInfo.errorMsg}</Text> : null}
-
-										<View style={style.itemActions}>
-											<View style={{ flexDirection: 'row' }}>
-												<TouchableOpacity style={style.itemAction} onPress={() => updateTheCartItem()}>
-													<Text style={style.itemActionHeader}>Update item to cart</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									</ScrollView>
-								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{showPaymentdetails.show && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.paymentDetailsContainer}>
-								<View style={style.paymentDetailsBox}>
-									<TouchableOpacity style={style.paymentDetailsClose} onPress={() => setShowpaymentdetails({ ...showPaymentdetails, show: false })}>
-										<AntDesign name="closecircleo" size={30}/>
-									</TouchableOpacity>
-
-									<Text style={style.paymentDetailsHeader}>Payment Details</Text>
-
-									<View>
-										<Text style={style.paymentDetailHeader}>Sub Total: ${showPaymentdetails.info.total.toFixed(2)}</Text>
-										<Text style={style.paymentDetailHeader}>PST: ${showPaymentdetails.info.pst.toFixed(2)}</Text>
-										<Text style={style.paymentDetailHeader}>HST: ${showPaymentdetails.info.hst.toFixed(2)}</Text>
-										<Text style={style.paymentDetailHeader}>E-pay fee: ${showPaymentdetails.info.fee.toFixed(2)}</Text>
-										<Text style={style.paymentDetailHeader}>Total Cost: ${showPaymentdetails.info.totalcost.toFixed(2)}</Text>
 									</View>
 								</View>
-							</View>
-						</View>
-					</Modal>
-				)}
-
-				{openFriendscart && (
-					<Modal>
-						<View style={style.friendsCart}>
-							<View style={{ paddingVertical: offsetPadding }}>
-								<View style={style.friendsList}>
-									<TextInput style={style.friendNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"/>
-
-									<View style={style.friendsListContainer}>
-										<View style={style.friendsListSearched}>
-											<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
-
-											<FlatList
-												data={friends}
-												renderItem={({ item, index }) => 
-													<View key={item.key} style={style.row}>
-														{item.row.map(friend => (
-															friend.username ? 
-																<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
-																	<View style={style.friendProfileHolder}>
-																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																	</View>
-																	<Text style={style.friendName}>{friend.username}</Text>
-																</TouchableOpacity>
-																:
-																<View key={friend.key} style={style.friend}></View>
-														))}
-													</View>
-												}
-											/>
-										</View>
-
-										<View style={style.friendsListSelected}>
-											{selectedFriends.length > 0 && (
-												<>
-													<Text style={style.selectedFriendsHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
-
-													<FlatList
-														data={selectedFriends}
-														renderItem={({ item, index }) => 
-															<View key={item.key} style={style.row}>
-																{item.row.map(friend => (
-																	friend.username ? 
-																		<View key={friend.key} style={style.friend}>
-																			<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
-																				<AntDesign name="closecircleo" size={15}/>
-																			</TouchableOpacity>
-																			<View style={style.friendProfileHolder}>
-																				<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																			</View>
-																			<Text style={style.friendName}>{friend.username}</Text>
-																		</View>
-																		:
-																		<View key={friend.key} style={style.friend}></View>
-																))}
-															</View>
-														}
-													/>
-												</>
-											)}
-										</View>
-									</View>
-
-									<View>
-										<View style={style.itemContainer}>
-											<View style={style.orderingItemImageHolder}>
-												<Image style={{ height: 50, width: 50 }} source={{ uri: logo_url + orderingItem.image }}/>
-											</View>
-											<View style={style.itemInfos}>
-												<Text style={style.orderingItemName}>{orderingItem.name}</Text>
-
-												{orderingItem.options.map((info, infoindex) => (
-													<Text key={info.key} style={style.itemInfo}>
-														<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
-														{info.selected}
-														{info.type == 'percentage' && '%'}
-													</Text>
-												))}
-
-												{orderingItem.others.map((other, infoindex) => (
-													other.selected ? 
-														<Text key={other.key} style={style.itemInfo}>
-															<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-															<Text>{other.input}</Text>
-															<Text>($ {other.price})</Text>
-														</Text>
-													: null
-												))}
-
-												{orderingItem.sizes.map((size, infoindex) => (
-													size.selected ? 
-														<Text key={size.key} style={style.itemInfo}>
-															<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-															<Text>{size.name}</Text>
-														</Text>
-													: null
-												))}
-											</View>
-											<View>
-												<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
-												<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>total cost:</Text> $ {orderingItem.cost.toFixed(2)}</Text>
-											</View>
-										</View>
-
-										<Text style={style.errorMsg}>{errorMsg}</Text>
-
-										<View style={{ alignItems: 'center' }}>
-											<View style={style.actions}>
-												<TouchableOpacity style={style.action} onPress={() => {
-													setOpenfriendscart(false)
-													setSelectedFriends([])
-													setNumselectedfriends(0)
-													setErrormsg('')
-												}}>
-													<Text style={style.actionHeader}>Close</Text>
-												</TouchableOpacity>
-												<TouchableOpacity style={style.action} onPress={() => updateTheCallfor()}>
-													<Text style={style.actionHeader}>Update</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									</View>
-								</View>
-							</View>
-
-							{showNotifyUser.show && (
-								<Modal transparent={true}>
-									<View style={{ paddingVertical: offsetPadding }}>
-										<View style={style.notifyUserBox}>
-											<View style={style.notifyUserContainer}>
-												<Text style={style.notifyUserHeader}>
-													{showNotifyUser.username} haven't provided a payment method.
-													Notify {showNotifyUser.username} to add a payment method
-												</Text>
-
-												<View style={style.notifyUserActions}>
-													<TouchableOpacity style={style.notifyUserAction} onPress={() => setShownotifyuser({ show: false, userid: 0, username: "" })}>
-														<Text style={style.notifyUserActionHeader}>Close</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={style.notifyUserAction} onPress={() => requestTheUserPaymentMethod()}>
-														<Text style={style.notifyUserActionHeader}>Ok</Text>
-													</TouchableOpacity>
-												</View>
-											</View>
-										</View>
-									</View>
-								</Modal>
 							)}
-						</View>
-					</Modal>
-				)}
 
-				{showPaymentRequired && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.cardRequiredBox}>
-								<View style={style.cardRequiredContainer}>
-									<Text style={style.cardRequiredHeader}>
-										You need to provide a payment method to accept
-										a reservation
+							{itemInfo.sizes.length > 0 && (
+								<View style={style.sizesBox}>
+									<Text style={style.sizesHeader}>Select a Size</Text>
+
+									<View style={style.sizes}>
+										{itemInfo.sizes.map((size, index) => (
+											<View key={size.key} style={style.size}>
+												<TouchableOpacity style={size.selected ? style.sizeTouchDisabled : style.sizeTouch} onPress={() => selectSize(index)}>
+													<Text style={size.selected ? style.sizeTouchHeaderDisabled : style.sizeTouchHeader}>{size.name}</Text>
+												</TouchableOpacity>
+												<Text style={style.sizePrice}>$ {size.price}</Text>
+											</View>
+										))}
+									</View>
+								</View>
+							)}
+
+							<View style={style.note}>
+								<TextInput style={style.noteInput} multiline textAlignVertical="top" placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} value={itemInfo.note} autoCorrect={false} autoCapitalize="none"/>
+							</View>
+
+							<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+								<View style={{ flexDirection: 'row' }}>
+									<Text style={style.quantityHeader}>Quantity</Text>
+									<View style={style.quantity}>
+										<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("-")}>
+											<Text style={style.quantityActionHeader}>-</Text>
+										</TouchableOpacity>
+										<Text style={style.quantityHeader}>{itemInfo.quantity}</Text>
+										<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("+")}>
+											<Text style={style.quantityActionHeader}>+</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+
+							<Text style={style.price}>Cost: $ {itemInfo.cost.toFixed(2)}</Text>
+
+							{itemInfo.errorMsg ? <Text style={style.errorMsg}>{itemInfo.errorMsg}</Text> : null}
+
+							<View style={style.itemActions}>
+								<View style={{ flexDirection: 'row' }}>
+									<TouchableOpacity style={style.itemAction} onPress={() => updateTheCartItem()}>
+										<Text style={style.itemActionHeader}>Update{'\n'}item to cart</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</ScrollView>
+					</View>
+				</Modal>
+			)}
+			{showPaymentdetails.show && (
+				<Modal transparent={true}>
+					<View style={style.paymentDetailsContainer}>
+						<View style={style.paymentDetailsBox}>
+							<TouchableOpacity style={style.paymentDetailsClose} onPress={() => setShowpaymentdetails({ ...showPaymentdetails, show: false })}>
+								<AntDesign name="closecircleo" size={30}/>
+							</TouchableOpacity>
+
+							<Text style={style.paymentDetailsHeader}>Payment Details</Text>
+
+							<View>
+								<Text style={style.paymentDetailHeader}>Sub Total: ${showPaymentdetails.info.total.toFixed(2)}</Text>
+								<Text style={style.paymentDetailHeader}>PST: ${showPaymentdetails.info.pst.toFixed(2)}</Text>
+								<Text style={style.paymentDetailHeader}>HST: ${showPaymentdetails.info.hst.toFixed(2)}</Text>
+								<Text style={style.paymentDetailHeader}>E-pay fee: ${showPaymentdetails.info.fee.toFixed(2)}</Text>
+								<Text style={style.paymentDetailHeader}>Total Cost: ${showPaymentdetails.info.totalcost.toFixed(2)}</Text>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{openFriendscart && (
+				<Modal>
+					<View style={style.friendsList}>
+						<View style={style.friendNameContainer}>
+							<TextInput 
+								style={style.friendNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" 
+								onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"
+							/>
+						</View>
+
+						<View style={style.friendsListContainer}>
+							<View style={style.friendsListSearched}>
+								<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
+
+								<FlatList
+									data={friends}
+									renderItem={({ item, index }) => 
+										<View key={item.key} style={style.row}>
+											{item.row.map(friend => (
+												friend.username ? 
+													<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
+														<View style={style.friendProfileHolder}>
+															<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+														</View>
+														<Text style={style.friendName}>{friend.username}</Text>
+													</TouchableOpacity>
+													:
+													<View key={friend.key} style={style.friend}></View>
+											))}
+										</View>
+									}
+								/>
+							</View>
+
+							<View style={style.friendsListSelected}>
+								{selectedFriends.length > 0 && (
+									<>
+										<Text style={style.selectedFriendsHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
+
+										<FlatList
+											data={selectedFriends}
+											renderItem={({ item, index }) => 
+												<View key={item.key} style={style.row}>
+													{item.row.map(friend => (
+														friend.username ? 
+															<View key={friend.key} style={style.friend}>
+																<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
+																	<AntDesign name="closecircleo" size={15}/>
+																</TouchableOpacity>
+																<View style={style.friendProfileHolder}>
+																	<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
+																</View>
+																<Text style={style.friendName}>{friend.username}</Text>
+															</View>
+															:
+															<View key={friend.key} style={style.friend}></View>
+													))}
+												</View>
+											}
+										/>
+									</>
+								)}
+							</View>
+						</View>
+
+						<View style={style.itemContainer}>
+							<View style={style.orderingItemImageHolder}>
+								<Image style={{ height: 50, width: 50 }} source={{ uri: logo_url + orderingItem.image }}/>
+							</View>
+							<View style={style.itemInfos}>
+								<Text style={style.orderingItemName}>{orderingItem.name}</Text>
+
+								{orderingItem.options.map((info, infoindex) => (
+									<Text key={info.key} style={style.itemInfo}>
+										<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
+										{info.selected}
+										{info.type == 'percentage' && '%'}
+									</Text>
+								))}
+
+								{orderingItem.others.map((other, infoindex) => (
+									other.selected ? 
+										<Text key={other.key} style={style.itemInfo}>
+											<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+											<Text>{other.input}</Text>
+											<Text>($ {other.price})</Text>
+										</Text>
+									: null
+								))}
+
+								{orderingItem.sizes.map((size, infoindex) => (
+									size.selected ? 
+										<Text key={size.key} style={style.itemInfo}>
+											<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+											<Text>{size.name}</Text>
+										</Text>
+									: null
+								))}
+							</View>
+							<View>
+								<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
+								<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>total cost:</Text> $ {orderingItem.cost.toFixed(2)}</Text>
+							</View>
+						</View>
+
+						<View style={style.friendsListActionContainer}>
+							<Text style={style.errorMsg}>{errorMsg}</Text>
+
+							<View style={style.friendsListActions}>
+								<TouchableOpacity style={style.friendsListAction} onPress={() => {
+									setOpenfriendscart(false)
+									setSelectedFriends([])
+									setNumselectedfriends(0)
+									setErrormsg('')
+								}}>
+									<Text style={style.friendsListActionHeader}>Close</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={style.friendsListAction} onPress={() => updateTheCallfor()}>
+									<Text style={style.friendsListActionHeader}>Update</Text>
+								</TouchableOpacity>
+							</View>
+						</View>
+					</View>
+
+					{showNotifyUser.show && (
+						<Modal transparent={true}>
+							<View style={style.notifyUserBox}>
+								<View style={style.notifyUserContainer}>
+									<Text style={style.notifyUserHeader}>
+										{showNotifyUser.username} haven't provided a payment method.
+										Notify {showNotifyUser.username} to add a payment method
 									</Text>
 
-									<View style={style.cardRequiredActions}>
-										<TouchableOpacity style={style.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
-											<Text style={style.cardRequiredActionHeader}>Close</Text>
+									<View style={style.notifyUserActions}>
+										<TouchableOpacity style={style.notifyUserAction} onPress={() => setShownotifyuser({ show: false, userid: 0, username: "" })}>
+											<Text style={style.notifyUserActionHeader}>Close</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.cardRequiredAction} onPress={() => {
-											setShowpaymentrequired(false)
-											props.navigation.navigate("account", { required: "card" })
-										}}>
-											<Text style={style.cardRequiredActionHeader}>Ok</Text>
+										<TouchableOpacity style={style.notifyUserAction} onPress={() => requestTheUserPaymentMethod()}>
+											<Text style={style.notifyUserActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
 							</View>
-						</View>
-					</Modal>
-				)}
-			</View>
-
+						</Modal>
+					)}
+				</Modal>
+			)}
 			{showDisabledScreen && (
 				<Modal transparent={true}>
 					<View style={style.disabled}>
@@ -1224,11 +1182,13 @@ export default function cart(props) {
 }
 
 const style = StyleSheet.create({
-	cart: { backgroundColor: 'white' },
-	box: { backgroundColor: '#EAEAEA', height: screenHeight, width: '100%' },
-	close: { marginTop: 20, marginHorizontal: 20 },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	cart: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
+	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
+	headers: { flexDirection: 'column', height: '15%', justifyContent: 'space-around' },
+	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
+
+	body: { height: '85%' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 35, height: 70, overflow: 'hidden', width: 70 },
 	itemImage: { height: 70, width: 70 },
@@ -1236,15 +1196,15 @@ const style = StyleSheet.create({
 	itemName: { fontSize: fsize(0.05), marginBottom: 10 },
 	itemInfo: { fontSize: fsize(0.04) },
 	header: { fontSize: fsize(0.04) },
-	itemChange: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5, width: 80 },
-	itemChangeHeader: { fontSize: fsize(0.035), textAlign: 'center' },
+	itemChange: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5 },
+	itemChangeHeader: { textAlign: 'center' },
 	note: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, padding: 5 },
 	noteHeader: { textAlign: 'center' },
 	orderersContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginVertical: 10, padding: 5 },
 	orderersEdit: { flexDirection: 'row' },
 	orderersEditHeader: { fontWeight: 'bold', marginRight: 10, marginTop: 7, textAlign: 'center' },
 	orderersEditTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-	orderersEditTouchHeader: { },
+	orderersEditTouchHeader: {  },
 	orderers: {  },
 	orderer: { alignItems: 'center', margin: 10, width: width / 4 },
 	ordererProfileHolder: { backgroundColor: 'white', borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
@@ -1254,12 +1214,9 @@ const style = StyleSheet.create({
 	ordererRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	ordererRemoveHeader: { },
 
-	viewPaymentDetails: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	viewPaymentDetailsHeader: { },
-
-	checkout: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 20, padding: 10 },
-	checkoutDisabled: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginVertical: 5, opacity: 0.3, padding: 10 },
-	checkoutHeader: { },
+	cartActions: { flexDirection: 'row', marginBottom: 5 },
+	cartAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5 },
+	cartActionHeader: { textAlign: 'center' },
 
 	// confirm & requested box
 	confirm: { backgroundColor: 'white' },
@@ -1271,9 +1228,10 @@ const style = StyleSheet.create({
 	confirmOptionHeader: { },
 
 	// item info
-	itemInfoBox: { backgroundColor: 'white' },
-	itemInfoContainer: { backgroundColor: '#EAEAEA' },
+	itemInfoBox: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
+	itemInfoHeader: { alignItems: 'center', flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
 	itemClose: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', justifyContent: 'space-around', padding: 2 },
+	itemInfoContainer: { height: '90%' },
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	image: { height: 200, width: 200 },
 	boxItemHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
@@ -1334,13 +1292,13 @@ const style = StyleSheet.create({
 	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
 	quantityHeader: { fontSize: fsize(0.04), fontWeight: 'bold', padding: 10 },
 
-	price: { fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+	price: { fontSize: fsize(0.04), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 
 	// friends list
-	friendsCart: { backgroundColor: 'white' },
-	friendsList: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	friendsList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
+	friendNameContainer: { height: '10%' },
 	friendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, margin: 10, padding: 10 },
-	friendsListContainer: { flexDirection: 'column', height: screenHeight - 270, justifyContent: 'space-between' },
+	friendsListContainer: { flexDirection: 'column', height: '60%', justifyContent: 'space-between' },
 	friendsListSearched: { height: '50%', overflow: 'hidden' },
 	friendsListSelected: { height: '50%', overflow: 'hidden' },
 	selectedFriendsHeader: { fontWeight: 'bold', textAlign: 'center' },
@@ -1350,21 +1308,15 @@ const style = StyleSheet.create({
 	friendDelete: { marginBottom: -5, marginLeft: 60 },
 	friendProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
 	friendName: { textAlign: 'center' },
-	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: 150, justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
+	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: '20%', justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
 	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
 	itemInfo: { fontSize: fsize(0.04) },
 	itemHeader: { fontSize: fsize(0.04) },
-	actions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
-	action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 70 },
-	actionHeader: { textAlign: 'center' },
-
-	cardRequiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	cardRequiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	cardRequiredHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	cardRequiredActionHeader: { },
+	friendsListActionContainer: { alignItems: 'center', height: '10%' },
+	friendsListActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
+	friendsListAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 70 },
+	friendsListActionHeader: { textAlign: 'center' },
 
 	notifyUserBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	notifyUserContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
@@ -1373,7 +1325,7 @@ const style = StyleSheet.create({
 	notifyUserAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	notifyUserActionHeader: { },
 
-	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 5, textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontSize: fsize(0.04), fontWeight: 'bold', textAlign: 'center' },
 
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
 	disabledContainer: { alignItems: 'center', width: '100%' },

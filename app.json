@@ -10,13 +10,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.geottuse.serviceapp.user",
-      "buildNumber": "11",
+      "buildNumber": "0",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (User) uses camera to allow you to take a profile picture",
         "NSMicrophoneUsageDescription": "EasyGO (User) does not need microphone",
@@ -26,11 +29,11 @@
       }
     },
     "android": {
-      "package": "com.geottuse.serviceapp.user"
+      "package": "com.geottuse.serviceapp.user",
+      "versionCode": 0
     },
     "notification": {
       "icon": "./assets/notification.png"
     }
-  },
-  "name": "EasyGO(User)"
+  }
 }

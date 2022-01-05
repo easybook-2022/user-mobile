@@ -13,8 +13,6 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
-const workerImage = (width / 3) - 40
 
 const fsize = p => {
 	return width * p
@@ -427,7 +425,30 @@ export default function notifications(props) {
 			const { id, locationid, serviceprice } = items[index]
 			const scheduleid = id
 
-			getWorkers(locationid)
+			let date = new Date()
+			let currDate = date.getDate()
+			let day = date.getDay()
+			let month = date.getMonth() + 1
+			let year = date.getFullYear()
+
+			let hour = date.getHours()
+			let minute = date.getMinutes()
+			let second = date.getSeconds()
+			let dateStr = "", timeStr = ""
+
+			currDate = currDate < 10 ? '0' + currDate : currDate
+			month = month < 10 ? '0' + month : month
+
+			hour = hour < 10 ? '0' + hour : hour
+			minute = minute < 10 ? '0' + minute : minute
+			second = second < 10 ? '0' + second : second
+
+			dateStr = currDate + "." + month + "." + year + " "
+			timeStr = hour + ":" + minute + ":" + second
+
+			const data = { locationid, dateStr, timeStr, day }
+
+			getWorkers(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -868,383 +889,296 @@ export default function notifications(props) {
 	
 	return (
 		<View style={style.notifications}>
-			<View style={{ paddingTop: offsetPadding }}>
+			{loaded ? 
 				<View style={style.box}>
-					<View style={{ alignItems: 'center', width: '100%' }}>
-						<TouchableOpacity style={style.close} onPress={() => props.close()}>
-							<AntDesign name="closecircleo" size={30}/>
-						</TouchableOpacity>
-					</View>
-					<Text style={style.boxHeader}>{items.length} Notification(s)</Text>
+					<View style={{ alignItems: 'center', height: '20%', width: '100%' }}>
+						<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
+							<TouchableOpacity style={style.close} onPress={() => props.close()}>
+								<AntDesign name="closecircleo" size={30}/>
+							</TouchableOpacity>
 
-					<View style={{ alignItems: 'center' }}>
-						<TouchableOpacity style={style.refresh} onPress={() => getTheNotifications()}>
-							<Text style={style.refreshHeader}>Refresh {numUnreaded > 0 ? <Text style={{ fontWeight: 'bold' }}>({numUnreaded})</Text> : null}</Text>
-						</TouchableOpacity>
+							<Text style={style.boxHeader}>{items.length} Notification(s)</Text>
+
+							<TouchableOpacity style={style.refresh} onPress={() => getTheNotifications()}>
+								<Text style={style.refreshHeader}>Refresh {numUnreaded > 0 ? <Text style={{ fontWeight: 'bold' }}>({numUnreaded})</Text> : null}</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 					
 					<View style={style.body}>
-						{loaded ? 
-							items.length > 0 ?
-								<FlatList
-									showsVerticalScrollIndicator={false}
-									data={items}
-									renderItem={({ item, index }) => 
-										<View style={style.item} key={item.key}>
-											{(item.type == "cart-order-other" || item.type == "dining-order" || item.type == "paymentrequested") && (
-												<>
-													<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-														<View style={style.itemImageHolder}>
-															<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
-														</View>
-														<View style={style.itemInfos}>
-															<Text style={style.itemName}>{item.name}</Text>
-
-															{item.options.map((option, infoindex) => (
-																<Text key={option.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-																	{option.selected}
-																	{option.type == 'percentage' && '%'}
-																</Text>
-															))}
-
-															{item.others.map((other, otherindex) => (
-																other.selected ? 
-																	<Text key={other.key} style={style.itemInfo}>
-																		<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-																		<Text>{other.input}</Text>
-																	</Text>
-																: null
-															))}
-
-															{item.sizes.map((size, sizeindex) => (
-																size.selected ? 
-																	<Text key={size.key} style={style.itemInfo}>
-																		<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-																		<Text>{size.name}</Text>
-																	</Text>
-																: null
-															))}
-														</View>
-														<View>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>HST fee:</Text> ${item.hst.toFixed(2)}</Text>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.total.toFixed(2)}</Text>
-														</View>
-													</View>
-
-													{(item.status == "checkout" || item.status == "ready") && (
-														<>
-															<Text style={style.itemOrderNumber}>Your order#: {item.orderNumber}</Text>
-															<Text style={style.itemHeader}>
-																{item.status == 'checkout' ? 
-																	'Your order will be ready soon'
-																	:
-																	'Your order is ready. You can pick up now'
-																}
-															</Text>
-														</>
-													)}
-													{item.status == "unlisted" && (
-														<>
-															<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }}>
-																<View style={{ flexDirection: 'row' }}>
-																	<View style={style.adderInfo}>
-																		<View style={style.adderInfoProfile}>
-																			<Image source={{ uri: logo_url + item.adder.profile }} style={{ height: 40, width: 40 }}/>
-																		</View>
-																		<Text style={style.adderInfoUsername}>{item.adder.username}</Text>
-																	</View>
-																	<Text style={style.adderInfoHeader}> added this item to your {item.type.includes("dining") ? "dining order" : "cart"}.</Text>
-																</View>
-															</View>
-															<Text style={style.itemHeader}>
-																{item.type == "cart-order-other" && 'Want to purchase this?'}
-																{item.type == "dining-order" && 'Want to order this?'}
-																{item.type == "paymentrequested" && 'Please provide a payment method to purchase this'}
-															</Text>
-															<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-																<View style={style.actions}>
-																	<TouchableOpacity style={style.action} onPress={() => {
-																		if (item.type.includes("cart")) {
-																			cancelTheCartOrder(item.id, index)
-																		} else {
-																			cancelTheDiningOrder(item.orderid, index)
-																		}
-																	}}>
-																		<Text style={style.actionHeader}>No</Text>
-																	</TouchableOpacity>
-																	<TouchableOpacity style={style.action} onPress={() => {
-																		if (item.type.includes("order")) {
-																			if (item.type.includes("cart")) {
-																				confirmTheCartOrder(index)
-																			} else {
-																				confirmTheDiningOrder(index)
-																			}
-																		} else {
-																			props.close()
-																			props.navigation.navigate("account", { required: "card" })
-																		}
-																	}}>
-																		<Text style={style.actionHeader}>Yes</Text>
-																	</TouchableOpacity>
-																</View>
-															</View>
-														</>
-													)}
-												</>
-											)}
-
-											{item.type == "cart-order-self" && (
-												<>
-													<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-														<View style={style.itemImageHolder}>
-															<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
-														</View>
-														<View style={style.itemInfos}>
-															<Text style={style.itemName}>{item.name}</Text>
-
-															{item.options.map((option, infoindex) => (
-																<Text key={option.key} style={style.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-																	{option.selected}
-																	{option.type == 'percentage' && '%'}
-																</Text>
-															))}
-
-															{item.others.map((other, otherindex) => (
-																other.selected ? 
-																	<Text key={other.key} style={style.itemInfo}>
-																		<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-																		<Text>{other.input}</Text>
-																	</Text>
-																: null
-															))}
-
-															{item.sizes.map((size, sizeindex) => (
-																size.selected ? 
-																	<Text key={size.key} style={style.itemInfo}>
-																		<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-																		<Text>{size.name}</Text>
-																	</Text>
-																: null
-															))}
-														</View>
-														<View>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>HST fee:</Text> ${item.hst.toFixed(2)}</Text>
-															<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.total.toFixed(2)}</Text>
-														</View>
-													</View>
-													<Text style={style.itemOrderNumber}>Your order#: {item.orderNumber}</Text>
-													<Text style={style.itemHeader}>
-														{item.status == 'checkout' ? 
-															'Your order will be ready soon'
-															:
-															'Your order is ready. You can pick up now'
-														}
-													</Text>
-												</>
-											)}
-
-											{item.type == "service" && (
+						{items.length > 0 ?
+							<FlatList
+								showsVerticalScrollIndicator={false}
+								data={items}
+								renderItem={({ item, index }) => 
+									<View style={style.item} key={item.key}>
+										{(item.type == "cart-order-other" || item.type == "dining-order" || item.type == "paymentrequested") && (
+											<>
 												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-													<View style={style.itemImageHolders}>
-														<View style={style.itemLocationImageHolder}>
-															<Image source={{ uri: logo_url + item.locationimage }} style={{ height: 80, width: 80 }}/>
-														</View>
-														{item.serviceimage != '' ? 
-															<View style={style.itemServiceImageHolder}>
-																<Image source={{ uri: logo_url + item.serviceimage }} style={{ height: 100, width: 100 }}/>
-															</View>
-														: null }
+													<View style={style.itemImageHolder}>
+														<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
 													</View>
-													<View style={{ flexDirection: 'column', width: width - 130 }}>
-														{item.locationtype == "restaurant" ? 
-															item.booker ? 
-																<Text style={style.itemServiceHeader}>
-																	You requested a reservation
-																	{(item.diners) > 0 ? ' for ' + (item.diners) + ' ' + ((item.diners) == 1 ? 'person' : 'people') : null }
-																	{'\n'}at{'\n'}
-																	<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.location}</Text>
-																	{'\n'}
-																	<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{displayTime(item.time)}</Text>
-																	{'\n'}
+													<View style={style.itemInfos}>
+														<Text style={style.itemName}>{item.name}</Text>
+
+														{item.options.map((option, infoindex) => (
+															<Text key={option.key} style={style.itemInfo}>
+																<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+																{option.selected}
+																{option.type == 'percentage' && '%'}
+															</Text>
+														))}
+
+														{item.others.map((other, otherindex) => (
+															other.selected ? 
+																<Text key={other.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+																	<Text>{other.input}</Text>
 																</Text>
+															: null
+														))}
+
+														{item.sizes.map((size, sizeindex) => (
+															size.selected ? 
+																<Text key={size.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+																	<Text>{size.name}</Text>
+																</Text>
+															: null
+														))}
+													</View>
+													<View>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>HST fee:</Text> ${item.hst.toFixed(2)}</Text>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.total.toFixed(2)}</Text>
+													</View>
+												</View>
+
+												{(item.status == "checkout" || item.status == "ready") && (
+													<>
+														<Text style={style.itemOrderNumber}>Your order#: {item.orderNumber}</Text>
+														<Text style={style.itemHeader}>
+															{item.status == 'checkout' ? 
+																'Your order will be ready soon'
 																:
-																<Text style={style.itemServiceHeader}>
-																	{item.bookerName} {item.action == "accepted" ? "made" : "requested"} a reservation for you
-																	{item.diners > 0 ? 
-																		<>
-																			{' '}and{' '}
-																			{
-																				item.diners - 1 == 0 ? 
-																					item.bookerName
-																					:
-																					(item.diners - 1) + " other " + ((item.diners - 1) <= 1 ? "person" : "people") + " " 
-																			}
-																		</>
-																	: null}
-																	{'\n'}at
-																	<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{'\n' + item.location}</Text>
-																	{'\n'}
-																	<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{displayTime(item.time)}</Text>
+																'Your order is ready. You can pick up now'
+															}
+														</Text>
+													</>
+												)}
+												{item.status == "unlisted" && (
+													<>
+														<View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }}>
+															<View style={{ flexDirection: 'row' }}>
+																<View style={style.adderInfo}>
+																	<View style={style.adderInfoProfile}>
+																		<Image source={{ uri: logo_url + item.adder.profile }} style={{ height: 40, width: 40 }}/>
+																	</View>
+																	<Text style={style.adderInfoUsername}>{item.adder.username}</Text>
+																</View>
+																<Text style={style.adderInfoHeader}> added this item to your {item.type.includes("dining") ? "dining order" : "cart"}.</Text>
+															</View>
+														</View>
+														<Text style={style.itemHeader}>
+															{item.type == "cart-order-other" && 'Want to purchase this?'}
+															{item.type == "dining-order" && 'Want to order this?'}
+															{item.type == "paymentrequested" && 'Please provide a payment method to purchase this'}
+														</Text>
+														<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+															<View style={style.actions}>
+																<TouchableOpacity style={style.action} onPress={() => {
+																	if (item.type.includes("cart")) {
+																		cancelTheCartOrder(item.id, index)
+																	} else {
+																		cancelTheDiningOrder(item.orderid, index)
+																	}
+																}}>
+																	<Text style={style.actionHeader}>No</Text>
+																</TouchableOpacity>
+																<TouchableOpacity style={style.action} onPress={() => {
+																	if (item.type.includes("order")) {
+																		if (item.type.includes("cart")) {
+																			confirmTheCartOrder(index)
+																		} else {
+																			confirmTheDiningOrder(index)
+																		}
+																	} else {
+																		props.close()
+																		props.navigation.navigate("account", { required: "card" })
+																	}
+																}}>
+																	<Text style={style.actionHeader}>Yes</Text>
+																</TouchableOpacity>
+															</View>
+														</View>
+													</>
+												)}
+											</>
+										)}
+
+										{item.type == "cart-order-self" && (
+											<>
+												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+													<View style={style.itemImageHolder}>
+														<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
+													</View>
+													<View style={style.itemInfos}>
+														<Text style={style.itemName}>{item.name}</Text>
+
+														{item.options.map((option, infoindex) => (
+															<Text key={option.key} style={style.itemInfo}>
+																<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+																{option.selected}
+																{option.type == 'percentage' && '%'}
+															</Text>
+														))}
+
+														{item.others.map((other, otherindex) => (
+															other.selected ? 
+																<Text key={other.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+																	<Text>{other.input}</Text>
 																</Text>
-															:
+															: null
+														))}
+
+														{item.sizes.map((size, sizeindex) => (
+															size.selected ? 
+																<Text key={size.key} style={style.itemInfo}>
+																	<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+																	<Text>{size.name}</Text>
+																</Text>
+															: null
+														))}
+													</View>
+													<View>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>HST fee:</Text> ${item.hst.toFixed(2)}</Text>
+														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.total.toFixed(2)}</Text>
+													</View>
+												</View>
+												<Text style={style.itemOrderNumber}>Your order#: {item.orderNumber}</Text>
+												<Text style={style.itemHeader}>
+													{item.status == 'checkout' ? 
+														'Your order will be ready soon'
+														:
+														'Your order is ready. You can pick up now'
+													}
+												</Text>
+											</>
+										)}
+
+										{item.type == "service" && (
+											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+												<View style={style.itemImageHolders}>
+													<View style={style.itemLocationImageHolder}>
+														<Image source={{ uri: logo_url + item.locationimage }} style={{ height: 80, width: 80 }}/>
+													</View>
+													{item.serviceimage != '' ? 
+														<View style={style.itemServiceImageHolder}>
+															<Image source={{ uri: logo_url + item.serviceimage }} style={{ height: 100, width: 100 }}/>
+														</View>
+													: null }
+												</View>
+												<View style={{ flexDirection: 'column', width: width - 130 }}>
+													{item.locationtype == "restaurant" ? 
+														item.booker ? 
 															<Text style={style.itemServiceHeader}>
-																You requested an appointment for {' '}
-																<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.service}</Text>
+																You requested a reservation
+																{(item.diners) > 0 ? ' for ' + (item.diners) + ' ' + ((item.diners) == 1 ? 'person' : 'people') : null }
 																{'\n'}at{'\n'}
 																<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.location}</Text>
 																{'\n'}
 																<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{displayTime(item.time)}</Text>
-
-																{item.worker != null && <Text style={{ fontSize: fsize(0.05) }}>{'\nwith worker: ' + item.worker.username}</Text>}
+																{'\n'}
 															</Text>
-														}
-
-														{(item.action == "requested" || item.action == "change") && 
-															<Text style={{ fontWeight: '100' }}>waiting for the {item.locationtype == 'restaurant' ? 'restaurant' : 'salon'}'s response</Text>
-														}
-
-														{item.action == "accepted" && (
-															<>
-																<Text style={style.itemServiceResponseHeader}>
-																	{item.locationtype == 'restaurant' ? 
-																		item.booker ? "Your reservation has been accepted" : ""
-																		:
-																		"Your requested appointment has been accepted."
-																	}
-																	{'\n\n'}
-																	{item.locationtype == 'restaurant' && "Your table is #" + item.table}
-																</Text>
-																
-																<View style={{ alignItems: 'center' }}>
-																	{item.locationtype == "restaurant" ? 
-																		item.booker ? 
-																			<View style={{ alignItems: 'center' }}>
-																				<View style={style.actions}>
-																					<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
-																						<Text style={style.actionHeader}>Cancel</Text>
-																					</TouchableOpacity>
-																					<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(index)}>
-																						<Text style={style.actionHeader}>Accept</Text>
-																					</TouchableOpacity>
-																				</View>
-																			</View>
-																			:
-																			item.confirm ? 
-																				<>
-																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
-																						props.close()
-																						props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
-																					}}>
-																						<Text style={style.itemServiceOrderActionHeader}>See the menu</Text>
-																					</TouchableOpacity>
-																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
-																						props.close()
-																						props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
-																					}}>
-																						<Text style={style.itemServiceOrderActionHeader}>Reschedule</Text>
-																					</TouchableOpacity>
-																					<View style={style.itemServiceOrderTouchDisabled} onPress={() => {}}>
-																						<Text style={style.itemServiceOrderActionHeader}>
-																							Awaits seating{'\n'}
-																							<Text>........</Text>
-																						</Text>
-																					</View>
-																				</>
+															:
+															<Text style={style.itemServiceHeader}>
+																{item.bookerName} {item.action == "accepted" ? "made" : "requested"} a reservation for you
+																{item.diners > 0 ? 
+																	<>
+																		{' '}and{' '}
+																		{
+																			item.diners - 1 == 0 ? 
+																				item.bookerName
 																				:
-																				<View style={{ alignItems: 'center' }}>
-																					<View style={style.actions}>
-																						<TouchableOpacity style={style.action} onPress={() => cancelTheReservationJoining(item.id)}>
-																							<Text style={style.actionHeader}>Not Coming</Text>
-																						</TouchableOpacity>
-																						<TouchableOpacity style={style.action} onPress={() => acceptTheReservationJoining(index)}>
-																							<Text style={style.actionHeader}>Accept</Text>
-																						</TouchableOpacity>
-																					</View>
-																				</View>
-																		:
-																		<View style={style.actions}>
-																			<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
-																				<Text style={style.actionHeader}>Cancel</Text>
-																			</TouchableOpacity>
-																			<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(index)}>
-																				<Text style={style.actionHeader}>Confirm</Text>
-																			</TouchableOpacity>
-																		</View>
-																	}
-																</View>
-															</>
-														)}
+																				(item.diners - 1) + " other " + ((item.diners - 1) <= 1 ? "person" : "people") + " " 
+																		}
+																	</>
+																: null}
+																{'\n'}at
+																<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{'\n' + item.location}</Text>
+																{'\n'}
+																<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{displayTime(item.time)}</Text>
+															</Text>
+														:
+														<Text style={style.itemServiceHeader}>
+															You requested an appointment for {' '}
+															<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.service}</Text>
+															{'\n'}at{'\n'}
+															<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.location}</Text>
+															{'\n'}
+															<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{displayTime(item.time)}</Text>
 
-														{item.action == "confirmed" && (
-															<>
-																<Text style={style.itemServiceResponseHeader}>
-																	{item.locationtype == 'restaurant' ? 
-																		(item.booker ? "Your" : "The") + " reservation has been accepted"
-																		:
-																		"Your requested appointment has been accepted."
-																	}
-																	{'\n\n'}
-																	{item.locationtype == 'restaurant' && "Your table is #" + item.table}
-																</Text>
+															{item.worker != null && <Text style={{ fontSize: fsize(0.05) }}>{'\nwith worker: ' + item.worker.username}</Text>}
+														</Text>
+													}
 
-																{item.locationtype == "restaurant" ?
-																	item.confirm ? 
+													{(item.action == "requested" || item.action == "change") && 
+														<Text style={{ fontWeight: '100' }}>waiting for the {item.locationtype == 'restaurant' ? 'restaurant' : 'salon'}'s response</Text>
+													}
+
+													{item.action == "accepted" && (
+														<>
+															<Text style={style.itemServiceResponseHeader}>
+																{item.locationtype == 'restaurant' ? 
+																	item.booker ? "Your reservation has been accepted" : ""
+																	:
+																	"Your requested appointment has been accepted."
+																}
+																{'\n\n'}
+																{item.locationtype == 'restaurant' && "Your table is #" + item.table}
+															</Text>
+															
+															<View style={{ alignItems: 'center' }}>
+																{item.locationtype == "restaurant" ? 
+																	item.booker ? 
 																		<View style={{ alignItems: 'center' }}>
-																			{item.seated ?
-																				<View style={style.itemServiceOrderActions}>
-																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
-																						props.close()
-																						props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
-																					}}>
-																						<Text style={style.itemServiceOrderActionHeader}>See menu</Text>
-																					</TouchableOpacity>
-																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => sendTheDiningPayment(item.id, index)}>
-																						<Text style={style.itemServiceOrderActionHeader}>Send payment{item.allowPayment ? " again" : ""}</Text>
-																					</TouchableOpacity>
-																				</View>
-																				:
-																				<>
-																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
-																						props.close()
-																						props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
-																					}}>
-																						<Text style={style.itemServiceOrderActionHeader}>See the menu</Text>
-																					</TouchableOpacity>
-																					<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
-																						props.close()
-																						props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
-																					}}>
-																						<Text style={style.itemServiceOrderActionHeader}>Reschedule</Text>
-																					</TouchableOpacity>
-																					<View style={style.itemServiceOrderTouchDisabled} onPress={() => {}}>
-																						<Text style={style.itemServiceOrderActionHeader}>
-																							Awaits seating{'\n'}
-																							<Text>........</Text>
-																						</Text>
-																					</View>
-																				</>
-																			}
+																			<View style={style.actions}>
+																				<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
+																					<Text style={style.actionHeader}>Cancel</Text>
+																				</TouchableOpacity>
+																				<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(index)}>
+																					<Text style={style.actionHeader}>Accept</Text>
+																				</TouchableOpacity>
+																			</View>
 																		</View>
 																		:
-																		item.booker ? 
-																			<View style={{ alignItems: 'center' }}>
-																				<View style={style.actions}>
-																					<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
-																						<Text style={style.actionHeader}>Cancel</Text>
-																					</TouchableOpacity>
-																					<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(index)}>
-																						<Text style={style.actionHeader}>Accept</Text>
-																					</TouchableOpacity>
+																		item.confirm ? 
+																			<>
+																				<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
+																					props.close()
+																					props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
+																				}}>
+																					<Text style={style.itemServiceOrderActionHeader}>See the menu</Text>
+																				</TouchableOpacity>
+																				<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
+																					props.close()
+																					props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
+																				}}>
+																					<Text style={style.itemServiceOrderActionHeader}>Change</Text>
+																				</TouchableOpacity>
+																				<View style={style.itemServiceOrderTouchDisabled} onPress={() => {}}>
+																					<Text style={style.itemServiceOrderActionHeader}>
+																						Awaits seating{'\n'}
+																						<Text>........</Text>
+																					</Text>
 																				</View>
-																			</View>
+																			</>
 																			:
 																			<View style={{ alignItems: 'center' }}>
 																				<View style={style.actions}>
@@ -1257,363 +1191,449 @@ export default function notifications(props) {
 																				</View>
 																			</View>
 																	:
-																	<View style={{ alignItems: 'center' }}>
-																		<View style={style.actions}>
-																			<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
-																				<Text style={style.actionHeader}>Cancel Service</Text>
-																			</TouchableOpacity>
-																			<TouchableOpacity style={style.action} onPress={() => allowThePayment(item, index)}>
-																				<Text style={style.actionHeader}>Allow Payment{item.allowPayment ? ' Again' : ''}</Text>
-																			</TouchableOpacity>
-																			<TouchableOpacity style={style.action} onPress={() => {
-																				props.close()
-																				props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id })
-																			}}>
-																				<Text style={style.actionHeader}>Reschedule</Text>
-																			</TouchableOpacity>
-																		</View>											
-																	</View>
-																}
-															</>
-														)}
-
-														{item.action == "cancel" || item.action == "rebook" ? 
-															<View style={style.storeRequested}>
-																<Text style={style.itemServiceResponseHeader}>
-																	{item.action == "cancel" ? 
-																		item.locationtype == 'restaurant' ? 
-																			"Your reservation has been cancelled"
-																			:
-																			"Your requested appointment has been cancelled"
-																		:
-																		"Unfortunately, this time has been taken."
-																	}								
-																</Text>
-																{item.reason != "" && <Text style={style.itemServiceResponseHeader}>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>}
-																{item.action == "cancel" && (
-																	<View style={{ alignItems: 'center' }}>
-																		<TouchableOpacity style={style.itemServiceResponseTouch} onPress={() => closeTheRequest(index)}>
-																			<Text style={style.itemServiceResponseTouchHeader}>Ok</Text>
+																	<View style={style.actions}>
+																		<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
+																			<Text style={style.actionHeader}>Cancel</Text>
+																		</TouchableOpacity>
+																		<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(index)}>
+																			<Text style={style.actionHeader}>Confirm</Text>
 																		</TouchableOpacity>
 																	</View>
-																)}
-																{item.nextTime > 0 && (
-																	<>
-																		<Text style={style.itemHeader}>
-																			<Text>The {item.locationtype == "restaurant" ? "restaurant" : "salon"} requested this time for you.</Text>
-																			{'\n'}
-																			<Text style={style.itemServiceResponseHeader}>{displayTime(item.nextTime)}</Text>
-																			{'\n\n'}
-																			<Text>Will you be available?</Text>
-																		</Text>
-																		<View style={style.actions}>
-																			<TouchableOpacity style={style.action} onPress={() => closeTheRequest(index)}>
-																				<Text style={style.actionHeader}>Cancel</Text>
-																			</TouchableOpacity>
-																			<TouchableOpacity style={style.action} onPress={() => {
-																				props.close()
-																				
-																				if (item.locationtype == "restaurant") {
-																					props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
-																				} else {
-																					props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid })
-																				}
-																			}}>
-																				<Text style={style.actionHeader}>Reschedule</Text>
-																			</TouchableOpacity>
-																			<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(index)}>
-																				<Text style={style.actionHeader}>Yes</Text>
-																			</TouchableOpacity>
-																		</View>
-																	</>
-																)}
+																}
 															</View>
-														: null }
-													</View>
+														</>
+													)}
+
+													{item.action == "confirmed" && (
+														<>
+															<Text style={style.itemServiceResponseHeader}>
+																{item.locationtype == 'restaurant' ? 
+																	(item.booker ? "Your" : "The") + " reservation has been accepted"
+																	:
+																	"Your requested appointment has been accepted."
+																}
+																{'\n\n'}
+																{item.locationtype == 'restaurant' && "Your table is #" + item.table}
+															</Text>
+
+															{item.locationtype == "restaurant" ?
+																item.confirm ? 
+																	<View style={{ alignItems: 'center' }}>
+																		{item.seated ?
+																			<View style={style.itemServiceOrderActions}>
+																				<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
+																					props.close()
+																					props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
+																				}}>
+																					<Text style={style.itemServiceOrderActionHeader}>See menu</Text>
+																				</TouchableOpacity>
+																				<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => sendTheDiningPayment(item.id, index)}>
+																					<Text style={style.itemServiceOrderActionHeader}>Send payment{item.allowPayment ? " again" : ""}</Text>
+																				</TouchableOpacity>
+																			</View>
+																			:
+																			<>
+																				<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
+																					props.close()
+																					props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
+																				}}>
+																					<Text style={style.itemServiceOrderActionHeader}>See the menu</Text>
+																				</TouchableOpacity>
+																				<TouchableOpacity style={style.itemServiceOrderAction} onPress={() => {
+																					props.close()
+																					props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
+																				}}>
+																					<Text style={style.itemServiceOrderActionHeader}>Change</Text>
+																				</TouchableOpacity>
+																				<View style={style.itemServiceOrderTouchDisabled} onPress={() => {}}>
+																					<Text style={style.itemServiceOrderActionHeader}>
+																						Awaits seating{'\n'}
+																						<Text>........</Text>
+																					</Text>
+																				</View>
+																			</>
+																		}
+																	</View>
+																	:
+																	item.booker ? 
+																		<View style={{ alignItems: 'center' }}>
+																			<View style={style.actions}>
+																				<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
+																					<Text style={style.actionHeader}>Cancel</Text>
+																				</TouchableOpacity>
+																				<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(index)}>
+																					<Text style={style.actionHeader}>Accept</Text>
+																				</TouchableOpacity>
+																			</View>
+																		</View>
+																		:
+																		<View style={{ alignItems: 'center' }}>
+																			<View style={style.actions}>
+																				<TouchableOpacity style={style.action} onPress={() => cancelTheReservationJoining(item.id)}>
+																					<Text style={style.actionHeader}>Not Coming</Text>
+																				</TouchableOpacity>
+																				<TouchableOpacity style={style.action} onPress={() => acceptTheReservationJoining(index)}>
+																					<Text style={style.actionHeader}>Accept</Text>
+																				</TouchableOpacity>
+																			</View>
+																		</View>
+																:
+																<View style={{ alignItems: 'center' }}>
+																	<View style={style.actions}>
+																		<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
+																			<Text style={style.actionHeader}>Cancel Service</Text>
+																		</TouchableOpacity>
+																		<TouchableOpacity style={style.action} onPress={() => allowThePayment(item, index)}>
+																			<Text style={style.actionHeader}>Allow Payment{item.allowPayment ? ' Again' : ''}</Text>
+																		</TouchableOpacity>
+																		<TouchableOpacity style={style.action} onPress={() => {
+																			props.close()
+																			props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id })
+																		}}>
+																			<Text style={style.actionHeader}>Change</Text>
+																		</TouchableOpacity>
+																	</View>											
+																</View>
+															}
+														</>
+													)}
+
+													{item.action == "cancel" || item.action == "rebook" ? 
+														<View style={style.storeRequested}>
+															<Text style={style.itemServiceResponseHeader}>
+																{item.action == "cancel" ? 
+																	item.locationtype == 'restaurant' ? 
+																		"Your reservation has been cancelled"
+																		:
+																		"Your requested appointment has been cancelled"
+																	:
+																	"Unfortunately, this time has been taken."
+																}								
+															</Text>
+															{item.reason != "" && <Text style={style.itemServiceResponseHeader}>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>}
+															{item.action == "cancel" && (
+																<View style={{ alignItems: 'center' }}>
+																	<TouchableOpacity style={style.itemServiceResponseTouch} onPress={() => closeTheRequest(index)}>
+																		<Text style={style.itemServiceResponseTouchHeader}>Ok</Text>
+																	</TouchableOpacity>
+																</View>
+															)}
+															{item.nextTime > 0 && (
+																<>
+																	<Text style={style.itemHeader}>
+																		<Text>The {item.locationtype == "restaurant" ? "restaurant" : "salon"} requested this time for you.</Text>
+																		{'\n'}
+																		<Text style={style.itemServiceResponseHeader}>{displayTime(item.nextTime)}</Text>
+																		{'\n\n'}
+																		<Text>Will you be available?</Text>
+																	</Text>
+																	<View style={style.actions}>
+																		<TouchableOpacity style={style.action} onPress={() => closeTheRequest(index)}>
+																			<Text style={style.actionHeader}>Cancel</Text>
+																		</TouchableOpacity>
+																		<TouchableOpacity style={style.action} onPress={() => {
+																			props.close()
+																			
+																			if (item.locationtype == "restaurant") {
+																				props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
+																			} else {
+																				props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid })
+																			}
+																		}}>
+																			<Text style={style.actionHeader}>Change</Text>
+																		</TouchableOpacity>
+																		<TouchableOpacity style={style.action} onPress={() => confirmTheRequest(index)}>
+																			<Text style={style.actionHeader}>Yes</Text>
+																		</TouchableOpacity>
+																	</View>
+																</>
+															)}
+														</View>
+													: null }
 												</View>
-											)}
-										</View>
-									}
-								/>
-								:
-								<View style={{ alignItems: 'center', flexDirection: 'column', height: screenHeight - 114, justifyContent: 'space-around' }}>
-									<Text style={{ fontSize: fsize(0.05) }}>No Notification(s) Yet</Text>
-								</View>
+											</View>
+										)}
+									</View>
+								}
+							/>
 							:
-							<View style={{ flexDirection: 'column', height: screenHeight - 114, justifyContent: 'space-around' }}>
-								<ActivityIndicator size="small"/>
+							<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
+								<Text style={{ fontSize: fsize(0.05) }}>No Notification(s) Yet</Text>
 							</View>
 						}
 					</View>
 				</View>
+				:
+				<View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
+					<ActivityIndicator color="black" size="large"/>
+				</View>
+			}
 
-				{confirm.show && (
-					<Modal transparent={true}>
-						<View style={{ paddingTop: offsetPadding }}>
-							<View style={style.confirmBox}>
-								<View style={style.confirmContainer}>
-									<Text style={style.confirmHeader}>
-										Confirmed {confirm.type == "cart" ? "Cart" : "Dining"} Order: 
-										{'\n\n Quantity: ' + confirm.quantity + '\n\n'} {confirm.name + '\n\n'} at ${confirm.price}
-									</Text>
+			{confirm.show && (
+				<Modal transparent={true}>
+					<View style={{ paddingTop: offsetPadding }}>
+						<View style={style.confirmBox}>
+							<View style={style.confirmContainer}>
+								<Text style={style.confirmHeader}>
+									Confirmed {confirm.type == "cart" ? "Cart" : "Dining"} Order: 
+									{'\n\n Quantity: ' + confirm.quantity + '\n\n'} {confirm.name + '\n\n'} at ${confirm.price}
+								</Text>
 
-									<View style={style.confirmOptions}>
-										<TouchableOpacity style={style.confirmOption} onPress={() => {
-											const newItems = [...items]
+								<View style={style.confirmOptions}>
+									<TouchableOpacity style={style.confirmOption} onPress={() => {
+										const newItems = [...items]
 
-											newItems.splice(confirm.index, 1)
+										newItems.splice(confirm.index, 1)
 
-											setItems(newItems)
+										setItems(newItems)
 
-											setConfirm({ ...confirm, show: false, type: "", index: 0, name: "", quantity: "", price: "" })
-										}}>
-											<Text style={style.confirmOptionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
+										setConfirm({ ...confirm, show: false, type: "", index: 0, name: "", quantity: "", price: "" })
+									}}>
+										<Text style={style.confirmOptionHeader}>Ok</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
-				{cancelRequest.show && (
-					<Modal transparent={true}>
-						<View style={{ paddingTop: offsetPadding }}>
-							<View style={style.confirmBox}>
-								<View style={style.confirmContainer}>
-									<Text style={style.confirmHeader}>
-										<Text style={{ fontFamily: 'Arial'}}>
-											Are you sure you want to cancel the 
+					</View>
+				</Modal>
+			)}
+			{cancelRequest.show && (
+				<Modal transparent={true}>
+					<View style={{ paddingTop: offsetPadding }}>
+						<View style={style.confirmBox}>
+							<View style={style.confirmContainer}>
+								<Text style={style.confirmHeader}>
+									<Text style={{ fontFamily: 'Arial'}}>
+										Are you sure you want to cancel the 
 
-											{cancelRequest.type != 'restaurant' ? ' service appointment of' : ' reservation'}
-										</Text>
-										{cancelRequest.service ? '\n\n' + cancelRequest.service + '\n' : '\n\n'}
-										{'\nat ' + cancelRequest.location + '\n'}
-										{displayTime(cancelRequest.time)}
+										{cancelRequest.type != 'restaurant' ? ' service appointment of' : ' reservation'}
 									</Text>
+									{cancelRequest.service ? '\n\n' + cancelRequest.service + '\n' : '\n\n'}
+									{'\nat ' + cancelRequest.location + '\n'}
+									{displayTime(cancelRequest.time)}
+								</Text>
 
-									<View style={style.confirmOptions}>
-										<TouchableOpacity style={style.confirmOption} onPress={() => setCancelrequest({ show: false, service: "", time: 0, index: -1 })}>
-											<Text style={style.confirmOptionHeader}>No</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.confirmOption} onPress={() => cancelTheRequest()}>
-											<Text style={style.confirmOptionHeader}>Yes</Text>
-										</TouchableOpacity>
-									</View>
+								<View style={style.confirmOptions}>
+									<TouchableOpacity style={style.confirmOption} onPress={() => setCancelrequest({ show: false, service: "", time: 0, index: -1 })}>
+										<Text style={style.confirmOptionHeader}>No</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.confirmOption} onPress={() => cancelTheRequest()}>
+										<Text style={style.confirmOptionHeader}>Yes</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
-				{showDiningPaymentRequired && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.popBox}>
-								<View style={style.popContainer}>
-									<Text style={style.popHeader}>
-										You need to provide a payment method to accept
-										a reservation
-									</Text>
+					</View>
+				</Modal>
+			)}
+			{showDiningPaymentRequired && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertical: offsetPadding }}>
+						<View style={style.popBox}>
+							<View style={style.popContainer}>
+								<Text style={style.popHeader}>
+									You need to provide a payment method to accept
+									a reservation
+								</Text>
 
-									<View style={style.popActions}>
-										<TouchableOpacity style={style.popAction} onPress={() => setShowdiningpaymentrequired(false)}>
-											<Text style={style.popActionHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.popAction} onPress={() => {
-											props.close()
-											props.navigation.navigate("account", { required: "card" })
-										}}>
-											<Text style={style.popActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
+								<View style={style.popActions}>
+									<TouchableOpacity style={style.popAction} onPress={() => setShowdiningpaymentrequired(false)}>
+										<Text style={style.popActionHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.popAction} onPress={() => {
+										props.close()
+										props.navigation.navigate("account", { required: "card" })
+									}}>
+										<Text style={style.popActionHeader}>Ok</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
-				{showServicePaymentRequired && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.popBox}>
-								<View style={style.popContainer}>
-									<Text style={style.popHeader}>
-										You need to provide a payment method to continue
-									</Text>
+					</View>
+				</Modal>
+			)}
+			{showServicePaymentRequired && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertical: offsetPadding }}>
+						<View style={style.popBox}>
+							<View style={style.popContainer}>
+								<Text style={style.popHeader}>
+									You need to provide a payment method to continue
+								</Text>
 
-									<View style={style.popActions}>
-										<TouchableOpacity style={style.popAction} onPress={() => setShowservicepaymentrequired(false)}>
-											<Text style={style.popActionHeader}>Close</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.popAction} onPress={() => {
-											props.close()
-											props.navigation.navigate("account", { required: "card" })
-										}}>
-											<Text style={style.popActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
+								<View style={style.popActions}>
+									<TouchableOpacity style={style.popAction} onPress={() => setShowservicepaymentrequired(false)}>
+										<Text style={style.popActionHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.popAction} onPress={() => {
+										props.close()
+										props.navigation.navigate("account", { required: "card" })
+									}}>
+										<Text style={style.popActionHeader}>Ok</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
 						</View>
-					</Modal>
-				)}
-				{showChargeuser.show && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.popBox}>
-								{showChargeuser.trialstatus.days > 0 ? 
-									<View style={style.popBox}>
-										<View style={style.popContainer}>
-											<Text style={style.popHeader}>Appointment Confirmed</Text>
-
-											<View style={style.popActions}>
-												<TouchableOpacity style={style.popAction} onPress={() => {
-													if (showChargeuser.type == "restaurant") {
-														acceptTheReservationJoining()
-													} else {
-														setShowchargeuser({ ...showChargeuser, show: false })
-													}
-												}}>
-													<Text style={style.popActionHeader}>Ok</Text>
-												</TouchableOpacity>
-											</View>
-										</View>
-									</View>
-									:
+					</View>
+				</Modal>
+			)}
+			{showChargeuser.show && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertical: offsetPadding }}>
+						<View style={style.popBox}>
+							{showChargeuser.trialstatus.days > 0 ? 
+								<View style={style.popBox}>
 									<View style={style.popContainer}>
-										<Text style={style.popHeader}>
-											Trial over
-											{'\n'}
-											A charge of $ 0.50 will be applied
-											to your credit card to proceed with
-											confirmation
-										</Text>
-
-										<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
-											App fee: ${showChargeuser.cost}
-											{'\n'}E-pay fee: ${showChargeuser.fee}
-											{'\n'}PST: ${showChargeuser.pst}
-											{'\n'}HST: ${showChargeuser.hst}
-											{'\n'}Total: ${showChargeuser.total}
-										</Text>
+										<Text style={style.popHeader}>Appointment Confirmed</Text>
 
 										<View style={style.popActions}>
-											<TouchableOpacity style={style.popAction} onPress={() => setShowchargeuser({ ...showChargeuser, show: false, showworkers: false, trialstatus: { days: 30, status: "" }})}>
-												<Text style={style.popActionHeader}>Close</Text>
-											</TouchableOpacity>
 											<TouchableOpacity style={style.popAction} onPress={() => {
-												if (showChargeuser.type == "salon") {
-													confirmTheRequest()
-												} else {
+												if (showChargeuser.type == "restaurant") {
 													acceptTheReservationJoining()
+												} else {
+													setShowchargeuser({ ...showChargeuser, show: false })
 												}
 											}}>
 												<Text style={style.popActionHeader}>Ok</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
-								}
-							</View>
-						</View>
-					</Modal>
-				)}
-				{showPaymentdetail.show && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							<View style={style.popBox}>
+								</View>
+								:
 								<View style={style.popContainer}>
-									<Text style={style.popHeader}>Payment detail</Text>
+									<Text style={style.popHeader}>
+										Trial over
+										{'\n'}
+										A charge of $ 0.50 will be applied
+										to your credit card to proceed with
+										confirmation
+									</Text>
 
 									<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
-										Amount: ${showPaymentdetail.amount}
-										{'\n'}E-pay fee: ${showPaymentdetail.fee}
-										{'\n'}PST: ${showPaymentdetail.pst}
-										{'\n'}HST: ${showPaymentdetail.hst}
-										{'\n'}Total: ${showPaymentdetail.total}
+										App fee: ${showChargeuser.cost}
+										{'\n'}E-pay fee: ${showChargeuser.fee}
+										{'\n'}PST: ${showChargeuser.pst}
+										{'\n'}HST: ${showChargeuser.hst}
+										{'\n'}Total: ${showChargeuser.total}
 									</Text>
 
 									<View style={style.popActions}>
-										<TouchableOpacity style={style.popAction} onPress={() => setShowpaymentdetail({ ...showPaymentdetail, show: false })}>
+										<TouchableOpacity style={style.popAction} onPress={() => setShowchargeuser({ ...showChargeuser, show: false, showworkers: false, trialstatus: { days: 30, status: "" }})}>
 											<Text style={style.popActionHeader}>Close</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={style.popAction} onPress={() => sendTheDiningPayment()}>
+										<TouchableOpacity style={style.popAction} onPress={() => {
+											if (showChargeuser.type == "salon") {
+												confirmTheRequest()
+											} else {
+												acceptTheReservationJoining()
+											}
+										}}>
+											<Text style={style.popActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							}
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showPaymentdetail.show && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertical: offsetPadding }}>
+						<View style={style.popBox}>
+							<View style={style.popContainer}>
+								<Text style={style.popHeader}>Payment detail</Text>
+
+								<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+									Amount: ${showPaymentdetail.amount}
+									{'\n'}E-pay fee: ${showPaymentdetail.fee}
+									{'\n'}PST: ${showPaymentdetail.pst}
+									{'\n'}HST: ${showPaymentdetail.hst}
+									{'\n'}Total: ${showPaymentdetail.total}
+								</Text>
+
+								<View style={style.popActions}>
+									<TouchableOpacity style={style.popAction} onPress={() => setShowpaymentdetail({ ...showPaymentdetail, show: false })}>
+										<Text style={style.popActionHeader}>Close</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.popAction} onPress={() => sendTheDiningPayment()}>
+										<Text style={style.popActionHeader}>Ok</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					</View>
+				</Modal>
+			)}
+			{showOwners.show && (
+				<Modal transparent={true}>
+					<View style={{ paddingVertical: offsetPadding }}>
+						{showOwners.showworkers ? 
+							<View style={style.payworkerBox}>
+								<View style={style.payworkerContainer}>
+									<TextInput style={style.payworkerSearchInput} placeholder="Search worker" placeholderTextColor="rgba(0, 0, 0, 0.5)" onChangeText={username => searchTheWorkers(username)}/>
+
+									<Text style={style.payworkerWorkersListHeader}>Select worker to send payment</Text>
+
+									<View style={style.payworkerWorkersList}>
+										<FlatList
+											data={showOwners.owners}
+											renderItem={({ item, index }) => 
+												<View key={item.key} style={style.payworkerWorkersRow}>
+													{item.row.map(info => (
+														info.username ? 
+															<TouchableOpacity key={info.key} style={!info.selected ? style.payworkerWorker : style.payworkerWorkerDisabled} onPress={() => selectWorker(info.id)}>
+																<View style={style.payworkerWorkerProfile}>
+																	<Image source={{ uri: logo_url + info.profile }} style={{ height: fsize(0.15), width: fsize(0.15) }}/>
+																</View>
+																<Text style={style.payworkerWorkerHeader}>{info.username}</Text>
+															</TouchableOpacity>
+															:
+															<View key={info.key} style={style.payworkerWorkerEmpty}>
+															</View>
+													))}
+												</View>
+											}
+										/>
+									</View>
+
+									<View style={style.payworkerActions}>
+										<TouchableOpacity style={style.payworkerAction} onPress={() => setShowowners({ ...showOwners, show: false, owners: [], trialstatus: { days: 30, status: "" } })}>
+											<Text style={style.payworkerActionHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={showOwners.workerid > 0 ? style.payworkerAction : style.payworkerActionDisabled} disabled={showOwners.workerid == 0} onPress={() => setShowowners({ ...showOwners, showworkers: false })}>
+											<Text style={style.payworkerActionHeader}>Send</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							</View>
+							:
+							<View style={style.popBox}>
+								<View style={style.popContainer}>
+									<Text style={style.popHeader}>Payment Detail</Text>
+
+									<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+										Service cost: ${showOwners.cost}
+										{'\n'}E-pay fee: ${showOwners.fee}
+										{'\n'}PST: ${showOwners.pst}
+										{'\n'}HST: ${showOwners.hst}
+										{'\n'}Total: ${showOwners.total}
+									</Text>
+
+									<View style={style.popActions}>
+										<TouchableOpacity style={style.popAction} onPress={() => setShowowners({ ...showOwners, show: false, trialstatus: { days: 30, status: "" } })}>
+											<Text style={style.popActionHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.popAction} onPress={() => allowThePayment()}>
 											<Text style={style.popActionHeader}>Ok</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
 							</View>
-						</View>
-					</Modal>
-				)}
-				{showOwners.show && (
-					<Modal transparent={true}>
-						<View style={{ paddingVertical: offsetPadding }}>
-							{showOwners.showworkers ? 
-								<View style={style.payworkerBox}>
-									<View style={style.payworkerContainer}>
-										<TextInput style={style.payworkerSearchInput} placeholder="Search worker" placeholderTextColor="rgba(0, 0, 0, 0.5)" onChangeText={username => searchTheWorkers(username)}/>
-
-										<Text style={style.payworkerWorkersListHeader}>Select worker to send payment</Text>
-
-										<View style={style.payworkerWorkersList}>
-											<FlatList
-												data={showOwners.owners}
-												renderItem={({ item, index }) => 
-													<View key={item.key} style={style.payworkerWorkersRow}>
-														{item.row.map(info => (
-															info.username ? 
-																<TouchableOpacity key={info.key} style={!info.selected ? style.payworkerWorker : style.payworkerWorkerDisabled} onPress={() => selectWorker(info.id)}>
-																	<View style={style.payworkerWorkerProfile}>
-																		<Image source={{ uri: logo_url + info.profile }} style={{ height: workerImage, width: workerImage }}/>
-																	</View>
-																	<Text style={style.payworkerWorkerHeader}>{info.username}</Text>
-																</TouchableOpacity>
-																:
-																<View key={info.key} style={style.payworkerWorkerEmpty}>
-																</View>
-														))}
-													</View>
-												}
-											/>
-										</View>
-
-										<View style={style.payworkerActions}>
-											<TouchableOpacity style={style.payworkerAction} onPress={() => setShowowners({ ...showOwners, show: false, owners: [], trialstatus: { days: 30, status: "" } })}>
-												<Text style={style.payworkerActionHeader}>Close</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={showOwners.workerid > 0 ? style.payworkerAction : style.payworkerActionDisabled} disabled={showOwners.workerid == 0} onPress={() => setShowowners({ ...showOwners, showworkers: false })}>
-												<Text style={style.payworkerActionHeader}>Send</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								</View>
-								:
-								<View style={style.popBox}>
-									<View style={style.popContainer}>
-										<Text style={style.popHeader}>Payment Detail</Text>
-
-										<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
-											Service cost: ${showOwners.cost}
-											{'\n'}E-pay fee: ${showOwners.fee}
-											{'\n'}PST: ${showOwners.pst}
-											{'\n'}HST: ${showOwners.hst}
-											{'\n'}Total: ${showOwners.total}
-										</Text>
-
-										<View style={style.popActions}>
-											<TouchableOpacity style={style.popAction} onPress={() => setShowowners({ ...showOwners, show: false, trialstatus: { days: 30, status: "" } })}>
-												<Text style={style.popActionHeader}>Close</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.popAction} onPress={() => allowThePayment()}>
-												<Text style={style.popActionHeader}>Ok</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								</View>
-							}
-						</View>
-					</Modal>
-				)}
-			</View>
-
+						}
+					</View>
+				</Modal>
+			)}
 			{showDisabledScreen && (
 				<Modal transparent={true}>
 					<View style={style.disabled}>
@@ -1638,15 +1658,15 @@ export default function notifications(props) {
 }
 
 const style = StyleSheet.create({
-	notifications: { backgroundColor: 'white' },
-	box: { backgroundColor: '#EAEAEA', height: screenHeight, width: '100%' },
+	notifications: { backgroundColor: '#EAEAEA', height: '100%', paddingVertical: offsetPadding, width: '100%' },
+	box: { height: '100%', width: '100%' },
 	close: { marginTop: 20, marginHorizontal: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	refresh: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5 },
 	refreshHeader: { fontSize: fsize(0.04) },
 
-	body: { flexDirection: 'column', height: screenHeight - 114, justifyContent: 'space-around' },
+	body: { flexDirection: 'column', height: '80%', justifyContent: 'space-around' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
 	itemImageHolders: { width: 100 },
 	itemLocationImageHolder: { borderRadius: 50, height: 80, overflow: 'hidden', width: 80 },
@@ -1654,7 +1674,7 @@ const style = StyleSheet.create({
 
 	// service
 	itemServiceHeader: { fontWeight: 'bold', margin: 10, textAlign: 'center' },
-	itemServiceResponseHeader: { fontWeight: 'bold', margin: 10 },
+	itemServiceResponseHeader: { fontSize: fsize(0.04), fontWeight: 'bold', margin: 10 },
 	itemServiceResponseTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 60 },
 	itemServiceResponseTouchHeader: { fontWeight: 'bold', textAlign: 'center' },
 	itemServiceOrderActions: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -1701,9 +1721,9 @@ const style = StyleSheet.create({
 	payworkerWorkersListHeader: { fontWeight: 'bold', textAlign: 'center' },
 	payworkerWorkersRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	payworkerWorker: { alignItems: 'center', marginHorizontal: 5, padding: 5 },
-	payworkerWorkerDisabled: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: 5, marginHorizontal: 5, padding: 5, width: workerImage },
-	payworkerWorkerEmpty: { alignItems: 'center', borderRadius: 5, marginHorizontal: 5, padding: 5, width: workerImage },
-	payworkerWorkerProfile: { borderRadius: (workerImage - 10) / 2, height: (workerImage - 10), overflow: 'hidden', width: (workerImage - 10) },
+	payworkerWorkerDisabled: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: 5, marginHorizontal: 5, padding: 5, width: fsize(0.18) },
+	payworkerWorkerEmpty: { alignItems: 'center', borderRadius: 5, marginHorizontal: 5, padding: 5, width: fsize(0.18) },
+	payworkerWorkerProfile: { borderRadius: fsize(0.15) / 2, height: fsize(0.15), overflow: 'hidden', width: fsize(0.15) },
 	payworkerWorkerHeader: {  },
 	payworkerActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	payworkerAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },

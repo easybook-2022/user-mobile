@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { ActivityIndicator, Dimensions, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { logo_url } from '../../../assets/info'
 import { getLocationProfile } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
-import { getProducts } from '../../apis/products'
-import { getServices } from '../../apis/services'
 import { getNumCartItems } from '../../apis/carts'
 
 import Cart from '../../components/cart'
@@ -39,17 +37,8 @@ export default function salonprofile(props) {
 	const [showInfo, setShowinfo] = useState(false)
 	const [userId, setUserid] = useState(null)
 
-	const [showMenus, setShowmenus] = useState(false)
 	const [menus, setMenus] = useState([])
-	const [numMenus, setNummenus] = useState(0)
 
-	const [showProducts, setShowproducts] = useState(false)
-	const [products, setProducts] = useState([])
-	const [numProducts, setNumproducts] = useState(0)
-
-	const [showServices, setShowservices] = useState(false)
-	const [services, setServices] = useState([])
-	const [numServices, setNumservices] = useState(0)
 	const [loaded, setLoaded] = useState(false)
 
 	const [openCart, setOpencart] = useState(false)
@@ -95,23 +84,13 @@ export default function salonprofile(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { locationInfo, msg } = res
-					const { name, logo, addressOne, addressTwo, city, province, postalcode, phonenumber, distance, longitude, latitude } = locationInfo
-					const address = addressOne + " " + addressTwo + ", " + city + " " + province + ", " + postalcode
+					const { name, logo, fullAddress, city, province, postalcode, phonenumber, distance } = res.info
 
 					setLogo(logo)
 					setName(name)
-					setAddress(address)
+					setAddress(fullAddress)
 					setPhonenumber(phonenumber)
 					setDistance(distance)
-
-					if (msg == "menus") {
-						getAllMenus()
-					} else if (msg == "services") {
-						getAllServices()
-					} else if (msg == "products") {
-						getAllProducts()
-					}
 				}
 			})
 			.catch((err) => {
@@ -123,9 +102,7 @@ export default function salonprofile(props) {
 			})
 	}
 	const getAllMenus = async() => {
-		const data = { locationid, parentmenuid: "" }
-
-		getMenus(data)
+		getMenus(locationid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -134,58 +111,6 @@ export default function salonprofile(props) {
 			.then((res) => {
 				if (res && isMounted.current == true) {
 					setMenus(res.menus)
-					setNummenus(res.nummenus)
-					setShowmenus(true)
-					setLoaded(true)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("an error has occurred in server")
-				}
-			})
-	}
-	const getAllProducts = async() => {
-		const data = { locationid, menuid: "" }
-
-		getProducts(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res && isMounted.current == true) {
-					setProducts(res.products)
-					setNumproducts(res.numproducts)
-					setShowproducts(true)
-					setLoaded(true)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("an error has occurred in server")
-				}
-			})
-	}
-	const getAllServices = async() => {
-		const data = { userid: userId, locationid, menuid: "" }
-
-		getServices(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res && isMounted.current == true) {
-					setServices(res.services)
-					setNumservices(res.numservices)
-					setShowservices(true)
 					setLoaded(true)
 				}
 			})
@@ -200,6 +125,76 @@ export default function salonprofile(props) {
 	const initialize = () => {
 		getTheNumCartItems()
 		getTheLocationProfile()
+		getAllMenus()
+	}
+	const displayList = info => {
+		let { id, image, name, list, listType, left } = info
+		let add = name ? true : false
+
+		return (
+			<View style={{ marginLeft: left }}>
+				{name ?
+					<View style={style.menu}>
+						<View style={{ flexDirection: 'row' }}>
+							<View style={style.menuImageHolder}>
+								<Image style={style.menuImage} source={{ uri: logo_url + image }}/>
+							</View>
+							<Text style={style.menuName}>{name} (Menu)</Text>
+						</View>
+						{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+						{list.length > 0 && list.map((info, index) => (
+							<View key={"list-" + index}>
+								{info.listType == "list" ? 
+									displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
+									:
+									<View style={style.item}>
+										<View style={{ flexDirection: 'row', }}>
+											<View style={style.itemImageHolder}>
+												<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+											</View>
+											<Text style={style.itemHeader}>{info.name}</Text>
+											<Text style={style.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+											{info.listType == "service" && <Text style={style.itemHeader}>{info.duration}</Text>}
+										</View>
+										{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+										<View style={style.itemActions}>
+											<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, initialize: () => getAllMenus() })}>
+												<Text style={style.itemActionHeader}>Book a time</Text>
+											</TouchableOpacity>
+										</View>
+									</View>
+								}
+							</View>
+						))}
+					</View>
+					:
+					list.map((info, index) => (
+						<View key={"list-" + index}>
+							{info.listType == "list" ? 
+								displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
+								:
+								<View style={style.item}>
+									<View style={{ flexDirection: 'row', }}>
+										<View style={style.itemImageHolder}>
+											<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+										</View>
+										<Text style={style.itemHeader}>{info.name}</Text>
+										<Text style={style.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+										{info.listType == "service" && <Text style={style.itemHeader}>{info.duration}</Text>}
+									</View>
+									{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+									<View style={style.itemActions}>
+										<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, initialize: () => getAllMenus() })}>
+											<Text style={style.itemActionHeader}>Book a time</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							}
+						</View>
+					))
+				}
+			</View>
+		)
 	}
 	
 	useEffect(() => {
@@ -212,135 +207,32 @@ export default function salonprofile(props) {
 
 	return (
 		<View style={style.salonprofile}>
-			<View style={{ paddingVertical: offsetPadding }}>
 				<View style={style.box}>
 					<View style={style.profileInfo}>
-						<TouchableOpacity style={style.back} onPress={() => {
-							if (refetch) {
-								refetch()
-							}
-							
-							props.navigation.goBack()
-						}}>
-							<Text allowFontScaling={false} style={style.backHeader}>Back</Text>
-						</TouchableOpacity>
+						<View style={style.headers}>
+							<TouchableOpacity style={style.viewInfoTouch} onPress={() => setShowinfo(true)}>
+								<Text style={style.viewInfoTouchHeader}>View{'\n'}Info</Text>
+							</TouchableOpacity>
+							<View style={style.logoHolder}>
+								<Image style={style.logo} source={{ uri: logo_url + logo }}/>
+							</View>
+							<TouchableOpacity style={style.callTouch} onPress={() => Linking.openURL('tel://' + phonenumber)}>
+								<AntDesign name="phone" size={30}/>
+							</TouchableOpacity>
+						</View>
+						<View style={style.navs}>
+							<View style={{ flexDirection: 'row' }}>
+								<TouchableOpacity style={style.nav} onPress={() => getAllMenus()}>
+									<Text style={style.navHeader}>Refresh menu</Text>
+								</TouchableOpacity>
+							</View>
+						</View>
 					</View>
 					
 					<View style={style.body}>
-						{loaded ? 
-							<>
-								{showMenus && (
-									<>
-										<View style={{ alignItems: 'center' }}>
-											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
-												<Text allowFontScaling={false} style={style.moreInfoHeader}>View Salon Info</Text>
-											</TouchableOpacity>
-											<Text allowFontScaling={false} style={style.bodyHeader}>{numMenus} Menu(s)</Text>
-										</View>
-
-										<FlatList
-											showsVerticalScrollIndicator={false}
-											data={menus}
-											style={{ height: height - 386 }}
-											renderItem={({ item, index }) => 
-												<View key={item.key} style={style.row}>
-													{item.row.map(menu => (
-														menu.id ? 
-															<View key={menu.key} style={style.item}>
-																<View style={style.itemPhotoHolder}>
-																	<Image source={{ uri: logo_url + menu.image }} style={{ height: fsize(0.3), width: fsize(0.3) }}/>
-																</View>
-																<Text allowFontScaling={false} style={style.itemHeader}>{menu.name}</Text>
-																<Text allowFontScaling={false} style={style.itemNumCatHeader}>{menu.numCategories} service(s)</Text>
-																<TouchableOpacity style={style.seeMenu} onPress={() => props.navigation.navigate("menu", { locationid: locationid, menuid: menu.id, initialize: () => initialize() })}>
-																	<Text allowFontScaling={false} style={style.seeMenuHeader}>See Menu</Text>
-																</TouchableOpacity>
-															</View>
-															:
-															<View key={menu.key} style={style.item}></View>
-													))}
-												</View>
-											}
-										/>
-									</>
-								)}
-
-								{showProducts && (
-									<>
-										<View style={{ alignItems: 'center' }}>
-											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
-												<Text allowFontScaling={false} style={style.moreInfoHeader}>More Info</Text>
-											</TouchableOpacity>
-											<Text allowFontScaling={false} style={style.bodyHeader}>{numProducts} Product(s)</Text>
-										</View>
-
-										<FlatList
-											showsVerticalScrollIndicator={false}
-											data={products}
-											style={{ height: height - 386 }}
-											renderItem={({ item, index }) => 
-												<View key={item.key} style={style.row}>
-													{item.row.map(product => (
-														product.name ? 
-															<TouchableOpacity key={product.key} style={style.product} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id, initialize: () => initialize() })}>
-																<Image style={style.productImage} source={{ uri: logo_url + product.image }}/>
-																<Text allowFontScaling={false} style={style.productName}>{product.name}</Text>
-																
-																{product.info && <Text allowFontScaling={false} style={style.productInfo}>{product.info}</Text>}
-
-																<View style={{ flexDirection: 'row' }}>
-																	<Text allowFontScaling={false} style={style.productPrice}>$ {product.price}</Text>
-																</View>
-
-																<TouchableOpacity style={style.productBuy} onPress={() => props.navigation.navigate("itemprofile", { menuid: "", productid: product.id, initialize: () => initialize() })}>
-																	<Text allowFontScaling={false} style={style.productBuyHeader}>Buy</Text>
-																</TouchableOpacity>
-															</TouchableOpacity>
-															:
-															<View key={product.key} style={style.product}></View>
-													))}
-												</View>
-											}
-										/>
-									</>
-								)}
-
-								{showServices && (
-									<>
-										<View style={{ alignItems: 'center' }}>
-											<TouchableOpacity style={style.moreInfo} onPress={() => setShowinfo(true)}>
-												<Text allowFontScaling={false} style={style.moreInfoHeader}>More Info</Text>
-											</TouchableOpacity>
-											<Text allowFontScaling={false} style={style.bodyHeader}>{numServices} Service(s)</Text>
-										</View>
-
-										<FlatList
-											showsVerticalScrollIndicator={false}
-											data={services}
-											style={{ height: height - 386 }}
-											renderItem={({ item, index }) => 
-												<TouchableOpacity key={item.key} style={style.service} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id, initialize: () => initialize() })}>
-													<Image style={style.serviceImage} source={{ uri: logo_url + item.image }}/>
-													<View style={{ marginLeft: 10, width: (width - fsize(0.3)) - 30 }}>
-														<Text allowFontScaling={false} style={style.serviceName}>{item.name}</Text>
-														{item.info ? <Text allowFontScaling={false} style={style.serviceInfo}>{item.info}</Text> : null}
-
-														<Text allowFontScaling={false} style={style.serviceDetail}><Text allowFontScaling={false} style={{ fontWeight: 'bold' }}>Price</Text>: ${item.price}</Text>
-														<Text allowFontScaling={false} style={style.serviceDetail}>{JSON.stringify(item.time)}</Text>
-
-														<TouchableOpacity style={style.serviceBook} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: item.id, initialize: () => initialize() })}>
-															<Text allowFontScaling={false} style={style.serviceBookHeader}>Book a time</Text>
-														</TouchableOpacity>
-													</View>
-												</TouchableOpacity>
-											}
-										/>
-									</>
-								)}
-							</>
-							:
-							<ActivityIndicator size="small"/>
-						}
+						<ScrollView>
+							{displayList({ name: "", image: "", list: menus, listType: "list", left: 0 })}
+						</ScrollView>
 					</View>
 
 					<View style={style.bottomNavs}>
@@ -360,7 +252,7 @@ export default function salonprofile(props) {
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
 									<Entypo name="shopping-cart" size={30}/>
-									{numCartItems > 0 && <Text allowFontScaling={false} style={style.numCartItemsHeader}>{numCartItems}</Text>}
+									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
 								</TouchableOpacity>
 							)}
 
@@ -383,134 +275,118 @@ export default function salonprofile(props) {
 									setShowauth({ show: true, action: false })
 								}
 							}}>
-								<Text allowFontScaling={false} style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
 				</View>
 
-				{openCart && <Modal><Cart showNotif={() => {
-					setOpencart(false)
-					setTimeout(function () {
-						props.navigation.dispatch(
-							CommonActions.reset({
-								index: 0,
-								routes: [{ name: "main", params: { showNotif: true } }]
-							})
-						)
-					}, 1000)
-				}} close={() => {
-					getTheNumCartItems()
-					setOpencart(false)
-				}}/></Modal>}
-				{showAuth.show && (
-					<Modal transparent={true}>
-						<Userauth close={() => setShowauth({ show: false, action: "" })} done={(id, msg) => {
-							if (msg == "setup") {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: "setup" }]
-									})
-								);
-							} else {
-								socket.emit("socket/user/login", "user" + id, () => {
-									setUserid(id)
-
-									if (showAuth.action == "addcart") {
-										addCart()
-									} else if (showAuth.action == "openfriendscart") {
-										openFriendsCart()
-									}
+			{openCart && <Modal><Cart showNotif={() => {
+				setOpencart(false)
+				setTimeout(function () {
+					props.navigation.dispatch(
+						CommonActions.reset({
+							index: 0,
+							routes: [{ name: "main", params: { showNotif: true } }]
+						})
+					)
+				}, 1000)
+			}} close={() => {
+				getTheNumCartItems()
+				setOpencart(false)
+			}}/></Modal>}
+			{showAuth.show && (
+				<Modal transparent={true}>
+					<Userauth close={() => setShowauth({ show: false, action: "" })} done={(id, msg) => {
+						if (msg == "setup") {
+							props.navigation.dispatch(
+								CommonActions.reset({
+									index: 1,
+									routes: [{ name: "setup" }]
 								})
-							}
+							);
+						} else {
+							socket.emit("socket/user/login", "user" + id, () => {
+								setUserid(id)
 
-							setShowauth({ show: false, action: false })
-						}} navigate={props.navigation.navigate}/>
-					</Modal>
-				)}
-				{showInfo && (
-					<Modal transparent={true}>
-						<View style={style.showInfoContainer}>
-							<View style={style.showInfoBox}>
-								<TouchableOpacity style={style.showInfoClose} onPress={() => setShowinfo(false)}>
-									<AntDesign name="close" size={40}/>
-								</TouchableOpacity>
+								if (showAuth.action == "addcart") {
+									addCart()
+								} else if (showAuth.action == "openfriendscart") {
+									openFriendsCart()
+								}
+							})
+						}
 
-								<View style={style.logoHolder}>
-									<Image style={style.logo} source={{ uri: logo_url + logo }}/>
+						setShowauth({ show: false, action: false })
+					}} navigate={props.navigation.navigate}/>
+				</Modal>
+			)}
+			{showInfo && (
+				<Modal transparent={true}>
+					<View style={style.showInfoContainer}>
+						<View style={style.showInfoBox}>
+							<TouchableOpacity style={style.showInfoClose} onPress={() => setShowinfo(false)}>
+								<AntDesign name="close" size={40}/>
+							</TouchableOpacity>
+
+							<Text style={style.showInfoHeader}>{name}</Text>
+							<Text style={style.showInfoHeader}>{address}</Text>
+							<View style={{ alignItems: 'center' }}>
+								<View style={{ flexDirection: 'row' }}>
+									<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
+										<AntDesign name="phone" size={30}/>
+									</TouchableOpacity>
+									<Text style={style.showInfoPhonenumber}>{phonenumber}</Text>
 								</View>
-								<Text allowFontScaling={false} style={style.showInfoHeader}>{name}</Text>
-								<Text allowFontScaling={false} style={style.showInfoHeader}>{address}</Text>
-								<View style={{ alignItems: 'center' }}>
-									<View style={{ flexDirection: 'row' }}>
-										<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
-											<AntDesign name="phone" size={30}/>
-										</TouchableOpacity>
-										<Text allowFontScaling={false} style={style.phonenumber}>{phonenumber}</Text>
-									</View>
-								</View>
-								<Text allowFontScaling={false} style={style.showInfoHeader}>{distance}</Text>
 							</View>
+							<Text style={style.showInfoHeader}>{distance}</Text>
 						</View>
-					</Modal>
-				)}
-			</View>
+					</View>
+				</Modal>
+			)}
 		</View>
 	)
 }
 
 const style = StyleSheet.create({
-	salonprofile: { backgroundColor: 'white' },
+	salonprofile: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	profileInfo: { height: 55 },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginHorizontal: 20, marginTop: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	profileInfo: { height: '20%' },
+	headers: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 5, width: '100%' },
+	viewInfoTouch: { borderRadius: fsize(0.2) / 2, borderStyle: 'solid', borderWidth: 2, height: 52, marginTop: fsize(0.03), padding: 5, width: fsize(0.2) },
+	viewInfoTouchHeader: { textAlign: 'center' },
+	logoHolder: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), overflow: 'hidden', width: fsize(0.2) },
+	logo: { height: fsize(0.2), width: fsize(0.2) },
+	callTouch: { alignItems: 'center', borderRadius: fsize(0.2) / 2, borderStyle: 'solid', borderWidth: 2, height: 52, marginTop: fsize(0.03), paddingTop: 5, width: fsize(0.2) },
 
-	moreInfo: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5, width: 160 },
-	moreInfoHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	navs: { flexDirection: 'row', justifyContent: 'space-around' },
+	nav: { alignItems: 'center', backgroundColor: 'white', borderRadius: 8, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 5, padding: 5, width: fsize(0.4) },
+	navHeader: { fontSize: fsize(0.04) },
 
-	body: { flexDirection: 'column', height: screenHeight - 85, justifyContent: 'space-around' },
-	bodyHeader: { fontSize: fsize(0.05), fontWeight: 'bold', padding: 3, textAlign: 'center' },
-	row: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
+	body: { height: '70%' },
+	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3, width: '98%' },
+	menuImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), overflow: 'hidden', width: fsize(0.1) },
+	menuImage: { height: fsize(0.1), width: fsize(0.1) },
+	menuName: { fontSize: fsize(0.06), fontWeight: 'bold', marginLeft: 5 },
+	itemActions: { flexDirection: 'row', marginTop: 0 },
+	itemAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5 },
+	itemActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	item: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, margin: '2%', paddingHorizontal: 3, paddingBottom: 30, width: '98%' },
+	itemImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), margin: 5, overflow: 'hidden', width: fsize(0.1) },
+	itemImage: { height: fsize(0.1), width: fsize(0.1) },
+	itemHeader: { fontSize: fsize(0.06), fontWeight: 'bold', marginRight: 20, textDecorationStyle: 'solid' },
+	itemInfo: { fontSize: fsize(0.05), marginLeft: 10, marginVertical: 10 },
 
-	item: { alignItems: 'center', height: width * 0.5, marginBottom: 10, width: width * 0.5 },
-	itemPhotoHolder: { borderRadius: (fsize(0.3)) / 2, height: fsize(0.3), overflow: 'hidden', width: fsize(0.3) },
-	itemHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginTop: 20 },
-	itemNumCatHeader: { fontFamily: 'appFont', fontSize: fsize(0.04) },
-	seeMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	seeMenuHeader: { fontSize: fsize(0.05) },
-
-	// product
-	product: { alignItems: 'center', marginBottom: 50, marginHorizontal: 10 },
-	productImage: { borderRadius: fsize(0.3) / 2, height: fsize(0.3), width: fsize(0.3) },
-	productName: { fontSize: fsize(0.05), fontWeight: 'bold' },
-	productInfo: { fontSize: fsize(0.04) },
-	productPrice: { fontSize: fsize(0.05), marginHorizontal: 10, marginVertical: 5 },
-	productBuy: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
-	productBuyHeader: { fontSize: fsize(0.05), textAlign: 'center' },
-
-	// service
-	service: { alignItems: 'center', flexDirection: 'row', marginBottom: 50, marginHorizontal: 10 },
-	serviceImage: { borderRadius: 50, height: 100, width: 100 },
-	serviceName: { fontSize: fsize(0.04), fontWeight: 'bold', marginBottom: 10 },
-	serviceInfo: { fontSize: fsize(0.04), marginBottom: 10 },
-	serviceDetail: { fontSize: fsize(0.04) },
-	serviceBook: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 150 },
-	serviceBookHeader: { fontSize: fsize(0.05) },
-
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
 
-	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
 	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, width: 44 },
-	logoHolder: { borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
-	logo: { height: 100, width: 100 },
-	showInfoHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), fontWeight: 'bold', marginVertical: 5 },
-	phonenumber: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+	showInfoHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 10, textAlign: 'center' },
+	showInfoPhonenumber: { fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 })

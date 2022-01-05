@@ -15,15 +15,13 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
+const offsetPadding = Constants.statusBarHeight
 
 const fsize = p => {
 	return width * p
 }
 
 export default function setup({ navigation }) {
-	const offsetPadding = Constants.statusBarHeight
-	const screenHeight = height - (offsetPadding * 2)
-
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -87,7 +85,7 @@ export default function setup({ navigation }) {
 		let char = "", captured, self = this
 
 		if (camComp) {
-			let options = { quality: 0, base64: true };
+			let options = { quality: 0, base64: true, skipProcessing: true };
 			let photo = await camComp.takePictureAsync(options)
 			let photo_option = [{ resize: { width: width, height: width }}]
 			let photo_save_option = { format: ImageManipulator.SaveFormat.JPEG, base64: true }
@@ -181,79 +179,79 @@ export default function setup({ navigation }) {
 	}
 	
 	useEffect(() => {
-		(async() => {
-			allowCamera()
-			allowChoosing()
-		})()
+		allowCamera()
+		allowChoosing()
 	}, [])
 
 	if (cameraPermission === null || pickingPermission === null) return <View/>
 
 	return (
-		<View style={style.setup}>
-			<View style={{ paddingVertical: offsetPadding, opacity: loading ? 0.5 : 1 }}>
-				<ScrollView style={{ backgroundColor: '#EAEAEA', height: screenHeight - 40, width: '100%' }}>
-					<View style={style.box}>
-						<Text style={style.boxHeader}>Setup</Text>
+		<View style={[style.setup, { opacity: loading ? 0.5 : 1 }]}>
+			<ScrollView style={{ backgroundColor: '#EAEAEA', height: '90%', width: '100%' }}>
+				<View style={style.box}>
+					<Text style={style.boxHeader}>Setup</Text>
 
-						<View style={style.inputsBox}>
-							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Enter a name you like:</Text>
-								<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
-							</View>
-
-							<View style={style.cameraContainer}>
-								<Text style={style.inputHeader}>Profile Picture</Text>
-
-								{profile.uri ? (
-									<>
-										<Image style={style.camera} source={{ uri: profile.uri }}/>
-
-										<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
-											<Text style={style.cameraActionHeader}>Cancel</Text>
-										</TouchableOpacity>
-									</>
-								) : (
-									<>
-										<Camera style={style.camera} type={camType} ref={r => {setCamcomp(r)}}/>
-
-										<View style={style.cameraActions}>
-											<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-												<Text style={style.cameraActionHeader}>Take this photo</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-												<Text style={style.cameraActionHeader}>Choose from phone</Text>
-											</TouchableOpacity>
-										</View>
-									</>
-								)}	
-							</View>
+					<View style={style.inputsBox}>
+						<View style={style.inputContainer}>
+							<Text style={style.inputHeader}>Enter a name you like:</Text>
+							<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
 						</View>
 
-						{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
-						{loading ? <ActivityIndicator color="black" size="small"/> : null}
+						<View style={style.cameraContainer}>
+							<Text style={style.inputHeader}>Profile Picture</Text>
 
-						<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupAccount()}>
-							<Text style={style.setupButtonHeader}>Done</Text>
-						</TouchableOpacity>
+							{profile.uri ? (
+								<>
+									<Image style={style.camera} source={{ uri: profile.uri }}/>
+
+									<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
+										<Text style={style.cameraActionHeader}>Cancel</Text>
+									</TouchableOpacity>
+								</>
+							) : (
+								<>
+									<Camera 
+										style={style.camera} 
+										type={camType} ref={r => {setCamcomp(r)}}
+										ratio="1:1"
+									/>
+
+									<View style={style.cameraActions}>
+										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
+											<Text style={style.cameraActionHeader}>Take{'\n'}this photo</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
+											<Text style={style.cameraActionHeader}>Choose{'\n'}from phone</Text>
+										</TouchableOpacity>
+									</View>
+								</>
+							)}	
+						</View>
 					</View>
-				</ScrollView>
 
-				<View style={style.bottomNavs}>
-					<View style={style.bottomNavsRow}>
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
-							AsyncStorage.clear()
+					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
+					{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
-							navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: 'main' }]
-								})
-							);
-						}}>
-							<Text style={style.bottomNavHeader}>Log-Out</Text>
-						</TouchableOpacity>
-					</View>
+					<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupAccount()}>
+						<Text style={style.setupButtonHeader}>Done</Text>
+					</TouchableOpacity>
+				</View>
+			</ScrollView>
+
+			<View style={style.bottomNavs}>
+				<View style={style.bottomNavsRow}>
+					<TouchableOpacity style={style.bottomNav} onPress={() => {
+						AsyncStorage.clear()
+
+						navigation.dispatch(
+							CommonActions.reset({
+								index: 1,
+								routes: [{ name: 'main' }]
+							})
+						);
+					}}>
+						<Text style={style.bottomNavHeader}>Log-Out</Text>
+					</TouchableOpacity>
 				</View>
 			</View>
 		</View>
@@ -261,8 +259,8 @@ export default function setup({ navigation }) {
 }
 
 const style = StyleSheet.create({
-	setup: { backgroundColor: 'white' },
-	box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
+	setup: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
+	box: { alignItems: 'center', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { paddingHorizontal: 20, width: '90%' },
@@ -271,17 +269,17 @@ const style = StyleSheet.create({
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5, width: '100%' },
 	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: width * 0.8, width: width * 0.8 },
+	camera: { height: fsize(0.7), width: fsize(0.7) },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	cameraActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
 
 	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
 
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
 	setupButtonHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
-	bottomNavs: { backgroundColor: 'white', flexDirection: 'row', height: 40, justifyContent: 'space-around', width: '100%' },
+	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
