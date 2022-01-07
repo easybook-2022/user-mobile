@@ -507,7 +507,7 @@ export default function booktime(props) {
 
 				{!loaded ? 
 					<View style={{ height: '80%' }}>
-						<ActivityIndicator size="small"/>
+						<ActivityIndicator color="black" size="small"/>
 					</View>
 					:
 					times.length > 0 ? 
@@ -608,7 +608,7 @@ export default function booktime(props) {
 							</View>
 						</ScrollView>
 						:
-						<View style={style.noTime}>
+						<View style={{ alignItems: 'center', flexDirection: 'column', justifyContent: 'space-around', width: '100%' }}>
 							<Text style={style.noTimeHeader}>Currently closed</Text>
 						</View>
 				}
@@ -701,17 +701,15 @@ export default function booktime(props) {
 											<Text style={style.requestedHeaderInfo}>You will get notify by the salon in your notification very soon</Text>
 											<TouchableOpacity style={style.requestedClose} onPress={() => {
 												setConfirmrequest({ ...confirmRequest, show: false, requested: false })
-												
-												if (func.initialize) {
-													func.initialize()
-												}
 
-												props.navigation.dispatch(
-													CommonActions.reset({
-														index: 0,
-														routes: [{ name: "main", params: { showNotif: true } }]
-													})
-												)
+												setTimeout(function () {
+													props.navigation.dispatch(
+														CommonActions.reset({
+															index: 0,
+															routes: [{ name: "main", params: { showNotif: true } }]
+														})
+													)
+												}, 1000)
 											}}>
 												<Text style={style.requestedCloseHeader}>Ok</Text>
 											</TouchableOpacity>
@@ -884,7 +882,6 @@ const style = StyleSheet.create({
 	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
 	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
 
-	noTime: { alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '100%' },
 	noTimeHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },

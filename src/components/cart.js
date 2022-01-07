@@ -821,7 +821,7 @@ export default function cart(props) {
 										</TouchableOpacity>
 									</View>
 
-									{loading && <ActivityIndicator size="small"/>}
+									{loading && <ActivityIndicator color="black" size="small"/>}
 								</View>
 							</>
 							:
@@ -1172,7 +1172,7 @@ export default function cart(props) {
 								<Text style={style.disabledCloseHeader}>Close</Text>
 							</TouchableOpacity>
 
-							<ActivityIndicator size="large"/>
+							<ActivityIndicator color="black" size="large"/>
 						</View>
 					</View>
 				</Modal>

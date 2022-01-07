@@ -26,7 +26,6 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const offsetPadding = Constants.statusBarHeight
-const imageSize = 100
 
 const fsize = p => {
 	return width * p
@@ -35,7 +34,7 @@ const fsize = p => {
 export default function main(props) {
 	let updateTrackUser
 	const firstTime = props.route.params ? props.route.params.firstTime ? true : false : false
-	const openNotif = props.route.params ? props.route.params.showNotif ? props.route.params.showNotif : false : false
+	const openNotif = props.route.params ? props.route.params.showNotif ? true : false : false
 
 	const [locationPermission, setLocationpermission] = useState(false)
 	const [notificationPermission, setNotificationpermission] = useState(false)
@@ -422,7 +421,7 @@ export default function main(props) {
 										<FlatList
 											ListFooterComponent={() => {
 												if (item.loading && item.index < item.max) {
-													return <ActivityIndicator style={{ marginVertical: 50 }} size="large"/>
+													return <ActivityIndicator style={{ marginVertical: 50 }} color="black" size="large"/>
 												}
 
 												return null
@@ -435,7 +434,7 @@ export default function main(props) {
 											renderItem={({ item }) => 
 												<View style={style.location}>
 													<View style={style.locationPhotoHolder}>
-														<Image source={{ uri: logo_url + item.logo }} style={{ height: imageSize, width: imageSize }}/>
+														<Image source={{ uri: logo_url + item.logo }} style={{ height: fsize(0.2), width: fsize(0.2) }}/>
 													</View>
 
 													<Text style={style.locationName}>{item.name}</Text>
@@ -445,7 +444,7 @@ export default function main(props) {
 														clearInterval(updateTrackUser)
 														props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
 													}}>
-														<Text style={style.locationMenuHeader}>See menu</Text>
+														<Text style={style.locationMenuHeader}>View</Text>
 													</TouchableOpacity>
 
 													{displayLocationStatus(item.opentime, item.closetime) ? <Text style={style.locationHours}>{displayLocationStatus(item.opentime, item.closetime)}</Text> : null}
@@ -457,7 +456,7 @@ export default function main(props) {
 							}
 						/>
 						:
-						<ActivityIndicator size="large"/>
+						<ActivityIndicator color="black" size="large"/>
 					}
 				</View>
 
@@ -552,7 +551,7 @@ export default function main(props) {
 								<Text style={style.disabledCloseHeader}>Close</Text>
 							</TouchableOpacity>
 
-							<ActivityIndicator size="large"/>
+							<ActivityIndicator color="black" size="large"/>
 						</View>
 					</View>
 				</Modal>
@@ -580,11 +579,11 @@ const style = StyleSheet.create({
 	seeMore: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	row: { flexDirection: 'row', marginBottom: 20 },
 	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: 100 },
-	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: imageSize / 2, height: imageSize, overflow: 'hidden', width: imageSize },
+	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: fsize(0.2) / 2, height: fsize(0.2), overflow: 'hidden', width: fsize(0.2) },
 	locationName: { fontSize: fsize(0.04), fontWeight: 'bold', textAlign: 'center' },
 	locationDistance: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
-	locationMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	locationMenuHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	locationMenu: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5, width: fsize(0.2) },
+	locationMenuHeader: { fontSize: fsize(0.045), textAlign: 'center' },
 	locationHours: { fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },

@@ -151,7 +151,7 @@ export default function recent(props) {
 						</View>
 					:
 					<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
-						<ActivityIndicator size="small"/>
+						<ActivityIndicator color="black" size="small"/>
 					</View>
 				}
 			</View>

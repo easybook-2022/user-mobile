@@ -113,7 +113,6 @@ export default function App() {
                             )
                         })}/>
                         <Stack.Screen name="cart" component={Cart} options={{ headerShown: false }}/>
-
                         <Stack.Screen name="salonprofile" component={Salonprofile} options={({ navigation }) => ({
                             headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Salon Profile</Text>,
                             headerLeft: () => (
@@ -140,7 +139,6 @@ export default function App() {
                                 )           
                             )
                         })}/>
-
                         <Stack.Screen name="notifications" component={Notifications} options={{ headerShown: false }}/>
                         <Stack.Screen name="account" component={Account} options={({ navigation, route }) => ({
                             headerTitle: () => <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Account Info</Text>,

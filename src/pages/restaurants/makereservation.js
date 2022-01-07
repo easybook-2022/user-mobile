@@ -907,16 +907,14 @@ export default function booktime(props) {
 											<TouchableOpacity style={style.requestedClose} onPress={() => {
 												setConfirmrequest({ ...confirmRequest, show: false, requested: false })
 
-												if (func.initialize) {
-													func.initialize()
-												}
-
-												props.navigation.dispatch(
-													CommonActions.reset({
-														index: 0,
-														routes: [{ name: "main", params: { showNotif: true } }]
-													})
-												)
+												setTimeout(function () {
+													props.navigation.dispatch(
+														CommonActions.reset({
+															index: 0,
+															routes: [{ name: "main", params: { showNotif: true } }]
+														})
+													)
+												}, 1000)
 											}}>
 												<Text style={style.requestedCloseHeader}>Ok</Text>
 											</TouchableOpacity>

@@ -605,7 +605,7 @@ export default function account(props) {
 								}	
 							</View>
 
-							{loading ? <ActivityIndicator size="small"/> : null}
+							{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
 							<View style={{ alignItems: 'center' }}>
 								<TouchableOpacity style={style.updateButton} onPress={() => updateAccount()}>
@@ -651,7 +651,7 @@ export default function account(props) {
 					</ScrollView>
 					:
 					<View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
-						<ActivityIndicator size="small"/>
+						<ActivityIndicator color="black" size="small"/>
 					</View>
 				}
 			</View>
@@ -714,7 +714,7 @@ export default function account(props) {
 										
 								</View>
 
-								{paymentMethodForm.loading ? <ActivityIndicator size="small"/> : null}
+								{paymentMethodForm.loading ? <ActivityIndicator color="black" size="small"/> : null}
 
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 									<TouchableOpacity style={style.formSubmit} disabled={paymentMethodForm.loading} onPress={() => {

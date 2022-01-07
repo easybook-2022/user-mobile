@@ -198,7 +198,7 @@ export default function setup({ navigation }) {
 						</View>
 
 						<View style={style.cameraContainer}>
-							<Text style={style.inputHeader}>Profile Picture</Text>
+							<Text style={style.inputHeader}>Provide a photo of yourself</Text>
 
 							{profile.uri ? (
 								<>
@@ -265,7 +265,7 @@ const style = StyleSheet.create({
 
 	inputsBox: { paddingHorizontal: 20, width: '90%' },
 	inputContainer: { marginVertical: 30, width: '100%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.06) },
+	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5, width: '100%' },
 	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },

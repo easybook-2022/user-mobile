@@ -2018,7 +2018,7 @@ export default function order(props) {
 								<Text style={style.disabledCloseHeader}>Close</Text>
 							</TouchableOpacity>
 
-							<ActivityIndicator size="large"/>
+							<ActivityIndicator color="black" size="large"/>
 						</View>
 					</View>
 				</Modal>

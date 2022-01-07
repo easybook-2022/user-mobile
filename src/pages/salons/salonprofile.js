@@ -207,6 +207,7 @@ export default function salonprofile(props) {
 
 	return (
 		<View style={style.salonprofile}>
+			{loaded ? 
 				<View style={style.box}>
 					<View style={style.profileInfo}>
 						<View style={style.headers}>
@@ -280,6 +281,11 @@ export default function salonprofile(props) {
 						</View>
 					</View>
 				</View>
+				:
+				<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
+					<ActivityIndicator color="black" size="large"/>
+				</View>
+			}
 
 			{openCart && <Modal><Cart showNotif={() => {
 				setOpencart(false)
@@ -370,9 +376,9 @@ const style = StyleSheet.create({
 	menuImage: { height: fsize(0.1), width: fsize(0.1) },
 	menuName: { fontSize: fsize(0.06), fontWeight: 'bold', marginLeft: 5 },
 	itemActions: { flexDirection: 'row', marginTop: 0 },
-	itemAction: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5 },
+	itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5 },
 	itemActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
-	item: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, margin: '2%', paddingHorizontal: 3, paddingBottom: 30, width: '98%' },
+	item: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, margin: '2%', paddingHorizontal: 3, paddingBottom: 30 },
 	itemImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), margin: 5, overflow: 'hidden', width: fsize(0.1) },
 	itemImage: { height: fsize(0.1), width: fsize(0.1) },
 	itemHeader: { fontSize: fsize(0.06), fontWeight: 'bold', marginRight: 20, textDecorationStyle: 'solid' },
