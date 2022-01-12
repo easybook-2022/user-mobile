@@ -227,7 +227,32 @@ export default function userauth(props) {
 						{authInfo.type == 'login' && (
 							<View style={style.authInputContainer}>
 								<Text style={style.authInputHeader}>Cell number:</Text>
-								<TextInput style={style.authInput} onChangeText={(cellnumber) => setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
+								<TextInput style={style.authInput} onKeyPress={(e) => {
+									let newValue = e.nativeEvent.key
+									let cellnumber = authInfo.info.cellnumber
+
+									if (newValue >= "0" && newValue <= "9") {
+										if (cellnumber.length == 3) {
+											cellnumber = "(" + cellnumber + ") " + newValue
+
+											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+										} else if (cellnumber.length == 9) {
+											cellnumber = cellnumber + "-" + newValue
+
+											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+										} else if (cellnumber.length == 14) {
+											Keyboard.dismiss()
+										} else {
+											cellnumber = cellnumber + newValue
+
+											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+										}
+									} else if (newValue == "Backspace") {
+										cellnumber = cellnumber.substr(0, cellnumber.length - 1)
+
+										setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+									}
+								}} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
 							</View>
 						)}
 
@@ -265,7 +290,32 @@ export default function userauth(props) {
 								:
 								<View style={style.authInputContainer}>
 									<Text style={style.authInputHeader}>Cell number:</Text>
-									<TextInput style={style.authInput} onChangeText={(cellnumber) => setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
+									<TextInput style={style.authInput} onKeyPress={(e) => {
+										let newValue = e.nativeEvent.key
+										let cellnumber = authInfo.info.cellnumber
+
+										if (newValue >= "0" && newValue <= "9") {
+											if (cellnumber.length == 3) {
+												cellnumber = "(" + cellnumber + ") " + newValue
+
+												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+											} else if (cellnumber.length == 9) {
+												cellnumber = cellnumber + "-" + newValue
+
+												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+											} else if (cellnumber.length == 14) {
+												Keyboard.dismiss()
+											} else {
+												cellnumber = cellnumber + newValue
+
+												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+											}
+										} else if (newValue == "Backspace") {
+											cellnumber = cellnumber.substr(0, cellnumber.length - 1)
+
+											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+										}
+									}} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
 								</View>
 						)}
 
@@ -287,7 +337,32 @@ export default function userauth(props) {
 							!authInfo.codesent ? 
 								<View style={style.authInputContainer}>
 									<Text style={style.authInputHeader}>Cell number:</Text>
-									<TextInput style={style.authInput} onChangeText={(cellnumber) => setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
+									<TextInput style={style.authInput} onKeyPress={(e) => {
+										let newValue = e.nativeEvent.key
+										let cellnumber = authInfo.info.cellnumber
+
+										if (newValue >= "0" && newValue <= "9") {
+											if (cellnumber.length == 3) {
+												cellnumber = "(" + cellnumber + ") " + newValue
+
+												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+											} else if (cellnumber.length == 9) {
+												cellnumber = cellnumber + "-" + newValue
+
+												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+											} else if (cellnumber.length == 14) {
+												Keyboard.dismiss()
+											} else {
+												cellnumber = cellnumber + newValue
+
+												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+											}
+										} else if (newValue == "Backspace") {
+											cellnumber = cellnumber.substr(0, cellnumber.length - 1)
+
+											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+										}
+									}} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
 								</View>
 								:
 								<View style={style.authInputContainer}>

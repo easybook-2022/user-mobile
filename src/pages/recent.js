@@ -98,9 +98,11 @@ export default function recent(props) {
 											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 												<View style={{ alignItems: 'center' }}>
 													<Text style={style.itemName}>{recent.name}</Text>
-													<View style={style.itemImageHolder}>
-														<Image source={{ uri: logo_url + recent.image }} style={style.itemImage}/>
-													</View>
+													{recent.image && (
+														<View style={style.itemImageHolder}>
+															<Image source={{ uri: logo_url + recent.image }} style={style.itemImage}/>
+														</View>
+													)}
 												</View>
 												<View style={style.itemInfos}>
 													{recent.type == "product" && (

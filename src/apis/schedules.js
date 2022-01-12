@@ -58,6 +58,13 @@ export const sendDiningPayment = data => {
 	)
 }
 
+export const sendServicePayment = data => {
+	return axios.post(
+		`${url}/schedules/send_service_payment`,
+		data
+	)
+}
+
 export const doneDining = data => {
 	return axios.post(
 		`${url}/schedules/done_dining`,

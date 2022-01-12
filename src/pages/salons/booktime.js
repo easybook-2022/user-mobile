@@ -33,7 +33,7 @@ export default function booktime(props) {
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 	const pushtime = 1000 * (60 * 10)
 
-	const { locationid, serviceid } = props.route.params
+	const { locationid, serviceid, serviceinfo } = props.route.params
 	const func = props.route.params
 	const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
@@ -127,7 +127,6 @@ export default function booktime(props) {
 					const { name } = res.serviceInfo
 
 					setName(name)
-					getTheLocationHours()
 				}
 			})
 			.catch((err) => {
@@ -426,7 +425,7 @@ export default function booktime(props) {
 		setSelecteddateinfo({ ...selectedDateinfo, name, time })
 
 		if (selectedDateinfo.date) {
-			setConfirmrequest({ ...confirmRequest, show: true, service: name, time })
+			setConfirmrequest({ ...confirmRequest, show: true, service: name ? name : serviceinfo, time })
 		}
 	}
 	const requestAnAppointment = async() => {
@@ -438,7 +437,12 @@ export default function booktime(props) {
 			const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
 			const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
 			let data = { 
-				id: scheduleid, userid: userId, workerid: worker != null ? worker.id : -1, locationid, serviceid, oldtime, 
+				id: scheduleid, userid: userId, 
+				workerid: worker != null ? worker.id : -1, 
+				locationid, 
+				serviceid: serviceid ? serviceid : -1, 
+				serviceinfo: serviceinfo ? serviceinfo : "",
+				oldtime, 
 				time: dateInfo, note: note ? note : "", 
 				type: "requestAppointment", currTime: Date.now()
 			}
@@ -493,8 +497,11 @@ export default function booktime(props) {
 		isMounted.current = true
 
 		getTheNumCartItems()
-		getTheServiceInfo()
 
+		if (serviceid) getTheServiceInfo()
+
+		getTheLocationHours()
+		
 		return () => isMounted.current = false
 	}, [])
 
@@ -502,14 +509,10 @@ export default function booktime(props) {
 		<View style={style.booktime}>
 			<View style={style.box}>
 				<View style={style.headers}>
-					<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>for</Text> {name}</Text>
+					<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>for</Text> {name ? name : serviceinfo}</Text>
 				</View>
 
-				{!loaded ? 
-					<View style={{ height: '80%' }}>
-						<ActivityIndicator color="black" size="small"/>
-					</View>
-					:
+				{loaded ? 
 					times.length > 0 ? 
 						<ScrollView style={{ height: '80%' }}>
 							<View style={style.chooseWorker}>
@@ -539,7 +542,6 @@ export default function booktime(props) {
 									</View>
 								)}
 							</View>
-
 							<View style={style.dateHeaders}>
 								<Text style={style.timesHeader}>Pick a date</Text>
 								
@@ -611,6 +613,10 @@ export default function booktime(props) {
 						<View style={{ alignItems: 'center', flexDirection: 'column', justifyContent: 'space-around', width: '100%' }}>
 							<Text style={style.noTimeHeader}>Currently closed</Text>
 						</View>
+					:
+					<View style={{ alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around' }}>
+						<ActivityIndicator color="black" size="small"/>
+					</View>
 				}
 
 				<View style={style.bottomNavs}>

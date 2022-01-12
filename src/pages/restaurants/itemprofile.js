@@ -24,7 +24,7 @@ const fsize = p => {
 }
 
 export default function itemProfile(props) {
-	const { productid } = props.route.params
+	const { locationid, productid, productinfo } = props.route.params
 	const func = props.route.params
 
 	const [itemName, setItemname] = useState('')
@@ -173,11 +173,12 @@ export default function itemProfile(props) {
 	}
 	const addCart = async() => {
 		if (userId) {
-			let callfor = [], receiver = [], size = ""
+			let callfor = [], receiver = []
 			let newOptions = JSON.parse(JSON.stringify(options))
 			let newOthers = JSON.parse(JSON.stringify(others))
 			let newSizes = JSON.parse(JSON.stringify(sizes))
-			let price = 0
+			let size = "", price = 0
+				
 
 			if (openFriendscart && selectedFriends.length == 0) {
 				setErrormsg("You didn't select anyone")
@@ -191,28 +192,40 @@ export default function itemProfile(props) {
 					})
 				})
 
-				if (newSizes.length > 0) {
-					newSizes.forEach(function (info) {
-						delete info['key']
+				if (!productinfo) {
+					if (newSizes.length > 0) {
+						newSizes.forEach(function (info) {
+							delete info['key']
 
-						if (info.selected) {
-							price = parseFloat(info.price) * quantity
-						}
+							if (info.selected) {
+								price = parseFloat(info.price) * quantity
+							}
+						})
+					} else {
+						price = itemPrice * quantity
+					}
+
+					newOptions.forEach(function (option) {
+						delete option['key']
 					})
-				} else {
-					price = itemPrice * quantity
+
+					newOthers.forEach(function (other) {
+						delete other['key']
+					})
 				}
+					
 
-				newOptions.forEach(function (option) {
-					delete option['key']
-				})
-
-				newOthers.forEach(function (other) {
-					delete other['key']
-				})
-
-				if (price) {
-					let data = { userid: userId, productid, quantity, callfor, options: newOptions, others: newOthers, sizes: newSizes, note: itemNote, receiver }
+				if (price || productinfo) {
+					const data = { 
+						userid: userId, locationid, 
+						productid: productid ? productid : -1, 
+						productinfo: productinfo ? productinfo : "", 
+						quantity, 
+						callfor, 
+						options: newOptions, others: newOthers, sizes: newSizes, 
+						note: itemNote, 
+						receiver 
+					}
 
 					addItemtocart(data)
 						.then((res) => {
@@ -494,7 +507,8 @@ export default function itemProfile(props) {
 	}
 	const initialize = () => {
 		getTheNumCartItems()
-		getTheProductInfo()
+
+		if (productid) getTheProductInfo()
 	}
 
 	useEffect(() => {
@@ -512,11 +526,13 @@ export default function itemProfile(props) {
 			<View style={style.box}>
 				<ScrollView style={{ height: '100%' }}>
 					<View style={{ alignItems: 'center', marginTop: 20 }}>
-						<View style={style.imageHolder}>
-							<Image source={{ uri: logo_url + itemImage }} style={style.image}/>
-						</View>
+						{itemImage ? 
+							<View style={style.imageHolder}>
+								<Image source={{ uri: logo_url + itemImage }} style={style.image}/>
+							</View>
+						: null }
 					</View>
-					<Text style={style.boxHeader}>{itemName}</Text>
+					<Text style={style.boxHeader}>{itemName ? itemName : productinfo}</Text>
 					<Text style={style.boxHeaderInfo}>{itemInfo}</Text>
 
 					{options.map((option, index) => (
@@ -603,14 +619,26 @@ export default function itemProfile(props) {
 						</View>
 					)}
 
-					<View style={style.note}>
-						<TextInput 
-							style={style.noteInput} multiline textAlignVertical="top" 
-							placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder="Leave a note if you want" 
-							maxLength={100} onChangeText={(note) => setItemnote(note)} 
-							autoCorrect={false} autoCapitalize="none"
-						/>
-					</View>
+					{!productinfo ? 
+						<View style={style.note}>
+							<TextInput 
+								style={style.noteInput} multiline textAlignVertical="top" 
+								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder="Leave a note if you want" 
+								maxLength={100} onChangeText={(note) => setItemnote(note)} 
+								autoCorrect={false} autoCapitalize="none"
+							/>
+						</View>
+						:
+						<View style={style.note}>
+							<Text style={style.noteHeader}>Add some instruction if you want ?</Text>
+							<TextInput 
+								style={style.noteInput} multiline textAlignVertical="top" 
+								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder={"example: add 2 cream and 1 sugar"}
+								maxLength={100} onChangeText={(note) => setItemnote(note)} 
+								autoCorrect={false} autoCapitalize="none"
+							/>
+						</View>
+					}
 
 					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 						<View style={{ flexDirection: 'row' }}>
@@ -627,7 +655,7 @@ export default function itemProfile(props) {
 						</View>
 					</View>
 
-					<Text style={style.price}>Cost: $ {cost.toFixed(2)}</Text>
+					{!productinfo ? <Text style={style.price}>Cost: $ {cost.toFixed(2)}</Text> : null}
 
 					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
 
@@ -952,6 +980,7 @@ const style = StyleSheet.create({
 	sizePrice: { fontWeight: 'bold', margin: 10 },
 
 	// note
+	noteHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
 	note: { alignItems: 'center', marginBottom: 20 },
 	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), height: 100, padding: 5, width: '80%' },
 

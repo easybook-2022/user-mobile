@@ -7,7 +7,7 @@ import { socket, url, logo_url, displayTime, stripeFee } from '../../assets/info
 import { getNotifications, getTrialInfo } from '../apis/users'
 import { getWorkers, searchWorkers } from '../apis/owners'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
-import { acceptRequest, closeRequest, confirmRequest, cancelReservationJoining, acceptReservationJoining, cancelService, allowPayment, sendDiningPayment, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
+import { acceptRequest, closeRequest, confirmRequest, cancelReservationJoining, acceptReservationJoining, cancelService, allowPayment, sendDiningPayment, sendServicePayment, cancelDiningOrder, confirmDiningOrder } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -29,7 +29,7 @@ export default function notifications(props) {
 	const [showDiningPaymentRequired, setShowdiningpaymentrequired] = useState(false)
 	const [showServicePaymentRequired, setShowservicepaymentrequired] = useState(false)
 	const [showChargeuser, setShowchargeuser] = useState({ show: false, trialstatus: { days: 30, status: "" }, locationid: 0, scheduleid: 0, index: -1, cost: 0.00, pst: 0.00, hst: 0.00, fee: 0.00, total: 0.00 })
-	const [showPaymentdetail, setShowpaymentdetail] = useState({ show: false, scheduleid: 0, index: 0, amount: 0.00, pst: 0.00, hst: 0.00, fee: 0.00, total: 0.00 })
+	const [showPaymentdetail, setShowpaymentdetail] = useState({ show: false, type: '', service: "", workerinfo: {}, confirm: false, scheduleid: 0, index: 0, amount: 0.00, pst: 0.00, hst: 0.00, fee: 0.00, total: 0.00 })
 	const [showOwners, setShowowners] = useState({ show: false, showworkers: false, scheduleid: 0, index: -1, owners: [], workerid: 0, cost: 0.00, pst: 0.00, hst: 0.00, fee: 0.00, total: 0.00 })
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
 
@@ -582,7 +582,7 @@ export default function notifications(props) {
 						const fee = total - nofee
 
 						setShowpaymentdetail({ 
-							show: true, scheduleid, index, 
+							show: true, type: 'dine', scheduleid, index, 
 							amount: amount.toFixed(2), pst: pst.toFixed(2), 
 							hst: hst.toFixed(2), fee: fee.toFixed(2), 
 							total: total.toFixed(2)
@@ -606,6 +606,70 @@ export default function notifications(props) {
 
 				}
 			})
+	}
+	const sendTheServicePayment = async(scheduleid, index) => {
+		if (!showPaymentdetail.show) {
+			const { service, workerInfo } = items[index]
+			const cost = parseFloat(workerInfo["requestprice"])
+			const pst = cost * 0.08
+			const hst = cost * 0.05
+			const total = stripeFee(cost + pst + hst)
+			const nofee = cost + pst + hst
+			const fee = total - nofee
+
+			setShowpaymentdetail({
+				...showPaymentdetail, show: true, type: 'service', service, workerinfo: workerInfo, scheduleid, index, 
+				amount: cost.toFixed(2), pst: pst.toFixed(2), 
+				hst: hst.toFixed(2), fee: fee.toFixed(2), 
+				total: total.toFixed(2)
+			})
+		} else if (!showPaymentdetail.confirm) {
+			const newItems = [...items]
+			const { service, workerinfo, scheduleid, index } = showPaymentdetail
+			const data = { scheduleid, userid: userId, service, workerinfo }
+
+			sendServicePayment(data)
+				.then((res) => {
+					if (res.status == 200) {
+						return res.data
+					}
+				})
+				.then((res) => {
+					if (res) {
+						data["receiver"] = "owner" + workerinfo.id
+						data["type"] = "confirmPayment"
+						data["price"] = parseFloat(workerinfo["requestprice"])
+
+						socket.emit("socket/confirmPayment", data, () => setShowpaymentdetail({ 
+							...showPaymentdetail, 
+							confirm: true 
+						}))
+					}
+				})
+				.catch((err) => {
+					if (err.response && err.response.status == 400) {
+						const { errormsg, status } = err.response.data
+
+						switch (status) {
+							case "cardrequired":
+								setShowpaymentdetail({ ...showPaymentdetail, show: false })
+								setShowservicepaymentrequired(true)
+
+								break;
+							default:
+
+						}
+					}
+				})
+		} else {
+			const newItems = [...items]
+			const { workerinfo, scheduleid, index } = showPaymentdetail
+
+			newItems.splice(index, 1)
+
+			setItems(newItems)
+			setShowpaymentdetail({ ...showPaymentdetail, show: false, confirm: false })
+		}
 	}
 
 	const getTheNotifications = async() => {
@@ -660,10 +724,22 @@ export default function notifications(props) {
 					}
 				}))
 			} else if (data.type == "cancelReservation") {
-				const { id } = data
-
 				setItems(newItems.filter(item => {
 					if (item.id != data.id) {
+						return item
+					}
+				}))
+			} else if (data.type == "cancelAppointment") {
+				setItems(newItems.filter(item => {
+					if (item.id != data.id) {
+						return item
+					}
+				}))
+			} else if (data.type == "requestPayment") {
+				setItems(newItems.filter(item => {
+					if (item.id == data.id) {
+						return item.requestPayment = true, item.workerInfo = data.worker
+					} else {
 						return item
 					}
 				}))
@@ -915,9 +991,12 @@ export default function notifications(props) {
 										{(item.type == "cart-order-other" || item.type == "dining-order" || item.type == "paymentrequested") && (
 											<>
 												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-													<View style={style.itemImageHolder}>
-														<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
-													</View>
+													{item.image && (
+														<View style={style.itemImageHolder}>
+															<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
+														</View>
+													)}
+														
 													<View style={style.itemInfos}>
 														<Text style={style.itemName}>{item.name}</Text>
 
@@ -1021,9 +1100,12 @@ export default function notifications(props) {
 										{item.type == "cart-order-self" && (
 											<>
 												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-													<View style={style.itemImageHolder}>
-														<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
-													</View>
+													{item.image && (
+														<View style={style.itemImageHolder}>
+															<Image source={{ uri: logo_url + item.image }} style={{ height: 100, width: 100 }}/>
+														</View>
+													)}
+														
 													<View style={style.itemInfos}>
 														<Text style={style.itemName}>{item.name}</Text>
 
@@ -1055,19 +1137,23 @@ export default function notifications(props) {
 													</View>
 													<View>
 														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>
-														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>
-														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>HST fee:</Text> ${item.hst.toFixed(2)}</Text>
-														<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.total.toFixed(2)}</Text>
+
+														{item.productid ? 
+															<>
+																<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>
+																<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>
+																<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>HST fee:</Text> ${item.hst.toFixed(2)}</Text>
+																<Text style={style.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.total.toFixed(2)}</Text>
+															</>
+														: null }	
 													</View>
 												</View>
 												<Text style={style.itemOrderNumber}>Your order#: {item.orderNumber}</Text>
+
 												<Text style={style.itemHeader}>
-													{item.status == 'checkout' ? 
-														'Your order will be ready soon'
-														:
-														'Your order is ready. You can pick up now'
-													}
+													{item.status == 'checkout' && 'Your order will be ready soon'}
+													{item.status == 'requested' && 'Your order is waiting to be confirm'}
+													{item.status == 'ready' && 'Your order is ready. You can pick up now'}
 												</Text>
 											</>
 										)}
@@ -1117,9 +1203,10 @@ export default function notifications(props) {
 															</Text>
 														:
 														<Text style={style.itemServiceHeader}>
-															You requested an appointment for {' '}
-															<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.service}</Text>
-															{'\n'}at{'\n'}
+															You requested an appointment for 
+															{'\n'}
+															<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.service + ' '}</Text>
+															at{' \n'}
 															<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{item.location}</Text>
 															{'\n'}
 															<Text style={{ fontFamily: 'appFont', fontSize: fsize(0.05) }}>{displayTime(item.time)}</Text>
@@ -1129,7 +1216,9 @@ export default function notifications(props) {
 													}
 
 													{(item.action == "requested" || item.action == "change") && 
-														<Text style={{ fontWeight: '100' }}>waiting for the {item.locationtype == 'restaurant' ? 'restaurant' : 'salon'}'s response</Text>
+														<Text style={{ fontWeight: '100' }}>
+															waiting for the {item.locationtype == 'restaurant' ? 'restaurant' : 'salon'}'s response
+														</Text>
 													}
 
 													{item.action == "accepted" && (
@@ -1279,20 +1368,37 @@ export default function notifications(props) {
 																		</View>
 																:
 																<View style={{ alignItems: 'center' }}>
-																	<View style={style.actions}>
-																		<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
-																			<Text style={style.actionHeader}>Cancel Service</Text>
-																		</TouchableOpacity>
-																		<TouchableOpacity style={style.action} onPress={() => allowThePayment(item, index)}>
-																			<Text style={style.actionHeader}>Allow Payment{item.allowPayment ? ' Again' : ''}</Text>
-																		</TouchableOpacity>
-																		<TouchableOpacity style={style.action} onPress={() => {
-																			props.close()
-																			props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id })
-																		}}>
-																			<Text style={style.actionHeader}>Change</Text>
-																		</TouchableOpacity>
-																	</View>											
+																	{item.serviceid ? 
+																		<View style={style.actions}>
+																			<TouchableOpacity style={style.action} onPress={() => cancelTheRequest(item, index)}>
+																				<Text style={style.actionHeader}>Cancel Service</Text>
+																			</TouchableOpacity>
+																			<TouchableOpacity style={style.action} onPress={() => allowThePayment(item, index)}>
+																				<Text style={style.actionHeader}>Allow Payment{item.allowPayment ? ' Again' : ''}</Text>
+																			</TouchableOpacity>
+																			<TouchableOpacity style={style.action} onPress={() => {
+																				props.close()
+																				props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id })
+																			}}>
+																				<Text style={style.actionHeader}>Change</Text>
+																			</TouchableOpacity>
+																		</View>
+																		:
+																		<View style={style.actions}>
+																			{!item.requestPayment ? 
+																				<View style={style.itemServiceOrderTouchDisabled}>
+																					<Text style={style.itemServiceOrderActionHeader}>
+																						Awaits payment detail{'\n'}
+																						<Text>........</Text>
+																					</Text>
+																				</View>
+																				:
+																				<TouchableOpacity style={[style.action, { width: fsize(0.4) }]} onPress={() => sendTheServicePayment(item.id, index)}>
+																					<Text style={style.actionHeader}>See payment details{'\n&\n'}Pay</Text>
+																				</TouchableOpacity>
+																			}
+																		</View>
+																	}
 																</View>
 															}
 														</>
@@ -1337,7 +1443,7 @@ export default function notifications(props) {
 																			if (item.locationtype == "restaurant") {
 																				props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
 																			} else {
-																				props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid })
+																				props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.service })
 																			}
 																		}}>
 																			<Text style={style.actionHeader}>Change</Text>
@@ -1541,26 +1647,44 @@ export default function notifications(props) {
 				<Modal transparent={true}>
 					<View style={{ paddingVertical: offsetPadding }}>
 						<View style={style.popBox}>
-							<View style={style.popContainer}>
-								<Text style={style.popHeader}>Payment detail</Text>
+							{!showPaymentdetail.confirm ? 
+								<View style={style.popContainer}>
+									<Text style={style.popHeader}>Payment detail</Text>
 
-								<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
-									Amount: ${showPaymentdetail.amount}
-									{'\n'}E-pay fee: ${showPaymentdetail.fee}
-									{'\n'}PST: ${showPaymentdetail.pst}
-									{'\n'}HST: ${showPaymentdetail.hst}
-									{'\n'}Total: ${showPaymentdetail.total}
-								</Text>
+									<Text style={{ fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+										Amount: ${showPaymentdetail.amount}
+										{'\n'}E-pay fee: ${showPaymentdetail.fee}
+										{'\n'}PST: ${showPaymentdetail.pst}
+										{'\n'}HST: ${showPaymentdetail.hst}
+										{'\n'}Total: ${showPaymentdetail.total}
+									</Text>
 
-								<View style={style.popActions}>
-									<TouchableOpacity style={style.popAction} onPress={() => setShowpaymentdetail({ ...showPaymentdetail, show: false })}>
-										<Text style={style.popActionHeader}>Close</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.popAction} onPress={() => sendTheDiningPayment()}>
-										<Text style={style.popActionHeader}>Ok</Text>
-									</TouchableOpacity>
+									<View style={style.popActions}>
+										<TouchableOpacity style={style.popAction} onPress={() => setShowpaymentdetail({ ...showPaymentdetail, show: false })}>
+											<Text style={style.popActionHeader}>Close</Text>
+										</TouchableOpacity>
+										<TouchableOpacity style={style.popAction} onPress={() => {
+											if (showPaymentdetail.type == 'dine') {
+												sendTheDiningPayment()
+											} else {
+												sendTheServicePayment()
+											}
+										}}>
+											<Text style={style.popActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
 								</View>
-							</View>
+								:
+								<View style={style.popContainer}>
+									<Text style={style.popHeader}>Payment confirmed</Text>
+
+									<View style={style.popActions}>
+										<TouchableOpacity style={style.popAction} onPress={() => sendTheServicePayment()}>
+											<Text style={style.popActionHeader}>Ok</Text>
+										</TouchableOpacity>
+									</View>
+								</View>
+							}
 						</View>
 					</View>
 				</Modal>
@@ -1696,7 +1820,7 @@ const style = StyleSheet.create({
 	itemOrderNumber: { fontSize: fsize(0.05), fontWeight: 'bold', textAlign: 'center' },
 	itemHeader: { fontSize: fsize(0.04), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 	actions: { flexDirection: 'row', justifyContent: 'space-around' },
-	action: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: 75 },
+	action: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: fsize(0.2) },
 	actionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
 
 	// confirm & requested box

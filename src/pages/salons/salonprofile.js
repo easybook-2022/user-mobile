@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -37,7 +37,8 @@ export default function salonprofile(props) {
 	const [showInfo, setShowinfo] = useState(false)
 	const [userId, setUserid] = useState(null)
 
-	const [menus, setMenus] = useState([])
+	const [serviceInfo, setServiceinfo] = useState('')
+	const [menuInfo, setMenuinfo] = useState({ type: '', items: [] })
 
 	const [loaded, setLoaded] = useState(false)
 
@@ -110,7 +111,9 @@ export default function salonprofile(props) {
 			})
 			.then((res) => {
 				if (res && isMounted.current == true) {
-					setMenus(res.menus)
+					const { type, menus } = res
+
+					setMenuinfo({ type, items: menus })
 					setLoaded(true)
 				}
 			})
@@ -158,7 +161,7 @@ export default function salonprofile(props) {
 										</View>
 										{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
 										<View style={style.itemActions}>
-											<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, initialize: () => getAllMenus() })}>
+											<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
 												<Text style={style.itemActionHeader}>Book a time</Text>
 											</TouchableOpacity>
 										</View>
@@ -184,7 +187,7 @@ export default function salonprofile(props) {
 									</View>
 									{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
 									<View style={style.itemActions}>
-										<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, initialize: () => getAllMenus() })}>
+										<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
 											<Text style={style.itemActionHeader}>Book a time</Text>
 										</TouchableOpacity>
 									</View>
@@ -231,8 +234,28 @@ export default function salonprofile(props) {
 					</View>
 					
 					<View style={style.body}>
-						<ScrollView>
-							{displayList({ name: "", image: "", list: menus, listType: "list", left: 0 })}
+						{(menuInfo.type && menuInfo.type == "photos") && (
+							<View style={style.menuInputBox}>
+								<TextInput style={style.menuInput} type="text" placeholder="Enter service # or name" onChangeText={(info) => setServiceinfo(info)}/>
+								<TouchableOpacity style={style.menuInputTouch} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: "", serviceinfo: serviceInfo, initialize: () => getAllMenus() })}>
+									<Text style={style.menuInputTouchHeader}>Click to{'\n'}book a time</Text>
+								</TouchableOpacity>
+							</View>
+						)}
+
+						<ScrollView style={{ width: '100%' }}>
+							{menuInfo.type ? 
+								menuInfo.type == "photos" ? 
+									menuInfo.items.map(info => (
+										info.row.map(item => (
+											<View key={item.key} style={style.menuPhoto}>
+												<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo }}/>
+											</View>
+										))
+									))
+									:
+									displayList({ name: "", image: "", list: menus, listType: "list", left: 0 })
+							: null }
 						</ScrollView>
 					</View>
 
@@ -371,6 +394,16 @@ const style = StyleSheet.create({
 	navHeader: { fontSize: fsize(0.04) },
 
 	body: { height: '70%' },
+
+	menuInputBox: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 5, marginHorizontal: 10 },
+	menuInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), padding: 5, width: '70%' },
+	menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), marginLeft: 2, padding: 5, width: '30%' },
+	menuInputTouchHeader: { textAlign: 'center' },
+	menuRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5 },
+	menuPhoto: { height, margin: width * 0.025, width: width * 0.95 },
+	menuStart: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+	menuStartHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+
 	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3, width: '98%' },
 	menuImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), overflow: 'hidden', width: fsize(0.1) },
 	menuImage: { height: fsize(0.1), width: fsize(0.1) },
