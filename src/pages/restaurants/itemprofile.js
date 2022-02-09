@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { SafeAreaView, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
 import Constants from 'expo-constants';
@@ -17,13 +17,14 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function itemProfile(props) {
+export default function Itemprofile(props) {
 	const { locationid, productid, productinfo } = props.route.params
 	const func = props.route.params
 
@@ -522,33 +523,33 @@ export default function itemProfile(props) {
 	}, [])
 
 	return (
-		<View style={style.itemprofile}>
-			<View style={style.box}>
+		<SafeAreaView style={styles.itemprofile}>
+			<View style={styles.box}>
 				<ScrollView style={{ height: '100%' }}>
 					<View style={{ alignItems: 'center', marginTop: 20 }}>
 						{itemImage ? 
-							<View style={style.imageHolder}>
-								<Image source={{ uri: logo_url + itemImage }} style={style.image}/>
+							<View style={styles.imageHolder}>
+								<Image source={{ uri: logo_url + itemImage }} style={styles.image}/>
 							</View>
 						: null }
 					</View>
-					<Text style={style.boxHeader}>{itemName ? itemName : productinfo}</Text>
-					<Text style={style.boxHeaderInfo}>{itemInfo}</Text>
+					<Text style={styles.boxHeader}>{itemName ? itemName : productinfo}</Text>
+					<Text style={styles.boxHeaderInfo}>{itemInfo}</Text>
 
 					{options.map((option, index) => (
 						<View key={option.key} style={{ alignItems: 'center' }}>
-							<View style={style.info}>
-								<Text style={style.infoHeader}>{option.header}:</Text>
+							<View style={styles.info}>
+								<Text style={styles.infoHeader}>{option.header}:</Text>
 
 								{option.type == "amount" && (
 									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<View style={style.amount}>
-											<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
-												<Text style={style.amountActionHeader}>-</Text>
+										<View style={styles.amount}>
+											<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "-")}>
+												<Text style={styles.amountActionHeader}>-</Text>
 											</TouchableOpacity>
-											<Text style={style.amountHeader}>{option.selected}</Text>
-											<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
-												<Text style={style.amountActionHeader}>+</Text>
+											<Text style={styles.amountHeader}>{option.selected}</Text>
+											<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "+")}>
+												<Text style={styles.amountActionHeader}>+</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
@@ -556,13 +557,13 @@ export default function itemProfile(props) {
 
 								{option.type == "percentage" && (
 									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<View style={style.percentage}>
-											<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
-												<Text style={style.percentageActionHeader}>-</Text>
+										<View style={styles.percentage}>
+											<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "-")}>
+												<Text style={styles.percentageActionHeader}>-</Text>
 											</TouchableOpacity>
-											<Text style={style.percentageHeader}>{option.selected}%</Text>
-											<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
-												<Text style={style.percentageActionHeader}>+</Text>
+											<Text style={styles.percentageHeader}>{option.selected}%</Text>
+											<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "+")}>
+												<Text style={styles.percentageActionHeader}>+</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
@@ -572,26 +573,26 @@ export default function itemProfile(props) {
 					))}
 
 					{others.length > 0 && (
-						<View style={style.othersBox}>
-							<Text style={style.othersHeader}>Other options</Text>
+						<View style={styles.othersBox}>
+							<Text style={styles.othersHeader}>Other options</Text>
 
-							<View style={style.others}>
+							<View style={styles.others}>
 								{others.map((other, index) => (
 									<View key={other.key} style={{ alignItems: 'center' }}>
-										<View style={style.other}>
+										<View style={styles.other}>
 											<View style={{ flexDirection: 'row' }}>
-												<Text style={style.otherName}># {other.name}:</Text>
-												<Text style={style.otherInput}>{other.input}</Text>
+												<Text style={styles.otherName}># {other.name}:</Text>
+												<Text style={styles.otherInput}>{other.input}</Text>
 											</View>
 											<View style={{ flexDirection: 'row', marginTop: 10 }}>
-												<Text style={style.otherPrice}>$ {other.price}</Text>
+												<Text style={styles.otherPrice}>$ {other.price}</Text>
 
-												<View style={style.otherActions}>
-													<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
-														<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+												<View style={styles.otherActions}>
+													<TouchableOpacity style={other.selected ? styles.otherActionLeftDisabled : styles.otherActionLeft} onPress={() => selectOther(index)}>
+														<Text style={[styles.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
 													</TouchableOpacity>
-													<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
-														<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+													<TouchableOpacity style={!other.selected ? styles.otherActionRightDisabled : styles.otherActionRight} onPress={() => selectOther(index)}>
+														<Text style={[styles.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
 													</TouchableOpacity>
 												</View>
 											</View>
@@ -603,16 +604,16 @@ export default function itemProfile(props) {
 					)}
 
 					{sizes.length > 0 && (
-						<View style={style.sizesBox}>
-							<Text style={style.sizesHeader}>Select a Size</Text>
+						<View style={styles.sizesBox}>
+							<Text style={styles.sizesHeader}>Select a Size</Text>
 
-							<View style={style.sizes}>
+							<View style={styles.sizes}>
 								{sizes.map((size, index) => (
-									<View key={size.key} style={style.size}>
-										<TouchableOpacity style={size.selected ? style.sizeTouchDisabled : style.sizeTouch} onPress={() => selectSize(index)}>
-											<Text style={size.selected ? style.sizeTouchHeaderDisabled : style.sizeTouchHeader}>{size.name}</Text>
+									<View key={size.key} style={styles.size}>
+										<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectSize(index)}>
+											<Text style={size.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{size.name}</Text>
 										</TouchableOpacity>
-										<Text style={style.sizePrice}>$ {size.price}</Text>
+										<Text style={styles.sizePrice}>$ {size.price}</Text>
 									</View>
 								))}
 							</View>
@@ -620,19 +621,19 @@ export default function itemProfile(props) {
 					)}
 
 					{!productinfo ? 
-						<View style={style.note}>
+						<View style={styles.note}>
 							<TextInput 
-								style={style.noteInput} multiline textAlignVertical="top" 
+								style={styles.noteInput} multiline textAlignVertical="top" 
 								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder="Leave a note if you want" 
 								maxLength={100} onChangeText={(note) => setItemnote(note)} 
 								autoCorrect={false} autoCapitalize="none"
 							/>
 						</View>
 						:
-						<View style={style.note}>
-							<Text style={style.noteHeader}>Add some instruction if you want ?</Text>
+						<View style={styles.note}>
+							<Text style={styles.noteHeader}>Add some instruction if you want ?</Text>
 							<TextInput 
-								style={style.noteInput} multiline textAlignVertical="top" 
+								style={styles.noteInput} multiline textAlignVertical="top" 
 								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder={"example: add 2 cream and 1 sugar"}
 								maxLength={100} onChangeText={(note) => setItemnote(note)} 
 								autoCorrect={false} autoCapitalize="none"
@@ -641,58 +642,64 @@ export default function itemProfile(props) {
 					}
 
 					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-						<View style={{ flexDirection: 'row' }}>
-							<Text style={style.quantityHeader}>Quantity:</Text>
-							<View style={style.quantity}>
-								<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("-")}>
-									<Text style={style.quantityActionHeader}>-</Text>
-								</TouchableOpacity>
-								<Text style={style.quantityHeader}>{quantity}</Text>
-								<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("+")}>
-									<Text style={style.quantityActionHeader}>+</Text>
-								</TouchableOpacity>
-							</View>
-						</View>
+						<View style={styles.quantity}>
+              <View style={styles.column}>
+                <Text style={styles.quantityHeader}>Quantity:</Text>
+              </View>
+              <View style={styles.column}>
+                <TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("-")}>
+                  <Text style={styles.quantityActionHeader}>-</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.column}>
+                <Text style={styles.quantityHeader}>{quantity}</Text>
+              </View>
+              <View style={styles.column}>
+                <TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("+")}>
+                  <Text style={styles.quantityActionHeader}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 					</View>
 
-					{!productinfo ? <Text style={style.price}>Cost: $ {cost.toFixed(2)}</Text> : null}
+					{!productinfo ? <Text style={styles.price}>Cost: $ {cost.toFixed(2)}</Text> : null}
 
-					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null}
+					{errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null}
 
-					<View style={style.itemActions}>
+					<View style={styles.itemActions}>
 						<View style={{ flexDirection: 'row' }}>
-							<TouchableOpacity style={style.itemAction} onPress={() => addCart()}>
-								<Text style={style.itemActionHeader}>Add to your cart</Text>
+							<TouchableOpacity style={styles.itemAction} onPress={() => addCart()}>
+								<Text style={styles.itemActionHeader}>Add to{'\n'}your cart</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={style.itemAction} onPress={() => openFriendsCart()}>
-								<Text style={style.itemActionHeader}>Call for friend(s)</Text>
+							<TouchableOpacity style={styles.itemAction} onPress={() => openFriendsCart()}>
+								<Text style={styles.itemActionHeader}>Call for{'\n'}friend(s)</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
 				</ScrollView>
 
-				<View style={style.bottomNavs}>
-					<View style={style.bottomNavsRow}>
+				<View style={styles.bottomNavs}>
+					<View style={styles.bottomNavsRow}>
 						{userId && (
-							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("account")}>
 								<FontAwesome5 name="user-circle" size={30}/>
 							</TouchableOpacity>
 						)}
 
 						{userId && (
-							<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("recent")}>
 								<FontAwesome name="history" size={30}/>
 							</TouchableOpacity>
 						)}
 
 						{userId && (
-							<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
 								<Entypo name="shopping-cart" size={30}/>
-								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
 							</TouchableOpacity>
 						)}
 
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
+						<TouchableOpacity style={styles.bottomNav} onPress={() => {
 							props.navigation.dispatch(
 								CommonActions.reset({
 									index: 0,
@@ -703,7 +710,7 @@ export default function itemProfile(props) {
 							<Entypo name="home" size={30}/>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
+						<TouchableOpacity style={styles.bottomNav} onPress={() => {
 							if (userId) {
 								AsyncStorage.clear()
 
@@ -712,7 +719,7 @@ export default function itemProfile(props) {
 								setShowauth({ show: true, action: false })
 							}
 						}}>
-							<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+							<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -733,32 +740,32 @@ export default function itemProfile(props) {
 				}}/></Modal>}
 				{openFriendscart && (
 					<Modal>
-						<View style={style.usersList}>
-							<View style={style.userNameContainer}>
+						<SafeAreaView style={styles.usersList}>
+							<View style={styles.userNameContainer}>
 								<TextInput 
-									style={style.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" 
+									style={styles.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" 
 									onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"
 								/>
 							</View>
 
-							<View style={style.usersListContainer}>
+							<View style={styles.usersListContainer}>
 								<View style={{ height: '50%', overflow: 'hidden' }}>
-									<Text style={style.usersHeader}>{numFriends} Searched Friend(s)</Text>
+									<Text style={styles.usersHeader}>{numFriends} Searched Friend(s)</Text>
 
 									<FlatList
 										data={friends}
 										renderItem={({ item, index }) => 
-											<View key={item.key} style={style.row}>
+											<View key={item.key} style={styles.row}>
 												{item.row.map(friend => (
 													friend.username ? 
-														<TouchableOpacity key={friend.key} style={style.user} onPress={() => selectFriend(friend.id)}>
-															<View style={style.userProfileHolder}>
+														<TouchableOpacity key={friend.key} style={styles.user} onPress={() => selectFriend(friend.id)}>
+															<View style={styles.userProfileHolder}>
 																<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
 															</View>
-															<Text style={style.userName}>{friend.username}</Text>
+															<Text style={styles.userName}>{friend.username}</Text>
 														</TouchableOpacity>
 														:
-														<View key={friend.key} style={style.user}></View>
+														<View key={friend.key} style={styles.user}></View>
 												))}
 											</View>
 										}
@@ -768,25 +775,25 @@ export default function itemProfile(props) {
 								<View style={{ height: '50%', overflow: 'hidden' }}>
 									{selectedFriends.length > 0 && (
 										<>
-											<Text style={style.selectedUsersHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
+											<Text style={styles.selectedUsersHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
 
 											<FlatList
 												data={selectedFriends}
 												renderItem={({ item, index }) => 
-													<View key={item.key} style={style.row}>
+													<View key={item.key} style={styles.row}>
 														{item.row.map(friend => (
 															friend.username ? 
-																<View key={friend.key} style={style.user}>
-																	<TouchableOpacity style={style.userDelete} onPress={() => deselectFriend(friend.id)}>
+																<View key={friend.key} style={styles.user}>
+																	<TouchableOpacity style={styles.userDelete} onPress={() => deselectFriend(friend.id)}>
 																		<AntDesign name="closecircleo" size={15}/>
 																	</TouchableOpacity>
-																	<View style={style.userProfileHolder}>
+																	<View style={styles.userProfileHolder}>
 																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
 																	</View>
-																	<Text style={style.userName}>{friend.username}</Text>
+																	<Text style={styles.userName}>{friend.username}</Text>
 																</View>
 																:
-																<View key={friend.key} style={style.user}></View>
+																<View key={friend.key} style={styles.user}></View>
 														))}
 													</View>
 												}
@@ -796,15 +803,15 @@ export default function itemProfile(props) {
 								</View>
 							</View>
 
-							<View style={style.itemContainer}>
-								<View style={style.orderingItemImageHolder}>
+							<View style={styles.itemContainer}>
+								<View style={styles.orderingItemImageHolder}>
 									<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
 								</View>
-								<View style={style.itemInfos}>
-									<Text style={style.orderingItemName}>{orderingItem.name}</Text>
+								<View style={styles.itemInfos}>
+									<Text style={styles.orderingItemName}>{orderingItem.name}</Text>
 									
 									{orderingItem.options.map((info, infoindex) => (
-										<Text key={info.key} style={style.itemInfo}>
+										<Text key={info.key} style={styles.itemInfo}>
 											<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
 											{info.selected}
 											{info.type == 'percentage' && '%'}
@@ -812,7 +819,7 @@ export default function itemProfile(props) {
 									))}
 
 									{orderingItem.others.map((info, infoindex) => (
-										<Text key={info.key} style={style.itemInfo}>
+										<Text key={info.key} style={styles.itemInfo}>
 											<Text style={{ fontWeight: 'bold' }}>{info.name}: </Text> 
 											<Text>{info.input}</Text>
 										</Text>
@@ -820,7 +827,7 @@ export default function itemProfile(props) {
 
 									{orderingItem.sizes.map((info, infoindex) => (
 										info.selected ? 
-											<Text key={info.key} style={style.itemInfo}>
+											<Text key={info.key} style={styles.itemInfo}>
 												<Text style={{ fontWeight: 'bold' }}>Size: </Text> 
 												<Text>{info.name}</Text>
 											</Text>
@@ -828,76 +835,76 @@ export default function itemProfile(props) {
 									))}
 								</View>
 								<View>
-									<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
-									<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost}</Text>
+									<Text style={styles.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
+									<Text style={styles.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost}</Text>
 								</View>
 							</View>
 
-							<View style={style.usersListActionContainer}>
-								<Text style={style.errorMsg}>{errorMsg}</Text>
+							<View style={styles.usersListActionContainer}>
+								<Text style={styles.errorMsg}>{errorMsg}</Text>
 
-								<View style={style.usersListActions}>
-									<TouchableOpacity style={style.usersListAction} onPress={() => {
+								<View style={styles.usersListActions}>
+									<TouchableOpacity style={styles.usersListAction} onPress={() => {
 										setOpenfriendscart(false)
 										setSelectedFriends([])
 										setNumSelectedFriends(0)
 										setErrormsg('')
 									}}>
-										<Text style={style.usersListActionHeader}>Close</Text>
+										<Text style={styles.usersListActionHeader}>Close</Text>
 									</TouchableOpacity>
-									<TouchableOpacity style={style.usersListAction} onPress={() => addCart()}>
-										<Text style={style.usersListActionHeader}>Add</Text>
+									<TouchableOpacity style={styles.usersListAction} onPress={() => addCart()}>
+										<Text style={styles.usersListActionHeader}>Add</Text>
 									</TouchableOpacity>
 								</View>
 							</View>
-						</View>
+						</SafeAreaView>
 
 						{showNotifyUser.show && (
 							<Modal transparent={true}>
-								<View style={style.notifyUserBox}>
-									<View style={style.notifyUserContainer}>
-										<Text style={style.notifyUserHeader}>
+								<SafeAreaView style={styles.notifyUserBox}>
+									<View style={styles.notifyUserContainer}>
+										<Text style={styles.notifyUserHeader}>
 											{showNotifyUser.username} haven't provided a payment method.
 											Notify {showNotifyUser.username} to add a payment method
 										</Text>
 
-										<View style={style.notifyUserActions}>
-											<TouchableOpacity style={style.notifyUserAction} onPress={() => setShownotifyuser({ show: false, userid: 0, username: "" })}>
-												<Text style={style.notifyUserActionHeader}>Close</Text>
+										<View style={styles.notifyUserActions}>
+											<TouchableOpacity style={styles.notifyUserAction} onPress={() => setShownotifyuser({ show: false, userid: 0, username: "" })}>
+												<Text style={styles.notifyUserActionHeader}>Close</Text>
 											</TouchableOpacity>
-											<TouchableOpacity style={style.notifyUserAction} onPress={() => requestTheUserPaymentMethod()}>
-												<Text style={style.notifyUserActionHeader}>Ok</Text>
+											<TouchableOpacity style={styles.notifyUserAction} onPress={() => requestTheUserPaymentMethod()}>
+												<Text style={styles.notifyUserActionHeader}>Ok</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
-								</View>
+								</SafeAreaView>
 							</Modal>
 						)}
 					</Modal>
 				)}
 				{showPaymentRequired && (
-					<Modal transparent={true}>
-						<View style={style.cardRequiredBox}>
-							<View style={style.cardRequiredContainer}>
-								<Text style={style.cardRequiredHeader}>
-									You need to provide a payment method 
-									to add items to your cart
-								</Text>
+          <Modal transparent={true}>
+  					<SafeAreaView style={styles.cardRequiredBox}>
+              <View style={styles.cardRequiredContainer}>
+                <Text style={styles.cardRequiredHeader}>
+                  You need to provide a payment method 
+                  to add items to your cart
+                </Text>
 
-								<View style={style.cardRequiredActions}>
-									<TouchableOpacity style={style.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
-										<Text style={style.cardRequiredActionHeader}>Close</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.cardRequiredAction} onPress={() => {
-										setShowpaymentrequired(false)
-										props.navigation.navigate("account", { required: "card" })
-									}}>
-										<Text style={style.cardRequiredActionHeader}>Ok</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					</Modal>
+                <View style={styles.cardRequiredActions}>
+                  <TouchableOpacity style={styles.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
+                    <Text style={styles.cardRequiredActionHeader}>Close</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.cardRequiredAction} onPress={() => {
+                    setShowpaymentrequired(false)
+                    props.navigation.navigate("account", { required: "card" })
+                  }}>
+                    <Text style={styles.cardRequiredActionHeader}>Ok</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </SafeAreaView>
+          </Modal>
 				)}
 				{showAuth.show && (
 					<Modal transparent={true}>
@@ -926,20 +933,18 @@ export default function itemProfile(props) {
 					</Modal>
 				)}
 			</View>
-		</View>
+		</SafeAreaView>
 	);
 }
 
-const style = StyleSheet.create({
-	itemprofile: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+const styles = StyleSheet.create({
+	itemprofile: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-	back: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginTop: 20, marginHorizontal: 20, padding: 5, width: 100 },
-	backHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
 
-	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
+	imageHolder: { borderRadius: wsize(40) / 2, height: wsize(40), overflow: 'hidden', width: wsize(40) },
 	image: { height: 200, width: 200 },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-	boxHeaderInfo: { fontSize: fsize(0.04), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
+	boxHeader: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+	boxHeaderInfo: { fontSize: wsize(4), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 
 	info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
 	infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
@@ -947,20 +952,20 @@ const style = StyleSheet.create({
 	// amount
 	amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	amountAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	amountHeader: { fontSize: fsize(0.04), fontWeight: 'bold', padding: 10 },
+	amountHeader: { fontSize: wsize(4), fontWeight: 'bold', padding: 10 },
 
 	// percentage
 	percentage: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	percentageAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
-	percentageHeader: { fontSize: fsize(0.04), fontWeight: 'bold', padding: 10 },
+	percentageHeader: { fontSize: wsize(4), fontWeight: 'bold', padding: 10 },
 
 	// others
 	othersBox: { alignItems: 'center', marginVertical: 20 },
 	othersHeader: { fontWeight: 'bold' },
 	others: { marginVertical: 20, width: '100%' },
 	other: {  },
-	otherName: { fontSize: fsize(0.05), fontWeight: 'bold' },
-	otherInput: { fontSize: fsize(0.05) },
+	otherName: { fontSize: wsize(5), fontWeight: 'bold' },
+	otherInput: { fontSize: wsize(5) },
 	otherPrice: { fontWeight: 'bold', marginRight: 10, marginTop: 5 },
 	otherActions: { flexDirection: 'row', marginTop: -5 },
 	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
@@ -980,20 +985,21 @@ const style = StyleSheet.create({
 	sizePrice: { fontWeight: 'bold', margin: 10 },
 
 	// note
-	noteHeader: { fontSize: fsize(0.05), fontWeight: 'bold' },
+	noteHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 	note: { alignItems: 'center', marginBottom: 20 },
-	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), height: 100, padding: 5, width: '80%' },
+	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), height: 100, padding: 5, width: '80%' },
 
 	// quantity
 	quantity: { flexDirection: 'row', justifyContent: 'space-around' },
-	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, marginHorizontal: 10, paddingTop: 8, width: 35 },
-	quantityHeader: { fontSize: fsize(0.05), fontWeight: 'bold', padding: 5 },
+	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, padding: 10 },
+  quantityActionHeader: { fontSize: wsize(5) },
+	quantityHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 5 },
 
-	price: { fontSize: fsize(0.05), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
+	price: { fontSize: wsize(5), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
 
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	itemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: 100 },
-	itemActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
+	itemAction: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: wsize(30) },
+	itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
@@ -1002,7 +1008,7 @@ const style = StyleSheet.create({
 	numCartItemsHeader: { fontWeight: 'bold' },
 
 	// users list
-	usersList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingVertical: offsetPadding, width: '100%' },
+	usersList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	userNameContainer: { height: '10%' },
 	userNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
 	usersListContainer: { flexDirection: 'column', height: '60%', justifyContent: 'space-between' },
@@ -1016,8 +1022,8 @@ const style = StyleSheet.create({
 	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: '20%', justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
 	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
 	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
-	itemInfo: { fontSize: fsize(0.04) },
-	itemHeader: { fontSize: fsize(0.04) },
+	itemInfo: { fontSize: wsize(4) },
+	itemHeader: { fontSize: wsize(4) },
 	usersListActionContainer: { alignItems: 'center', height: '10%' },
 	usersListActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	usersListAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 60 },
@@ -1030,17 +1036,18 @@ const style = StyleSheet.create({
 
 	cardRequiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	cardRequiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	cardRequiredHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	cardRequiredHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	cardRequiredActionHeader: { },
 
 	notifyUserBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	notifyUserContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	notifyUserHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	notifyUserHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	notifyUserActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	notifyUserAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 	notifyUserActionHeader: { },
 
-	errorMsg: { color: 'darkred', fontSize: fsize(0.04), fontWeight: 'bold', textAlign: 'center' },
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 })

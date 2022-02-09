@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system'
@@ -15,13 +15,14 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function setup({ navigation }) {
+export default function Setup({ navigation }) {
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -186,7 +187,7 @@ export default function setup({ navigation }) {
 	if (cameraPermission === null || pickingPermission === null) return <View/>
 
 	return (
-		<View style={[style.setup, { opacity: loading ? 0.5 : 1 }]}>
+		<SafeAreaView style={[style.setup, { opacity: loading ? 0.5 : 1 }]}>
 			<ScrollView style={{ backgroundColor: '#EAEAEA', height: '90%', width: '100%' }}>
 				<View style={style.box}>
 					<Text style={style.boxHeader}>Setup</Text>
@@ -254,33 +255,33 @@ export default function setup({ navigation }) {
 					</TouchableOpacity>
 				</View>
 			</View>
-		</View>
+		</SafeAreaView>
 	)
 }
 
 const style = StyleSheet.create({
-	setup: { backgroundColor: 'white', height: '100%', paddingVertical: offsetPadding, width: '100%' },
+	setup: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', width: '100%' },
-	boxHeader: { fontFamily: 'appFont', fontSize: fsize(0.1), fontWeight: 'bold', paddingVertical: 30 },
+	boxHeader: { fontFamily: 'appFont', fontSize: wsize(10), fontWeight: 'bold', paddingVertical: 30 },
 
 	inputsBox: { paddingHorizontal: 20, width: '90%' },
 	inputContainer: { marginVertical: 30, width: '100%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5, width: '100%' },
+	inputHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5, width: '100%' },
 	cameraContainer: { alignItems: 'center', marginBottom: 50, width: '100%' },
 	cameraHeader: { fontFamily: 'appFont', fontWeight: 'bold', paddingVertical: 5 },
-	camera: { height: fsize(0.7), width: fsize(0.7) },
+	camera: { height: wsize(70), width: wsize(70) },
 	cameraActions: { flexDirection: 'row' },
 	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: fsize(0.03), textAlign: 'center' },
+	cameraActionHeader: { fontSize: wsize(3), textAlign: 'center' },
 
-	errorMsg: { color: 'darkred', fontWeight: 'bold', textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 
 	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
-	setupButtonHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	setupButtonHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5, width: wsize(30) },
+	bottomNavHeader: { fontSize: wsize(5) },
 })

@@ -15,8 +15,8 @@ export const acceptRequest = data => {
 	)
 }
 
-export const closeRequest = id => {
-	return axios.get(`${url}/schedules/close_request/${id}`)
+export const closeSchedule = id => {
+	return axios.get(`${url}/schedules/close_schedule/${id}`)
 }
 
 export const confirmRequest = data => {
@@ -40,8 +40,11 @@ export const acceptReservationJoining = data => {
 	)
 }
 
-export const cancelService = id => {
-	return axios.get(`${url}/schedules/cancel_service/${id}`)
+export const cancelRequest = data => {
+	return axios.post(
+    `${url}/schedules/cancel_request`,
+    data
+  )
 }
 
 export const allowPayment = data => {
@@ -78,6 +81,10 @@ export const getReservationInfo = id => {
 
 export const getScheduleInfo = id => {
 	return axios.get(`${url}/schedules/get_schedule_info/${id}`)
+}
+
+export const getAppointmentInfo = id => {
+  return axios.get(`${url}/schedules/get_appointment_info/${id}`)
 }
 
 export const addItemtoorder = data => {

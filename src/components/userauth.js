@@ -1,24 +1,22 @@
 import React, { useState } from 'react'
-import { ActivityIndicator, Dimensions, View, Text, Image, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native'
+import { SafeAreaView, ActivityIndicator, Dimensions, View, Text, Image, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { loginInfo, registerInfo } from '../../assets/info'
 import { getCode, verifyUser, resetPassword, registerUser, loginUser } from '../apis/users'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
-const { height, width } = Dimensions.get('window')
 const { cellnumber, password, confirmPassword } = loginInfo
-
-const fsize = p => {
-	return width * p
+const { height, width } = Dimensions.get('window')
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function userauth(props) {
-	const offsetPadding = Constants.statusBarHeight
-	const screenHeight = height - (offsetPadding * 2)
-
+export default function Userauth(props) {
 	const [authInfo, setAuthinfo] = useState({ type: '', info: { cellnumber, password, confirmPassword }, loading: false, verifycode: null, codesent: false, errormsg: "" })
 
 	const login = () => {
@@ -212,9 +210,7 @@ export default function userauth(props) {
 		<View style={style.authContainer}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={style.authBox}>
-					<TouchableOpacity style={style.authClose} onPress={() => props.close()}>
-						<AntDesign name="closecircleo" size={30}/>
-					</TouchableOpacity>
+					<AntDesign name="closecircleo" size={wsize(8)} onPress={() => props.close()}/>
 
 					<Text style={style.authBoxHeader}>
 						{authInfo.type == 'login' && 'Log-In'}
@@ -223,8 +219,107 @@ export default function userauth(props) {
 						{authInfo.type == 'resetpassword' && 'Reset Password'}
 					</Text>
 
-					<View style={style.authInputsBox}>
-						{authInfo.type == 'login' && (
+					{authInfo.type == 'login' && (
+						<View style={style.authInputContainer}>
+							<Text style={style.authInputHeader}>Cell number:</Text>
+							<TextInput style={style.authInput} onKeyPress={(e) => {
+								let newValue = e.nativeEvent.key
+								let cellnumber = authInfo.info.cellnumber
+
+								if (newValue >= "0" && newValue <= "9") {
+									if (cellnumber.length == 3) {
+										setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber: "(" + cellnumber + ") " + newValue }})
+									} else if (cellnumber.length == 9) {
+										setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber: cellnumber + "-" + newValue }})
+									} else if (cellnumber.length == 13) {
+										setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber: cellnumber + newValue }})
+
+										Keyboard.dismiss()
+									} else {
+										setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber: cellnumber + newValue }})
+									}
+								} else if (newValue == "Backspace") {
+									cellnumber = cellnumber.substr(0, cellnumber.length - 1)
+
+									setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
+								}
+							}} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
+						</View>
+					)}
+
+					{authInfo.type == 'register' && (
+						<>
+							<View style={style.authInputContainer}>
+								<Text style={style.authInputHeader}>Password:</Text>
+								<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, password }})} value={authInfo.info.password} autoCorrect={false}/>
+							</View>
+							<View style={style.authInputContainer}>
+								<Text style={style.authInputHeader}>Confirm password:</Text>
+								<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => {
+									setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})
+
+									if (password.length == authInfo.info.password.length) {
+										Keyboard.dismiss()
+									}
+								}} value={authInfo.info.confirmPassword} autoCorrect={false}/>
+							</View>
+						</>
+					)}
+
+					{authInfo.type == 'verifyuser' && (
+						authInfo.verifycode ? 
+							<View style={style.authInputContainer}>
+								<Text style={style.authInputHeader}>Please enter verify code from your message:</Text>
+								<TextInput style={style.authInput} onChangeText={(resetcode) => {
+									setAuthinfo({ ...authInfo, info: {...authInfo.info, resetcode }})
+
+									if (resetcode.length == 6) {
+										Keyboard.dismiss()
+									}
+								}} value={authInfo.info.resetcode} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+							:
+							<View style={style.authInputContainer}>
+								<Text style={style.authInputHeader}>Cell number:</Text>
+								<TextInput style={style.authInput} onKeyPress={(e) => {
+									let newValue = e.nativeEvent.key
+									let cellnumber = authInfo.info.cellnumber
+
+									if (newValue >= "0" && newValue <= "9") {
+										if (cellnumber.length == 3) {
+											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber: "(" + cellnumber + ") " + newValue }})
+										} else if (cellnumber.length == 9) {
+											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber: cellnumber + "-" + newValue }})
+										} else if (cellnumber.length == 13) {
+											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber: cellnumber + newValue }})
+
+											Keyboard.dismiss()
+										} else {
+											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber: cellnumber + newValue }})
+										}
+									} else if (newValue == "Backspace") {
+										setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber: cellnumber.substr(0, cellnumber.length - 1) }})
+									}
+								}} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
+							</View>
+					)}
+
+					{authInfo.type == 'resetpassword' && (
+						<>
+							<View style={style.authInputContainer}>
+								<Text style={style.authInputHeader}>New password:</Text>
+								<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, newPassword: password }})} value={authInfo.info.newPassword} autoCorrect={false}/>
+							</View>
+
+							<View style={style.authInputContainer}>
+								<Text style={style.authInputHeader}>Confirm password:</Text>
+								<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})} value={authInfo.info.confirmPassword} autoCorrect={false}/>
+							</View>
+						</>
+					)}
+
+					{authInfo.type == 'forgotpassword' && (
+						!authInfo.codesent ? 
 							<View style={style.authInputContainer}>
 								<Text style={style.authInputHeader}>Cell number:</Text>
 								<TextInput style={style.authInput} onKeyPress={(e) => {
@@ -254,208 +349,90 @@ export default function userauth(props) {
 									}
 								}} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
 							</View>
-						)}
-
-						{authInfo.type == 'register' && (
-							<>
-								<View style={style.authInputContainer}>
-									<Text style={style.authInputHeader}>Password:</Text>
-									<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, password }})} value={authInfo.info.password} autoCorrect={false}/>
-								</View>
-								<View style={style.authInputContainer}>
-									<Text style={style.authInputHeader}>Confirm password:</Text>
-									<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => {
-										setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})
-
-										if (password.length == authInfo.info.password.length) {
-											Keyboard.dismiss()
-										}
-									}} value={authInfo.info.confirmPassword} autoCorrect={false}/>
-								</View>
-							</>
-						)}
-
-						{authInfo.type == 'verifyuser' && (
-							authInfo.verifycode ? 
-								<View style={style.authInputContainer}>
-									<Text style={style.authInputHeader}>Please enter verify code from your message:</Text>
-									<TextInput style={style.authInput} onChangeText={(resetcode) => {
-										setAuthinfo({ ...authInfo, info: {...authInfo.info, resetcode }})
-
-										if (resetcode.length == 6) {
-											Keyboard.dismiss()
-										}
-									}} value={authInfo.info.resetcode} keyboardType="numeric" autoCorrect={false}/>
-								</View>
-								:
-								<View style={style.authInputContainer}>
-									<Text style={style.authInputHeader}>Cell number:</Text>
-									<TextInput style={style.authInput} onKeyPress={(e) => {
-										let newValue = e.nativeEvent.key
-										let cellnumber = authInfo.info.cellnumber
-
-										if (newValue >= "0" && newValue <= "9") {
-											if (cellnumber.length == 3) {
-												cellnumber = "(" + cellnumber + ") " + newValue
-
-												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
-											} else if (cellnumber.length == 9) {
-												cellnumber = cellnumber + "-" + newValue
-
-												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
-											} else if (cellnumber.length == 14) {
-												Keyboard.dismiss()
-											} else {
-												cellnumber = cellnumber + newValue
-
-												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
-											}
-										} else if (newValue == "Backspace") {
-											cellnumber = cellnumber.substr(0, cellnumber.length - 1)
-
-											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
-										}
-									}} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
-								</View>
-						)}
-
-						{authInfo.type == 'resetpassword' && (
-							<>
-								<View style={style.authInputContainer}>
-									<Text style={style.authInputHeader}>New password:</Text>
-									<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, newPassword: password }})} value={authInfo.info.newPassword} autoCorrect={false}/>
-								</View>
-
-								<View style={style.authInputContainer}>
-									<Text style={style.authInputHeader}>Confirm password:</Text>
-									<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})} value={authInfo.info.confirmPassword} autoCorrect={false}/>
-								</View>
-							</>
-						)}
-
-						{authInfo.type == 'forgotpassword' && (
-							!authInfo.codesent ? 
-								<View style={style.authInputContainer}>
-									<Text style={style.authInputHeader}>Cell number:</Text>
-									<TextInput style={style.authInput} onKeyPress={(e) => {
-										let newValue = e.nativeEvent.key
-										let cellnumber = authInfo.info.cellnumber
-
-										if (newValue >= "0" && newValue <= "9") {
-											if (cellnumber.length == 3) {
-												cellnumber = "(" + cellnumber + ") " + newValue
-
-												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
-											} else if (cellnumber.length == 9) {
-												cellnumber = cellnumber + "-" + newValue
-
-												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
-											} else if (cellnumber.length == 14) {
-												Keyboard.dismiss()
-											} else {
-												cellnumber = cellnumber + newValue
-
-												setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
-											}
-										} else if (newValue == "Backspace") {
-											cellnumber = cellnumber.substr(0, cellnumber.length - 1)
-
-											setAuthinfo({ ...authInfo, info: {...authInfo.info, cellnumber }})
-										}
-									}} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
-								</View>
-								:
-								<View style={style.authInputContainer}>
-									<Text style={style.resetCodeHeader}>Please enter the reset code sent your phone</Text>
-
-									<Text style={style.authInputHeader}>Reset Code:</Text>
-									<TextInput style={style.authInput} onChangeText={(resetcode) => setAuthinfo({ ...authInfo, info: {...authInfo.info, resetcode }})} keyboardType="numeric" value={authInfo.info.resetcode} autoCorrect={false}/>
-
-									<View style={{ alignItems: 'center' }}>
-										<TouchableOpacity style={style.resend} onPress={() => getTheCode()}>
-											<Text style={style.resendHeader}>Resend</Text>
-										</TouchableOpacity>
-									</View>
-								</View>
-						)}
-
-						{authInfo.type == 'login' && (
-							<View style={style.authInputContainer}>
-								<Text style={style.authInputHeader}>Password:</Text>
-								<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: {...authInfo.info, password }})} secureTextEntry={true} value={authInfo.info.password} autoCorrect={false}/>
-							</View>
-						)}
-
-						<Text style={style.errorMsg}>{authInfo.errormsg}</Text>
-
-						{authInfo.type ? 
-							<TouchableOpacity style={style.submit} disabled={authInfo.loading} onPress={() => {
-								if (authInfo.type == 'forgotpassword') {
-									if (authInfo.codesent) {
-										done()
-									} else {
-										getTheCode()
-									}
-								} else if (authInfo.type == 'resetpassword') {
-									reset()
-								} else if (authInfo.type == 'login') {
-									login()
-								} else if (authInfo.type == 'verifyuser') {
-									if (authInfo.verifycode) {
-										if (authInfo.info.resetcode == '111111' || authInfo.info.resetcode == authInfo.verifycode) {
-											setAuthinfo({ ...authInfo, type: 'register', errormsg: "" })
-										} else {
-											setAuthinfo({ ...authInfo, errormsg: "Code is incorrect" })
-										}
-									} else {
-										verify()
-									}
-								} else if (authInfo.type == 'register') {
-									register()
-								}
-							}}>
-								<Text style={style.submitHeader}>
-									{authInfo.type == 'forgotpassword' && (authInfo.codesent ? 'Done' : 'Get Code')}
-									{authInfo.type == 'verifyuser' && (authInfo.verifycode ? 'Verify' : 'Register')}
-									{authInfo.type == 'resetpassword' && 'Done'}
-									{authInfo.type == 'register' && 'Register'}
-									{authInfo.type == 'login' && 'Sign-In'}
-								</Text>
-							</TouchableOpacity>
 							:
-							<View style={style.welcomeBox}>
-								<Text style={style.boxHeader}>Welcome to EasyGO (User)</Text>
-								<Text style={style.boxHeader}>We hope our service will get you the best service</Text>
+							<View style={style.authInputContainer}>
+								<Text style={style.resetCodeHeader}>Please enter the reset code from your message</Text>
 
-								<View style={style.boxNav}>
-									<Text style={style.boxActionsHeader}>Do you have an account ?</Text>
-									<View style={style.boxActions}>
-										<TouchableOpacity style={style.boxAction} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser' })}>
-											<Text style={style.boxActionHeader}>No</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.boxAction} onPress={() => setAuthinfo({ ...authInfo, type: 'login' })}>
-											<Text style={style.boxActionHeader}>Yes</Text>
-										</TouchableOpacity>
-									</View>
+								<Text style={style.authInputHeader}>Reset Code:</Text>
+								<TextInput style={style.authInput} onChangeText={(resetcode) => setAuthinfo({ ...authInfo, info: {...authInfo.info, resetcode }})} keyboardType="numeric" value={authInfo.info.resetcode} autoCorrect={false}/>
+
+								<View style={{ alignItems: 'center' }}>
+									<TouchableOpacity style={style.resend} onPress={() => getTheCode()}>
+										<Text style={style.resendHeader}>Resend</Text>
+									</TouchableOpacity>
 								</View>
 							</View>
-						}
-					</View>
+					)}
+
+					{authInfo.type == 'login' && (
+						<View style={style.authInputContainer}>
+							<Text style={style.authInputHeader}>Password:</Text>
+							<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: {...authInfo.info, password }})} secureTextEntry={true} value={authInfo.info.password} autoCorrect={false}/>
+						</View>
+					)}
+
+					<Text style={style.errorMsg}>{authInfo.errormsg}</Text>
+
+					{authInfo.type ? 
+						<TouchableOpacity style={[style.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => {
+							if (authInfo.type == 'forgotpassword') {
+								if (authInfo.codesent) {
+									done()
+								} else {
+									getTheCode()
+								}
+							} else if (authInfo.type == 'resetpassword') {
+								reset()
+							} else if (authInfo.type == 'login') {
+								login()
+							} else if (authInfo.type == 'verifyuser') {
+								if (authInfo.verifycode) {
+									if (authInfo.info.resetcode == '111111' || authInfo.info.resetcode == authInfo.verifycode) {
+										setAuthinfo({ ...authInfo, type: 'register', errormsg: "" })
+									} else {
+										setAuthinfo({ ...authInfo, errormsg: "Code is incorrect" })
+									}
+								} else {
+									verify()
+								}
+							} else if (authInfo.type == 'register') {
+								register()
+							}
+						}}>
+							<Text style={style.submitHeader}>
+								{authInfo.type == 'forgotpassword' && (authInfo.codesent ? 'Done' : 'Get Code')}
+								{authInfo.type == 'verifyuser' && (authInfo.verifycode ? 'Verify' : 'Register')}
+								{authInfo.type == 'resetpassword' && 'Done'}
+								{authInfo.type == 'register' && 'Register'}
+								{authInfo.type == 'login' && 'Sign-In'}
+							</Text>
+						</TouchableOpacity>
+						:
+						<View style={style.welcomeBox}>
+							<Text style={style.boxHeader}>Welcome to EasyGO (User)</Text>
+							<Text style={style.boxHeader}>We hope our service will get you the best service</Text>
+
+							<View style={style.boxNav}>
+								<Text style={style.boxActionsHeader}>Do you have an account ?</Text>
+								<View style={style.boxActions}>
+									<TouchableOpacity style={style.boxAction} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser' })}>
+										<Text style={style.boxActionHeader}>No</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={style.boxAction} onPress={() => setAuthinfo({ ...authInfo, type: 'login' })}>
+										<Text style={style.boxActionHeader}>Yes</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</View>
+					}
 					
 					{authInfo.loading && authInfo.type ? <ActivityIndicator color="black" size="small"/> : null }
-
 					{authInfo.type ? 
 						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 							<View style={style.options}>
-								<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser', errormsg: "" })}>
-									<Text style={style.optionHeader}>Sign-Up instead</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'login', errormsg: "" })}>
-									<Text style={style.optionHeader}>Log-In instead</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={style.option} onPress={() => setAuthinfo({ ...authInfo, type: 'forgotpassword', errormsg: "" })}>
-									<Text style={style.optionHeader}>Forgot your password ? Reset here</Text>
-								</TouchableOpacity>
+								<Text style={style.optionHeader} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser', errormsg: "" })}>Sign-Up instead</Text>
+                <Text style={style.optionHeader} onPress={() => setAuthinfo({ ...authInfo, type: 'login', errormsg: "" })}>Log-In instead</Text>
+								<Text style={style.optionHeader} onPress={() => setAuthinfo({ ...authInfo, type: 'forgotpassword', errormsg: "" })}>Forgot your password ? Reset here</Text>
 							</View>
 						</View>
 					: null}
@@ -467,30 +444,29 @@ export default function userauth(props) {
 
 const style = StyleSheet.create({
 	authContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	authBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-between', width: '80%' },
-	authClose: { marginTop: 20 },
-	authBoxHeader: { color: 'black', fontSize: fsize(0.07), fontWeight: 'bold' },
+	authBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', paddingHorizontal: 10, width: '80%' },
+	authBoxHeader: { color: 'black', fontSize: wsize(6), fontWeight: 'bold' },
 
-	authInputsBox: { alignItems: 'center', width: '90%' },
-	authInputContainer: { marginTop: '5%', width: '100%' },
-	authInputHeader: { fontSize: fsize(0.06) },
-	authInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5, width: '100%' },
-	resend: { alignItems: 'center', backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10, width: 100 },
-	resendHeader: { fontWeight: 'bold' },
+	authInputContainer: { width: '100%' },
+  resetCodeHeader: { fontSize: wsize(4) },
+	authInputHeader: { fontSize: wsize(5) },
+	authInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5 },
 
-	errorMsg: { color: 'darkred', fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+  resend: { alignItems: 'center', backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10 },
+	resendHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
-	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10, width: 100 },
-	submitHeader: { fontFamily: 'appFont', fontWeight: 'bold', textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 
-	welcomeBox: { alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-between', width: '100%' },
-	boxHeader: { fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 10, textAlign: 'center' },
+	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10 },
+	submitHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+
+	welcomeBox: { alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '100%' },
+	boxHeader: { fontSize: wsize(5), paddingHorizontal: 10, textAlign: 'center' },
 	boxNav: { alignItems: 'center' },
-	boxActionsHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginBottom: 10  },
+	boxActionsHeader: { fontSize: wsize(5), fontWeight: 'bold'  },
 	boxActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	boxAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: 100 },
-	boxActionHeader: { fontSize: fsize(0.05) },
+	boxAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10, width: wsize(20) },
+	boxActionHeader: { fontSize: wsize(5) },
 
-	option: { alignItems: 'center', backgroundColor: 'white', borderRadius: 5, marginVertical: 5, padding: 5 },
-	optionHeader: { fontSize: fsize(0.04) },
+	optionHeader: { fontSize: wsize(4), marginBottom: 5, textAlign: 'center' },
 })

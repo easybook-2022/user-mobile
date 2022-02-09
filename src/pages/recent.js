@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { 
+  SafeAreaView, ActivityIndicator, Dimensions, FlatList, View, Text, Image, 
+  TouchableOpacity, StyleSheet 
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { logo_url } from '../../assets/info'
 import { getTransactions } from '../apis/transactions'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function recent(props) {
+export default function Recent(props) {
 	const { params } = props.route
 	const refetch = params && params.refetch ? params.refetch : null
 	const [items, setItems] = useState([])
@@ -76,7 +80,7 @@ export default function recent(props) {
 	}, [])
 
 	return (
-		<View style={style.recent}>
+		<SafeAreaView style={style.recent}>
 			<View style={style.box}>
 				{loaded ? 
 					items.length > 0 ?
@@ -86,11 +90,13 @@ export default function recent(props) {
 							renderItem={({ item, index }) => 
 								<View key={item.key} style={style.group}>
 									<Text style={style.dateHeader}>
-										{item.items[0].type == "service" ? 
-											<><Text style={{ fontWeight: 'bold' }}>Appointment on</Text> {displayDateStr(item.time)}</>
-											:
-											<><Text style={{ fontWeight: 'bold' }}>Purchased on</Text> {displayDateStr(item.time)}</>
-										}
+                    <Text style={{ fontWeight: 'bold' }}>
+                      {item.type == "service" && "Appointment "}
+                      {item.type == "cartorder" && "Purchased "}
+                      {item.type == "dining" && "Dined "}
+                      on
+                    </Text> 
+                    {' ' + displayDateStr(item.time)}
 									</Text>
 
 									{item.items.map(recent => (
@@ -137,6 +143,7 @@ export default function recent(props) {
 												<View>
 													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Service cost:</Text> ${recent.cost.toFixed(2)}</Text>
 													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${recent.fee.toFixed(2)}</Text>
+                          {recent.tip > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Tip:</Text> ${recent.tip.toFixed(2)}</Text>}
 													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${recent.pst.toFixed(2)}</Text>
 													<Text style={[style.header, { marginBottom: 10 }]}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${recent.hst.toFixed(2)}</Text>
 													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total:</Text> ${recent.total.toFixed(2)}</Text>
@@ -149,7 +156,7 @@ export default function recent(props) {
 						/>
 						:
 						<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
-							<Text style={{ fontSize: fsize(0.05) }}>You don't have any recents</Text>
+							<Text style={{ fontSize: wsize(5) }}>You don't have any recents</Text>
 						</View>
 					:
 					<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
@@ -157,21 +164,21 @@ export default function recent(props) {
 					</View>
 				}
 			</View>
-		</View>
+		</SafeAreaView>
 	);
 }
 
 const style = StyleSheet.create({
-	recent: { backgroundColor: '#EAEAEA', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	recent: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 	box: { height: '100%', width: '100%' },
 
 	group: { borderRadius: 10, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 10 },
-	dateHeader: { fontSize: fsize(0.04), marginBottom: 20 },
+	dateHeader: { fontSize: wsize(4), marginBottom: 20 },
 	item: { marginBottom: 5 },
 	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 50, height: 100, overflow: 'hidden', width: 100 },
 	itemImage: { height: 100, width: 100 },
 	itemInfos: {  },
-	itemName: { fontSize: fsize(0.05), marginBottom: 10 },
-	itemInfo: { fontSize: fsize(0.04) },
-	header: { fontSize: fsize(0.04) }
+	itemName: { fontSize: wsize(5), marginBottom: 10 },
+	itemInfo: { fontSize: wsize(4) },
+	header: { fontSize: wsize(4) }
 })

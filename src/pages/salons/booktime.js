@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { 
-	ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TextInput, 
+	SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TextInput, 
 	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,7 +10,7 @@ import { socket, url, logo_url, displayTime } from '../../../assets/info'
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours } from '../../apis/locations'
 import { getWorkers, getWorkerInfo } from '../../apis/owners'
-import { requestAppointment } from '../../apis/schedules'
+import { getAppointmentInfo, requestAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
 import Cart from '../../components/cart'
@@ -20,15 +20,14 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-const screenHeight = height - (offsetPadding * 2)
-const workerImage = (width / 3) - 40
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function booktime(props) {
+export default function Booktime(props) {
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 	const pushtime = 1000 * (60 * 10)
@@ -85,7 +84,7 @@ export default function booktime(props) {
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
-	const [confirmRequest, setConfirmrequest] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })
+	const [confirm, setConfirm] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })
 
 	const isMounted = useRef(null)
 
@@ -137,7 +136,24 @@ export default function booktime(props) {
 				}
 			})
 	}
-	const getTheLocationHours = async() => {
+  const getTheAppointmentInfo = async() => {
+    getAppointmentInfo(scheduleid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res && isMounted.current == true) {
+          const { locationId, name, time, worker } = res.appointmentInfo
+
+          setName(name)
+          getTheLocationHours(time)
+          setSelectedworkerinfo({ ...selectedWorkerinfo, worker })
+        }
+      })
+  }
+	const getTheLocationHours = async(time) => {
 		const day = new Date(Date.now()).toString().split(" ")[0]
 		const data = { locationid, day }
 
@@ -158,6 +174,15 @@ export default function booktime(props) {
 					const currDay = days[currTime.getDay()]
 					const currDate = currTime.getDate()
 					const currMonth = months[currTime.getMonth()]
+
+          let selectedTime = time > 0 && time > Date.now() ? new Date(time) : null
+          let selectedDay = null, selectedDate = null, selectedMonth = null
+
+          if (selectedTime) {
+            selectedDay = days[selectedTime.getDay()]
+            selectedDate = selectedTime.getDate()
+            selectedMonth = months[selectedTime.getMonth()]
+          }
 
 					let openStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + openHour + ":" + openMinute
 					let closeStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + closeHour + ":" + closeMinute
@@ -189,6 +214,15 @@ export default function booktime(props) {
 						})
 					})
 
+          if (selectedTime) {
+            openStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + openHour + ":" + openMinute
+            closeStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + closeHour + ":" + closeMinute
+            openDateStr = Date.parse(openStr)
+            closeDateStr = Date.parse(closeStr)
+
+            currDateStr = openDateStr
+          }
+
 					while (currDateStr < (closeDateStr - pushtime)) {
 						currDateStr += pushtime
 
@@ -202,15 +236,23 @@ export default function booktime(props) {
 						let timetaken = scheduled.indexOf(currDateStr) > -1
 						let working = true
 
-						newTimes.push({ 
-							key: newTimes.length, header: timedisplay, 
-							time: currDateStr, timetaken, timepassed, working
-						})
+            if (!timepassed) {
+              newTimes.push({ 
+                key: newTimes.length, header: timedisplay, 
+                time: currDateStr, timetaken, working
+              })
+            }
 					}
 
 					setOpentime({ hour: openHour, minute: openMinute })
 					setClosetime({ hour: closeHour, minute: closeMinute })
-					setSelecteddateinfo({ month: currMonth, year: currTime.getFullYear(), day: currDay, date: currDate, time: 0 })
+
+					if (selectedTime) {
+            setSelecteddateinfo({ month: currMonth, year: selectedTime.getFullYear(), day: selectedDay, date: selectedDate, time: 0 })
+          } else {
+            setSelecteddateinfo({ month: currMonth, year: currTime.getFullYear(), day: currDay, date: currDate, time: 0 })
+          }
+
 					setCalendar({ firstDay, numDays, data })
 					setScheduledtimes(scheduled)
 					setTimes(newTimes)
@@ -357,10 +399,12 @@ export default function booktime(props) {
 			let timepassed = currenttime > currDateStr
 			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
 
-			newTimes.push({ 
-				key: newTimes.length, header: timedisplay, 
-				time: currDateStr, timetaken, timepassed
-			})
+  		if (!timepassed) {
+        newTimes.push({ 
+          key: newTimes.length, header: timedisplay, 
+          time: currDateStr, timetaken, timepassed
+        })
+      }
 		}
 
 		setSelecteddateinfo({ ...selectedDateinfo, month: months[month], date: null, year })
@@ -371,12 +415,12 @@ export default function booktime(props) {
 	const selectDate = (date, days) => {
 		const { month, year } = selectedDateinfo
 		const hours = days != null ? 
-						days
-						: 
-						selectedWorkerinfo.worker != null ? 
-							selectedWorkerinfo.worker.days 
-							: 
-							null
+			days
+			: 
+			selectedWorkerinfo.worker != null ? 
+				selectedWorkerinfo.worker.days 
+				: 
+				null
 
 		let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
 		let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
@@ -403,17 +447,19 @@ export default function booktime(props) {
 			let timepassed = currenttime > currDateStr
 			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
 			let working = hours != null ? 
-								hours[day]["working"] ?
-									(currDateStr > workerStarttime && currDateStr < workerEndtime)
-									:
-									false
-								:
-								true
+				hours[day]["working"] ?
+					(currDateStr > workerStarttime && currDateStr < workerEndtime)
+					:
+					false
+				:
+				true
 
-			newTimes.push({ 
-				key: newTimes.length, header: timedisplay, 
-				time: currDateStr, timetaken, timepassed, working
-			})
+  		if (!timepassed) {
+        newTimes.push({ 
+          key: newTimes.length, header: timedisplay, 
+          time: currDateStr, timetaken, timepassed, working
+        })
+      }
 		}
 
 		setSelecteddateinfo({ ...selectedDateinfo, date })
@@ -425,19 +471,20 @@ export default function booktime(props) {
 		setSelecteddateinfo({ ...selectedDateinfo, name, time })
 
 		if (selectedDateinfo.date) {
-			setConfirmrequest({ ...confirmRequest, show: true, service: name ? name : serviceinfo, time })
+			setConfirm({ ...confirm, show: true, service: name ? name : serviceinfo, time })
 		}
 	}
 	const requestAnAppointment = async() => {
 		if (userId) {
 			const { month, date, year, time } = selectedDateinfo
 			const { worker } = selectedWorkerinfo
-			const { note, oldtime } = confirmRequest
+			const { note, oldtime } = confirm
 			const selecteddate = new Date(time)
 			const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
 			const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
 			let data = { 
-				id: scheduleid, userid: userId, 
+        id: scheduleid, // socket purpose
+				userid: userId, 
 				workerid: worker != null ? worker.id : -1, 
 				locationid, 
 				serviceid: serviceid ? serviceid : -1, 
@@ -446,6 +493,8 @@ export default function booktime(props) {
 				time: dateInfo, note: note ? note : "", 
 				type: "requestAppointment", currTime: Date.now()
 			}
+
+      setConfirm({ ...confirm, loading: true })
 
 			requestAppointment(data)
 				.then((res) => {
@@ -457,11 +506,26 @@ export default function booktime(props) {
 					if (res) {
 						if (res.status == "new" || res.status == "updated" || res.status == "requested") {
 							data = { ...data, receiver: res.receiver }
-							socket.emit("socket/requestAppointment", data, () => setConfirmrequest({ ...confirmRequest, requested: true }))
+							socket.emit("socket/requestAppointment", data, () => {
+                setConfirm({ ...confirm, requested: true, loading: false })
+
+                setTimeout(function () {
+                  setConfirm({ ...confirm, show: false, requested: false })
+
+                  setTimeout(function () {
+                    props.navigation.dispatch(
+                      CommonActions.reset({
+                        index: 0,
+                        routes: [{ name: "main", params: { showNotif: true } }]
+                      })
+                    )
+                  }, 1000)
+                }, 3000)
+              })
 						} else {
 							let { oldtime, note } = res
 
-							setConfirmrequest({ ...confirmRequest, show: true, oldtime, note })
+							setConfirm({ ...confirm, show: true, oldtime, note })
 						}
 					}
 				})
@@ -470,25 +534,20 @@ export default function booktime(props) {
 						const { errormsg, status } = err.response.data
 
 						switch (status) {
-							case "cardrequired":
-								setConfirmrequest({ ...confirmRequest, show: false })
-								setShowpaymentrequired(true)
-
-								break;
 							case "trialover":
-								setConfirmrequest({ ...confirmRequest, show: false })
+								setConfirm({ ...confirm, show: false })
 								setTrialover(true)
 
 								break
 							default:
-								setConfirmrequest({ ...confirmRequest, show: true, errormsg })
+								setConfirm({ ...confirm, show: true, errormsg })
 						}
 					} else {
 						alert("an error has occurred in server")
 					}
 				})
 		} else {
-			setConfirmrequest({ ...confirmRequest, show: false })
+			setConfirm({ ...confirm, show: false })
 			setShowauth(true)
 		}
 	}
@@ -500,110 +559,112 @@ export default function booktime(props) {
 
 		if (serviceid) getTheServiceInfo()
 
-		getTheLocationHours()
+    if (scheduleid) {
+      getTheAppointmentInfo()
+    } else {
+      getTheLocationHours()
+    }
 		
 		return () => isMounted.current = false
 	}, [])
 
 	return (
-		<View style={style.booktime}>
-			<View style={style.box}>
-				<View style={style.headers}>
-					<Text style={style.serviceHeader}><Text style={{ fontSize: fsize(0.05) }}>for</Text> {name ? name : serviceinfo}</Text>
+		<View style={styles.booktime}>
+			<View style={styles.box}>
+				<View style={styles.headers}>
+					<Text style={styles.serviceHeader}><Text style={{ fontSize: wsize(5) }}>for</Text> {name ? name : serviceinfo}</Text>
 				</View>
 
 				{loaded ? 
 					times.length > 0 ? 
-						<ScrollView style={{ height: '80%' }}>
-							<View style={style.chooseWorker}>
-								<Text style={style.timesHeader}>Pick a worker</Text>
-								<Text style={style.chooseWorkerHeader}>(Optional, random by default)</Text>
+						<ScrollView style={{ height: '80%', width: '100%' }}>
+							<View style={styles.workerSelection}>
+								<Text style={styles.workerSelectionHeader}>Pick a stylist (Optional)</Text>
 
-								<View style={style.chooseWorkerActions}>
+								<View style={styles.chooseWorkerActions}>
 									{selectedWorkerinfo.worker != null && (
-										<TouchableOpacity style={style.chooseWorkerAction} onPress={() => {
+										<TouchableOpacity style={styles.chooseWorkerAction} onPress={() => {
 											setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
 											selectDate(selectedDateinfo.date)
 										}}>
-											<Text style={style.chooseWorkerActionHeader}>Cancel Worker</Text>
+											<Text style={styles.chooseWorkerActionHeader}>Cancel Stylist</Text>
 										</TouchableOpacity>
 									)}
 										
-									<TouchableOpacity style={style.chooseWorkerAction} onPress={() => getTheWorkers()}>
-										<Text style={style.chooseWorkerActionHeader}>{selectedWorkerinfo.worker == null ? 'Choose your worker' : 'Choose a different worker'}</Text>
+									<TouchableOpacity style={styles.chooseWorkerAction} onPress={() => getTheWorkers()}>
+										<Text style={styles.chooseWorkerActionHeader}>{selectedWorkerinfo.worker == null ? 'Tap to choose your stylist' : 'Tap to choose a different stylist'}</Text>
 									</TouchableOpacity>
 								</View>
-									
 
 								{selectedWorkerinfo.worker != null && (
-									<View style={style.selectedWorker}>
-										<Image style={style.selectedWorkerImage} source={{ uri: logo_url + selectedWorkerinfo.worker.profile }}/>
-										<Text style={style.selectedWorkerHeader}>{selectedWorkerinfo.worker.username}</Text>
+									<View style={styles.selectedWorker}>
+										<Image style={styles.selectedWorkerImage} source={{ uri: logo_url + selectedWorkerinfo.worker.profile }}/>
+										<Text style={styles.selectedWorkerHeader}>{selectedWorkerinfo.worker.username}</Text>
 									</View>
 								)}
 							</View>
-							<View style={style.dateHeaders}>
-								<Text style={style.timesHeader}>Pick a date</Text>
-								
-								<View style={style.date}>
-									<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('left')}><AntDesign name="left" size={25}/></TouchableOpacity>
-									<Text style={style.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
-									<TouchableOpacity style={style.dateNav} onPress={() => dateNavigate('right')}><AntDesign name="right" size={25}/></TouchableOpacity>
-								</View>
 
-								<View style={style.dateDays}>
-									<View style={style.dateDaysRow}>
+							<View style={styles.dateSelection}>
+								<Text style={styles.dateSelectionHeader}>Tap a date below</Text>
+								
+								<View style={styles.dateHeaders}>
+                  <View style={styles.column}>
+									 <TouchableOpacity onPress={() => dateNavigate('left')}><AntDesign name="left" size={wsize(7)}/></TouchableOpacity>
+                  </View>
+                  <View style={styles.column}>
+									 <Text style={styles.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
+                  </View>
+                  <View style={styles.column}>
+									 <TouchableOpacity onPress={() => dateNavigate('right')}><AntDesign name="right" size={wsize(7)}/></TouchableOpacity>
+                  </View>
+								</View>
+								<View style={styles.days}>
+									<View style={styles.daysHeaderRow}>
 										{days.map((day, index) => (
-											<TouchableOpacity key={"day-header-" + index} style={style.dateDayTouchDisabled}>
-												<Text style={style.dateDayTouchDisabledHeader}>{day.substr(0, 3)}</Text>
-											</TouchableOpacity>
+                      <Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>
 										))}
 									</View>
 									{calendar.data.map((info, rowindex) => (
-										<View key={info.key} style={style.dateDaysRow}>
+										<View key={info.key} style={styles.daysDataRow}>
 											{info.row.map((day, dayindex) => (
 												day.num > 0 ?
 													day.passed ? 
-														<TouchableOpacity key={day.key} disabled={true} style={style.dateDayTouchPassed}>
-															<Text style={style.dateDayTouchPassedHeader}>{day.num}</Text>
+														<TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+															<Text style={styles.dayTouchHeader}>{day.num}</Text>
 														</TouchableOpacity>
 														:
 														selectedDateinfo.date == day.num ?
-															<TouchableOpacity key={day.key} style={style.dateDayTouchSelected} onPress={() => selectDate(day.num)}>
-																<Text style={style.dateDayTouchSelectedHeader}>{day.num}</Text>
+															<TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => selectDate(day.num)}>
+																<Text style={[styles.dayTouchHeader, { color: 'white' }]}>{day.num}</Text>
 															</TouchableOpacity>
 															:
-															<TouchableOpacity key={day.key} style={style.dateDayTouch} onPress={() => selectDate(day.num)}>
-																<Text style={style.dateDayTouchHeader}>{day.num}</Text>
+															<TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => selectDate(day.num)}>
+																<Text style={styles.dayTouchHeader}>{day.num}</Text>
 															</TouchableOpacity>
 													:
-													<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={style.dateDayTouchDisabled}></TouchableOpacity>
+													<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={styles.dayTouchDisabled}></TouchableOpacity>
 											))}
 										</View>
 									))}
 								</View>
 							</View>
-							<Text style={style.timesHeader}>Pick a time</Text>
-							<View style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-around', marginBottom: 50, width: '100%' }}>
-								<View style={style.times}>
+
+							<View style={styles.timesSelection}>
+                <Text style={styles.timesHeader}>Tap a time below</Text>
+
+								<View style={styles.times}>
 									{times.map(info => (
 										<View key={info.key}>
-											{(!info.timetaken && !info.timepassed && info.working) && (
-												<TouchableOpacity style={style.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-													<Text style={style.unselectHeader}>{info.header}</Text>
-												</TouchableOpacity>
-											)}
-
-											{(info.timetaken || info.timepassed || !info.working) && (
-												info.timetaken ? 
-													<TouchableOpacity style={style.selected} disabled={true} onPress={() => {}}>
-														<Text style={style.selectedHeader}>{info.header}</Text>
-													</TouchableOpacity>
-													:
-													<TouchableOpacity style={style.selectedPassed} disabled={true} onPress={() => {}}>
-														<Text style={style.selectedPassedHeader}>{info.header}</Text>
-													</TouchableOpacity>
-											)}
+                      {info.working && (
+                        info.timetaken ? 
+                          <TouchableOpacity style={[styles.unselect, { backgroundColor: 'black' }]} disabled={true} onPress={() => {}}>
+                            <Text style={[styles.unselectHeader, { color: 'white' }]}>{info.header}</Text>
+                          </TouchableOpacity>
+                          :
+                          <TouchableOpacity style={styles.unselect} onPress={() => selectTime(name, info.header, info.time)}>
+                            <Text style={styles.unselectHeader}>{info.header}</Text>
+                          </TouchableOpacity>
+                      )}
 										</View>
 									))}
 								</View>
@@ -611,7 +672,7 @@ export default function booktime(props) {
 						</ScrollView>
 						:
 						<View style={{ alignItems: 'center', flexDirection: 'column', justifyContent: 'space-around', width: '100%' }}>
-							<Text style={style.noTimeHeader}>Currently closed</Text>
+						  <Text style={styles.noTimeHeader}>Not open today</Text>
 						</View>
 					:
 					<View style={{ alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around' }}>
@@ -619,16 +680,16 @@ export default function booktime(props) {
 					</View>
 				}
 
-				<View style={style.bottomNavs}>
-					<View style={style.bottomNavsRow}>
+				<View style={styles.bottomNavs}>
+					<View style={styles.bottomNavsRow}>
 						{userId && (
-							<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-								<Entypo name="shopping-cart" size={30}/>
-								{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
+								<Entypo name="shopping-cart" size={wsize(7)}/>
+								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
 							</TouchableOpacity>
 						)}
 
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
+						<TouchableOpacity style={styles.bottomNav} onPress={() => {
 							props.navigation.dispatch(
 								CommonActions.reset({
 									index: 0,
@@ -636,10 +697,10 @@ export default function booktime(props) {
 								})
 							)
 						}}>
-							<Entypo name="home" size={30}/>
+							<Entypo name="home" size={wsize(7)}/>
 						</TouchableOpacity>
 
-						<TouchableOpacity style={style.bottomNav} onPress={() => {
+						<TouchableOpacity style={styles.bottomNav} onPress={() => {
 							if (userId) {
 								AsyncStorage.clear()
 
@@ -648,117 +709,109 @@ export default function booktime(props) {
 								setShowauth(true)
 							}
 						}}>
-							<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+							<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
 			</View>
 
-			{confirmRequest.show && (
+			{confirm.show && (
 				<Modal transparent={true}>
-					<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
-						<View style={style.confirmBox}>
-							<View style={style.confirmContainer}>
-								{!confirmRequest.requested ? 
+					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+						<SafeAreaView style={styles.confirmBox}>
+							<View style={styles.confirmContainer}>
+								{!confirm.requested ? 
 									<>
-										{confirmRequest.oldtime == 0 ? 
-											<Text style={style.confirmHeader}>
+										{confirm.oldtime == 0 ? 
+											<Text style={styles.confirmHeader}>
 												<Text style={{ fontFamily: 'appFont' }}>Request an appointment for</Text>
-												{'\n' + confirmRequest.service + '\n'}
-												{displayTime(confirmRequest.time) + '\n'}
+												{'\n' + confirm.service + '\n'}
+												{displayTime(confirm.time) + '\n'}
 											</Text>
 											:
-											<Text style={style.confirmHeader}>
+											<Text style={styles.confirmHeader}>
 												<Text style={{ fontFamily: 'appFont' }}>You already requested an appointment for</Text>
-												{'\n' + confirmRequest.service + '\n'}
-												{displayTime(confirmRequest.oldtime) + '\n\n'}
+												{'\n' + confirm.service + '\n'}
+												{displayTime(confirm.oldtime) + '\n\n'}
 												<Text style={{ fontFamily: 'appFont' }}>Are you sure you want to change it to</Text>
-												{'\n' + displayTime(confirmRequest.time) + '\n'}
+												{'\n' + displayTime(confirm.time) + '\n'}
 											</Text>
 										}
 
-										<View style={style.note}>
+										<View style={styles.note}>
 											<TextInput 
-												style={style.noteInput} multiline textAlignVertical="top" 
+												style={styles.noteInput} multiline textAlignVertical="top" 
 												placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" 
-												maxLength={100} onChangeText={(note) => setConfirmrequest({...confirmRequest, note })} autoCorrect={false}
+												maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} autoCorrect={false}
 											/>
 										</View>
 
-										{confirmRequest.errormsg ? <Text style={style.errorMsg}>You already requested an appointment for this service</Text> : null}
+										{confirm.errormsg ? <Text style={styles.errorMsg}>You already requested an appointment for this service</Text> : null}
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-											<View style={style.confirmOptions}>
-												<TouchableOpacity style={style.confirmOption} onPress={() => setConfirmrequest({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })}>
-													<Text style={style.confirmOptionHeader}>No</Text>
+											<View style={styles.confirmOptions}>
+												<TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => setConfirm({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })}>
+													<Text style={styles.confirmOptionHeader}>No</Text>
 												</TouchableOpacity>
-												<TouchableOpacity style={style.confirmOption} onPress={() => requestAnAppointment()}>
-													<Text style={style.confirmOptionHeader}>Yes</Text>
+												<TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => requestAnAppointment()}>
+													<Text style={styles.confirmOptionHeader}>Yes</Text>
 												</TouchableOpacity>
 											</View>
 										</View>
+
+                    {confirm.loading && (
+                      <View style={{ alignItems: 'center' }}>
+                        <ActivityIndicator color="black" size="small"/>
+                      </View>
+                    )}
 									</>
 									:
-									<>
-										<View style={style.requestedHeaders}>
-											<Text style={style.requestedHeader}>Appointment requested for{'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>{confirmRequest.service} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>{displayTime(confirmRequest.time)} {'\n'}</Text>
-											<Text style={style.requestedHeaderInfo}>You will get notify by the salon in your notification very soon</Text>
-											<TouchableOpacity style={style.requestedClose} onPress={() => {
-												setConfirmrequest({ ...confirmRequest, show: false, requested: false })
-
-												setTimeout(function () {
-													props.navigation.dispatch(
-														CommonActions.reset({
-															index: 0,
-															routes: [{ name: "main", params: { showNotif: true } }]
-														})
-													)
-												}, 1000)
-											}}>
-												<Text style={style.requestedCloseHeader}>Ok</Text>
-											</TouchableOpacity>
-										</View>
-									</>
+									<View style={styles.requestedHeaders}>
+                    <Text style={styles.requestedHeader}>Appointment requested for{'\n'}</Text>
+                    <Text style={styles.requestedHeaderInfo}>
+                      {confirm.service} {'\n'}
+                      {displayTime(confirm.time)} {'\n\n'}
+                      You will get notify by the salon
+                    </Text>
+                  </View>
 								}
 							</View>
-						</View>
+						</SafeAreaView>
 					</TouchableWithoutFeedback>
 				</Modal>
 			)}
 			{selectedWorkerinfo.show && (
 				<Modal transparent={true}>
-					<View style={style.workersContainer}>
-						<View style={style.workersBox}>
-							<Text style={style.workersHeader}>Book the worker you want</Text>
+					<SafeAreaView style={styles.workersContainer}>
+						<View style={styles.workersBox}>
+							<Text style={styles.workersHeader}>Tap the stylist you want</Text>
 
-							<View style={style.workersList}>
+							<View style={styles.workersList}>
 								<FlatList
 									data={selectedWorkerinfo.workers}
 									renderItem={({ item, index }) => 
-										<View key={item.key} style={style.workersRow}>
+										<View key={item.key} style={styles.workersRow}>
 											{item.row.map(info => (
 												info.id ? 
-													<TouchableOpacity key={info.key} style={!info.selected ? style.worker : style.workerDisabled} onPress={() => selectWorker(info.id)}>
-														<View style={style.workerProfile}>
-															<Image source={{ uri: logo_url + info.profile }} style={{ height: workerImage, width: workerImage }}/>
+													<TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: info.selected ? 'rgba(0, 0, 0, 0.3)' : null }]} onPress={() => selectWorker(info.id)}>
+														<View style={styles.workerProfile}>
+															<Image source={{ uri: logo_url + info.profile }} style={{ height: wsize(20), width: wsize(20) }}/>
 														</View>
-														<Text style={style.workerHeader}>{info.username}</Text>
+														<Text style={styles.workerHeader}>{info.username}</Text>
 													</TouchableOpacity>
 													:
-													<View key={info.key} style={style.worker}></View>
+													<View key={info.key} style={styles.worker}></View>
 											))}
 										</View>
 									}
 								/>
 							</View>
 
-							<TouchableOpacity style={style.workersClose} onPress={() => setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, workers: [] })}>
-								<Text style={style.workersCloseHeader}>Cancel</Text>
+							<TouchableOpacity style={styles.workersClose} onPress={() => setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, workers: [] })}>
+								<Text style={styles.workersCloseHeader}>Cancel</Text>
 							</TouchableOpacity>
 						</View>
-					</View>
+					</SafeAreaView>
 				</Modal>
 			)}
 			{openCart && <Modal><Cart navigation={props.navigation} close={() => {
@@ -767,55 +820,51 @@ export default function booktime(props) {
 			}}/></Modal>}
 			{showPaymentrequired && (
 				<Modal transparent={true}>
-					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.requiredBox}>
-							<View style={style.requiredContainer}>
-								<Text style={style.requiredHeader}>
-									You need to provide a payment method to book
-									an appointment
-								</Text>
+					<SafeAreaView style={styles.requiredBox}>
+            <View style={styles.requiredContainer}>
+              <Text style={styles.requiredHeader}>
+                You need to provide a payment method to book
+                an appointment
+              </Text>
 
-								<View style={style.requiredActions}>
-									<TouchableOpacity style={style.requiredAction} onPress={() => setShowpaymentrequired(false)}>
-										<Text style={style.requiredActionHeader}>Close</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.requiredAction} onPress={() => {
-										setShowpaymentrequired(false)
-										props.navigation.navigate("account", { required: "card" })
-									}}>
-										<Text style={style.requiredActionHeader}>Ok</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					</View>
+              <View style={styles.requiredActions}>
+                <TouchableOpacity style={styles.requiredAction} onPress={() => setShowpaymentrequired(false)}>
+                  <Text style={styles.requiredActionHeader}>Close</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.requiredAction} onPress={() => {
+                  setShowpaymentrequired(false)
+                  props.navigation.navigate("account", { required: "card" })
+                }}>
+                  <Text style={styles.requiredActionHeader}>Ok</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </SafeAreaView>
 				</Modal>
 			)}
 			{showTrialover && (
 				<Modal transparent={true}>
-					<View style={{ paddingVertical: offsetPadding }}>
-						<View style={style.requiredBox}>
-							<View style={style.requiredContainer}>
-								<Text style={style.requiredHeader}>
-									Your 30 days trial period is up. A cost of $0.50
-									will be charged from you if any of your future appointment
-									is accepted by a salon
-								</Text>
+					<SafeAreaView style={styles.requiredBox}>
+            <View style={styles.requiredContainer}>
+              <Text style={styles.requiredHeader}>
+                Your 30 days trial period is up. A cost of $0.50
+                will be charged from you if any of your future appointment
+                is accepted by a salon
+              </Text>
 
-								<View style={style.requiredActions}>
-									<TouchableOpacity style={style.requiredAction} onPress={() => setShowtrialover(false)}>
-										<Text style={style.requiredActionHeader}>Close</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={style.requiredAction} onPress={() => {
-										setShowpaymentrequired(true)
-										setShowtrialover(false)
-									}}>
-										<Text style={style.requiredActionHeader}>Ok</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</View>
-					</View>
+              <View style={styles.requiredActions}>
+                <TouchableOpacity style={styles.requiredAction} onPress={() => setShowtrialover(false)}>
+                  <Text style={styles.requiredActionHeader}>Close</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.requiredAction} onPress={() => {
+                  setShowpaymentrequired(true)
+                  setShowtrialover(false)
+                }}>
+                  <Text style={styles.requiredActionHeader}>Ok</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </SafeAreaView>
 				</Modal>
 			)}
 			{showAuth && (
@@ -840,96 +889,88 @@ export default function booktime(props) {
 	)
 }
 
-const style = StyleSheet.create({
-	booktime: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+const styles = StyleSheet.create({
+	booktime: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	headers: { height: '10%' },
-	serviceHeader: { fontSize: fsize(0.08), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
+	serviceHeader: { fontSize: wsize(8), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 
-	chooseWorker: { alignItems: 'center', marginBottom: 50, marginTop: 50 },
-	chooseWorkerHeader: { fontSize: fsize(0.05) },
-
+	workerSelection: { alignItems: 'center', marginVertical: 50 },
+  workerSelectionHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
 	chooseWorkerActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	chooseWorkerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 2, padding: 5, width: 150 },
-	chooseWorkerActionHeader: { textAlign: 'center' },
+	chooseWorkerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 2, padding: 5, width: wsize(40) },
+	chooseWorkerActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 	selectedWorker: { marginVertical: 10 },
-	selectedWorkerImage: { borderRadius: workerImage / 2, height: workerImage, width: workerImage },
-	selectedWorkerHeader: { fontWeight: 'bold', textAlign: 'center' },
+	selectedWorkerImage: { borderRadius: wsize(20) / 2, height: wsize(20), width: wsize(20) },
+	selectedWorkerHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
 
-	dateHeaders: { alignItems: 'center', marginVertical: 50 },
-	date: { flexDirection: 'row', margin: 10 },
-	dateNav: { marginHorizontal: 20 },
-	dateHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), marginVertical: 5, textAlign: 'center', width: fsize(0.5) },
-	dateDays: { alignItems: 'center' },
-	dateDaysRow: { flexDirection: 'row' },
+	dateSelection: { alignItems: 'center', marginVertical: 50, width: '100%' },
+  dateSelectionHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
+  dateHeaders: { flexDirection: 'row', justifyContent: 'space-between', width: '70%' },
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+  dateHeader: { fontSize: wsize(6), marginVertical: 5, textAlign: 'center', width: wsize(50) },
+  days: { alignItems: 'center', width: '100%' },
 
-	dateDayTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+  daysHeaderRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  daysHeader: { fontSize: wsize(12) * 0.4, fontWeight: 'bold', marginVertical: 1, textAlign: 'center', width: wsize(12) },
 
-	dateDayTouchSelected: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchSelectedHeader: { color: 'white', fontSize: fsize(0.038), textAlign: 'center' },
+  daysDataRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  dayTouch: { borderStyle: 'solid', borderWidth: 2, marginVertical: 1, paddingVertical: 10, width: wsize(12) },
+  dayTouchHeader: { color: 'black', fontSize: wsize(12) * 0.4, textAlign: 'center' },
 
-	dateDayTouchPassed: { backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchPassedHeader: { color: 'black', fontSize: fsize(0.038), textAlign: 'center' },
+  dayTouchDisabled: { paddingVertical: 10, width: wsize(12) },
+  dayTouchDisabledHeader: { fontSize: wsize(12) * 0.4, fontWeight: 'bold' },
 
-	dateDayTouchDisabled: { margin: 3, paddingVertical: 10, width: fsize(0.1) },
-	dateDayTouchDisabledHeader: { fontSize: fsize(0.038), fontWeight: 'bold' },
-
-	timesHeader: { fontFamily: 'appFont', fontSize: fsize(0.07), fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: fsize(0.79) },
+  timesSelection: { alignItems: 'center', marginVertical: 50 },
+	timesHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
+	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', width: wsize(79) },
 	
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
-	unselectHeader: { color: 'black', fontSize: fsize(0.04) },
-	
-	selected: { alignItems: 'center', backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: fsize(0.25) },
-	selectedHeader: { color: 'white', fontSize: fsize(0.04) },
-	
-	selectedPassed: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, opacity: 0.3, paddingVertical: 10, width: fsize(0.25) },
-	selectedPassedHeader: { color: 'black', fontSize: fsize(0.04) },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: wsize(25) },
+	unselectHeader: { color: 'black', fontSize: wsize(5) },
 
-	noTimeHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	noTimeHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
+	bottomNavHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 	cart: { flexDirection: 'row', height: 30, marginVertical: 5 },
-	numCartItemsHeader: { fontWeight: 'bold' },
+	numCartItemsHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', justifyContent: 'space-around', paddingVertical: 20, width: '80%' },
-	confirmHeader: { fontSize: fsize(0.04), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontSize: wsize(4), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
-	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.04), height: 100, padding: 5, width: '80%' },
+	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(4), height: 100, padding: 5, width: '80%' },
 	confirmOptions: { flexDirection: 'row' },
-	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 50 },
-	confirmOptionHeader: { },
+	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(20) },
+	confirmOptionHeader: { fontSize: wsize(4) },
 	requestedHeaders: { alignItems: 'center', paddingHorizontal: 20 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
-	requestedCloseHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
-	requestedHeaderInfo: { fontSize: fsize(0.05), textAlign: 'center' },
+	requestedCloseHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+	requestedHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+	requestedHeaderInfo: { fontSize: wsize(5), textAlign: 'center' },
 
 	workersContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	workersBox: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
-	workersHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), paddingVertical: 20, textAlign: 'center' },
-	workersRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+	workersHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 20, textAlign: 'center' },
 	workersList: { height: '80%' },
 	workersRow: { flexDirection: 'row', justifyContent: 'space-between' },
 	worker: { alignItems: 'center', marginHorizontal: 5, padding: 5, width: (width / 3) - 30 },
-	workerProfile: { borderRadius: workerImage / 2, height: workerImage, overflow: 'hidden', width: workerImage },
-	workerHeader: { fontSize: fsize(0.04), fontWeight: 'bold'  },
-	workersClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 100 },
-	workersCloseHeader: { textAlign: 'center' },
+	workerProfile: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
+	workerHeader: { fontSize: wsize(4), fontWeight: 'bold'  },
+	workersClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: wsize(30) },
+	workersCloseHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	requiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	requiredHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	requiredHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	requiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	requiredActionHeader: { },
+	requiredAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
+	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
-	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' }
 })

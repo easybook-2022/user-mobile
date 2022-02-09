@@ -22,15 +22,15 @@ const users = [
 	{ id: 13, username: "user13", cellnumber: "(234) 234-2345", password: "password", confirmPassword: "password" },
 	{ id: 14, username: "user14", cellnumber: "(345) 345-3456", password: "password", confirmPassword: "password" }
 ]
-const emptyUser = { username: "", cellnuber: "", password: "", confirmPassword: "" }
+const emptyUser = { username: "", cellnumber: "", password: "", confirmPassword: "" }
 
 const testCards = [
 	{ id: 0, number: "4000000000000077", expMonth: 2, expYear: 34, cvc: '232' }, // visa
 	{ id: 1, number: "5555555555554444", expMonth: 1, expYear: 23, cvc: '121' }, // mastercard
 	{ id: 2, number: "378282246310005", expMonth: 5, expYear: 29, cvc: '243' }, // amex
-	/*{ id: 3, number: "6011111111111117", expMonth: 9, expYear: 22, cvc: '869' }, // discover
+	{ id: 3, number: "6011111111111117", expMonth: 9, expYear: 22, cvc: '869' }, // discover
 	{ id: 4, number: "30569309025904", expMonth: 12, expYear: 45, cvc: '054' }, // diners club
-	{ id: 5, number: "3530111333300000", expMonth: 12, expYear: 23, cvc: '056' }, // jcb*/
+	{ id: 5, number: "3530111333300000", expMonth: 12, expYear: 23, cvc: '056' }, // jcb
 ]
 const realCards = [
 	{ id: 0, number: "4537336027385014", expMonth: 9, expYear: 23, cvc: '959' },
@@ -48,7 +48,7 @@ const { number, expMonth, expYear, cvc } =
 	emptyCard
 
 const login = test_input ? users[0] : emptyUser
-const register = test_input ? users[0] : emptyUser
+const register = test_input ? users[1] : emptyUser
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
 const server_api_url = "https://www.easygo.tk/flask"
@@ -74,11 +74,11 @@ export const displayTime = unixtime => {
 	let timeStr = "", timeheader = "", diff
 
 	minute = minute < 10 ? '0' + minute : minute
-	period = hour > 12 ? 'pm' : 'am'
+	period = hour < 12 ? 'am' : 'pm'
 	hour = hour > 12 ? 
 			hour - 12 
-			:
-			hour == 0 ? 12 : hour
+			: 
+      hour == 0 ? 12 : hour
 
 	timeheader = hour + ":" + minute + " " + period
 

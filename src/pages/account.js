@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-	ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, 
+	SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, 
 	Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,13 +20,14 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function account(props) {
+export default function Account(props) {
 	const amexLogo = require("../../assets/amex.jpg")
 	const dinersclubLogo = require("../../assets/dinersclub.png")
 	const discoverLogo = require("../../assets/discover.png")
@@ -550,7 +551,7 @@ export default function account(props) {
 	}, [])
 
 	return (
-		<View style={style.account}>
+		<SafeAreaView style={style.account}>
 			<View style={style.box}>
 				{loaded ? 
 					<ScrollView>
@@ -562,7 +563,25 @@ export default function account(props) {
 
 							<View style={style.inputContainer}>
 								<Text style={style.inputHeader}>Cell number:</Text>
-								<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="cell phone number" onChangeText={(cellnumber) => setCellnumber(cellnumber)} value={cellnumber} autoCorrect={false}/>
+								<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="cell phone number" onKeyPress={(e) => {
+									let newValue = e.nativeEvent.key
+
+									if (newValue >= "0" && newValue <= "9") {
+										if (cellnumber.length == 3) {
+											setCellnumber("(" + cellnumber + ") " + newValue)
+										} else if (cellnumber.length == 9) {
+											setCellnumber(cellnumber + "-" + newValue)
+										} else if (cellnumber.length == 13) {
+											setCellnumber(cellnumber + newValue)
+
+											Keyboard.dismiss()
+										} else {
+											setCellnumber(cellnumber + newValue)
+										}
+									} else if (newValue == "Backspace") {
+										setCellnumber(cellnumber.substr(0, cellnumber.length - 1))
+									}
+								}} keyboardType="numeric" value={cellnumber} autoCorrect={false}/>
 							</View>
 
 							<View style={style.cameraContainer}>
@@ -633,8 +652,8 @@ export default function account(props) {
 										</View>
 									</View>
 									<View style={style.paymentMethodActions}>
-										<TouchableOpacity style={info.default ? style.paymentMethodActionDisabled : style.paymentMethodAction} disabled={info.default} onPress={() => usePaymentMethod(info.cardid)}>
-											<Text style={info.default ? style.paymentMethodActionHeaderDisabled : style.paymentMethodActionHeader}>Set default</Text>
+										<TouchableOpacity style={[style.paymentMethodAction, { backgroundColor: info.default ? 'black' : 'transparent' }]} disabled={info.default} onPress={() => usePaymentMethod(info.cardid)}>
+											<Text style={[style.paymentMethodActionHeader, { color: info.default ? 'white' : 'black' }]}>Set default</Text>
 										</TouchableOpacity>
 										<TouchableOpacity style={style.paymentMethodAction} onPress={() => editPaymentMethod(info.cardid, index)}>
 											<Text style={style.paymentMethodActionHeader}>Edit</Text>
@@ -658,8 +677,8 @@ export default function account(props) {
 
 			{paymentMethodForm.show && (
 				<Modal transparent={true}>
-					<TouchableWithoutFeedback style={{ paddingVertical: offsetPadding }} onPress={() => Keyboard.dismiss()}>
-						<View style={style.form}>
+					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+						<SafeAreaView style={style.form}>
 							<View style={style.formContainer}>
 								<View style={{ alignItems: 'center', marginVertical: 5 }}>
 									<TouchableOpacity onPress={() => {
@@ -669,7 +688,7 @@ export default function account(props) {
 											number: '', expMonth: '', expYear: '', cvc: ''
 										})
 									}}>
-										<AntDesign name="closecircleo" size={30}/>
+										<AntDesign name="closecircleo" size={wsize(7)}/>
 									</TouchableOpacity>
 
 									<Text style={style.formHeader}>Enter card information</Text>
@@ -717,7 +736,7 @@ export default function account(props) {
 								{paymentMethodForm.loading ? <ActivityIndicator color="black" size="small"/> : null}
 
 								<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-									<TouchableOpacity style={style.formSubmit} disabled={paymentMethodForm.loading} onPress={() => {
+									<TouchableOpacity style={[style.formSubmit, { opacity: paymentMethodForm.loading ? 0.5 : 1 }]} disabled={paymentMethodForm.loading} onPress={() => {
 										if (paymentMethodForm.type == 'add') {
 											addNewPaymentMethod()
 										} else {
@@ -728,57 +747,55 @@ export default function account(props) {
 									</TouchableOpacity>
 								</View>
 							</View>
-						</View>
+						</SafeAreaView>
 					</TouchableWithoutFeedback>
 				</Modal>
 			)}
-		</View>
+		</SafeAreaView>
 	);
 }
 
 const style = StyleSheet.create({
-	account: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	account: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
 	inputsBox: { alignItems: 'center', marginBottom: 50 },
 	inputContainer: { marginVertical: 20, width: '90%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: fsize(0.06), fontWeight: 'bold' },
-	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.06), padding: 5 },
+	inputHeader: { fontFamily: 'appFont', fontSize: wsize(6), fontWeight: 'bold' },
+	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5 },
 	cameraContainer: { alignItems: 'center', marginVertical: 50, width: '100%' },
-	camera: { height: fsize(0.7), width: fsize(0.7) },
+	camera: { height: wsize(70), width: wsize(70) },
 	cameraActions: { flexDirection: 'row' },
-	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: 100 },
-	cameraActionHeader: { fontSize: fsize(0.04), textAlign: 'center' },
+	cameraAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 5, padding: 5, width: wsize(30) },
+	cameraActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	paymentMethods: { alignItems: 'center', margin: 10 },
-	paymentMethodHeader: { fontFamily: 'appFont', fontSize: fsize(0.05), textAlign: 'center' },
+	paymentMethodHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
 	paymentMethodAdd: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 3, padding: 5 },
-	paymentMethodAddHeader: { fontSize: fsize(0.05) },
+	paymentMethodAddHeader: { fontSize: wsize(5) },
 	paymentMethod: { marginVertical: 30 },
 	paymentMethodRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	paymentMethodHeader: { fontSize: fsize(0.05), fontWeight: 'bold', padding: 5 },
+	paymentMethodHeader: { fontSize: wsize(5), fontWeight: 'bold', padding: 5 },
 	paymentMethodImageHolder: { height: 40, margin: 2, width: 40 },
 	paymentMethodImage: { height: 40, width: 40 },
 	paymentMethodNumberHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, flexDirection: 'row', justifyContent: 'space-between', padding: 5, width: '70%' },
-	paymentMethodNumberHeader: { fontSize: fsize(0.05), paddingVertical: 4, textAlign: 'center', width: '50%' },
+	paymentMethodNumberHeader: { fontSize: wsize(5), paddingVertical: 4, textAlign: 'center', width: '50%' },
 	paymentMethodActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	paymentMethodAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 80 },
-	paymentMethodActionHeader: { fontSize: fsize(0.033), textAlign: 'center' },
-	paymentMethodActionDisabled: { backgroundColor: 'black', borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: 80 },
-	paymentMethodActionHeaderDisabled: { color: 'white', fontSize: fsize(0.033), textAlign: 'center' },
+	paymentMethodAction: { borderRadius: 2, borderStyle: 'solid', borderWidth: 2, marginTop: 5, padding: 5, width: wsize(25) },
+	paymentMethodActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 
-	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10, width: fsize(0.3) },
-	updateButtonHeader: { fontFamily: 'appFont', fontSize: fsize(0.05) },
+	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10, width: wsize(30) },
+	updateButtonHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
 
 	// form
 	form: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	formContainer: { backgroundColor: 'white', height: '90%', paddingVertical: 10, width: '90%' },
-	formHeader: { fontSize: fsize(0.05), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	formHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
 	formInputField: { marginBottom: 20, marginHorizontal: '10%', width: '80%' },
-	formInputHeader: { fontSize: fsize(0.04), fontWeight: 'bold' },
-	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: fsize(0.04), padding: 5, width: '100%' },
+	formInputHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+	formInputInput: { borderRadius: 2, borderStyle: 'solid', borderWidth: 3, fontSize: wsize(6), padding: 5, width: '100%' },
 	formSubmit: { alignItems: 'center', borderRadius: 2, borderStyle: 'solid', borderWidth: 1, padding: 5 },
-	formSubmitHeader: {  },
+	formSubmitHeader: { fontSize: wsize(6) },
 
-	errorMsg: { color: 'darkred', fontWeight: 'bold', marginVertical: 20, textAlign: 'center' },
+	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 })

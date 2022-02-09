@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, Linking, StyleSheet, Modal } from 'react-native';
+import { 
+  SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, 
+  TextInput, TouchableOpacity, Linking, StyleSheet, Modal 
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -17,13 +20,14 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
-const offsetPadding = Constants.statusBarHeight
-
-const fsize = p => {
-	return width * p
+const wsize = p => {
+  return width * (p / 100)
+}
+const hsize = p => {
+  return height * (p / 100)
 }
 
-export default function restaurantprofile(props) {
+export default function Restaurantprofile(props) {
 	const { locationid, refetch } = props.route.params
 	const func = props.route.params
 
@@ -210,39 +214,38 @@ export default function restaurantprofile(props) {
 	}, [])
 
 	return (
-		<View style={style.restaurantprofile}>
+		<SafeAreaView style={style.restaurantprofile}>
 			{loaded ? 
 				<View style={style.box}>
 					<View style={style.profileInfo}>
-						<View style={style.headers}>
-							<TouchableOpacity style={style.viewInfoTouch} onPress={() => setShowinfo(true)}>
-								<Text style={style.viewInfoTouchHeader}>View{'\n'}Info</Text>
-							</TouchableOpacity>
-							<View style={style.logoHolder}>
-								<Image style={style.logo} source={{ uri: logo_url + logo }}/>
-							</View>
-							<TouchableOpacity style={style.callTouch} onPress={() => Linking.openURL('tel://' + phonenumber)}>
-								<AntDesign name="phone" size={30}/>
-							</TouchableOpacity>
-						</View>
-						<View style={style.navs}>
-							<View style={{ flexDirection: 'row' }}>
-								<TouchableOpacity style={style.nav} onPress={() => getAllMenus()}>
-									<Text style={style.navHeader}>Refresh menu</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={style.nav} onPress={() => props.navigation.navigate("makereservation", { locationid, initialize: () => initialize() })}>
-									<Text style={style.navHeader}>Book Table</Text>
-								</TouchableOpacity>
-							</View>
-						</View>
+						<View style={style.column}>
+              <TouchableOpacity style={style.headerAction} onPress={() => setShowinfo(true)}>
+                <Text style={style.headerActionHeader}>View Info</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={style.column}>
+              <TouchableOpacity style={style.headerAction} onPress={() => getAllMenus()}>
+                <Text style={style.headerActionHeader}>Refresh menu</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={style.column}>
+              <TouchableOpacity style={style.headerAction} onPress={() => props.navigation.navigate("makereservation", { locationid, initialize: () => initialize() })}>
+                <Text style={style.headerActionHeader}>Book Table</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={style.column}>
+              <TouchableOpacity style={style.headerAction} onPress={() => Linking.openURL('tel://' + phonenumber)}>
+                <Text style={style.headerActionHeader}>Call</Text>
+              </TouchableOpacity>
+            </View>
 					</View>
 					
 					<View style={style.body}>
 						{(menuInfo.type && menuInfo.type == "photos") && (
 							<View style={style.menuInputBox}>
-								<TextInput style={style.menuInput} type="text" placeholder="Enter product # or name" onChangeText={(info) => setProductinfo(info)}/>
+								<TextInput style={style.menuInput} type="text" placeholder="Enter product # or name" onChangeText={(info) => setProductinfo(info)} autoCorrect={false} autoCapitalize="none"/>
 								<TouchableOpacity style={style.menuInputTouch} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: "", productinfo: productInfo, initialize: () => getAllMenus() })}>
-									<Text style={style.menuInputTouchHeader}>Buy{'\n'}product</Text>
+									<Text style={style.menuInputTouchHeader}>Buy item</Text>
 								</TouchableOpacity>
 							</View>
 						)}
@@ -252,9 +255,11 @@ export default function restaurantprofile(props) {
 								menuInfo.type == "photos" ? 
 									menuInfo.items.map(info => (
 										info.row.map(item => (
-											<View key={item.key} style={style.menuPhoto}>
-												<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo }}/>
-											</View>
+											item.photo ? 
+												<View key={item.key} style={style.menuPhoto}>
+													<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo }}/>
+												</View>
+											: null
 										))
 									))
 									:
@@ -267,19 +272,19 @@ export default function restaurantprofile(props) {
 						<View style={style.bottomNavsRow}>
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
-									<FontAwesome5 name="user-circle" size={30}/>
+									<FontAwesome5 name="user-circle" size={wsize(7)}/>
 								</TouchableOpacity>
 							)}
 
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
-									<FontAwesome name="history" size={30}/>
+									<FontAwesome name="history" size={wsize(7)}/>
 								</TouchableOpacity>
 							)}
 
 							{userId && (
 								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
-									<Entypo name="shopping-cart" size={30}/>
+									<Entypo name="shopping-cart" size={wsize(7)}/>
 									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
 								</TouchableOpacity>
 							)}
@@ -292,7 +297,7 @@ export default function restaurantprofile(props) {
 									})
 								)
 							}}>
-								<Entypo name="home" size={30}/>
+								<Entypo name="home" size={wsize(7)}/>
 							</TouchableOpacity>
 							<TouchableOpacity style={style.bottomNav} onPress={() => {
 								if (userId) {
@@ -348,10 +353,10 @@ export default function restaurantprofile(props) {
 			)}
 			{showInfo && (
 				<Modal transparent={true}>
-					<View style={style.showInfoContainer}>
+					<SafeAreaView style={style.showInfoContainer}>
 						<View style={style.showInfoBox}>
 							<TouchableOpacity style={style.showInfoClose} onPress={() => setShowinfo(false)}>
-								<AntDesign name="close" size={40}/>
+								<AntDesign name="close" size={wsize(7)}/>
 							</TouchableOpacity>
 
 							<Text style={style.showInfoHeader}>{name}</Text>
@@ -359,69 +364,60 @@ export default function restaurantprofile(props) {
 							<View style={{ alignItems: 'center' }}>
 								<View style={{ flexDirection: 'row' }}>
 									<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
-										<AntDesign name="phone" size={30}/>
+										<AntDesign name="phone" size={wsize(7)}/>
 									</TouchableOpacity>
 									<Text style={style.showInfoPhonenumber}>{phonenumber}</Text>
 								</View>
 							</View>
 							<Text style={style.showInfoHeader}>{distance}</Text>
 						</View>
-					</View>
+					</SafeAreaView>
 				</Modal>
 			)}
-		</View>
+		</SafeAreaView>
 	);
 }
 
 const style = StyleSheet.create({
-	restaurantprofile: { backgroundColor: 'white', height: '100%', paddingBottom: offsetPadding, width: '100%' },
+	restaurantprofile: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-	profileInfo: { height: '20%' },
-	headers: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 5, width: '100%' },
-	viewInfoTouch: { borderRadius: fsize(0.2) / 2, borderStyle: 'solid', borderWidth: 2, height: 52, marginTop: fsize(0.03), padding: 5, width: fsize(0.2) },
-	viewInfoTouchHeader: { textAlign: 'center' },
-	logoHolder: { borderRadius: fsize(0.2) / 2, height: fsize(0.2), overflow: 'hidden', width: fsize(0.2) },
-	logo: { height: fsize(0.2), width: fsize(0.2) },
-	callTouch: { alignItems: 'center', borderRadius: fsize(0.2) / 2, borderStyle: 'solid', borderWidth: 2, height: 52, marginTop: fsize(0.03), paddingTop: 5, width: fsize(0.2) },
+	profileInfo: { flexDirection: 'row', height: '7%', justifyContent: 'space-around', width: '100%' },
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
+	headerAction: { alignItems: 'center', borderRadius: 10, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: wsize(20) },
+	headerActionHeader: { color: 'black', fontSize: wsize(3), textAlign: 'center' },
 
-	navs: { flexDirection: 'row', justifyContent: 'space-around' },
-	nav: { alignItems: 'center', backgroundColor: 'white', borderRadius: 8, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 5, padding: 5, width: fsize(0.3) },
-	navHeader: { fontSize: fsize(0.035) },
-
-	body: { height: '70%' },
+	body: { height: '83%' },
 
 	menuInputBox: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 5, marginHorizontal: 10 },
-	menuInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), padding: 5, width: '70%' },
-	menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: fsize(0.05), marginLeft: 2, padding: 5, width: '30%' },
-	menuInputTouchHeader: { textAlign: 'center' },
-	menuRow: { flexDirection: 'row', justifyContent: 'space-between', padding: 5 },
-	menuPhoto: { height, margin: width * 0.025, width: width * 0.95 },
-	menuStart: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-	menuStartHeader: { fontSize: fsize(0.05), textAlign: 'center' },
+	menuInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(4), paddingLeft: 5, width: '68%' },
+	menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginLeft: 2, padding: 5, width: '28%' },
+	menuInputTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
+  menuInputError: { color: 'darkred', marginLeft: 10 },
+	menuPhoto: { height, marginBottom: 10, marginHorizontal: width * 0.025, width: width * 0.95 },
 
 	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3 },
-	menuImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), overflow: 'hidden', width: fsize(0.1) },
-	menuImage: { height: fsize(0.1), width: fsize(0.1) },
-	menuName: { fontSize: fsize(0.06), fontWeight: 'bold', marginLeft: 5, marginTop: fsize(0.04) / 2 },
+	menuImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
+	menuImage: { height: wsize(10), width: wsize(10) },
+	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2 },
 	itemActions: { flexDirection: 'row', marginTop: 0 },
 	itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5 },
-	itemActionHeader: { fontSize: fsize(0.06), textAlign: 'center' },
+	itemActionHeader: { fontSize: wsize(6), textAlign: 'center' },
 	item: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 10, margin: '2%', paddingHorizontal: 3, paddingBottom: 30 },
-	itemImageHolder: { borderRadius: fsize(0.1) / 2, height: fsize(0.1), margin: 5, overflow: 'hidden', width: fsize(0.1) },
-	itemImage: { height: fsize(0.1), width: fsize(0.1) },
-	itemHeader: { fontSize: fsize(0.06), fontWeight: 'bold', marginRight: 20, paddingTop: fsize(0.04), textDecorationStyle: 'solid' },
-	itemInfo: { fontSize: fsize(0.05), marginLeft: 10, marginVertical: 10 },
+	itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), margin: 5, overflow: 'hidden', width: wsize(10) },
+	itemImage: { height: wsize(10), width: wsize(10) },
+	itemHeader: { fontSize: wsize(6), fontWeight: 'bold', marginRight: 20, paddingTop: wsize(4), textDecorationStyle: 'solid' },
+	itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
-	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
-	numCartItemsHeader: { fontWeight: 'bold' },
+	bottomNavHeader: { fontSize: wsize(5), fontWeight: 'bold' },
+	numCartItemsHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
 	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
 	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, width: 44 },
-	showInfoHeader: { fontSize: fsize(0.05), fontWeight: 'bold', margin: 10, textAlign: 'center' },
-	showInfoPhonenumber: { fontSize: fsize(0.05), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 10, textAlign: 'center' },
+	showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
 })
