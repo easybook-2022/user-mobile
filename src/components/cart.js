@@ -599,6 +599,9 @@ export default function Cart(props) {
             setTimeout(function () {
               setLoading(false)
 
+              setShowconfirm(false)
+              props.showNotif()
+
               getTheCartItems()
             }, 2000)
 					})
@@ -851,24 +854,12 @@ export default function Cart(props) {
   					}
   				</View>
   			</View>
-  			
+
   			{showConfirm && (
   				<Modal transparent={true}>
   					<SafeAreaView style={style.confirmBox}>
   						<View style={style.confirmContainer}>
   							<Text style={style.confirmHeader}>Orders sent</Text>
-
-  							<View style={style.confirmOptions}>
-  								<TouchableOpacity style={style.confirmOption} onPress={() => {
-  									setShowconfirm(false)
-
-                    setTimeout(function () {
-                      props.showNotif()
-                    }, 1000)
-  								}}>
-  									<Text style={style.confirmOptionHeader}>Ok</Text>
-  								</TouchableOpacity>
-  							</View>
   						</View>
   					</SafeAreaView>
   				</Modal>

@@ -1,9 +1,9 @@
 import axios from 'axios'
 import { url } from '../../assets/info'
 
-export const requestAppointment = data => {
+export const makeAppointment = data => {
 	return axios.post(
-		`${url}/schedules/request_appointment`, 
+		`${url}/schedules/make_appointment`, 
 		data
 	)
 }

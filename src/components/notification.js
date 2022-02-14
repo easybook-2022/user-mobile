@@ -242,7 +242,7 @@ export default function Notification(props) {
 				})
 				.then((res) => {
 					if (res) {
-						data = { ...data, receivers: res.receivers }
+						data = { ...data, receivers: res.receivers, locationType: res.type }
 						socket.emit("socket/cancelRequest", data, () => {
 							const newItems = [...items]
 
@@ -560,7 +560,7 @@ export default function Notification(props) {
 		setShowowners({ ...showOwners, owners, workerid })
 	}
 	const sendTheDiningPayment = async(scheduleid, index) => {
-		let data = { scheduleid, userid }
+		let data = { scheduleid, userid: userId }
 		let getinfo = false // show payment details
 
 		if (!showPaymentdetail.show) { // get payment details first
@@ -642,7 +642,7 @@ export default function Notification(props) {
 		} else if (!showPaymentdetail.confirm) {
 			const newItems = [...items]
 			const { service, workerInfo, scheduleid, index } = showPaymentdetail
-			const data = { scheduleid, userid, service, workerInfo }
+			const data = { scheduleid, userid: userId, service, workerInfo }
 
       setShowpaymentdetail({ ...showPaymentdetail, loading: true })
 
@@ -884,6 +884,7 @@ export default function Notification(props) {
 
         newItems.forEach(function (item) {
           if (item.id == data.id) {
+            item.status = "confirmed"
             item.confirm = true
             item.seated = true
           }
@@ -1275,7 +1276,6 @@ export default function Notification(props) {
 														item.booker ? 
 															<Text style={styles.itemServiceHeader}>
 																Reservation requested
-
                                 <Text style={{ fontSize: wsize(4.5) }}>
   																{'\n\n' + ((item.diners) > 0 && ((item.diners) + ' ' + ((item.diners) == 1 ? 'person' : 'people')))}
   																{'\nat ' + item.location}
@@ -1313,9 +1313,9 @@ export default function Notification(props) {
 														</Text>
 													}
 
-													{(item.action == "requested" || item.action == "change") && 
+													{item.action == "requested" || item.action == "change" && 
 														<Text style={styles.itemHeader}>
-															waiting for the {item.locationtype == 'restaurant' ? 'restaurant' : 'salon'}'s response
+															waiting for the restaurant's response
 														</Text>
 													}
 
@@ -1325,7 +1325,7 @@ export default function Notification(props) {
 																{item.locationtype == 'restaurant' ? 
 																	item.booker ? "Reservation accepted" : ""
 																	:
-																	"Appointment accepted."
+																	"Appointment accepted"
 																}
 																{'\n\n'}
 																{item.locationtype == 'restaurant' && "Table #" + item.table}
@@ -1389,11 +1389,7 @@ export default function Notification(props) {
 
 													{item.action == "confirmed" && (
 														<>
-															<Text style={styles.itemServiceHeader}>
-																{item.locationtype == 'restaurant' ? "Reservation" : "Appointment"}
-																{' accepted\n'}
-																{item.locationtype == 'restaurant' && "Table #" + item.table}
-															</Text>
+															<Text style={styles.itemServiceHeader}>{item.locationtype == 'restaurant' && "Table #" + item.table}</Text>
 
 															{item.locationtype == "restaurant" ?
 																item.confirm ? 
@@ -1402,13 +1398,20 @@ export default function Notification(props) {
 																			<View style={{ alignItems: 'center' }}>
 																				<TouchableOpacity style={styles.action} onPress={() => {
 																					props.close()
-																					props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
+																					props.navigation.navigate("order", { 
+                                            locationid: item.locationid, 
+                                            scheduleid: item.id, numOrders: item.numOrders,
+                                            allowPayment: item.allowPayment
+                                          })
 																				}}>
-																					<Text style={styles.actionHeader}>See menu</Text>
+																					<Text style={styles.actionHeader}>Order your meals</Text>
 																				</TouchableOpacity>
-																				<TouchableOpacity style={styles.action} onPress={() => sendTheDiningPayment(item.id, index)}>
-																					<Text style={styles.actionHeader}>Send payment{item.allowPayment ? " again" : ""}</Text>
-																				</TouchableOpacity>
+
+                                        {item.numOrders && item.numOrders > 0 && (
+                                          <TouchableOpacity style={styles.action} onPress={() => sendTheDiningPayment(item.id, index)}>
+                                            <Text style={styles.actionHeader}>Send payment{item.allowPayment ? " again" : ""}</Text>
+                                          </TouchableOpacity>
+                                        )}
 																			</View>
 																			:
 																			<View style={{ alignItems: 'center' }}>
@@ -1457,7 +1460,7 @@ export default function Notification(props) {
 																	{item.serviceid ? 
 																		<View style={{ alignItems: 'center' }}>
 																			<TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
-																				<Text style={styles.actionHeader}>Cancel Service</Text>
+																				<Text style={styles.actionHeader}>Cancel</Text>
 																			</TouchableOpacity>
 																			<TouchableOpacity style={styles.action} onPress={() => allowThePayment(item, index)}>
 																				<Text style={styles.actionHeader}>Allow Payment{item.allowPayment ? ' Again' : ''}</Text>
@@ -1474,14 +1477,8 @@ export default function Notification(props) {
 																			{!item.requestPayment ? 
                                         <View style={{ alignItems: 'center' }}>
                                           <TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
-                                            <Text style={styles.actionHeader}>Cancel Service</Text>
+                                            <Text style={styles.actionHeader}>Cancel</Text>
                                           </TouchableOpacity>
-                                          <View style={[styles.action, { opacity: 0.5 }]}>
-                                            <Text style={styles.actionHeader}>
-                                              Awaits payment detail{'\n'}
-                                              <Text>........</Text>
-                                            </Text>
-                                          </View>
                                           <TouchableOpacity style={styles.action} onPress={() => {
                                             props.close()
                                             props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id, serviceinfo: item.service })
@@ -1501,7 +1498,7 @@ export default function Notification(props) {
 														</>
 													)}
 
-													{item.action == "cancel" || item.action == "rebook" ? 
+													{(item.action == "cancel" || item.action == "rebook") ? 
 														<View style={styles.storeRequested}>
 															<Text style={styles.itemServiceHeader}>
 																{item.action == "cancel" ? 
@@ -1524,7 +1521,6 @@ export default function Notification(props) {
 																		<Text>New requested time</Text>
 																		{'\n'}
 																		<Text style={styles.itemServiceHeader}>{displayTime(item.nextTime)}</Text>
-																		{'\n\nWant this time?'}
 																	</Text>
 																	<View style={{ alignItems: 'center' }}>
 																    <TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
@@ -1590,12 +1586,11 @@ export default function Notification(props) {
 						<View style={styles.confirmBox}>
 							<View style={styles.confirmContainer}>
 								<Text style={styles.confirmHeader}>
-									<Text style={{ fontFamily: 'Arial'}}>
-										Are you sure you want to cancel the 
-
-										{cancelSchedule.type != 'restaurant' ? ' service appointment of' : ' reservation'}
+									<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>
+										Cancel
+										{cancelSchedule.type != 'restaurant' ? ' Appointment' : ' Reservation'}
 									</Text>
-									{cancelSchedule.service ? '\n\n' + cancelSchedule.service + '\n' : '\n\n'}
+									{cancelSchedule.service ? '\n\nfor ' + cancelSchedule.service : '\n'}
 									{'\nat ' + cancelSchedule.location + '\n'}
 									{displayTime(cancelSchedule.time)}
 								</Text>
@@ -1625,7 +1620,7 @@ export default function Notification(props) {
 						<View style={styles.popBox}>
 							<View style={styles.popContainer}>
 								<Text style={styles.popHeader}>
-									You need to provide a payment method
+									You need to provide a credit card to continue
 								</Text>
 
 								<View style={styles.popActions}>
@@ -1650,7 +1645,7 @@ export default function Notification(props) {
 						<View style={styles.popBox}>
 							<View style={styles.popContainer}>
 								<Text style={styles.popHeader}>
-									You need to provide a payment method to continue
+									You need to provide a credit card to continue
 								</Text>
 
 								<View style={styles.popActions}>
@@ -2031,10 +2026,10 @@ const styles = StyleSheet.create({
 
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontSize: wsize(6), paddingHorizontal: 20, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row', justifyContent: 'space-around' },
-	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	confirmOptionHeader: { },
+	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
+	confirmOptionHeader: { fontSize: wsize(4) },
 
 	popBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	popContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },

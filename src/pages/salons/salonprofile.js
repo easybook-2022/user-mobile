@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, 
   TextInput, TouchableOpacity, Linking, StyleSheet, Modal 
@@ -6,10 +6,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { logo_url } from '../../../assets/info'
-import { getLocationProfile } from '../../apis/locations'
-import { getMenus } from '../../apis/menus'
-import { getNumCartItems } from '../../apis/carts'
+import { logo_url } from '../../../assets/info';
+import { getWorkersTime } from '../../apis/owners';
+import { getLocationProfile } from '../../apis/locations';
+import { getMenus } from '../../apis/menus';
+import { getNumCartItems } from '../../apis/carts';
 
 import Cart from '../../components/cart'
 import Userauth from '../../components/userauth'
@@ -37,7 +38,8 @@ export default function Salonprofile(props) {
 	const [phonenumber, setPhonenumber] = useState('')
 	const [distance, setDistance] = useState(0)
 	const [showAuth, setShowauth] = useState(false)
-	const [showInfo, setShowinfo] = useState(false)
+	const [showStoreinfo, setShowstoreinfo] = useState(false)
+  const [showStylistsinfo, setShowstylistsinfo] = useState({ show: false, workerHours: [] })
 	const [userId, setUserid] = useState(null)
 
 	const [serviceInfo, setServiceinfo] = useState('')
@@ -140,32 +142,32 @@ export default function Salonprofile(props) {
 		return (
 			<View style={{ marginLeft: left }}>
 				{name ?
-					<View style={style.menu}>
+					<View style={styles.menu}>
 						<View style={{ flexDirection: 'row' }}>
-							<View style={style.menuImageHolder}>
-								<Image style={style.menuImage} source={{ uri: logo_url + image }}/>
+							<View style={styles.menuImageHolder}>
+								<Image style={styles.menuImage} source={{ uri: logo_url + image }}/>
 							</View>
-							<Text style={style.menuName}>{name} (Menu)</Text>
+							<Text style={styles.menuName}>{name} (Menu)</Text>
 						</View>
-						{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+						{info.info ? <Text style={styles.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
 						{list.length > 0 && list.map((info, index) => (
 							<View key={"list-" + index}>
 								{info.listType == "list" ? 
 									displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
 									:
-									<View style={style.item}>
+									<View style={styles.item}>
 										<View style={{ flexDirection: 'row', }}>
-											<View style={style.itemImageHolder}>
-												<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+											<View style={styles.itemImageHolder}>
+												<Image style={styles.itemImage} source={{ uri: logo_url + info.image }}/>
 											</View>
-											<Text style={style.itemHeader}>{info.name}</Text>
-											<Text style={style.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-											{info.listType == "service" && <Text style={style.itemHeader}>{info.duration}</Text>}
+											<Text style={styles.itemHeader}>{info.name}</Text>
+											<Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+											{info.listType == "service" && <Text style={styles.itemHeader}>{info.duration}</Text>}
 										</View>
-										{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
-										<View style={style.itemActions}>
-											<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
-												<Text style={style.itemActionHeader}>Book a time</Text>
+										{info.info ? <Text style={styles.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+										<View style={styles.itemActions}>
+											<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
+												<Text style={styles.itemActionHeader}>Book a time</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
@@ -179,19 +181,19 @@ export default function Salonprofile(props) {
 							{info.listType == "list" ? 
 								displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
 								:
-								<View style={style.item}>
+								<View style={styles.item}>
 									<View style={{ flexDirection: 'row', }}>
-										<View style={style.itemImageHolder}>
-											<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+										<View style={styles.itemImageHolder}>
+											<Image style={styles.itemImage} source={{ uri: logo_url + info.image }}/>
 										</View>
-										<Text style={style.itemHeader}>{info.name}</Text>
-										<Text style={style.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-										{info.listType == "service" && <Text style={style.itemHeader}>{info.duration}</Text>}
+										<Text style={styles.itemHeader}>{info.name}</Text>
+										<Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+										{info.listType == "service" && <Text style={styles.itemHeader}>{info.duration}</Text>}
 									</View>
-									{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
-									<View style={style.itemActions}>
-										<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
-											<Text style={style.itemActionHeader}>Book a time</Text>
+									{info.info ? <Text style={styles.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+									<View style={styles.itemActions}>
+										<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
+											<Text style={styles.itemActionHeader}>Book a time</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -202,6 +204,26 @@ export default function Salonprofile(props) {
 			</View>
 		)
 	}
+  const getTheWorkersTime = () => {
+    getWorkersTime(locationid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setShowstylistsinfo({ show: true, workerHours: res.workerHours })
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        } else {
+          alert("server error")
+        }
+      })
+  }
 	
 	useEffect(() => {
 		isMounted.current = true
@@ -212,36 +234,41 @@ export default function Salonprofile(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={style.salonprofile}>
+		<SafeAreaView style={styles.salonprofile}>
 			{loaded ? 
-				<View style={style.box}>
-					<View style={style.profileInfo}>
-						<View style={style.column}>
-              <TouchableOpacity style={style.headerAction} onPress={() => setShowinfo(true)}>
-                <Text style={style.headerActionHeader}>View Info</Text>
+				<View style={styles.box}>
+					<View style={styles.profileInfo}>
+						<View style={styles.column}>
+              <TouchableOpacity style={styles.headerAction} onPress={() => setShowstoreinfo(true)}>
+                <Text style={styles.headerActionHeader}>View Salon{'\n'}Info</Text>
               </TouchableOpacity>
             </View>
-            <View style={style.column}>
-              <TouchableOpacity style={style.headerAction} onPress={() => getAllMenus()}>
-              <Text style={style.headerActionHeader}>Refresh Menu</Text>
+            <View style={styles.column}>
+              <TouchableOpacity style={styles.headerAction} onPress={() => getTheWorkersTime()}>
+                <Text style={styles.headerActionHeader}>View{'\n'}Stylists' Info</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.column}>
+              <TouchableOpacity style={styles.headerAction} onPress={() => getAllMenus()}>
+              <Text style={styles.headerActionHeader}>Refresh{'\n'}Menu</Text>
             </TouchableOpacity>
             </View>
-            <View style={style.column}>
-              <TouchableOpacity style={style.headerAction} onPress={() => Linking.openURL('tel://' + phonenumber)}>
-                <Text style={style.headerActionHeader}>Call</Text>
+            <View style={styles.column}>
+              <TouchableOpacity style={styles.headerAction} onPress={() => Linking.openURL('tel://' + phonenumber)}>
+                <Text style={styles.headerActionHeader}>Call</Text>
               </TouchableOpacity>
             </View>
 					</View>
 					
-					<View style={style.body}>
+					<View style={styles.body}>
 						{(menuInfo.type && menuInfo.type == "photos") && (
               <>
-  							<View style={style.menuInputBox}>
-  								<TextInput style={style.menuInput} type="text" placeholder="Enter service # or name" onChangeText={(info) => {
+  							<View style={styles.menuInputBox}>
+  								<TextInput style={styles.menuInput} type="text" placeholder="Enter service # or name" onChangeText={(info) => {
                     setServiceinfo(info)
                     setMenuinfo({ ...menuInfo, error: false })
                   }} autoCorrect={false} autoCapitalize="none"/>
-  								<TouchableOpacity style={style.menuInputTouch} onPress={() => {
+  								<TouchableOpacity style={styles.menuInputTouch} onPress={() => {
                     if (serviceInfo) {
                       props.navigation.navigate(
                         "booktime", 
@@ -254,10 +281,10 @@ export default function Salonprofile(props) {
                       setMenuinfo({ ...menuInfo, error: true })
                     }
                   }}>
-  									<Text style={style.menuInputTouchHeader}>Book now</Text>
+  									<Text style={styles.menuInputTouchHeader}>Book now</Text>
   								</TouchableOpacity>
   							</View>
-                {menuInfo.error && <Text style={style.menuInputError}>Your request is empty</Text>}
+                {menuInfo.error && <Text style={styles.menuInputError}>Your request is empty</Text>}
               </>
 						)}
 
@@ -267,7 +294,7 @@ export default function Salonprofile(props) {
 									menuInfo.items.map(info => (
 										info.row.map(item => (
                       item.photo && (
-                        <View key={item.key} style={style.menuPhoto}>
+                        <View key={item.key} style={styles.menuPhoto}>
                           <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo }}/>
                         </View>
                       )
@@ -279,28 +306,28 @@ export default function Salonprofile(props) {
 						</ScrollView>
 					</View>
 
-					<View style={style.bottomNavs}>
-						<View style={style.bottomNavsRow}>
+					<View style={styles.bottomNavs}>
+						<View style={styles.bottomNavsRow}>
 							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+								<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("account")}>
 									<FontAwesome5 name="user-circle" size={wsize(7)}/>
 								</TouchableOpacity>
 							)}
 
 							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
+								<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("recent")}>
 									<FontAwesome name="history" size={wsize(7)}/>
 								</TouchableOpacity>
 							)}
 
 							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+								<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
 									<Entypo name="shopping-cart" size={wsize(7)}/>
-									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+									{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
 								</TouchableOpacity>
 							)}
 
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
+							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								props.navigation.dispatch(
 									CommonActions.reset({
 										index: 0,
@@ -310,7 +337,7 @@ export default function Salonprofile(props) {
 							}}>
 								<Entypo name="home" size={wsize(7)}/>
 							</TouchableOpacity>
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
+							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								if (userId) {
 									AsyncStorage.clear()
 
@@ -319,7 +346,7 @@ export default function Salonprofile(props) {
 									setShowauth({ show: true, action: false })
 								}
 							}}>
-								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+								<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -370,40 +397,84 @@ export default function Salonprofile(props) {
 					}} navigate={props.navigation.navigate}/>
 				</Modal>
 			)}
-			{showInfo && (
+			{showStoreinfo && (
 				<Modal transparent={true}>
-					<View style={style.showInfoContainer}>
-						<View style={style.showInfoBox}>
-							<TouchableOpacity style={style.showInfoClose} onPress={() => setShowinfo(false)}>
+					<View style={styles.showInfoContainer}>
+						<View style={styles.showInfoBox}>
+							<TouchableOpacity style={styles.showInfoClose} onPress={() => setShowstoreinfo(false)}>
 								<AntDesign name="close" size={wsize(7)}/>
 							</TouchableOpacity>
 
-							<Text style={style.showInfoHeader}>{name}</Text>
-							<Text style={style.showInfoHeader}>{address}</Text>
+							<Text style={styles.showInfoHeader}>{name}</Text>
+							<Text style={styles.showInfoHeader}>{address}</Text>
 							<View style={{ alignItems: 'center' }}>
 								<View style={{ flexDirection: 'row' }}>
 									<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
 										<AntDesign name="phone" size={wsize(7)}/>
 									</TouchableOpacity>
-									<Text style={style.showInfoPhonenumber}>{phonenumber}</Text>
+									<Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
 								</View>
 							</View>
-							<Text style={style.showInfoHeader}>{distance}</Text>
+							<Text style={styles.showInfoHeader}>{distance}</Text>
 						</View>
 					</View>
 				</Modal>
 			)}
+      {showStylistsinfo.show && (
+        <Modal transparent={true}>
+          <View style={styles.workerInfoContainer}>
+            <View style={styles.workerInfoBox}>
+              <TouchableOpacity style={styles.workerInfoClose} onPress={() => setShowstylistsinfo({ show: false, workerHours: [] })}>
+                <AntDesign name="close" size={wsize(7)}/>
+              </TouchableOpacity>
+              <ScrollView style={{ width: '100%' }}>
+                <View style={styles.workerInfoList}>
+                  {showStylistsinfo.workerHours.map(worker => (
+                    <View key={worker.key} style={styles.worker}>
+                      <View style={styles.workerInfo}>
+                        <View style={styles.workerInfoProfile}>
+                          <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + worker.profile }}/>
+                        </View>
+                        <Text style={styles.workerInfoName}>{worker.name}</Text>
+                      </View>
+                      <View style={styles.workerTime}>
+                        {worker.hours.map(info => (
+                          <View style={styles.workerTimeContainer} key={info.key}>
+                            <Text style={styles.dayHeader}>{info.header}: </Text>
+                            <View style={styles.timeHeaders}>
+                              <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
+                              <View style={styles.column}><Text>:</Text></View>
+                              <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
+                              <Text style={styles.timeHeader}>{info.opentime.period}</Text>
+                            </View>
+                            <View style={styles.column}><Text> - </Text></View>
+                            <View style={styles.timeHeaders}>
+                              <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
+                              <View style={styles.column}><Text>:</Text></View>
+                              <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
+                              <Text style={styles.timeHeader}>{info.closetime.period}</Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+      )}
 		</SafeAreaView>
 	)
 }
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
 	salonprofile: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	profileInfo: { flexDirection: 'row', height: '7%', justifyContent: 'space-around' },
-  column: { flexDirection: 'column', justifyContent: 'space-around' },
-  headerAction: { alignItems: 'center', borderRadius: 10, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: wsize(28) },
+  headerAction: { alignItems: 'center', borderRadius: 10, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: wsize(22) },
   headerActionHeader: { color: 'black', fontSize: wsize(3), fontWeight: 'bold', textAlign: 'center' },
 
   body: { height: '83%' },
@@ -439,4 +510,20 @@ const style = StyleSheet.create({
 	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2 },
 	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 10, textAlign: 'center' },
 	showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+
+  workerInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  workerInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '90%' },
+  workerInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2 },
+  worker: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
+  workerInfoList: { width: '100%' },
+  workerInfo: {  },
+  workerInfoProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
+  workerInfoName: { color: 'black', textAlign: 'center' },
+  workerTime: {  },
+  workerTimeContainer: { flexDirection: 'row', marginBottom: 10 },
+  dayHeader: {  },
+  timeHeaders: { flexDirection: 'row' },
+  timeHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+
+  column: { flexDirection: 'column', justifyContent: 'space-around' },
 })

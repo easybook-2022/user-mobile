@@ -39,6 +39,7 @@ export default function Makereservation(props) {
 	const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
 	const [name, setName] = useState('')
+  const [oldTime, setOldtime] = useState(0)
 
 	const [openList, setOpenlist] = useState(false)
 	const [diners, setDiners] = useState([])
@@ -54,6 +55,7 @@ export default function Makereservation(props) {
 	const [scheduledTimes, setScheduledtimes] = useState([])
 	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
 	const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
+  const [openDays, setOpendays] = useState([])
 	const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, time: 0 })
 	const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
 		{ key: "day-row-0", row: [
@@ -89,10 +91,11 @@ export default function Makereservation(props) {
 	]})
 	const [times, setTimes] = useState([])
 	const [loaded, setLoaded] = useState(false)
+  const [step, setStep] = useState(0)
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
-	const [confirm, setConfirm] = useState({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })
+	const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, note: "", requested: false, errormsg: "" })
 	
 	const isMounted = useRef(null)
 
@@ -199,25 +202,25 @@ export default function Makereservation(props) {
 		let date = month == currTime.getMonth() && year == currTime.getFullYear() ? currTime.getDate() : 1
 		let openStr = months[month] + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
 		let closeStr = months[month] + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
-		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
+		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
 		let currenttime = Date.now(), newTimes = []
 
-		while (currDateStr < (closeDateStr - pushtime)) {
-			currDateStr += pushtime
+		while (calcDateStr < (closeDateStr - pushtime)) {
+			calcDateStr += pushtime
 
-			let timestr = new Date(currDateStr)
+			let timestr = new Date(calcDateStr)
 			let hour = timestr.getHours()
 			let minute = timestr.getMinutes()
 			let period = hour < 12 ? "am" : "pm"
 
 			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
-			let timepassed = currenttime > currDateStr
-			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
+			let timepassed = currenttime > calcDateStr
+			let timetaken = scheduledTimes.indexOf(calcDateStr) > -1
 
-  		if (!timepassed) {
+  		if (!timepassed && !timetaken) {
         newTimes.push({ 
           key: newTimes.length, header: timedisplay, 
-          time: currDateStr, timetaken, timepassed
+          time: calcDateStr, timetaken, timepassed
         })
       }
 		}
@@ -232,25 +235,25 @@ export default function Makereservation(props) {
 
 		let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
 		let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
-		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
+		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
 		let currenttime = Date.now(), newTimes = []
 
-		while (currDateStr < (closeDateStr - pushtime)) {
-			currDateStr += pushtime
+		while (calcDateStr < (closeDateStr - pushtime)) {
+			calcDateStr += pushtime
 
-			let timestr = new Date(currDateStr)
+			let timestr = new Date(calcDateStr)
 			let hour = timestr.getHours()
 			let minute = timestr.getMinutes()
 			let period = hour < 12 ? "am" : "pm"
 
 			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
-			let timepassed = currenttime > currDateStr
-			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
+			let timepassed = currenttime > calcDateStr
+			let timetaken = scheduledTimes.indexOf(calcDateStr) > -1
 
-  		if (!timepassed) {
+  		if (!timepassed && !timetaken) {
         newTimes.push({ 
           key: newTimes.length, header: timedisplay, 
-          time: currDateStr, timetaken, timepassed
+          time: calcDateStr, timetaken, timepassed
         })
       }
 		}
@@ -279,6 +282,7 @@ export default function Makereservation(props) {
 				if (res && isMounted.current == true) {
 					const { numdiners, diners, table, note, time } = res.reservationInfo
 
+          setOldtime(time)
 					setNumselecteddiners(numdiners)
 					setSelecteddiners(diners)
 					setSelectedtable(table)
@@ -340,15 +344,32 @@ export default function Makereservation(props) {
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
 
-					const currTime = new Date(time && time > Date.now() ? time : Date.now())
+					const currTime = new Date(Date.now())
 					const currDay = days[currTime.getDay()]
 					const currDate = currTime.getDate()
 					const currMonth = months[currTime.getMonth()]
 
-					let openStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + openHour + ":" + openMinute
-					let closeStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + closeHour + ":" + closeMinute
-					let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr)
-					let newTimes = [], currenttime = Date.now(), currDateStr = openDateStr
+          let selectedTime = time > 0 ? new Date(time) : null
+          let selectedDay = null, selectedDate = null, selectedMonth = null
+          let openStr, closeStr, openDateStr, closeDateStr, calcDateStr
+
+          if (selectedTime) {
+            selectedDay = days[selectedTime.getDay()]
+            selectedDate = selectedTime.getDate()
+            selectedMonth = months[selectedTime.getMonth()]
+
+            openStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + openHour + ":" + openMinute
+            closeStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + closeHour + ":" + closeMinute
+          } else {
+            openStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + openHour + ":" + openMinute
+            closeStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + closeHour + ":" + closeMinute
+          }
+
+					openDateStr = Date.parse(openStr)
+          closeDateStr = Date.parse(closeStr)
+          calcDateStr = openDateStr
+
+					let newTimes = [], currenttime = Date.now()
 					let firstDay = (new Date(currTime.getFullYear(), currTime.getMonth())).getDay()
 					let numDays = 32 - new Date(currTime.getFullYear(), currTime.getMonth(), 32).getDate()
 					let daynum = 1, data = calendar.data, datetime = 0, datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
@@ -356,12 +377,18 @@ export default function Makereservation(props) {
 					data.forEach(function (info, rowindex) {
 						info.row.forEach(function (day, dayindex) {
 							day.num = 0
+              day.close = false
 
 							if (rowindex == 0) {
 								if (dayindex >= firstDay) {
 									datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
 
 									day.passed = datenow > datetime
+
+                  if (res.openDays.indexOf(days[dayindex].substr(0, 3)) == -1) {
+                    day.close = true
+                  }
+
 									day.num = daynum
 									daynum++
 								}
@@ -369,35 +396,51 @@ export default function Makereservation(props) {
 								datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
 
 								day.passed = datenow > datetime
+
+                if (res.openDays.indexOf(days[dayindex].substr(0, 3)) == -1) {
+                  day.close = true
+                }
+
 								day.num = daynum
 								daynum++
 							}
 						})
 					})
 
-					while (currDateStr < (closeDateStr - pushtime)) {
-						currDateStr += pushtime
+					while (calcDateStr < (closeDateStr - pushtime)) {
+						calcDateStr += pushtime
 
-						let timestr = new Date(currDateStr)
+						let timestr = new Date(calcDateStr)
 						let hour = timestr.getHours()
 						let minute = timestr.getMinutes()
 						let period = hour < 12 ? "am" : "pm"
 
 						let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
-						let timepassed = currenttime > currDateStr
-						let timetaken = scheduled.indexOf(currDateStr) > -1
+						let timepassed = currenttime > calcDateStr
+						let timetaken = scheduled.indexOf(calcDateStr) > -1
 
-            if (!timepassed) {
+            if (!timepassed && !timetaken) {
               newTimes.push({ 
                 key: newTimes.length, header: timedisplay, 
-                time: currDateStr, timetaken
+                time: calcDateStr, timetaken
               })
             }
 					}
 
 					setOpentime({ hour: openHour, minute: openMinute })
 					setClosetime({ hour: closeHour, minute: closeMinute })
-					setSelecteddateinfo({ month: currMonth, year: currTime.getFullYear(), day: currDay, date: currDate, time: 0 })
+          setOpendays(res.openDays)
+
+          if (selectedTime) {
+            setSelecteddateinfo({ month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay, date: selectedDate, time: 0 })
+          } else {
+            setSelecteddateinfo({ 
+              month: currMonth, year: currTime.getFullYear(), day: currDay, 
+              date: res.openDays.indexOf(currDay.indexOf(0, 3)) > -1 ? currDate : 0, 
+              time: 0
+            })
+          }
+            
 					setCalendar({ firstDay, numDays, data })
 					setScheduledtimes(scheduled)
 					setTimes(newTimes)
@@ -415,7 +458,7 @@ export default function Makereservation(props) {
 	const makeTheReservation = async() => {
 		if (userId) {
 			const { month, date, year, time } = selectedDateinfo
-			const { note, oldtime } = confirm
+			const { note } = confirm
 			const selecteddate = new Date(time)
 			const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
 			const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
@@ -431,7 +474,7 @@ export default function Makereservation(props) {
 
 			let data = { 
 				userid: userId, locationid, scheduleid, table: selectedTable, 
-				oldtime, time: dateInfo, diners, note: note ? note : "",
+				oldtime: oldTime, time: dateInfo, diners, note: note ? note : "",
 				type: "makeReservation"
 			}
 
@@ -463,12 +506,12 @@ export default function Makereservation(props) {
                       })
                     )
                   }, 1000)
-                }, 3000)
+                }, 2000)
               })
 						} else {
 							let { oldtime, note } = res
 
-							setConfirm({ ...confirm, oldtime, note })
+							setConfirm({ ...confirm, note })
 						}
 					}
 				})
@@ -663,106 +706,157 @@ export default function Makereservation(props) {
 
 					{times.length > 0 ?
 						<ScrollView style={{ height: '80%' }}>
-							<View style={{ alignItems: 'center', marginBottom: 30, marginTop: 0 }}>
-								<View style={styles.dinersBox}>
-									{!scheduleid && (
-										<>
-											<TouchableOpacity style={styles.dinersAdd} onPress={() => openDinersList()}>
-												<Text style={styles.dinersAddHeader}>{numSelectedDiners > 0 ? 'Edit' : 'Add Other'} Diner(s)</Text>
-											</TouchableOpacity>
-											<Text style={styles.dinersHeader}>{numSelectedDiners} diner(s) selected</Text>
-										</>
-									)}
+              {step == 0 && (
+  							<View style={{ alignItems: 'center', marginBottom: 30, marginTop: 0 }}>
+  								<View style={styles.dinersBox}>
+  									{!scheduleid && (
+  										<>
+  											<TouchableOpacity style={styles.dinersAdd} onPress={() => openDinersList()}>
+  												<Text style={styles.dinersAddHeader}>{numSelectedDiners > 0 ? 'Edit' : 'Add Other'} Diner(s)</Text>
+  											</TouchableOpacity>
+  											<Text style={styles.dinersHeader}>{numSelectedDiners} diner(s) selected</Text>
+  										</>
+  									)}
 
-									{(!openList && selectedDiners.length > 0) && (
-										selectedDiners.map(item => (
-											<View key={item.key} style={styles.selectedDinersRow}>
-												{item.row.map(diner => (
-													diner.id ? 
-														<View key={diner.key} style={styles.selectedDiner}>
-															{diner.id != userId ? 
-																<TouchableOpacity style={styles.selectedDinerDelete} onPress={() => deselectDiner(diner.id)}>
-																	<AntDesign name="closecircleo" size={15}/>
-																</TouchableOpacity>
-																:
-																<View style={styles.selectedDinerDelete}></View>
-															}
-															<View style={styles.dinerProfileHolder}>
-																<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
-															</View>
-														</View>
-														:
-														<View key={diner.key} style={styles.selectedDiner}>
-														</View>
-												))}
-											</View>
-										))
-									)}
-								</View>
-							</View>
-							<View style={styles.dateSelection}>
-								<Text style={styles.dateSelectionHeader}>Tap a date below</Text>
+  									{(!openList && selectedDiners.length > 0) && (
+  										selectedDiners.map(item => (
+  											<View key={item.key} style={styles.selectedDinersRow}>
+  												{item.row.map(diner => (
+  													diner.id ? 
+  														<View key={diner.key} style={styles.selectedDiner}>
+  															{diner.id != userId ? 
+  																<TouchableOpacity style={styles.selectedDinerDelete} onPress={() => deselectDiner(diner.id)}>
+  																	<AntDesign name="closecircleo" size={15}/>
+  																</TouchableOpacity>
+  																:
+  																<View style={styles.selectedDinerDelete}></View>
+  															}
+  															<View style={styles.dinerProfileHolder}>
+  																<Image source={{ uri: logo_url + diner.profile }} style={{ height: 60, width: 60 }}/>
+  															</View>
+  														</View>
+  														:
+  														<View key={diner.key} style={styles.selectedDiner}>
+  														</View>
+  												))}
+  											</View>
+  										))
+  									)}
+  								</View>
+  							</View>
+              )}
 
-								<View style={styles.dateHeaders}>
-                  <View style={styles.column}>
-  									<TouchableOpacity onPress={() => dateNavigate('left')}><AntDesign name="left" size={wsize(7)}/></TouchableOpacity>
-                  </View>
-                  <View style={styles.column}>
-  									<Text style={styles.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
-                  </View>
-                  <View style={styles.column}>
-  									<TouchableOpacity onPress={() => dateNavigate('right')}><AntDesign name="right" size={wsize(7)}/></TouchableOpacity>
-                  </View>
-								</View>
-								<View style={styles.days}>
-									<View style={styles.daysHeaderRow}>
-										{days.map((day, index) => (
-											<Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>
-										))}
-									</View>
-									{calendar.data.map((info, rowindex) => (
-										<View key={info.key} style={styles.daysDataRow}>
-											{info.row.map((day, dayindex) => (
-												day.num > 0 ?
-													day.passed ? 
-														<TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
-                              <Text style={styles.dayTouchHeader}>{day.num}</Text>
-                            </TouchableOpacity>
-                            :
-                            selectedDateinfo.date == day.num ?
-                              <TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => selectDate(day.num)}>
-                                <Text style={[styles.dayTouchHeader, { color: 'white' }]}>{day.num}</Text>
-                              </TouchableOpacity>
+              {step == 1 && (
+  							<View style={styles.dateSelection}>
+  								<Text style={styles.dateSelectionHeader}>Tap a date below</Text>
+
+  								<View style={styles.dateHeaders}>
+                    <View style={styles.column}>
+    									<TouchableOpacity onPress={() => dateNavigate('left')}><AntDesign name="left" size={wsize(7)}/></TouchableOpacity>
+                    </View>
+                    <View style={styles.column}>
+    									<Text style={styles.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
+                    </View>
+                    <View style={styles.column}>
+    									<TouchableOpacity onPress={() => dateNavigate('right')}><AntDesign name="right" size={wsize(7)}/></TouchableOpacity>
+                    </View>
+  								</View>
+  								<View style={styles.days}>
+  									<View style={styles.daysHeaderRow}>
+  										{days.map((day, index) => (
+  											<Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>
+  										))}
+  									</View>
+  									{calendar.data.map((info, rowindex) => (
+  										<View key={info.key} style={styles.daysDataRow}>
+  											{info.row.map((day, dayindex) => (
+  												day.num > 0 ?
+  													day.passed || day.close ? 
+                              day.close ? 
+    														<TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { opacity: 0.1 }]}>
+                                  <Text style={styles.dayTouchHeader}>{day.num}</Text>
+                                </TouchableOpacity>
+                                :
+                                <TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+                                  <Text style={styles.dayTouchHeader}>{day.num}</Text>
+                                </TouchableOpacity>
                               :
-                              <TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => selectDate(day.num)}>
-                                <Text style={styles.dayTouchHeader}>{day.num}</Text>
-                              </TouchableOpacity>
-													:
-													<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={styles.dayTouchDisabled}></TouchableOpacity>
-											))}
-										</View>
-									))}
-								</View>
-							</View>
-							
-							<View style={styles.timesSelection}>
-                <Text style={styles.timesHeader}>Tap a time below</Text>
-								<View style={styles.times}>
-									{times.map(info => (
-										<View key={info.key}>
-											{!info.timetaken ?
-												<TouchableOpacity style={styles.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-													<Text style={styles.unselectHeader}>{info.header}</Text>
-												</TouchableOpacity>
-                        :
-                        <TouchableOpacity style={[styles.unselect, { backgroundColor: 'black' }]} disabled={true} onPress={() => {}}>
-                          <Text style={[styles.unselectHeader, { color: 'white' }]}>{info.header}</Text>
-                        </TouchableOpacity>
-                      }
-										</View>
-									))}
-								</View>
-							</View>
+                              selectedDateinfo.date == day.num ?
+                                <TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => selectDate(day.num)}>
+                                  <Text style={[styles.dayTouchHeader, { color: 'white' }]}>{day.num}</Text>
+                                </TouchableOpacity>
+                                :
+                                <TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => selectDate(day.num)}>
+                                  <Text style={styles.dayTouchHeader}>{day.num}</Text>
+                                </TouchableOpacity>
+  													:
+  													<TouchableOpacity key={"calender-header-" + rowindex + "-" + dayindex} style={styles.dayTouchDisabled}></TouchableOpacity>
+  											))}
+  										</View>
+  									))}
+  								</View>
+                  <Text style={styles.errorMsg}>{calendar.errorMsg}</Text>
+  							</View>
+              )}
+
+              {step == 2 && (
+  							<View style={styles.timesSelection}>
+                  <Text style={styles.timesHeader}>Tap a time below</Text>
+  								<View style={styles.times}>
+  									{times.map(info => (
+  										<View key={info.key}>
+  											{!info.timetaken ?
+  												<TouchableOpacity style={styles.unselect} onPress={() => selectTime(name, info.header, info.time)}>
+  													<Text style={styles.unselectHeader}>{info.header}</Text>
+  												</TouchableOpacity>
+                          :
+                          <TouchableOpacity style={[styles.unselect, { backgroundColor: 'black' }]} disabled={true} onPress={() => {}}>
+                            <Text style={[styles.unselectHeader, { color: 'white' }]}>{info.header}</Text>
+                          </TouchableOpacity>
+                        }
+  										</View>
+  									))}
+  								</View>
+  							</View>
+              )}
+
+              <View style={styles.actions}>
+                {step > 0 && (
+                  <TouchableOpacity style={styles.action} onPress={() => {
+                    setStep(step - 1)
+
+                    if (step - 1 == 1) {
+                      getTheLocationHours(oldTime)
+                    }
+                  }}>
+                    <Text style={styles.actionHeader}>Back</Text>
+                  </TouchableOpacity>
+                )}
+
+                {step < 2 && (
+                  <TouchableOpacity style={styles.action} onPress={() => {
+                    switch (step) {
+                      case 0:
+                        setStep(step + 1)
+                        getTheLocationHours(oldTime)
+
+                        break
+                      case 1:
+                        if (selectedDateinfo.date > 0) {
+                          setStep(2)
+                        } else {
+                          setCalendar({ ...calendar, errorMsg: "Please tap on a day" })
+                        }
+
+                        break
+                      default:
+                        
+                    }
+                  }}>
+                    <Text style={styles.actionHeader}>Next</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
 						</ScrollView>
 						:
 						<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }}>
@@ -808,7 +902,7 @@ export default function Makereservation(props) {
 
 									setUserid(null)
 									setNumselecteddiners(0)
-									setSelectediners([])
+									setSelecteddiners([])
 								} else {
 									setShowauth({ show: true, action: "" })
 								}
@@ -831,41 +925,37 @@ export default function Makereservation(props) {
 							<View style={styles.confirmContainer}>
 								{!confirm.requested ? 
 									<>
-										{confirm.oldtime == 0 ? 
+										{oldTime == 0 ? 
 											<Text style={styles.confirmHeader}>
-												<Text style={{ fontFamily: 'appFont' }}>{!scheduleid ? 'Request' : 'Re-request'} a reservation for {'\n'}</Text>
-												{numSelectedDiners > 0 ? 
-													" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
-													: 
-													" yourself"
-												}
-												<Text style={{ fontFamily: 'appFont' }}>{'\n\nat ' + confirm.service + '\n'}</Text>
-												<Text style={{ fontFamily: 'appFont' }}>{'\n' + displayTime(confirm.time)}</Text>
+												Make a reservation for {'\n'}
+												{numSelectedDiners > 0 ? " " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') : " yourself"}
+												{'\nat ' + confirm.service}
+												{'\n' + displayTime(confirm.time)}
 											</Text>
 											:
 											<Text style={styles.confirmHeader}>
-												<Text style={{ fontFamily: 'appFont' }}>You already requested a reservation for {'\n'}</Text>
-												{numSelectedDiners > 0 ? 
-													" " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') 
-													: 
-													" yourself"
-												}
-												<Text style={{ fontFamily: 'appFont' }}>{'\nat ' + confirm.service + '\n'}</Text>
-												{displayTime(confirm.oldtime) + '\n\n'}
-												<Text style={{ fontFamily: 'appFont' }}>Are you sure you want to change it to</Text>
+												Change Reservation for{'\n'}
+												{numSelectedDiners > 0 ? " " + numSelectedDiners + " " + (numSelectedDiners > 1 ? 'people' : 'person') : " yourself"}
+												{'\nat ' + confirm.service + '\n\n'}
+												{displayTime(oldTime) + '\n\nto\n'}
 												{'\n' + displayTime(confirm.time) + '\n'}
 											</Text>
 										}
 
 										<View style={styles.note}>
-											<TextInput style={styles.noteInput} multiline textAlignVertical="top" placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" maxLength={100} onChangeText={(note) => setConfirm({...confirm, note })} value={confirm.note} autoCorrect={false} autoCapitalize="none"/>
+											<TextInput 
+                        style={styles.noteInput} multiline textAlignVertical="top" 
+                        placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" 
+                        maxLength={100} onChangeText={(note) => setConfirm({ ...confirm, note })} 
+                        value={confirm.note} autoCorrect={false} autoCapitalize="none"
+                      />
 										</View>
 
-										{confirm.errormsg ? <Text style={styles.errorMsg}>You already requested a reservation for this restaurant</Text> : null}
+										{confirm.errormsg ? <Text style={styles.errorMsg}>Reservation already made</Text> : null}
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 											<View style={styles.confirmOptions}>
-												<TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => setConfirm({ show: false, service: "", oldtime: 0, time: 0, note: "", requested: false, errormsg: "" })}>
+												<TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => setConfirm({ show: false, service: "", time: 0, note: "", requested: false, errormsg: "" })}>
 													<Text style={styles.confirmOptionHeader}>No</Text>
 												</TouchableOpacity>
 												<TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => makeTheReservation()}>
