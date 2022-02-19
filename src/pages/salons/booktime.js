@@ -9,7 +9,7 @@ import { CommonActions } from '@react-navigation/native';
 import { socket, url, logo_url, displayTime } from '../../../assets/info'
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours } from '../../apis/locations'
-import { getWorkers, getWorkerInfo } from '../../apis/owners'
+import { getWorkers, getWorkerInfo, getAllWorkersTime } from '../../apis/owners'
 import { getAppointmentInfo, makeAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
@@ -30,7 +30,7 @@ const hsize = p => {
 export default function Booktime(props) {
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-	const pushtime = 1000 * (60 * 20)
+	const pushtime = 1000 * (60 * 5)
 
 	const { locationid, serviceid, serviceinfo } = props.route.params
 	const func = props.route.params
@@ -38,6 +38,7 @@ export default function Booktime(props) {
 
 	const [name, setName] = useState()
 	const [trialStatus, setTrialstatus] = useState()
+  const [allWorkers, setAllworkers] = useState({})
 	const [scheduledTimes, setScheduledtimes] = useState([])
   const [oldTime, setOldtime] = useState(0)
 	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
@@ -86,7 +87,7 @@ export default function Booktime(props) {
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
-	const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, note: "", requested: false, errormsg: "" })
+	const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
 
 	const isMounted = useRef(null)
 
@@ -151,8 +152,8 @@ export default function Booktime(props) {
 
           setName(name)
           setOldtime(time)
-          getTheLocationHours(time)
           setSelectedworkerinfo({ ...selectedWorkerinfo, worker })
+          getTheLocationHours(time)
         }
       })
   }
@@ -183,6 +184,7 @@ export default function Booktime(props) {
           let selectedTime = time > 0 ? new Date(time) : null
           let selectedDay = null, selectedDate = null, selectedMonth = null
           let openStr, closeStr, openDateStr, closeDateStr, calcDateStr
+          let calcDay = ""
 
           if (selectedTime) {
             selectedDay = days[selectedTime.getDay()]
@@ -191,9 +193,13 @@ export default function Booktime(props) {
 
             openStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + openHour + ":" + openMinute
             closeStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + closeHour + ":" + closeMinute
+
+            calcDay = selectedDay
           } else {
             openStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + openHour + ":" + openMinute
             closeStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + closeHour + ":" + closeMinute
+
+            calcDay = currDay
           }
 
           openDateStr = Date.parse(openStr)
@@ -208,7 +214,7 @@ export default function Booktime(props) {
 					data.forEach(function (info, rowindex) {
 						info.row.forEach(function (day, dayindex) {
 							day.num = 0
-              day.notworking = false
+              day.noservice = false
 
 							if (rowindex == 0) {
 								if (dayindex >= firstDay) {
@@ -216,9 +222,10 @@ export default function Booktime(props) {
 
 									day.passed = datenow > datetime
 
-                  if (selectedWorkerinfo.worker != null) {
-                    day.notworking = !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
-                  }
+                  day.noservice = selectedWorkerinfo.worker != null ? 
+                    !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
+                    :
+                    !(days[dayindex].substr(0, 3) in allWorkers)
                   
 									day.num = daynum
 									daynum++
@@ -228,9 +235,10 @@ export default function Booktime(props) {
 
 								day.passed = datenow > datetime
 
-                if (selectedWorkerinfo.worker != null) {
-                  day.notworking = !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
-                }
+                day.noservice = selectedWorkerinfo.worker != null ? 
+                  !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
+                  :
+                  !(days[dayindex].substr(0, 3) in allWorkers)
                 
 								day.num = daynum
 								daynum++
@@ -246,15 +254,50 @@ export default function Booktime(props) {
 						let minute = timestr.getMinutes()
 						let period = hour < 12 ? "am" : "pm"
 
-						let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 						let timepassed = currenttime > calcDateStr
 						let timetaken = scheduled.indexOf(calcDateStr) > -1
-						let working = true
+            let availableService = false
+            let timedisplay = "", workerIds = []
 
-            if (!timepassed && !timetaken && working) {
+            if (selectedWorkerinfo.worker != null && calcDay.substr(0, 3) in selectedWorkerinfo.worker.days) {
+              let startTime = selectedWorkerinfo.worker.days[calcDay.substr(0, 3)]["start"]
+              let endTime = selectedWorkerinfo.worker.days[calcDay.substr(0, 3)]["end"]
+
+              if (
+                calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
+                && 
+                calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+              ) {
+                availableService = true
+                workerIds = [selectedWorkerinfo.worker.days[calcDay.substr(0, 3)]["workerId"]]
+              }
+            } else {
+              if (calcDay.substr(0, 3) in allWorkers) {
+                let times = allWorkers[calcDay.substr(0, 3)]
+                let startTime = "", endTime = ""
+
+                times.forEach(function (info) {
+                  workerIds.push(info.workerId)
+                  startTime = info.start
+                  endTime = info.end
+
+                  if (
+                    calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
+                    && 
+                    calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+                  ) {
+                    availableService = true
+                  }
+                })
+              }
+            }
+
+            if (!timepassed && !timetaken && availableService == true) {
+              timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
+
               newTimes.push({ 
                 key: newTimes.length, header: timedisplay, 
-                time: calcDateStr, timetaken, working
+                time: calcDateStr, workerIds
               })
             }
 					}
@@ -264,7 +307,7 @@ export default function Booktime(props) {
           } else {
             setSelecteddateinfo({
               month: currMonth, year: currTime.getFullYear(), day: currDay,
-              date: selectedWorkerinfo.worker == null || currDay.substr(0, 3) in selectedWorkerinfo.worker.days ? 
+              date: selectedWorkerinfo.worker == null || calcDay.substr(0, 3) in selectedWorkerinfo.worker.days ? 
                 currDate 
                 : 
                 0,
@@ -282,13 +325,13 @@ export default function Booktime(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
+					const { errormsg, status } = err.response.data
 				} else {
-					alert("server error")
+					alert(err.message)
 				}
 			})
 	}
-	const getTheWorkers = async() => {
+	const getTheWorkers = () => {
 		getWorkers(locationid)
 			.then((res) => {
 				if (res.status == 200) {
@@ -308,6 +351,26 @@ export default function Booktime(props) {
 				}
 			})
 	}
+  const getAllTheWorkersTime = () => {
+    getAllWorkersTime(locationid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setAllworkers(res.workers)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        } else {
+          alert("server error")
+        }
+      })
+  }
 	const selectWorker = id => {
 		let workerinfo
 
@@ -355,16 +418,24 @@ export default function Booktime(props) {
 
 		firstDay = (new Date(year, month)).getDay()
 		numDays = 32 - new Date(year, month, 32).getDate()
+
 		data.forEach(function (info, rowindex) {
 			info.row.forEach(function (day, dayindex) {
 				day.num = 0
-				day.passed = false
+				day.noservice = false
 
 				if (rowindex == 0) {
 					if (dayindex >= firstDay) {
 						datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
 						day.passed = datenow > datetime
+
+            if (selectedWorkerinfo.worker != null) {
+              day.noservice = !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
+            } else {
+              day.noservice = !(days[dayindex].substr(0, 3) in allWorkers)
+            }
+
 						day.num = daynum
 						daynum++
 					}
@@ -372,6 +443,13 @@ export default function Booktime(props) {
 					datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
 					day.passed = datenow > datetime
+
+          if (selectedWorkerinfo.worker != null) {
+            day.noservice = !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
+          } else {
+            day.noservice = !(days[dayindex].substr(0, 3) in allWorkers)
+          }
+
 					day.num = daynum
 					daynum++
 				}
@@ -391,92 +469,144 @@ export default function Booktime(props) {
 			let hour = timestr.getHours()
 			let minute = timestr.getMinutes()
 			let period = hour < 12 ? "am" : "pm"
-
-			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
+			
 			let timepassed = currenttime > currDateStr
 			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
+      let availableService = false
+      let timedisplay = "", workerIds = []
 
-  		if (!timepassed) {
+      if (selectedWorkerinfo.worker != null && currDay.substr(0, 3) in selectedWorkerinfo.worker.days) {
+        let startTime = selectedWorkerinfo.worker.days[currDay.substr(0, 3)]["start"]
+        let endTime = selectedWorkerinfo.worker.days[currDay.substr(0, 3)]["end"]
+
+        if (
+          calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
+          && 
+          calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+        ) {
+          availableService = true
+          workerIds = [selectedWorkerinfo.worker.days[currDay.substr(0, 3)]["workerId"]]
+        }
+      } else {
+        if (currDay.substr(0, 3) in allWorkers) {
+          let times = allWorkers[currDay.substr(0, 3)]
+          let startTime = "", endTime = ""
+
+          times.forEach(function (info) {
+            startTime = info.start
+            endTime = info.end
+
+            if (
+              calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
+              && 
+              calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+            ) {
+              availableService = true
+              workerIds.push(info.workerId)
+            }
+          })
+        }
+      }
+
+  		if (!timepassed && !timetaken && availableService == true) {
+        timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
+
         newTimes.push({ 
           key: newTimes.length, header: timedisplay, 
-          time: currDateStr, timetaken, timepassed
+          time: currDateStr, workerIds
         })
       }
 		}
 
-		setSelecteddateinfo({ ...selectedDateinfo, month: months[month], date: null, year })
+		setSelecteddateinfo({ ...selectedDateinfo, month: months[month], year })
 		setCalendar({ firstDay, numDays, data })
 		setTimes(newTimes)
 		setLoaded(true)
 	}
-	const selectDate = (date) => {
-		const { month, year } = selectedDateinfo
-		const hours = selectedWorkerinfo.worker != null ? 
-      selectedWorkerinfo.worker.days 
-      : 
-      null
+	const selectDate = async(date) => {
+    const { month, year } = selectedDateinfo
 
-		let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
-		let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
-		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
-		let day = new Date(openDateStr).toString().substr(0, 3)
-		let currenttime = Date.now(), newTimes = [], workerStarttime = null, workerEndtime = null, workerTime = null
+    let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
+    let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
+    let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
+    let day = new Date(openDateStr).toString()
+    let currenttime = Date.now(), newTimes = [], workerStarttime = null, workerEndtime = null, workerTime = null
 
-		if (hours != null) {
-			workerTime = hours[day]
+    while (calcDateStr < (closeDateStr - pushtime)) {
+      calcDateStr += pushtime
 
-			workerStarttime = Date.parse(month + " " + date + ", " + year + " " + workerTime["start"])
-			workerEndtime = Date.parse(month + " " + date + ", " + year + " " + workerTime["end"])
-		}
+      let timestr = new Date(calcDateStr)
+      let hour = timestr.getHours()
+      let minute = timestr.getMinutes()
+      let period = hour < 12 ? "am" : "pm"
 
-		while (calcDateStr < (closeDateStr - pushtime)) {
-			calcDateStr += pushtime
+      let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
+      let timepassed = currenttime > calcDateStr
+      let timetaken = scheduledTimes.indexOf(calcDateStr) > -1
+      let availableService = false, workerIds = []
 
-			let timestr = new Date(calcDateStr)
-			let hour = timestr.getHours()
-			let minute = timestr.getMinutes()
-			let period = hour < 12 ? "am" : "pm"
+      if (selectedWorkerinfo.worker != null && day.substr(0, 3) in selectedWorkerinfo.worker.days) {
+        let startTime = selectedWorkerinfo.worker.days[day.substr(0, 3)]["start"]
+        let endTime = selectedWorkerinfo.worker.days[day.substr(0, 3)]["end"]
 
-			let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
-			let timepassed = currenttime > calcDateStr
-			let timetaken = scheduledTimes.indexOf(calcDateStr) > -1
-			let working = hours != null ? 
-				hours[day]["working"] ?
-					(calcDateStr > workerStarttime && calcDateStr < workerEndtime)
-					:
-					false
-				:
-				false
+        if (
+          calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
+          && 
+          calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+        ) {
+          availableService = true
+          workerIds = [selectedWorkerinfo.worker.days[day.substr(0, 3)]["workerId"]]
+        }
+      } else {
+        if (day.substr(0, 3) in allWorkers) {
+          let times = allWorkers[day.substr(0, 3)]
+          let startTime = "", endTime = ""
 
-  		if (!timepassed) {
+          times.forEach(function (info) {
+            startTime = info.start
+            endTime = info.end
+
+            if (
+              calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
+              && 
+              calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+            ) {
+              availableService = true
+              workerIds.push(info.workerId)
+            }
+          })
+        }
+      }
+
+      if (!timepassed && !timetaken && availableService == true) {
         newTimes.push({ 
           key: newTimes.length, header: timedisplay, 
-          time: calcDateStr, timetaken, timepassed, working
+          time: calcDateStr, workerIds
         })
       }
-		}
+    }
 
-		setSelecteddateinfo({ ...selectedDateinfo, date })
-		setTimes(newTimes)
+    setSelecteddateinfo({ ...selectedDateinfo, date, day })
+    setTimes(newTimes)
 	}
-	const selectTime = (name, timeheader, time) => {
+	const selectTime = (name, timeheader, time, workerIds) => {
 		const { month, date, year } = selectedDateinfo
 
 		setSelecteddateinfo({ ...selectedDateinfo, name, time })
-    setConfirm({ ...confirm, show: true, service: name ? name : serviceinfo, time })
+    setConfirm({ ...confirm, show: true, service: name ? name : serviceinfo, time, workerIds })
 	}
 	const makeAnAppointment = async() => {
 		if (userId) {
 			const { month, date, year, time } = selectedDateinfo
 			const { worker } = selectedWorkerinfo
-			const { note } = confirm
+			const { note, workerIds } = confirm
 			const selecteddate = new Date(time)
 			const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
 			const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
 			let data = { 
-        id: scheduleid, // socket purpose
+        id: scheduleid, // id for socket purpose (updating)
 				userid: userId, 
-				workerid: worker != null ? worker.id : -1, 
+				workerid: worker != null ? worker.id : workerIds[Math.floor(Math.random() * (workerIds.length - 1)) + 0], 
 				locationid, 
 				serviceid: serviceid ? serviceid : -1, 
 				serviceinfo: serviceinfo ? serviceinfo : "",
@@ -531,6 +661,7 @@ export default function Booktime(props) {
 		isMounted.current = true
 
 		getTheNumCartItems()
+    getAllTheWorkersTime()
 
 		if (serviceid) getTheServiceInfo()
 
@@ -551,165 +682,181 @@ export default function Booktime(props) {
 				</View>
 
 				{loaded ? 
-					times.length > 0 ? 
-            <>
-              {step == 0 && (
-  							<View style={styles.workerSelection}>
-  								<Text style={styles.workerSelectionHeader}>Pick a stylist (Optional)</Text>
+          <>
+            {step == 0 && (
+							<View style={styles.workerSelection}>
+								<Text style={styles.workerSelectionHeader}>Pick a stylist (Optional)</Text>
 
-  								<View style={styles.chooseWorkerActions}>
-  									{selectedWorkerinfo.worker != null && (
+								<View style={styles.chooseWorkerActions}>
+									{selectedWorkerinfo.worker != null && (
+                    <View style={styles.column}>
+  										<TouchableOpacity style={styles.chooseWorkerAction} onPress={() => {
+                        setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
+                        getAllTheWorkersTime()
+                      }}>
+  											 <Text style={styles.chooseWorkerActionHeader}>Cancel</Text>
+  										</TouchableOpacity>
+                    </View>
+									)}
+										
+									<TouchableOpacity style={styles.chooseWorkerAction} onPress={() => getTheWorkers()}>
+										<Text style={styles.chooseWorkerActionHeader}>{selectedWorkerinfo.worker == null ? 'Tap to choose your stylist' : 'Tap to choose a different stylist'}</Text>
+									</TouchableOpacity>
+								</View>
+
+								{selectedWorkerinfo.worker != null && (
+									<View style={styles.selectedWorker}>
+										<Image style={styles.selectedWorkerImage} source={{ uri: logo_url + selectedWorkerinfo.worker.profile }}/>
+										<Text style={styles.selectedWorkerHeader}>{selectedWorkerinfo.worker.username}</Text>
+									</View>
+								)}
+							</View>
+            )}
+
+            {step == 1 && (
+							<View style={styles.dateSelection}>
+								<Text style={styles.dateSelectionHeader}>Tap a date below</Text>
+
+                {!calendar.loading ? 
+                  <>
+    								<View style={styles.dateHeaders}>
                       <View style={styles.column}>
-    										<TouchableOpacity style={styles.chooseWorkerAction} onPress={() => setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })}>
-    											 <Text style={styles.chooseWorkerActionHeader}>Cancel</Text>
-    										</TouchableOpacity>
+    									 <TouchableOpacity onPress={() => dateNavigate('left')}><AntDesign name="left" size={wsize(7)}/></TouchableOpacity>
                       </View>
-  									)}
-  										
-  									<TouchableOpacity style={styles.chooseWorkerAction} onPress={() => getTheWorkers()}>
-  										<Text style={styles.chooseWorkerActionHeader}>{selectedWorkerinfo.worker == null ? 'Tap to choose your stylist' : 'Tap to choose a different stylist'}</Text>
-  									</TouchableOpacity>
-  								</View>
+                      <View style={styles.column}>
+    									 <Text style={styles.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
+                      </View>
+                      <View style={styles.column}>
+    									 <TouchableOpacity onPress={() => dateNavigate('right')}><AntDesign name="right" size={wsize(7)}/></TouchableOpacity>
+                      </View>
+    								</View>
+    								<View style={styles.days}>
+    									<View style={styles.daysHeaderRow}>
+    										{days.map((day, index) => (
+                          <Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>
+    										))}
+    									</View>
+    									{calendar.data.map((info, rowindex) => (
+    										<View key={info.key} style={styles.daysDataRow}>
+    											{info.row.map((day, dayindex) => (
+    												day.num > 0 ?
+    													day.passed || day.noservice ? 
+                                day.passed ? 
+                                  <TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+                                    <Text style={styles.dayTouchHeader}>{day.num}</Text>
+                                  </TouchableOpacity>
+                                  :
+                                  <TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { opacity: 0.1 }]}>
+                                    <Text style={styles.dayTouchHeader}>{day.num}</Text>
+                                  </TouchableOpacity>
+    														:
+    														selectedDateinfo.date == day.num ?
+    															<TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => {
+                                    if (selectedWorkerinfo.worker != null) {
+                                      selectWorker(selectedWorkerinfo.worker.id)
+                                    } else {
+                                      getAllTheWorkersTime()
+                                    }
 
-  								{selectedWorkerinfo.worker != null && (
-  									<View style={styles.selectedWorker}>
-  										<Image style={styles.selectedWorkerImage} source={{ uri: logo_url + selectedWorkerinfo.worker.profile }}/>
-  										<Text style={styles.selectedWorkerHeader}>{selectedWorkerinfo.worker.username}</Text>
-  									</View>
-  								)}
-  							</View>
-              )}
+                                    selectDate(day.num)
+                                  }}>
+    																<Text style={[styles.dayTouchHeader, { color: 'white' }]}>{day.num}</Text>
+    															</TouchableOpacity>
+    															:
+    															<TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => {
+                                    if (selectedWorkerinfo.worker != null) {
+                                      selectWorker(selectedWorkerinfo.worker.id)
+                                    } else {
+                                      getAllTheWorkersTime()
+                                    }
 
-              {step == 1 && (
-  							<View style={styles.dateSelection}>
-  								<Text style={styles.dateSelectionHeader}>Tap a date below</Text>
+                                    selectDate(day.num)
+                                  }}>
+    																<Text style={styles.dayTouchHeader}>{day.num}</Text>
+    															</TouchableOpacity>
+    													:
+    													<View key={"calender-header-" + rowindex + "-" + dayindex} style={styles.dayTouchDisabled}></View>
+    											))}
+    										</View>
+    									))}
+    								</View>
+                    <Text style={styles.errorMsg}>{calendar.errorMsg}</Text>
+                  </>
+                  :
+                  <View style={styles.loading}>
+                    <ActivityIndicator color="black" size="small"/>
+                  </View>
+                }
+  						</View>
+            )}
 
-                  {!calendar.loading ? 
-                    <>
-      								<View style={styles.dateHeaders}>
-                        <View style={styles.column}>
-      									 <TouchableOpacity onPress={() => dateNavigate('left')}><AntDesign name="left" size={wsize(7)}/></TouchableOpacity>
-                        </View>
-                        <View style={styles.column}>
-      									 <Text style={styles.dateHeader}>{selectedDateinfo.month}, {selectedDateinfo.year}</Text>
-                        </View>
-                        <View style={styles.column}>
-      									 <TouchableOpacity onPress={() => dateNavigate('right')}><AntDesign name="right" size={wsize(7)}/></TouchableOpacity>
-                        </View>
-      								</View>
-      								<View style={styles.days}>
-      									<View style={styles.daysHeaderRow}>
-      										{days.map((day, index) => (
-                            <Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>
-      										))}
-      									</View>
-      									{calendar.data.map((info, rowindex) => (
-      										<View key={info.key} style={styles.daysDataRow}>
-      											{info.row.map((day, dayindex) => (
-      												day.num > 0 ?
-      													day.passed || day.notworking ? 
-                                  day.passed ? 
-                                    <TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
-                                      <Text style={styles.dayTouchHeader}>{day.num}</Text>
-                                    </TouchableOpacity>
-                                    :
-                                    <TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { opacity: 0.1 }]}>
-                                      <Text style={styles.dayTouchHeader}>{day.num}</Text>
-                                    </TouchableOpacity>
-      														:
-      														selectedDateinfo.date == day.num ?
-      															<TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => selectDate(day.num)}>
-      																<Text style={[styles.dayTouchHeader, { color: 'white' }]}>{day.num}</Text>
-      															</TouchableOpacity>
-      															:
-      															<TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => selectDate(day.num)}>
-      																<Text style={styles.dayTouchHeader}>{day.num}</Text>
-      															</TouchableOpacity>
-      													:
-      													<View key={"calender-header-" + rowindex + "-" + dayindex} style={styles.dayTouchDisabled}></View>
-      											))}
-      										</View>
-      									))}
-      								</View>
-                      <Text style={styles.errorMsg}>{calendar.errorMsg}</Text>
-                    </>
-                    :
-                    <View style={styles.loading}>
-                      <ActivityIndicator color="black" size="small"/>
-                    </View>
+            {step == 2 && (
+							<View style={styles.timesSelection}>
+                <ScrollView style={{ width: '100%' }}>
+                  <Text style={styles.timesHeader}>Tap a time below</Text>
+
+                  <View style={{ alignItems: 'center' }}>
+    								<View style={styles.times}>
+    									{times.map(info => (
+    										<View key={info.key}>
+                          <TouchableOpacity style={styles.unselect} onPress={() => selectTime(name, info.header, info.time, info.workerIds)}>
+                            <Text style={styles.unselectHeader}>{info.header}</Text>
+                          </TouchableOpacity>
+    										</View>
+    									))}
+    								</View>
+                  </View>
+                </ScrollView>
+							</View>
+            )}
+
+            <View style={styles.actions}>
+              {step > 0 && (
+                <TouchableOpacity style={styles.action} onPress={async() => {
+                  if (selectedWorkerinfo.worker != null) {
+                    selectWorker(selectedWorkerinfo.worker.id)
+                  } else {
+                    getAllTheWorkersTime()
                   }
-    						</View>
+
+                  setStep(step - 1)
+                }}>
+                  <Text style={styles.actionHeader}>Back</Text>
+                </TouchableOpacity>
               )}
 
-              {step == 2 && (
-  							<View style={styles.timesSelection}>
-                  <ScrollView style={{ width: '100%' }}>
-                    <Text style={styles.timesHeader}>Tap a time below</Text>
+              {step < 2 && (
+                <TouchableOpacity style={styles.action} onPress={() => {
+                  switch (step) {
+                    case 0:
+                      if (selectedWorkerinfo.worker != null) {
+                        selectWorker(selectedWorkerinfo.worker.id)
+                      } else {
+                        getAllTheWorkersTime()
+                      }
 
-                    <View style={{ alignItems: 'center' }}>
-      								<View style={styles.times}>
-      									{times.map(info => (
-      										<View key={info.key}>
-                            {info.working && (
-                              info.timetaken ? 
-                                <View style={[styles.unselect, { backgroundColor: 'black' }]}>
-                                  <Text style={[styles.unselectHeader, { color: 'white' }]}>{info.header}</Text>
-                                </View>
-                                :
-                                <TouchableOpacity style={styles.unselect} onPress={() => selectTime(name, info.header, info.time)}>
-                                  <Text style={styles.unselectHeader}>{info.header}</Text>
-                                </TouchableOpacity>
-                            )}
-      										</View>
-      									))}
-      								</View>
-                    </View>
-                  </ScrollView>
-  							</View>
-              )}
-
-              <View style={styles.actions}>
-                {step > 0 && (
-                  <TouchableOpacity style={styles.action} onPress={() => {
-                    setStep(step - 1)
-
-                    if (step - 1 == 1) {
                       getTheLocationHours(oldTime)
-                    }
-                  }}>
-                    <Text style={styles.actionHeader}>Back</Text>
-                  </TouchableOpacity>
-                )}
 
-                {step < 2 && (
-                  <TouchableOpacity style={styles.action} onPress={() => {
-                    switch (step) {
-                      case 0:
-                        setStep(step + 1)
-                        getTheLocationHours(oldTime)
+                      setStep(1)
 
-                        break
-                      case 1:
-                        if (selectedDateinfo.date > 0) {
-                          setStep(2)
-                        } else {
-                          setCalendar({ ...calendar, errorMsg: "Please tap on a day" })
-                        }
+                      break;
+                    case 1:
+                      if (selectedDateinfo.date > 0) {
+                        setStep(2)
+                      } else {
+                        setCalendar({ ...calendar, errorMsg: "Please tap on a day" })
+                      }
 
-                        break
-                      default:
-                        
-                    }
-                  }}>
-                    <Text style={styles.actionHeader}>Next</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </>
-						:
-						<View style={{ alignItems: 'center', flexDirection: 'column', justifyContent: 'space-around', width: '100%' }}>
-						  <Text style={styles.noTimeHeader}>Not open today</Text>
-						</View>
+                      break
+                    default:
+                      setStep(step + 1)
+                  }
+                }}>
+                  <Text style={styles.actionHeader}>Next</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </>
 					:
 					<View style={{ alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around' }}>
 						<ActivityIndicator color="black" size="small"/>

@@ -184,7 +184,7 @@ export default function Cart(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -213,7 +213,7 @@ export default function Cart(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -256,7 +256,7 @@ export default function Cart(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -301,7 +301,7 @@ export default function Cart(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -396,7 +396,7 @@ export default function Cart(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -504,7 +504,7 @@ export default function Cart(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -546,7 +546,7 @@ export default function Cart(props) {
 
 						setErrormsg(errormsg)
 					} else {
-						setErrormsg("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -611,7 +611,7 @@ export default function Cart(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -854,7 +854,7 @@ export default function Cart(props) {
   					}
   				</View>
   			</View>
-
+        
   			{showConfirm && (
   				<Modal transparent={true}>
   					<SafeAreaView style={style.confirmBox}>

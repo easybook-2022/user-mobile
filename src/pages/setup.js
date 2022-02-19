@@ -21,8 +21,10 @@ const wsize = p => {
 const hsize = p => {
   return height * (p / 100)
 }
+const steps = ['nickname', 'profile']
 
 export default function Setup({ navigation }) {
+  const [setupType, setSetuptype] = useState('nickname')
 	const [cameraPermission, setCamerapermission] = useState(null);
 	const [pickingPermission, setPickingpermission] = useState(null);
 	const [camComp, setCamcomp] = useState(null)
@@ -77,6 +79,38 @@ export default function Setup({ navigation }) {
 			}
 		}
 	}
+  const saveInfo = () => {
+    const index = steps.indexOf(setupType)
+    let nextStep, msg = ""
+
+    setLoading(true)
+
+    switch (index) {
+      case 0:
+        if (!username) {
+          msg = "Please provide a name you like"
+        }
+
+        break
+      case 1:
+        if (!profile.uri && Platform.OS == 'ios') {
+          msg = "Please provide a profile you like"
+        }
+    }
+
+    if (msg == "") {
+      nextStep = index == 1 ? "done" : steps[index + 1]
+
+      if (nextStep == "profile") {
+        allowCamera()
+        allowChoosing()
+      }
+
+      setSetuptype(nextStep)
+    }
+
+    setLoading(false)
+  }
 	const snapPhoto = async() => {
 		let letters = [
 			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
@@ -187,61 +221,79 @@ export default function Setup({ navigation }) {
 	if (cameraPermission === null || pickingPermission === null) return <View/>
 
 	return (
-		<SafeAreaView style={[style.setup, { opacity: loading ? 0.5 : 1 }]}>
+		<SafeAreaView style={[styles.setup, { opacity: loading ? 0.5 : 1 }]}>
 			<ScrollView style={{ backgroundColor: '#EAEAEA', height: '90%', width: '100%' }}>
-				<View style={style.box}>
-					<Text style={style.boxHeader}>Setup</Text>
+				<View style={styles.box}>
+					<Text style={styles.boxHeader}>Setup</Text>
 
-					<View style={style.inputsBox}>
-						<View style={style.inputContainer}>
-							<Text style={style.inputHeader}>Enter a name you like:</Text>
-							<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
-						</View>
+					<View style={styles.inputsBox}>
+            {setupType == "nickname" && (
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputHeader}>Enter a name you like:</Text>
+                <TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Enter a username" autoCapitalize="none" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
+              </View>
+            )}
 
-						<View style={style.cameraContainer}>
-							<Text style={style.inputHeader}>Provide a photo of yourself</Text>
+            {(setupType == "profile" && (cameraPermission !== null || pickingPermission !== null)) && (
+              <View style={styles.cameraContainer}>
+                <Text style={styles.inputHeader}>Provide a photo of yourself</Text>
 
-							{profile.uri ? (
-								<>
-									<Image style={style.camera} source={{ uri: profile.uri }}/>
+                {profile.uri ? (
+                  <>
+                    <Image style={styles.camera} source={{ uri: profile.uri }}/>
 
-									<TouchableOpacity style={style.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
-										<Text style={style.cameraActionHeader}>Cancel</Text>
-									</TouchableOpacity>
-								</>
-							) : (
-								<>
-									<Camera 
-										style={style.camera} 
-										type={camType} ref={r => {setCamcomp(r)}}
-										ratio="1:1"
-									/>
+                    <TouchableOpacity style={styles.cameraAction} onPress={() => setProfile({ uri: '', name: '' })}>
+                      <Text style={styles.cameraActionHeader}>Cancel</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    <Camera 
+                      style={styles.camera} 
+                      type={camType} ref={r => {setCamcomp(r)}}
+                      ratio="1:1"
+                    />
 
-									<View style={style.cameraActions}>
-										<TouchableOpacity style={style.cameraAction} onPress={snapPhoto.bind(this)}>
-											<Text style={style.cameraActionHeader}>Take{'\n'}this photo</Text>
-										</TouchableOpacity>
-										<TouchableOpacity style={style.cameraAction} onPress={() => choosePhoto()}>
-											<Text style={style.cameraActionHeader}>Choose{'\n'}from phone</Text>
-										</TouchableOpacity>
-									</View>
-								</>
-							)}	
-						</View>
+                    <View style={styles.cameraActions}>
+                      <TouchableOpacity style={styles.cameraAction} onPress={snapPhoto.bind(this)}>
+                        <Text style={styles.cameraActionHeader}>Take{'\n'}this photo</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.cameraAction} onPress={() => choosePhoto()}>
+                        <Text style={styles.cameraActionHeader}>Choose{'\n'}from phone</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}  
+              </View>
+            )}
 					</View>
 
-					{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
+					{errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null }
 					{loading ? <ActivityIndicator color="black" size="small"/> : null}
 
-					<TouchableOpacity style={style.setupButton} disabled={loading} onPress={() => setupAccount()}>
-						<Text style={style.setupButtonHeader}>Done</Text>
-					</TouchableOpacity>
+          <View style={styles.actions}>
+            {setupType != "nickname" && (
+              <TouchableOpacity style={[styles.action, { opacity: loading ? 0.3 : 1 }]} onPress={() => {
+                let index = steps.indexOf(setupType)
+
+                index--
+
+                setSetuptype(steps[index])
+              }}>
+                <Text style={styles.actionHeader}>Back</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity style={styles.action} disabled={loading} onPress={() => setupType == "profile" ? setupAccount() : saveInfo()}>
+              <Text style={styles.actionHeader}>{setupType == "profile" ? "Done" : "Next"}</Text>
+            </TouchableOpacity>
+          </View>
 				</View>
 			</ScrollView>
 
-			<View style={style.bottomNavs}>
-				<View style={style.bottomNavsRow}>
-					<TouchableOpacity style={style.bottomNav} onPress={() => {
+			<View style={styles.bottomNavs}>
+				<View style={styles.bottomNavsRow}>
+					<TouchableOpacity style={styles.bottomNav} onPress={() => {
 						AsyncStorage.clear()
 
 						navigation.dispatch(
@@ -251,7 +303,7 @@ export default function Setup({ navigation }) {
 							})
 						);
 					}}>
-						<Text style={style.bottomNavHeader}>Log-Out</Text>
+						<Text style={styles.bottomNavHeader}>Log-Out</Text>
 					</TouchableOpacity>
 				</View>
 			</View>
@@ -259,7 +311,7 @@ export default function Setup({ navigation }) {
 	)
 }
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
 	setup: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { alignItems: 'center', width: '100%' },
 	boxHeader: { fontFamily: 'appFont', fontSize: wsize(10), fontWeight: 'bold', paddingVertical: 30 },
@@ -277,8 +329,9 @@ const style = StyleSheet.create({
 
 	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 
-	setupButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginBottom: 50, marginTop: 5, padding: 10 },
-	setupButtonHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+  actions: { flexDirection: 'row', marginBottom: 50 },
+	action: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 10 },
+	actionHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },

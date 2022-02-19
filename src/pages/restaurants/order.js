@@ -199,7 +199,6 @@ export default function Order(props) {
 				}
 			})
 	}
-	
 	const seeTheDiningOrders = async() => {
 		seeDiningOrders(scheduleid)
 			.then((res) => {
@@ -388,7 +387,6 @@ export default function Order(props) {
 				}
 			})
 	}
-
 	const changeAmount = (index, action) => {
 		let { options } = itemInfo
 		let newOptions = [...options]
@@ -1679,7 +1677,7 @@ export default function Order(props) {
   																<Text style={styles.orderItemInfo}>
                                     <Text style={{ fontWeight: 'bold' }}>Cost: 
                                       {order.priceUnset == true ? 
-                                        <Text style={{ color: 'grey', fontSize: wsize(4), fontStyle: 'italic' }}>waiting for{'\n'}restaurant</Text> 
+                                        <Text style={{ color: 'grey', fontSize: wsize(4), fontStyle: 'italic' }}>restaurant will respond</Text> 
                                         : 
                                         '$ ' + order.cost.toFixed(2)
                                       }

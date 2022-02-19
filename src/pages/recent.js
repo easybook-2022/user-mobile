@@ -45,7 +45,7 @@ export default function Recent(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -140,14 +140,17 @@ export default function Recent(props) {
 														</>
 													)}	
 												</View>
-												<View>
-													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Service cost:</Text> ${recent.cost.toFixed(2)}</Text>
-													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${recent.fee.toFixed(2)}</Text>
-                          {recent.tip > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Tip:</Text> ${recent.tip.toFixed(2)}</Text>}
-													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${recent.pst.toFixed(2)}</Text>
-													<Text style={[style.header, { marginBottom: 10 }]}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${recent.hst.toFixed(2)}</Text>
-													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total:</Text> ${recent.total.toFixed(2)}</Text>
-												</View>
+
+                        {recent.cost > 0 && (
+                          <View>
+                            <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Service cost:</Text> ${recent.cost.toFixed(2)}</Text>
+                            <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${recent.fee.toFixed(2)}</Text>
+                            {recent.tip > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Tip:</Text> ${recent.tip.toFixed(2)}</Text>}
+                            <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${recent.pst.toFixed(2)}</Text>
+                            <Text style={[style.header, { marginBottom: 10 }]}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${recent.hst.toFixed(2)}</Text>
+                            <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total:</Text> ${recent.total.toFixed(2)}</Text>
+                          </View>
+                        )}
 											</View>
 										</View>
 									))}

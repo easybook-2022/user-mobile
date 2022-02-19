@@ -82,7 +82,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-						
+						alert("server error")
 					}
 				})
 		}
@@ -104,7 +104,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-						
+            alert("server error")	
 					}
 				})
 		}
@@ -141,7 +141,7 @@ export default function Main(props) {
 						default:
 					}
 				} else {
-					
+          alert("server error")	
 				}
 			})
 	}
@@ -176,7 +176,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					
+          alert("server error")	
 				}
 			})
 	}
@@ -257,7 +257,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-						
+            alert("server error")	
 					}
 				})
 		}
@@ -376,132 +376,138 @@ export default function Main(props) {
 
 	return (
 		<SafeAreaView style={styles.main}>
-			<View style={styles.box}>
-				<View style={styles.headers}>
-					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-						<TextInput 
-							style={styles.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
-							placeholder="Search name" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} 
-							autoCorrect={false}
-						/>
+      {loaded ? 
+  			<View style={styles.box}>
+  				<View style={styles.headers}>
+  					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+  						<TextInput 
+  							style={styles.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
+  							placeholder="Search name" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} 
+  							autoCorrect={false}
+  						/>
 
-						{userId && (
-							<TouchableOpacity style={styles.notification} onPress={() => setOpenNotifications(true)}>
-								<FontAwesome name="bell" size={wsize(7)}/>
-								{numNotifications > 0 && <Text style={styles.notificationHeader}>{numNotifications}</Text>}
-							</TouchableOpacity>
-						)}
-					</View>
-				</View>
+  						{userId && (
+  							<TouchableOpacity style={styles.notification} onPress={() => setOpenNotifications(true)}>
+  								<FontAwesome name="bell" size={wsize(7)}/>
+  								{numNotifications > 0 && <Text style={styles.notificationHeader}>{numNotifications}</Text>}
+  							</TouchableOpacity>
+  						)}
+  					</View>
+  				</View>
 
-				<View style={styles.refresh}>
-					<TouchableOpacity style={styles.refreshTouch} onPress={() => getLocationPermission()}>
-						<Text style={styles.refreshTouchHeader}>Reload</Text>
-					</TouchableOpacity>
-				</View>
+  				<View style={styles.refresh}>
+  					<TouchableOpacity style={styles.refreshTouch} onPress={() => getLocationPermission()}>
+  						<Text style={styles.refreshTouchHeader}>Reload</Text>
+  					</TouchableOpacity>
+  				</View>
 
-				<View style={styles.body}>
-					{geolocation.longitude && geolocation.latitude && loaded ? 
-						<FlatList
-							showsVerticalScrollIndicator={false}
-							data={locations}
-							renderItem={({ item, index }) => 
-                item.locations.length > 0 && (
-  								<View key={item.key} style={styles.service}>
-  									<Text style={styles.rowHeader}>{item.locations.length} {item.header} near you{'\n'}(Click to see menu)</Text>
+  				<View style={styles.body}>
+  					{geolocation.longitude && geolocation.latitude && loaded ? 
+  						<FlatList
+  							showsVerticalScrollIndicator={false}
+  							data={locations}
+  							renderItem={({ item, index }) => 
+                  item.locations.length > 0 && (
+    								<View key={item.key} style={styles.service}>
+    									<Text style={styles.rowHeader}>{item.locations.length} {item.header} near you{'\n'}(Click to see menu)</Text>
 
-  									{item.index < item.max && (
-  										<TouchableOpacity style={styles.seeMore} onPress={() => {
-  											clearInterval(updateTrackUser)
-  											props.navigation.navigate(item.service, { initialize: () => initialize() })
-  										}}>
-  											<Text style={styles.seeMoreHeader}>See More</Text>
-  										</TouchableOpacity>
-  									)}
+    									{item.index < item.max && (
+    										<TouchableOpacity style={styles.seeMore} onPress={() => {
+    											clearInterval(updateTrackUser)
+    											props.navigation.navigate(item.service, { initialize: () => initialize() })
+    										}}>
+    											<Text style={styles.seeMoreHeader}>See More</Text>
+    										</TouchableOpacity>
+    									)}
 
-  									<View style={styles.row}>
-  										<FlatList
-  											ListFooterComponent={() => {
-  												if (item.loading && item.index < item.max) {
-  													return <ActivityIndicator style={{ marginVertical: 50 }} color="black" size="large"/>
-  												}
+    									<View style={styles.row}>
+    										<FlatList
+    											ListFooterComponent={() => {
+    												if (item.loading && item.index < item.max) {
+    													return <ActivityIndicator style={{ marginVertical: 50 }} color="black" size="large"/>
+    												}
 
-  												return null
-  											}}
-  											horizontal
-  											onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
-  											onEndReachedThreshold={0}
-  											showsHorizontalScrollIndicator={false}
-  											data={item.locations}
-  											renderItem={({ item }) => 
-  												<TouchableOpacity style={styles.location} onPress={() => {
-                            clearInterval(updateTrackUser)
-                            props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
-                          }}>
-  													<View style={styles.locationPhotoHolder}>
-  														<Image source={{ uri: logo_url + item.logo }} style={{ height: wsize(15), width: wsize(15) }}/>
-  													</View>
+    												return null
+    											}}
+    											horizontal
+    											onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
+    											onEndReachedThreshold={0}
+    											showsHorizontalScrollIndicator={false}
+    											data={item.locations}
+    											renderItem={({ item }) => 
+    												<TouchableOpacity style={styles.location} onPress={() => {
+                              clearInterval(updateTrackUser)
+                              props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
+                            }}>
+    													<View style={styles.locationPhotoHolder}>
+    														<Image source={{ uri: logo_url + item.logo }} style={{ height: wsize(15), width: wsize(15) }}/>
+    													</View>
 
-  													<Text style={styles.locationHeader}>{item.name}</Text>
+    													<Text style={styles.locationHeader}>{item.name}</Text>
 
-  													{displayLocationStatus(item.opentime, item.closetime) ? <Text style={styles.locationHours}>{displayLocationStatus(item.opentime, item.closetime)}</Text> : null}
-  												</TouchableOpacity>
-  											}
-  										/>
-  									</View>
-  								</View>
-                )
-							}
-						/>
-						:
-						<ActivityIndicator color="black" size="large"/>
-					}
-				</View>
+    													{displayLocationStatus(item.opentime, item.closetime) ? <Text style={styles.locationHours}>{displayLocationStatus(item.opentime, item.closetime)}</Text> : null}
+    												</TouchableOpacity>
+    											}
+    										/>
+    									</View>
+    								</View>
+                  )
+  							}
+  						/>
+  						:
+  						<ActivityIndicator color="black" size="large"/>
+  					}
+  				</View>
 
-				<View style={styles.bottomNavs}>
-					<View style={styles.bottomNavsRow}>
-						{userId && (
-							<TouchableOpacity style={styles.bottomNav} onPress={() => {
-								clearInterval(updateTrackUser)
-								props.navigation.navigate("account", { refetch: () => initialize() })
-							}}>
-								<FontAwesome5 name="user-circle" size={wsize(7)}/>
-							</TouchableOpacity>
-						)}
+  				<View style={styles.bottomNavs}>
+  					<View style={styles.bottomNavsRow}>
+  						{userId && (
+  							<TouchableOpacity style={styles.bottomNav} onPress={() => {
+  								clearInterval(updateTrackUser)
+  								props.navigation.navigate("account", { refetch: () => initialize() })
+  							}}>
+  								<FontAwesome5 name="user-circle" size={wsize(7)}/>
+  							</TouchableOpacity>
+  						)}
 
-						{userId && (
-							<TouchableOpacity style={styles.bottomNav} onPress={() => {
-								clearInterval(updateTrackUser)
-								props.navigation.navigate("recent", { refetch: () => initialize() })
-							}}>
-								<FontAwesome name="history" size={wsize(7)}/>
-							</TouchableOpacity>
-						)}
+  						{userId && (
+  							<TouchableOpacity style={styles.bottomNav} onPress={() => {
+  								clearInterval(updateTrackUser)
+  								props.navigation.navigate("recent", { refetch: () => initialize() })
+  							}}>
+  								<FontAwesome name="history" size={wsize(7)}/>
+  							</TouchableOpacity>
+  						)}
 
-						{userId && (
-							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
-								<Entypo name="shopping-cart" size={wsize(7)}/>
-								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
-							</TouchableOpacity>
-						)}
+  						{userId && (
+  							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
+  								<Entypo name="shopping-cart" size={wsize(7)}/>
+  								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
+  							</TouchableOpacity>
+  						)}
 
-						<TouchableOpacity style={styles.bottomNav} onPress={() => {
-							if (userId) {
-								socket.emit("socket/user/logout", userId, () => {
-									clearInterval(updateTrackUser)
-									AsyncStorage.clear()
-									setUserid(null)
-								})
-							} else {
-								setShowauth(true)
-							}
-						}}>
-							<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</View>
-
+  						<TouchableOpacity style={styles.bottomNav} onPress={() => {
+  							if (userId) {
+  								socket.emit("socket/user/logout", userId, () => {
+  									clearInterval(updateTrackUser)
+  									AsyncStorage.clear()
+  									setUserid(null)
+  								})
+  							} else {
+  								setShowauth(true)
+  							}
+  						}}>
+  							<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+  						</TouchableOpacity>
+  					</View>
+  				</View>
+  			</View>
+        :
+        <View style={styles.loading}>
+          <ActivityIndicator color="black" size="small"/>
+        </View>
+      }
+      
 			{openNotifications && 
 				<Modal><NotificationsBox navigation={props.navigation} close={() => {
 					fetchTheNumNotifications()
@@ -591,5 +597,7 @@ const styles = StyleSheet.create({
 	disabledContainer: { alignItems: 'center', width: '100%' },
 	disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
 	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
-	disabledCloseHeader: {  }
+	disabledCloseHeader: {  },
+
+  loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }
 })

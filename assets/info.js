@@ -1,11 +1,11 @@
 import io from 'socket.io-client'
 
-const local_url = true
-const test_stripe = true
-const test_input = true
-const test_card = true
+const local_url = false
+const test_stripe = false
+const test_input = false
+const test_card = false
 
-const users = [
+const testUsers = [
 	{ id: 0, username: "robogram", cellnumber: "(000) 000-0000", password: "password", confirmPassword: "password" },
 	{ id: 1, username: "user1", cellnumber: "(111) 111-1111", password: "password", confirmPassword: "password" },
 	{ id: 2, username: "user2", cellnumber: "(222) 222-2222", password: "password", confirmPassword: "password" },
@@ -21,6 +21,9 @@ const users = [
 	{ id: 12, username: "user12", cellnumber: "(123) 123-1234", password: "password", confirmPassword: "password" },
 	{ id: 13, username: "user13", cellnumber: "(234) 234-2345", password: "password", confirmPassword: "password" },
 	{ id: 14, username: "user14", cellnumber: "(345) 345-3456", password: "password", confirmPassword: "password" }
+]
+const realUsers = [
+  { id: 0, username: "kevin", cellnumber: "(647) 926-3868", password: "password", confirmPassword: "password" }
 ]
 const emptyUser = { username: "", cellnumber: "", password: "", confirmPassword: "" }
 
@@ -38,6 +41,7 @@ const realCards = [
 	{ id: 2, number: "4512238770577855", expMonth: 11, expYear: 23, cvc: '086' },
 ]
 const emptyCard = { number: "", expMonth: "", expYear: "", cvc: "" }
+const useInput = false
 const { number, expMonth, expYear, cvc } = 
 	test_card ? 
 		test_stripe ? 
@@ -47,8 +51,8 @@ const { number, expMonth, expYear, cvc } =
 	:
 	emptyCard
 
-const login = test_input ? users[0] : emptyUser
-const register = test_input ? users[1] : emptyUser
+const login = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
+const register = test_input ? testUsers[3] : useInput ? realUsers[0] : emptyUser
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
 const server_api_url = "https://www.easygo.tk/flask"

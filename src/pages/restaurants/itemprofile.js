@@ -77,7 +77,7 @@ export default function Itemprofile(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						setErrormsg("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -254,7 +254,7 @@ export default function Itemprofile(props) {
 									default:
 								}
 							} else {
-								setErrormsg("an error has occurred in server")
+								alert("server error")
 							}
 						})
 				} else {
@@ -298,7 +298,7 @@ export default function Itemprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -321,7 +321,7 @@ export default function Itemprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -416,7 +416,7 @@ export default function Itemprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}

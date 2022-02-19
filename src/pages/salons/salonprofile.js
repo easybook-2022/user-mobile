@@ -6,7 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { logo_url } from '../../../assets/info';
+import { socket, logo_url } from '../../../assets/info';
 import { getWorkersTime } from '../../apis/owners';
 import { getLocationProfile } from '../../apis/locations';
 import { getMenus } from '../../apis/menus';
@@ -72,7 +72,7 @@ export default function Salonprofile(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -103,7 +103,7 @@ export default function Salonprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -126,7 +126,7 @@ export default function Salonprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -382,15 +382,7 @@ export default function Salonprofile(props) {
 								})
 							);
 						} else {
-							socket.emit("socket/user/login", "user" + id, () => {
-								setUserid(id)
-
-								if (showAuth.action == "addcart") {
-									addCart()
-								} else if (showAuth.action == "openfriendscart") {
-									openFriendsCart()
-								}
-							})
+							socket.emit("socket/user/login", "user" + id, () => setUserid(id))
 						}
 
 						setShowauth({ show: false, action: false })

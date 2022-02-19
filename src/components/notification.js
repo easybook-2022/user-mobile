@@ -36,7 +36,7 @@ export default function Notification(props) {
 	const [showPaymentdetail, setShowpaymentdetail] = useState({ show: false, type: '', service: "", workerInfo: {}, showTip: false, confirm: false, scheduleid: 0, index: 0, cost: 0.00, tip: 0.00, pst: 0.00, hst: 0.00, fee: 0.00, total: 0.00, loading: false })
 	const [showOwners, setShowowners] = useState({ show: false, showworkers: false, showTip: false, scheduleid: 0, index: -1, owners: [], workerid: 0, cost: 0.00, tip: 0.00, pst: 0.00, hst: 0.00, fee: 0.00, total: 0.00, loading: false })
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
-
+  
 	const isMounted = useRef(null)
 
 	const cancelTheCartOrder = async(cartid, index) => {
@@ -64,7 +64,7 @@ export default function Notification(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -95,7 +95,7 @@ export default function Notification(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -188,7 +188,7 @@ export default function Notification(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -219,7 +219,7 @@ export default function Notification(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -258,7 +258,7 @@ export default function Notification(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -357,7 +357,7 @@ export default function Notification(props) {
 							default:
 						}
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -420,70 +420,46 @@ export default function Notification(props) {
 
           
         } else {
-          alert("an error has occurred in server")
+          alert("server error")
         }
       })
 	}
 	const allowThePayment = async(info, index) => {
 		if (!showOwners.show) {
 			const { id, locationid, serviceprice } = items[index]
-			const scheduleid = id
-
-			let date = new Date()
-			let currDate = date.getDate()
-			let day = date.getDay()
-			let month = date.getMonth() + 1
-			let year = date.getFullYear()
-
-			let hour = date.getHours()
-			let minute = date.getMinutes()
-			let second = date.getSeconds()
-			let dateStr = "", timeStr = ""
-
-			currDate = currDate < 10 ? '0' + currDate : currDate
-			month = month < 10 ? '0' + month : month
-
-			hour = hour < 10 ? '0' + hour : hour
-			minute = minute < 10 ? '0' + minute : minute
-			second = second < 10 ? '0' + second : second
-
-			dateStr = currDate + "." + month + "." + year + " "
-			timeStr = hour + ":" + minute + ":" + second
-
-			const data = { locationid, dateStr, timeStr, day }
 
       setShowowners({ ...showOwners, loading: true })
 
-			getWorkers(data)
-				.then((res) => {
-					if (res.status == 200) {
-						return res.data
-					}
-				})
-				.then((res) => {
-					if (res) {
-						const { owners } = res
-						const cost = serviceprice
-						const pst = cost * 0.08
-						const hst = cost * 0.05
-						const total = stripeFee(cost + pst + hst)
-						const nofee = cost + pst + hst
-						const fee = total - nofee
+      getWorkers(locationid)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            const { owners } = res
+            const cost = typeof(serviceprice) == "number" ? serviceprice : 0
+            const pst = cost * 0.08
+            const hst = cost * 0.05
+            const total = stripeFee(cost + pst + hst)
+            const nofee = cost + pst + hst
+            const fee = total - nofee
 
-						setShowowners({ 
-							...showOwners, show: true, showworkers: true, scheduleid, index, owners, 
-							cost: cost.toFixed(2), pst: pst.toFixed(2), hst: hst.toFixed(2), 
-							fee: fee.toFixed(2), total: total.toFixed(2), loading: false
-						})
-					}
-				})
-				.catch((err) => {
-					if (err.response && err.response.status == 400) {
+            setShowowners({ 
+              ...showOwners, show: true, showworkers: true, scheduleid: id, index, owners, 
+              cost: cost.toFixed(2), pst: pst.toFixed(2), hst: hst.toFixed(2), 
+              fee: fee.toFixed(2), total: total.toFixed(2), loading: false
+            })
+          }
+        })
+        .catch((err) => {
+          if (err.response && err.response.status == 400) {
 
-					} else {
-						alert("an error has occurred in server")
-					}
-				})
+          } else {
+            alert("server error")
+          }
+        })
 		} else {
 			const { scheduleid, index, workerid, tip } = showOwners
 			let data = { scheduleid, workerid, tip, type: "allowPayment", receiver: "owner" + workerid }
@@ -512,7 +488,7 @@ export default function Notification(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -538,7 +514,7 @@ export default function Notification(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -714,7 +690,7 @@ export default function Notification(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -1313,10 +1289,10 @@ export default function Notification(props) {
 														</Text>
 													}
 
-													{item.action == "requested" || item.action == "change" && 
+													{(item.action == "requested" || item.action == "change") && 
 														<Text style={styles.itemHeader}>
-															waiting for the restaurant's response
-														</Text>
+                              waiting for the restaurant's response
+                            </Text>
 													}
 
 													{item.action == "accepted" && (
@@ -1463,7 +1439,7 @@ export default function Notification(props) {
 																				<Text style={styles.actionHeader}>Cancel</Text>
 																			</TouchableOpacity>
 																			<TouchableOpacity style={styles.action} onPress={() => allowThePayment(item, index)}>
-																				<Text style={styles.actionHeader}>Allow Payment{item.allowPayment ? ' Again' : ''}</Text>
+																				<Text style={styles.actionHeader}>Send Payment{item.allowPayment ? ' Again' : ''}</Text>
 																			</TouchableOpacity>
 																			<TouchableOpacity style={styles.action} onPress={() => {
 																				props.close()
@@ -1478,6 +1454,9 @@ export default function Notification(props) {
                                         <View style={{ alignItems: 'center' }}>
                                           <TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
                                             <Text style={styles.actionHeader}>Cancel</Text>
+                                          </TouchableOpacity>
+                                          <TouchableOpacity style={styles.action} onPress={() => allowThePayment(item, index)}>
+                                            <Text style={styles.actionHeader}>Send Payment{item.allowPayment ? ' Again' : ''}</Text>
                                           </TouchableOpacity>
                                           <TouchableOpacity style={styles.action} onPress={() => {
                                             props.close()
@@ -1848,9 +1827,9 @@ export default function Notification(props) {
 						{showOwners.showworkers ? 
 							<View style={styles.payworkerBox}>
 								<View style={styles.payworkerContainer}>
-									<TextInput style={styles.payworkerSearchInput} placeholder="Search worker" placeholderTextColor="rgba(0, 0, 0, 0.5)" onChangeText={username => searchTheWorkers(username)}/>
+									<TextInput style={styles.payworkerSearchInput} placeholder="Search stylist name" placeholderTextColor="rgba(0, 0, 0, 0.5)" onChangeText={username => searchTheWorkers(username)}/>
 
-									<Text style={styles.payworkerWorkersListHeader}>Select worker to send payment</Text>
+									<Text style={styles.payworkerWorkersListHeader}>Select the stylist to send payment</Text>
 
 									<View style={styles.payworkerWorkersList}>
 										<FlatList
@@ -1878,45 +1857,51 @@ export default function Notification(props) {
 										<TouchableOpacity style={styles.payworkerAction} onPress={() => setShowowners({ ...showOwners, show: false, owners: [], trialstatus: { days: 30, status: "" } })}>
 											<Text style={styles.payworkerActionHeader}>Close</Text>
 										</TouchableOpacity>
-										<TouchableOpacity style={showOwners.workerid > 0 ? styles.payworkerAction : styles.payworkerActionDisabled} disabled={showOwners.workerid == 0} onPress={() => setShowowners({ ...showOwners, showworkers: false })}>
+										<TouchableOpacity style={showOwners.workerid > 0 ? styles.payworkerAction : styles.payworkerActionDisabled} disabled={showOwners.workerid == 0} onPress={() => {
+                      if (showOwners.cost > 0) {
+                        setShowowners({ ...showOwners, showworkers: false })
+                      } else {
+                        allowThePayment()
+                      }
+                    }}>
 											<Text style={styles.payworkerActionHeader}>Send</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
 							</View>
 							:
-							<View style={styles.popBox}>
-								<View style={styles.popContainer}>
-									<Text style={styles.popHeader}>Payment Detail</Text>
+              <View style={styles.popBox}>
+                <View style={styles.popContainer}>
+                  <Text style={styles.popHeader}>Payment Detail</Text>
 
-									<Text style={{ fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
-										Service cost: ${showOwners.cost}
-										{'\n'}E-pay fee: ${showOwners.fee}
+                  <Text style={{ fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+                    Service cost: ${showOwners.cost}
+                    {'\n'}E-pay fee: ${showOwners.fee}
                     {showOwners.tip > 0 && '\nTip amount: $' + parseFloat(showOwners.tip).toFixed(2)}
-										{'\n'}PST: ${showOwners.pst}
-										{'\n'}HST: ${showOwners.hst}
-										{'\n'}Total: ${showOwners.total}
-									</Text>
+                    {'\n'}PST: ${showOwners.pst}
+                    {'\n'}HST: ${showOwners.hst}
+                    {'\n'}Total: ${showOwners.total}
+                  </Text>
 
-									<View style={styles.popActions}>
-										<TouchableOpacity style={styles.popAction} onPress={() => setShowowners({ ...showOwners, show: false, showTip: false, tip: 0, trialstatus: { days: 30, status: "" } })}>
-											<Text style={styles.popActionHeader}>Close</Text>
-										</TouchableOpacity>
+                  <View style={styles.popActions}>
+                    <TouchableOpacity style={styles.popAction} onPress={() => setShowowners({ ...showOwners, show: false, showTip: false, tip: 0, trialstatus: { days: 30, status: "" } })}>
+                      <Text style={styles.popActionHeader}>Close</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity style={styles.popAction} onPress={() => setShowowners({ ...showOwners, showTip: true })}>
                       <Text style={styles.popActionHeader}>Give tip</Text>
                     </TouchableOpacity>
-										<TouchableOpacity style={styles.popAction} onPress={() => allowThePayment()}>
-											<Text style={styles.popActionHeader}>Ok</Text>
-										</TouchableOpacity>
-									</View>
+                    <TouchableOpacity style={styles.popAction} onPress={() => allowThePayment()}>
+                      <Text style={styles.popActionHeader}>Ok</Text>
+                    </TouchableOpacity>
+                  </View>
 
                   {showOwners.loading && (
                     <View style={{ alignItems: 'center' }}>
                       <ActivityIndicator color="black" size="small"/>
                     </View>
                   )}
-								</View>
-							</View>
+                </View>
+              </View>
 						}
 
             {showOwners.showTip && (

@@ -119,7 +119,7 @@ export default function Makereservation(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						setErrormsg("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -148,7 +148,7 @@ export default function Makereservation(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -294,7 +294,7 @@ export default function Makereservation(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -436,7 +436,7 @@ export default function Makereservation(props) {
           } else {
             setSelecteddateinfo({ 
               month: currMonth, year: currTime.getFullYear(), day: currDay, 
-              date: res.openDays.indexOf(currDay.indexOf(0, 3)) > -1 ? currDate : 0, 
+              date: res.openDays.indexOf(currDay.substr(0, 3)) > -1 ? currDate : 0, 
               time: 0
             })
           }
@@ -451,7 +451,7 @@ export default function Makereservation(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -520,7 +520,7 @@ export default function Makereservation(props) {
 						const { errormsg, status } = err.response.data
 
 					} else {
-						setErrormsg("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		} else {
@@ -552,7 +552,7 @@ export default function Makereservation(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -917,7 +917,7 @@ export default function Makereservation(props) {
 					<ActivityIndicator color="black" size="large"/>
 				</View>
 			}
-
+      
 			{confirm.show && (
 				<Modal transparent={true}>
 					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
