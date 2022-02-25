@@ -1,9 +1,7 @@
 import io from 'socket.io-client'
 
-const local_url = false
-const test_stripe = false
-const test_input = false
-const test_card = false
+const local_url = true
+const test_input = true
 
 const testUsers = [
 	{ id: 0, username: "robogram", cellnumber: "(000) 000-0000", password: "password", confirmPassword: "password" },
@@ -27,32 +25,10 @@ const realUsers = [
 ]
 const emptyUser = { username: "", cellnumber: "", password: "", confirmPassword: "" }
 
-const testCards = [
-	{ id: 0, number: "4000000000000077", expMonth: 2, expYear: 34, cvc: '232' }, // visa
-	{ id: 1, number: "5555555555554444", expMonth: 1, expYear: 23, cvc: '121' }, // mastercard
-	{ id: 2, number: "378282246310005", expMonth: 5, expYear: 29, cvc: '243' }, // amex
-	{ id: 3, number: "6011111111111117", expMonth: 9, expYear: 22, cvc: '869' }, // discover
-	{ id: 4, number: "30569309025904", expMonth: 12, expYear: 45, cvc: '054' }, // diners club
-	{ id: 5, number: "3530111333300000", expMonth: 12, expYear: 23, cvc: '056' }, // jcb
-]
-const realCards = [
-	{ id: 0, number: "4537336027385014", expMonth: 9, expYear: 23, cvc: '959' },
-	{ id: 1, number: "379241612120017", expMonth: 7, expYear: 24, cvc: '3510' },
-	{ id: 2, number: "4512238770577855", expMonth: 11, expYear: 23, cvc: '086' },
-]
-const emptyCard = { number: "", expMonth: "", expYear: "", cvc: "" }
-const useInput = false
-const { number, expMonth, expYear, cvc } = 
-	test_card ? 
-		test_stripe ? 
-			testCards[0]
-			:
-			realCards[Math.floor(Math.random() * 2) + 0]
-	:
-	emptyCard
+const useInput = true
 
 const login = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
-const register = test_input ? testUsers[3] : useInput ? realUsers[0] : emptyUser
+const register = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
 const server_api_url = "https://www.easygo.tk/flask"
@@ -64,8 +40,6 @@ export const socket = io.connect(socket_url)
 export const registerInfo = { username: register.username, cellnumber: register.cellnumber, password: register.password, confirmPassword: register.confirmPassword, latitude: 43.663631, longitude: -79.351501 }
 export const url = local_url ? wifi_api_url : server_api_url
 export const isLocal = test_input
-export const cardInfo = { number, expMonth, expYear, cvc }
-export const stripe_key = test_stripe ? "sk_test_lft1B76yZfF2oEtD5rI3y8dz" : "sk_live_AeoXx4kxjfETP2fTR7IkdTYC"
 export const logo_url = url + "/static/"
 export const displayTime = unixtime => {
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']

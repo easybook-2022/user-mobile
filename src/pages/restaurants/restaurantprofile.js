@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, 
   TextInput, TouchableOpacity, Linking, StyleSheet, Modal 
@@ -41,14 +41,12 @@ export default function Restaurantprofile(props) {
 	const [showInfo, setShowinfo] = useState(false)
 
 	const [productInfo, setProductinfo] = useState('')
-	const [menuInfo, setMenuinfo] = useState({ type: '', items: [] })
+	const [menuInfo, setMenuinfo] = useState({ type: '', items: [], error: false })
 
 	const [loaded, setLoaded] = useState(false)
 	
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
-
-	const isMounted = useRef(null)
 
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -61,7 +59,7 @@ export default function Restaurantprofile(props) {
 					}
 				})
 				.then((res) => {
-					if (res && isMounted.current == true) {
+					if (res) {
 						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
@@ -70,7 +68,7 @@ export default function Restaurantprofile(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("an error has occurred in server")
+						alert("server error")
 					}
 				})
 		}
@@ -87,7 +85,7 @@ export default function Restaurantprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					const { name, logo, fullAddress, city, province, postalcode, phonenumber, distance } = res.info
 
 					setLogo(logo)
@@ -101,7 +99,7 @@ export default function Restaurantprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -115,7 +113,7 @@ export default function Restaurantprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					const { type, menus } = res
 
 					setMenuinfo({ type, items: menus })
@@ -126,7 +124,7 @@ export default function Restaurantprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("an error has occurred in server")
+					alert("server error")
 				}
 			})
 	}
@@ -142,32 +140,32 @@ export default function Restaurantprofile(props) {
 		return (
 			<View style={{ marginLeft: left }}>
 				{name ?
-					<View style={style.menu}>
+					<View style={styles.menu}>
 						<View style={{ flexDirection: 'row' }}>
-							<View style={style.menuImageHolder}>
-								<Image style={style.menuImage} source={{ uri: logo_url + image }}/>
+							<View style={styles.menuImageHolder}>
+								<Image style={styles.menuImage} source={{ uri: logo_url + image }}/>
 							</View>
-							<Text style={style.menuName}>{name} (Menu)</Text>
+							<Text style={styles.menuName}>{name} (Menu)</Text>
 						</View>
-						{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+						{info.info ? <Text style={styles.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
 						{list.length > 0 && list.map((info, index) => (
 							<View key={"list-" + index} style={{ marginBottom: (list.length - 1 == index && info.listType != "list") ? 50 : 0 }}>
 								{info.listType == "list" ? 
 									displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
 									:
-									<View style={style.item}>
+									<View style={styles.item}>
 										<View style={{ flexDirection: 'row', }}>
-											<View style={style.itemImageHolder}>
-												<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+											<View style={styles.itemImageHolder}>
+												<Image style={styles.itemImage} source={{ uri: logo_url + info.image }}/>
 											</View>
-											<Text style={style.itemHeader}>{info.name}</Text>
-											<Text style={style.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-											{info.listType == "service" && <Text style={style.itemHeader}>{info.duration}</Text>}
+											<Text style={styles.itemHeader}>{info.name}</Text>
+											<Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+											{info.listType == "service" && <Text style={styles.itemHeader}>{info.duration}</Text>}
 										</View>
-										{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
-										<View style={style.itemActions}>
-											<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus() })}>
-												<Text style={style.itemActionHeader}>See / Buy</Text>
+										{info.info ? <Text style={styles.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+										<View style={styles.itemActions}>
+											<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus() })}>
+												<Text style={styles.itemActionHeader}>See / Buy</Text>
 											</TouchableOpacity>
 										</View>
 									</View>
@@ -181,19 +179,19 @@ export default function Restaurantprofile(props) {
 							{info.listType == "list" ? 
 								displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
 								:
-								<View style={style.item}>
+								<View style={styles.item}>
 									<View style={{ flexDirection: 'row', }}>
-										<View style={style.itemImageHolder}>
-											<Image style={style.itemImage} source={{ uri: logo_url + info.image }}/>
+										<View style={styles.itemImageHolder}>
+											<Image style={styles.itemImage} source={{ uri: logo_url + info.image }}/>
 										</View>
-										<Text style={style.itemHeader}>{info.name}</Text>
-										<Text style={style.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-										{info.listType == "service" && <Text style={style.itemHeader}>{info.duration}</Text>}
+										<Text style={styles.itemHeader}>{info.name}</Text>
+										<Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
+										{info.listType == "service" && <Text style={styles.itemHeader}>{info.duration}</Text>}
 									</View>
-									{info.info ? <Text style={style.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
-									<View style={style.itemActions}>
-										<TouchableOpacity style={style.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus() })}>
-											<Text style={style.itemActionHeader}>See / Buy</Text>
+									{info.info ? <Text style={styles.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
+									<View style={styles.itemActions}>
+										<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus() })}>
+											<Text style={styles.itemActionHeader}>See / Buy</Text>
 										</TouchableOpacity>
 									</View>
 								</View>
@@ -206,48 +204,56 @@ export default function Restaurantprofile(props) {
 	}
 
 	useEffect(() => {
-		isMounted.current = true
-		
 		initialize()
-
-		return () => isMounted.current = false
 	}, [])
 
 	return (
-		<SafeAreaView style={style.restaurantprofile}>
+		<SafeAreaView style={styles.restaurantprofile}>
 			{loaded ? 
-				<View style={style.box}>
-					<View style={style.profileInfo}>
-						<View style={style.column}>
-              <TouchableOpacity style={style.headerAction} onPress={() => setShowinfo(true)}>
-                <Text style={style.headerActionHeader}>View Info</Text>
+				<View style={styles.box}>
+					<View style={styles.profileInfo}>
+						<View style={styles.column}>
+              <TouchableOpacity style={styles.headerAction} onPress={() => setShowinfo(true)}>
+                <Text style={styles.headerActionHeader}>View Info</Text>
               </TouchableOpacity>
             </View>
-            <View style={style.column}>
-              <TouchableOpacity style={style.headerAction} onPress={() => getAllMenus()}>
-                <Text style={style.headerActionHeader}>Refresh menu</Text>
+            <View style={styles.column}>
+              <TouchableOpacity style={styles.headerAction} onPress={() => getAllMenus()}>
+                <Text style={styles.headerActionHeader}>Refresh menu</Text>
               </TouchableOpacity>
             </View>
-            <View style={style.column}>
-              <TouchableOpacity style={style.headerAction} onPress={() => props.navigation.navigate("makereservation", { locationid, initialize: () => initialize() })}>
-                <Text style={style.headerActionHeader}>Book Table</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={style.column}>
-              <TouchableOpacity style={style.headerAction} onPress={() => Linking.openURL('tel://' + phonenumber)}>
-                <Text style={style.headerActionHeader}>Call</Text>
+            <View style={styles.column}>
+              <TouchableOpacity style={styles.headerAction} onPress={() => Linking.openURL('tel://' + phonenumber)}>
+                <Text style={styles.headerActionHeader}>Call</Text>
               </TouchableOpacity>
             </View>
 					</View>
 					
-					<View style={style.body}>
+					<View style={styles.body}>
 						{(menuInfo.type && menuInfo.type == "photos") && (
-							<View style={style.menuInputBox}>
-								<TextInput style={style.menuInput} type="text" placeholder="Enter product # or name" onChangeText={(info) => setProductinfo(info)} autoCorrect={false} autoCapitalize="none"/>
-								<TouchableOpacity style={style.menuInputTouch} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: "", productinfo: productInfo, initialize: () => getAllMenus() })}>
-									<Text style={style.menuInputTouchHeader}>Buy item</Text>
-								</TouchableOpacity>
-							</View>
+              <>
+  							<View style={styles.menuInputBox}>
+  								<TextInput style={styles.menuInput} type="text" placeholder="Enter product # or name" onChangeText={(info) => setProductinfo(info)} autoCorrect={false} autoCapitalize="none"/>
+                  <View style={styles.menuInputActions}>
+    								<TouchableOpacity style={styles.menuInputTouch} onPress={() => {
+                      if (productInfo) {
+                        props.navigation.navigate(
+                          "itemprofile", 
+                          { 
+                            locationid, menuid: "", productid: "", 
+                            productinfo: productInfo, initialize: () => getAllMenus() 
+                          }
+                        )
+                      } else {
+                        setMenuinfo({ ...menuInfo, error: true })
+                      }
+                    }}>
+    									<Text style={styles.menuInputTouchHeader}>Order item</Text>
+    								</TouchableOpacity>
+                  </View>
+  							</View>
+                {menuInfo.error && <Text style={styles.menuInputError}>Your request is empty</Text>}
+              </>
 						)}
 
 						<ScrollView style={{ height: '90%', width: '100%' }}>
@@ -256,40 +262,34 @@ export default function Restaurantprofile(props) {
 									menuInfo.items.map(info => (
 										info.row.map(item => (
 											item.photo ? 
-												<View key={item.key} style={style.menuPhoto}>
+												<View key={item.key} style={styles.menuPhoto}>
 													<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo }}/>
 												</View>
 											: null
 										))
 									))
 									:
-									displayList({ name: "", image: "", list: menuInfo.list, listType: "list", left: 0 })
+									displayList({ name: "", image: "", list: menuInfo.items, listType: menuInfo.type, left: 0 })
 							: null }
 						</ScrollView>
 					</View>
 
-					<View style={style.bottomNavs}>
-						<View style={style.bottomNavsRow}>
+					<View style={styles.bottomNavs}>
+						<View style={styles.bottomNavsRow}>
 							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("account")}>
+								<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("account")}>
 									<FontAwesome5 name="user-circle" size={wsize(7)}/>
 								</TouchableOpacity>
 							)}
 
 							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => props.navigation.navigate("recent")}>
-									<FontAwesome name="history" size={wsize(7)}/>
-								</TouchableOpacity>
-							)}
-
-							{userId && (
-								<TouchableOpacity style={style.bottomNav} onPress={() => setOpencart(true)}>
+								<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
 									<Entypo name="shopping-cart" size={wsize(7)}/>
-									{numCartItems > 0 && <Text style={style.numCartItemsHeader}>{numCartItems}</Text>}
+									{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
 								</TouchableOpacity>
 							)}
 
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
+							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								props.navigation.dispatch(
 									CommonActions.reset({
 										index: 0,
@@ -299,7 +299,7 @@ export default function Restaurantprofile(props) {
 							}}>
 								<Entypo name="home" size={wsize(7)}/>
 							</TouchableOpacity>
-							<TouchableOpacity style={style.bottomNav} onPress={() => {
+							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								if (userId) {
 									AsyncStorage.clear()
 
@@ -308,7 +308,7 @@ export default function Restaurantprofile(props) {
 									setShowauth(true)
 								}
 							}}>
-								<Text style={style.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+								<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -329,7 +329,10 @@ export default function Restaurantprofile(props) {
 						})
 					)
 				}, 1000)
-			}} close={() => {
+			}} navigate={() => {
+        setOpencart(false)
+        props.navigation.navigate("account", { required: "card" })
+      }} close={() => {
 				getTheNumCartItems()
 				setOpencart(false)
 			}}/></Modal>}
@@ -353,23 +356,23 @@ export default function Restaurantprofile(props) {
 			)}
 			{showInfo && (
 				<Modal transparent={true}>
-					<SafeAreaView style={style.showInfoContainer}>
-						<View style={style.showInfoBox}>
-							<TouchableOpacity style={style.showInfoClose} onPress={() => setShowinfo(false)}>
+					<SafeAreaView style={styles.showInfoContainer}>
+						<View style={styles.showInfoBox}>
+							<TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo(false)}>
 								<AntDesign name="close" size={wsize(7)}/>
 							</TouchableOpacity>
 
-							<Text style={style.showInfoHeader}>{name}</Text>
-							<Text style={style.showInfoHeader}>{address}</Text>
+							<Text style={styles.showInfoHeader}>{name}</Text>
+							<Text style={styles.showInfoHeader}>{address}</Text>
 							<View style={{ alignItems: 'center' }}>
 								<View style={{ flexDirection: 'row' }}>
 									<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
 										<AntDesign name="phone" size={wsize(7)}/>
 									</TouchableOpacity>
-									<Text style={style.showInfoPhonenumber}>{phonenumber}</Text>
+									<Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
 								</View>
 							</View>
-							<Text style={style.showInfoHeader}>{distance}</Text>
+							<Text style={styles.showInfoHeader}>{distance}</Text>
 						</View>
 					</SafeAreaView>
 				</Modal>
@@ -378,7 +381,7 @@ export default function Restaurantprofile(props) {
 	);
 }
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
 	restaurantprofile: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
@@ -389,9 +392,10 @@ const style = StyleSheet.create({
 
 	body: { height: '83%' },
 
-	menuInputBox: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 5, marginHorizontal: 10 },
-	menuInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(4), paddingLeft: 5, width: '68%' },
-	menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginLeft: 2, padding: 5, width: '28%' },
+	menuInputBox: { alignItems: 'center', marginBottom: 5, width: '100%' },
+  menuInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 10, width: '95%' },
+  menuInputActions: { flexDirection: 'row', justifyContent: 'space-around' },
+  menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), margin: 5, padding: 10, width: '40%' },
 	menuInputTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   menuInputError: { color: 'darkred', marginLeft: 10 },
 	menuPhoto: { height, marginBottom: 10, marginHorizontal: width * 0.025, width: width * 0.95 },

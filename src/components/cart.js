@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, 
   Text, TextInput, TouchableOpacity, StyleSheet, Modal 
@@ -8,7 +8,7 @@ import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../assets/info'
 import { searchFriends, selectUser, requestUserPaymentMethod } from '../apis/users'
-import { getCartItems, getCartItemsTotal, editCartItem, updateCartItem, removeFromCart, changeCartItem, editCallfor, updateCallfor, removeCallfor, checkoutCart } from '../apis/carts'
+import { getCartItems, getCartItemsTotal, editCartItem, updateCartItem, removeFromCart, changeCartItem, checkoutCart } from '../apis/carts'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -32,10 +32,8 @@ export default function Cart(props) {
 		image: "", price: "", options: [], others: [], sizes: [], quantity: 1, cost: 0,
 		errorMsg: ""
 	})
-	const [showPaymentdetails, setShowpaymentdetails] = useState({ show: false, info: null })
 
 	// friends cart
-	const [openFriendscart, setOpenfriendscart] = useState(false)
 	const [friends, setFriends] = useState([])
 	const [numFriends, setNumfriends] = useState(0)
 	const [selectedFriends, setSelectedFriends] = useState([])
@@ -44,8 +42,8 @@ export default function Cart(props) {
 	const [errorMsg, setErrormsg] = useState('')
 	const [showNotifyUser, setShownotifyuser] = useState({ show: false, userid: 0, username: "" })
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
-	
-	const isMounted = useRef(null)
+
+  const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 	
 	const changeOption = (index, selected) => {
 		let { options } = itemInfo
@@ -170,19 +168,18 @@ export default function Cart(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					socket.emit("socket/user/login", userid, () => {
 						setUserid(userid)
 						setItems(res.cartItems)
 						setActivecheckout(res.activeCheckout)
-						setShowpaymentdetails({ ...showPaymentdetails, info: res.totalcost })
 						setLoaded(true)
 					})
 				}
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
+
 				} else {
 					alert("server error")
 				}
@@ -240,6 +237,8 @@ export default function Cart(props) {
 		data['others'] = newOthers
 		data['sizes'] = newSizes
 
+    setLoaded(false)
+
 		updateCartItem(data)
 			.then((res) => {
 				if (res.status == 200) {
@@ -248,8 +247,8 @@ export default function Cart(props) {
 			})
 			.then((res) => {
 				if (res) {
+          getTheCartItems()
 					setIteminfo({ ...itemInfo, show: false })
-					getTheCartItems()
 				}
 			})
 			.catch((err) => {
@@ -282,303 +281,6 @@ export default function Cart(props) {
 			})
 	}
 
-	const getFriendsList = async(username) => {
-		const data = { userid: userId, username }
-
-		searchFriends(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setFriends(res.searchedFriends)
-					setNumfriends(res.numSearchedFriends)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
-	const selectFriend = (userid) => {
-		let newFriends = [...friends]
-		let newSelectedFriends = [...selectedFriends]
-		let selected = { id: "", key: "", profile: "", username: "", paymentrequested: false }
-		let last_row = null, next_key = null, unfill = false
-
-		if (JSON.stringify(newSelectedFriends).includes("\"id\":" + userid + ",")) {
-			return
-		}
-
-		selectUser(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const { username, cards } = res
-
-					if (cards == 0) {
-						selected.paymentrequested = true
-
-						setShownotifyuser({ show: true, userid, username })
-					}
-
-					// get last selected friend
-					newFriends.forEach(function (info) {
-						info.row.forEach(function (friend) {
-							if (friend.id == userid) {
-								selected.id = userid
-								selected.profile = friend.profile
-								selected.username = friend.username
-							}
-						})
-					})
-
-					if (newSelectedFriends.length > 0) {
-						last_row = newSelectedFriends[newSelectedFriends.length - 1].row
-
-						for (k in last_row) {
-							if (last_row[k].id) {
-								next_key = parseInt(last_row[k].key.substr(16)) + 1
-							} else {
-								unfill = true
-								selected.key = "selected-friend-" + next_key
-								last_row[k] = selected
-								next_key += 1
-
-								break
-							}
-						}
-
-						if (unfill) {
-							newSelectedFriends[newSelectedFriends.length - 1].row = last_row
-							setNumselectedfriends(numSelectedFriends + 1)
-						} else {
-							selected.key = "selected-friend-" + next_key
-							newSelectedFriends.push({
-								key: "selected-friend-row-" + (newSelectedFriends.length),
-								row: [
-									selected,
-									{ key: "selected-friend-" + (next_key + 1) },
-									{ key: "selected-friend-" + (next_key + 2) },
-									{ key: "selected-friend-" + (next_key + 3) }
-								]
-							})
-						}
-
-						setNumselectedfriends(numSelectedFriends + 1)
-					} else {
-						selected.key = "selected-friend-0"
-						newSelectedFriends = [{
-							key: "selected-friend-row-0",
-							row: [
-								selected,
-								{ key: "selected-friend-1" },
-								{ key: "selected-friend-2" },
-								{ key: "selected-friend-3" }
-							]
-						}]
-						setNumselectedfriends(1)
-					}
-
-					setSelectedFriends(newSelectedFriends)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
-	const requestTheUserPaymentMethod = () => {
-		const { userid } = showNotifyUser
-
-		requestUserPaymentMethod(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) setShownotifyuser({ show: false, userid: "", username: "" })
-			})
-	}
-	const deselectFriend = (userid) => {
-		let list = [...selectedFriends]
-		let last_row = list[list.length - 1].row
-		let newList = [], row = [], info, num = 0
-
-		list.forEach(function (listitem) {
-			listitem.row.forEach(function (info) {
-				if (info.id && info.id != userid) {
-					row.push({
-						key: "selected-friend-" + num,
-						id: info.id,
-						profile: info.profile,
-						username: info.username
-					})
-					num++
-
-					if (row.length == 4) {
-						newList.push({ key: "selected-friend-row-" + (newList.length), row })
-						row = []
-					}
-				}
-			})
-		})
-
-		if (row.length > 0) {
-			while (row.length < 4) {
-				row.push({ key: "selected-friend-" + num })
-				num++
-			}
-
-			newList.push({ key: "selected-friend-row-" + (newList.length), row })
-		}
-
-		setSelectedFriends(newList)
-		setNumselectedfriends(numSelectedFriends - 1)
-	}
-	const openFriendsCart = async() => {
-		const { quantity, price, options, others, sizes } = itemInfo
-		let newOrderingItem = {...orderingItem}
-		let newOptions = JSON.parse(JSON.stringify(options))
-		let newOthers = JSON.parse(JSON.stringify(others))
-		let newSizes = JSON.parse(JSON.stringify(sizes))
-		let empty = false, cost = 0
-
-		if (newSizes.length > 0) {
-			newSizes.forEach(function (size) {
-				if (size.selected) {
-					cost += parseFloat(size.price) * quantity
-				}
-			})
-		} else {
-			cost += price * quantity
-		}
-
-		if (!cost) {
-			newOrderingItem.name = itemName
-			newOrderingItem.image = itemImage
-			newOrderingItem.options = newOptions
-			newOrderingItem.others = newOthers
-			newOrderingItem.sizes = newSizes
-			newOrderingItem.quantity = quantity
-			newOrderingItem.cost = cost
-			newOrderingItem.price = price
-
-			setOpenfriendscart(true)
-			setOrderingItem(newOrderingItem)
-			setErrormsg('')
-		} else {
-			setErrormsg("Please choose a size")
-		}
-	}
-	const editTheCallfor = async(cartid) => {
-		editCallfor(cartid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setSelectedFriends(res.searchedFriends)
-					setNumselectedfriends(res.numSearchedFriends)
-					setOrderingItem(res.orderingItem)
-					setOpenfriendscart(true)
-					setIteminfo({ ...itemInfo, cartid })
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
-	const updateTheCallfor = async() => {
-		let { cartid } = itemInfo
-		let callfor = [], receiver = []
-
-		if (openFriendscart && selectedFriends.length == 0) {
-			setErrormsg("You didn't select anyone")
-		} else {	
-			selectedFriends.forEach(function (info) {
-				info.row.forEach(function (friend) {
-					if (friend.username) {
-						callfor.push({ userid: friend.id.toString(), status: friend.paymentrequested ? 'payment' : 'waiting' })
-						receiver.push("user" + friend.id)
-					}
-				})
-			})
-
-			const data = { cartid, callfor }
-
-			updateCallfor(data)
-				.then((res) => {
-					if (res.status == 200) {
-						return res.data
-					}
-				})
-				.then((res) => {
-					if (res) {
-						socket.emit("socket/updateCallfor", receiver, () => {
-							getTheCartItems()
-							setOpenfriendscart(false)
-						})
-					}
-				})
-				.catch((err) => {
-					if (err.response && err.response.status == 400) {
-						const { errormsg, status } = err.response.data
-
-						setErrormsg(errormsg)
-					} else {
-						alert("server error")
-					}
-				})
-		}
-	}
-	const removeTheCallfor = async(cartid, callforid) => {
-		const data = { cartid, callforid }
-
-		removeCallfor(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					socket.emit("socket/removeCallfor", "user" + callforid, () => getTheCartItems())
-				}
-			})
-	}
-	const getPaymentDetails = async() => {
-		getCartItemsTotal(userId)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setShowpaymentdetails({ ...showPaymentdetails, show: true, info: res.totalCost })
-				}
-			})
-	}
 	const checkout = async() => {
 		const time = Date.now()
 		let data = { userid: userId, time, type: "checkout" }
@@ -609,7 +311,15 @@ export default function Cart(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
+					const { errormsg, status } = err.response.data
+
+          switch (status) {
+            case "cardrequired":
+              setShowpaymentrequired(true)
+
+              break
+            default:
+          }
 				} else {
 					alert("server error")
 				}
@@ -685,11 +395,7 @@ export default function Cart(props) {
 	}
 
 	useEffect(() => {
-		isMounted.current = true
-
 		getTheCartItems()
-
-		return () => isMounted.current = false
 	}, [])
 
 	useEffect(() => {
@@ -697,24 +403,23 @@ export default function Cart(props) {
 
 		return () => {
 			socket.off("updateOrderers")
-			isMounted.current = false
 		}
 	}, [items.length])
 
 	return (
     <SafeAreaView>
-  		<View style={[style.cart, { opacity: loading ? 0.5 : 1 }]}>
-  			<View style={style.box}>
-  				<View style={style.headers}>
+  		<View style={[styles.cart, { opacity: loading ? 0.5 : 1 }]}>
+  			<View style={styles.box}>
+  				<View style={styles.headers}>
   					<View style={{ alignItems: 'center', width: '100%' }}>
   						<TouchableOpacity onPress={() => props.close()}>
   							<AntDesign name="closecircleo" size={wsize(7)}/>
   						</TouchableOpacity>
   					</View>
-  					<Text style={style.boxHeader}>Cart</Text>
+  					<Text style={styles.boxHeader}>Cart</Text>
   				</View>
 
-  				<View style={style.body}>
+  				<View style={styles.body}>
   					{loaded ? 
   						items.length > 0 ?
   							<>
@@ -722,21 +427,21 @@ export default function Cart(props) {
   									showsVerticalScrollIndicator={false}
   									data={items}
   									renderItem={({ item, index }) => 
-  										<View style={style.item} key={item.key}>
+  										<View style={styles.item} key={item.key}>
   											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
   												<TouchableOpacity disabled={item.status == "checkout"} onPress={() => removeTheCartItem(item.id)}>
   													<AntDesign name="closecircleo" size={wsize(7)}/>
   												</TouchableOpacity>
   												{item.image && (
-  													<View style={style.itemImageHolder}>
-  														<Image source={{ uri: logo_url + item.image }} style={style.itemImage}/>
+  													<View style={styles.itemImageHolder}>
+  														<Image source={{ uri: logo_url + item.image }} style={styles.itemImage}/>
   													</View>
   												)}
-  												<View style={style.itemInfos}>
-  													<Text style={style.itemName}>{item.name}</Text>
+  												<View style={styles.itemInfos}>
+  													<Text style={styles.itemName}>{item.name}</Text>
 
   													{item.options.map((option, infoindex) => (
-  														<Text key={option.key} style={style.itemInfo}>
+  														<Text key={option.key} style={styles.itemInfo}>
   															<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
   															{option.selected}
   															{option.type == 'percentage' && '%'}
@@ -745,7 +450,7 @@ export default function Cart(props) {
 
   													{item.others.map((other, otherindex) => (
   														other.selected ? 
-  															<Text key={other.key} style={style.itemInfo}>
+  															<Text key={other.key} style={styles.itemInfo}>
   																<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
   																<Text>{other.input}</Text>
   																<Text>($ {other.price})</Text>
@@ -755,7 +460,7 @@ export default function Cart(props) {
 
   													{item.sizes.map((size, sizeindex) => (
   														size.selected ? 
-  															<Text key={size.key} style={style.itemInfo}>
+  															<Text key={size.key} style={styles.itemInfo}>
   																<Text style={{ fontWeight: 'bold' }}>Size: </Text>
   																<Text>{size.name}</Text>
   															</Text>
@@ -763,80 +468,29 @@ export default function Cart(props) {
   													))}
   												</View>
   												<View>
-  													<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-
-  													{item.productid && (
-  														<>
-  															<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Price:</Text> ${item.price.toFixed(2)}</Text>
-  															{item.pst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>PST:</Text> ${item.pst.toFixed(2)}</Text>}
-  															{item.hst > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>HST:</Text> ${item.hst.toFixed(2)}</Text>}
-  															{item.fee > 0 && <Text style={style.header}><Text style={{ fontWeight: 'bold' }}>E-pay fee:</Text> ${item.fee.toFixed(2)}</Text>}
-  															<Text style={style.header}><Text style={{ fontWeight: 'bold' }}>Total Cost:</Text> ${item.totalcost.toFixed(2)}</Text>
-  														</>
-  													)}
+  													<Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
   												</View>
   											</View>
 
   											<View style={{ alignItems: 'center' }}>
-  												<TouchableOpacity style={style.itemChange} disabled={item.status == "checkout"} onPress={() => editTheCartItem(item.id)}>
-  													<Text style={style.itemChangeHeader}>Edit Order</Text>
+  												<TouchableOpacity style={styles.itemChange} disabled={item.status == "checkout"} onPress={() => editTheCartItem(item.id)}>
+  													<Text style={styles.itemChangeHeader}>Edit Order</Text>
   												</TouchableOpacity>
   											</View>
 
   											{item.note ? 
-  												<View style={style.note}>
-  													<Text style={style.noteHeader}><Text style={{ fontWeight: 'bold' }}>Customer's note:</Text> {'\n' + item.note}</Text>
+  												<View style={styles.note}>
+  													<Text style={styles.noteHeader}><Text style={{ fontWeight: 'bold' }}>Customer's note:</Text> {'\n' + item.note}</Text>
   												</View>
   											: null }
-
-  											<View style={{ alignItems: 'center' }}>
-  												<View style={style.orderersEdit}>
-  													<Text style={style.orderersEditHeader}>Calling for</Text>
-  													<TouchableOpacity style={style.orderersEditTouch} disabled={item.status == "checkout"} onPress={() => editTheCallfor(item.id)}>
-  														<Text style={style.orderersEditTouchHeader}>{item.orderers.length > 0 ? 'Edit' : 'Add'}</Text>
-  													</TouchableOpacity>
-  												</View>
-  											</View>
-
-  											{item.orderers.length > 0 && (
-  												<View style={style.orderersContainer}>
-  													<View style={style.orderers}>
-  														{item.orderers.map((orderer) => (
-  															<View key={orderer.key} style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  																{orderer.row.map((info) => (
-  																	info.id ? 
-  																		<View key={info.key} style={style.orderer}>
-  																			<View style={style.ordererProfileHolder}>
-  																				<Image source={{ uri: logo_url + info.profile }} style={style.ordererProfile}/>
-  																			</View>
-  																			<Text style={style.ordererHeader}>{info.username}</Text>
-  																			<Text style={style.ordererStatus}>{info.status}</Text>
-
-  																			<TouchableOpacity style={style.ordererRemove} disabled={item.status == "checkout"} onPress={() => removeTheCallfor(item.id, info.id)}>
-  																				<Text style={style.ordererRemoveHeader}>Remove</Text>
-  																			</TouchableOpacity>
-  																		</View>
-  																		:
-  																		<View key={info.key} style={style.orderer}></View>
-  																))}
-  															</View>
-  														))}
-  													</View>
-  												</View>
-  											)}
   										</View>
   									}
   								/>
 
   								<View style={{ alignItems: 'center' }}>
-  									<View style={style.cartActions}>
-  										{showPaymentdetails.info != null && (
-  											<TouchableOpacity style={style.cartAction} onPress={() => getPaymentDetails()}>
-  												<Text style={style.cartActionHeader}>See Payment{'\n'}Detail</Text>
-  											</TouchableOpacity>
-  										)}
-  										<TouchableOpacity style={[style.cartAction, { opacity: activeCheckout && !loading ? 1 : 0.3 }]} disabled={!activeCheckout || loading} onPress={() => checkout()}>
-  											<Text style={style.cartActionHeader}>Checkout</Text>
+  									<View style={styles.cartActions}>
+  										<TouchableOpacity style={[styles.cartAction, { opacity: activeCheckout && !loading ? 1 : 0.3 }]} disabled={!activeCheckout || loading} onPress={() => checkout()}>
+  											<Text style={styles.cartActionHeader}>Checkout</Text>
   										</TouchableOpacity>
   									</View>
 
@@ -857,44 +511,44 @@ export default function Cart(props) {
         
   			{showConfirm && (
   				<Modal transparent={true}>
-  					<SafeAreaView style={style.confirmBox}>
-  						<View style={style.confirmContainer}>
-  							<Text style={style.confirmHeader}>Orders sent</Text>
+  					<SafeAreaView style={styles.confirmBox}>
+  						<View style={styles.confirmContainer}>
+  							<Text style={styles.confirmHeader}>Orders sent</Text>
   						</View>
   					</SafeAreaView>
   				</Modal>
   			)}
   			{itemInfo.show && (
   				<Modal>
-  					<SafeAreaView style={style.itemInfoBox}>
-  						<View style={style.itemInfoHeader}>
-  							<TouchableOpacity style={style.itemClose} onPress={() => setIteminfo({ ...itemInfo, show: false })}>
+  					<SafeAreaView style={styles.itemInfoBox}>
+  						<View style={styles.itemInfoHeader}>
+  							<TouchableOpacity style={styles.itemClose} onPress={() => setIteminfo({ ...itemInfo, show: false })}>
   								<AntDesign name="close" size={wsize(7)}/>
   							</TouchableOpacity>
   						</View>
-  						<ScrollView style={style.itemInfoContainer}>
+  						<ScrollView style={styles.itemInfoContainer}>
   							<View style={{ alignItems: 'center', marginBottom: 20 }}>
-  								<View style={style.imageHolder}>
-  									<Image source={{ uri: logo_url + itemInfo.image }} style={style.image}/>
+  								<View style={styles.imageHolder}>
+  									<Image source={{ uri: logo_url + itemInfo.image }} style={styles.image}/>
   								</View>
   							</View>
-  							<Text style={style.boxItemHeader}>{itemInfo.name}</Text>
-  							<Text style={style.boxItemHeaderInfo}>{itemInfo.info}</Text>
+  							<Text style={styles.boxItemHeader}>{itemInfo.name}</Text>
+  							<Text style={styles.boxItemHeaderInfo}>{itemInfo.info}</Text>
 
   							{itemInfo.options.map((option, index) => (
   								<View key={option.key} style={{ alignItems: 'center' }}>
-  									<View style={style.info}>
-  										<Text style={style.infoHeader}>{option.header}:</Text>
+  									<View style={styles.info}>
+  										<Text style={styles.infoHeader}>{option.header}:</Text>
 
   										{option.type == "amount" && (
   											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  												<View style={style.amount}>
-  													<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "-")}>
-  														<Text style={style.amountActionHeader}>-</Text>
+  												<View style={styles.amount}>
+  													<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "-")}>
+  														<Text style={styles.amountActionHeader}>-</Text>
   													</TouchableOpacity>
-  													<Text style={style.amountHeader}>{option.selected}</Text>
-  													<TouchableOpacity style={style.amountAction} onPress={() => changeAmount(index, "+")}>
-  														<Text style={style.amountActionHeader}>+</Text>
+  													<Text style={styles.amountHeader}>{option.selected}</Text>
+  													<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "+")}>
+  														<Text style={styles.amountActionHeader}>+</Text>
   													</TouchableOpacity>
   												</View>
   											</View>
@@ -902,13 +556,13 @@ export default function Cart(props) {
 
   										{option.type == "percentage" && (
   											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  												<View style={style.percentage}>
-  													<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "-")}>
-  														<Text style={style.percentageActionHeader}>-</Text>
+  												<View style={styles.percentage}>
+  													<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "-")}>
+  														<Text style={styles.percentageActionHeader}>-</Text>
   													</TouchableOpacity>
-  													<Text style={style.percentageHeader}>{option.selected}%</Text>
-  													<TouchableOpacity style={style.percentageAction} onPress={() => changePercentage(index, "+")}>
-  														<Text style={style.percentageActionHeader}>+</Text>
+  													<Text style={styles.percentageHeader}>{option.selected}%</Text>
+  													<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "+")}>
+  														<Text style={styles.percentageActionHeader}>+</Text>
   													</TouchableOpacity>
   												</View>
   											</View>
@@ -918,26 +572,26 @@ export default function Cart(props) {
   							))}
 
   							{itemInfo.others.length > 0 && (
-  								<View style={style.othersBox}>
-  									<Text style={style.othersHeader}>Other options</Text>
+  								<View style={styles.othersBox}>
+  									<Text style={styles.othersHeader}>Other options</Text>
 
-  									<View style={style.others}>
+  									<View style={styles.others}>
   										{itemInfo.others.map((other, index) => (
   											<View key={other.key} style={{ alignItems: 'center' }}>
-  												<View style={style.other}>
+  												<View style={styles.other}>
   													<View style={{ flexDirection: 'row' }}>
-  														<Text style={style.otherName}># {other.name}:</Text>
-  														<Text style={style.otherInput}>{other.input}</Text>
+  														<Text style={styles.otherName}># {other.name}:</Text>
+  														<Text style={styles.otherInput}>{other.input}</Text>
   													</View>
   													<View style={{ flexDirection: 'row', marginTop: 10 }}>
-  														<Text style={style.otherPrice}>$ {other.price}</Text>
+  														<Text style={styles.otherPrice}>$ {other.price}</Text>
 
-  														<View style={style.otherActions}>
-  															<TouchableOpacity style={other.selected ? style.otherActionLeftDisabled : style.otherActionLeft} onPress={() => selectOther(index)}>
-  																<Text style={[style.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+  														<View style={styles.otherActions}>
+  															<TouchableOpacity style={other.selected ? styles.otherActionLeftDisabled : styles.otherActionLeft} onPress={() => selectOther(index)}>
+  																<Text style={[styles.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
   															</TouchableOpacity>
-  															<TouchableOpacity style={!other.selected ? style.otherActionRightDisabled : style.otherActionRight} onPress={() => selectOther(index)}>
-  																<Text style={[style.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+  															<TouchableOpacity style={!other.selected ? styles.otherActionRightDisabled : styles.otherActionRight} onPress={() => selectOther(index)}>
+  																<Text style={[styles.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
   															</TouchableOpacity>
   														</View>
   													</View>
@@ -949,25 +603,25 @@ export default function Cart(props) {
   							)}
 
   							{itemInfo.sizes.length > 0 && (
-  								<View style={style.sizesBox}>
-  									<Text style={style.sizesHeader}>Select a Size</Text>
+  								<View style={styles.sizesBox}>
+  									<Text style={styles.sizesHeader}>Select a Size</Text>
 
-  									<View style={style.sizes}>
+  									<View style={styles.sizes}>
   										{itemInfo.sizes.map((size, index) => (
-  											<View key={size.key} style={style.size}>
-  												<TouchableOpacity style={size.selected ? style.sizeTouchDisabled : style.sizeTouch} onPress={() => selectSize(index)}>
-  													<Text style={size.selected ? style.sizeTouchHeaderDisabled : style.sizeTouchHeader}>{size.name}</Text>
+  											<View key={size.key} style={styles.size}>
+  												<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectSize(index)}>
+  													<Text style={size.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{size.name}</Text>
   												</TouchableOpacity>
-  												<Text style={style.sizePrice}>$ {size.price}</Text>
+  												<Text style={styles.sizePrice}>$ {size.price}</Text>
   											</View>
   										))}
   									</View>
   								</View>
   							)}
 
-  							<View style={style.note}>
+  							<View style={styles.note}>
   								<TextInput 
-                    style={style.noteInput} multiline textAlignVertical="top" 
+                    style={styles.noteInput} multiline textAlignVertical="top" 
                     placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" 
                     maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} 
                     value={itemInfo.note} autoCorrect={false} autoCapitalize="none"
@@ -975,34 +629,32 @@ export default function Cart(props) {
   							</View>
 
   							<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  								<View style={style.quantity}>
-                    <View style={style.column}>
-                      <Text style={style.quantityHeader}>Quantity</Text>
+  								<View style={styles.quantity}>
+                    <View style={styles.column}>
+                      <Text style={styles.quantityHeader}>Quantity</Text>
                     </View>
-                    <View style={style.column}>
-    									<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("-")}>
-    										<Text style={style.quantityActionHeader}>-</Text>
+                    <View style={styles.column}>
+    									<TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("-")}>
+    										<Text style={styles.quantityActionHeader}>-</Text>
     									</TouchableOpacity>
                     </View>
-                    <View style={style.column}>
-    									<Text style={style.quantityHeader}>{itemInfo.quantity}</Text>
+                    <View style={styles.column}>
+    									<Text style={styles.quantityHeader}>{itemInfo.quantity}</Text>
                     </View>
-                    <View style={style.column}>
-    									<TouchableOpacity style={style.quantityAction} onPress={() => changeQuantity("+")}>
-    										<Text style={style.quantityActionHeader}>+</Text>
+                    <View style={styles.column}>
+    									<TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("+")}>
+    										<Text style={styles.quantityActionHeader}>+</Text>
     									</TouchableOpacity>
                     </View>
   								</View>
   							</View>
 
-  							<Text style={style.price}>Cost: $ {itemInfo.cost ? itemInfo.cost.toFixed(2) : "(price ?)"}</Text>
+  							{itemInfo.errorMsg ? <Text style={styles.errorMsg}>{itemInfo.errorMsg}</Text> : null}
 
-  							{itemInfo.errorMsg ? <Text style={style.errorMsg}>{itemInfo.errorMsg}</Text> : null}
-
-  							<View style={style.itemActions}>
+  							<View style={styles.itemActions}>
   								<View style={{ flexDirection: 'row' }}>
-  									<TouchableOpacity style={style.itemAction} onPress={() => updateTheCartItem()}>
-  										<Text style={style.itemActionHeader}>Update{'\n'}item to cart</Text>
+  									<TouchableOpacity style={styles.itemAction} onPress={() => updateTheCartItem()}>
+  										<Text style={styles.itemActionHeader}>Update{'\n'}order</Text>
   									</TouchableOpacity>
   								</View>
   							</View>
@@ -1010,186 +662,18 @@ export default function Cart(props) {
   					</SafeAreaView>
   				</Modal>
   			)}
-  			{showPaymentdetails.show && (
-  				<Modal transparent={true}>
-  					<SafeAreaView style={style.paymentDetailsContainer}>
-  						<View style={style.paymentDetailsBox}>
-  							<TouchableOpacity style={style.paymentDetailsClose} onPress={() => setShowpaymentdetails({ ...showPaymentdetails, show: false })}>
-  								<AntDesign name="closecircleo" size={wsize(7)}/>
-  							</TouchableOpacity>
-
-  							<Text style={style.paymentDetailsHeader}>Payment Details</Text>
-
-  							<View>
-  								<Text style={style.paymentDetailHeader}>Sub Total: ${showPaymentdetails.info.total.toFixed(2)}</Text>
-  								<Text style={style.paymentDetailHeader}>PST: ${showPaymentdetails.info.pst.toFixed(2)}</Text>
-  								<Text style={style.paymentDetailHeader}>HST: ${showPaymentdetails.info.hst.toFixed(2)}</Text>
-  								<Text style={style.paymentDetailHeader}>E-pay fee: ${showPaymentdetails.info.fee.toFixed(2)}</Text>
-  								<Text style={style.paymentDetailHeader}>Total Cost: ${showPaymentdetails.info.totalcost.toFixed(2)}</Text>
-  							</View>
-  						</View>
-  					</SafeAreaView>
-  				</Modal>
-  			)}
-  			{openFriendscart && (
-  				<Modal>
-  					<SafeAreaView style={style.friendsList}>
-  						<View style={style.friendNameContainer}>
-  							<TextInput 
-  								style={style.friendNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" 
-  								onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"
-  							/>
-  						</View>
-
-  						<View style={style.friendsListContainer}>
-  							<View style={style.friendsListSearched}>
-  								<Text style={style.friendsHeader}>{numFriends} Searched Friend(s)</Text>
-
-  								<FlatList
-  									data={friends}
-  									renderItem={({ item, index }) => 
-  										<View key={item.key} style={style.row}>
-  											{item.row.map(friend => (
-  												friend.username ? 
-  													<TouchableOpacity key={friend.key} style={style.friend} onPress={() => selectFriend(friend.id)}>
-  														<View style={style.friendProfileHolder}>
-  															<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-  														</View>
-  														<Text style={style.friendName}>{friend.username}</Text>
-  													</TouchableOpacity>
-  													:
-  													<View key={friend.key} style={style.friend}></View>
-  											))}
-  										</View>
-  									}
-  								/>
-  							</View>
-
-  							<View style={style.friendsListSelected}>
-  								{selectedFriends.length > 0 && (
-  									<>
-  										<Text style={style.selectedFriendsHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
-
-  										<FlatList
-  											data={selectedFriends}
-  											renderItem={({ item, index }) => 
-  												<View key={item.key} style={style.row}>
-  													{item.row.map(friend => (
-  														friend.username ? 
-  															<View key={friend.key} style={style.friend}>
-  																<TouchableOpacity style={style.friendDelete} onPress={() => deselectFriend(friend.id)}>
-  																	<AntDesign name="closecircleo" size={15}/>
-  																</TouchableOpacity>
-  																<View style={style.friendProfileHolder}>
-  																	<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-  																</View>
-  																<Text style={style.friendName}>{friend.username}</Text>
-  															</View>
-  															:
-  															<View key={friend.key} style={style.friend}></View>
-  													))}
-  												</View>
-  											}
-  										/>
-  									</>
-  								)}
-  							</View>
-  						</View>
-
-  						<View style={style.itemContainer}>
-  							<View style={style.orderingItemImageHolder}>
-  								<Image style={{ height: 50, width: 50 }} source={{ uri: logo_url + orderingItem.image }}/>
-  							</View>
-  							<View style={style.itemInfos}>
-  								<Text style={style.orderingItemName}>{orderingItem.name}</Text>
-
-  								{orderingItem.options.map((info, infoindex) => (
-  									<Text key={info.key} style={style.itemInfo}>
-  										<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
-  										{info.selected}
-  										{info.type == 'percentage' && '%'}
-  									</Text>
-  								))}
-
-  								{orderingItem.others.map((other, infoindex) => (
-  									other.selected ? 
-  										<Text key={other.key} style={style.itemInfo}>
-  											<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-  											<Text>{other.input}</Text>
-  											<Text>($ {other.price})</Text>
-  										</Text>
-  									: null
-  								))}
-
-  								{orderingItem.sizes.map((size, infoindex) => (
-  									size.selected ? 
-  										<Text key={size.key} style={style.itemInfo}>
-  											<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-  											<Text>{size.name}</Text>
-  										</Text>
-  									: null
-  								))}
-  							</View>
-  							<View>
-  								<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
-  								<Text style={style.itemHeader}><Text style={{ fontWeight: 'bold' }}>total cost:</Text> $ {orderingItem.cost.toFixed(2)}</Text>
-  							</View>
-  						</View>
-
-  						<View style={style.friendsListActionContainer}>
-  							<Text style={style.errorMsg}>{errorMsg}</Text>
-
-  							<View style={style.friendsListActions}>
-  								<TouchableOpacity style={style.friendsListAction} onPress={() => {
-  									setOpenfriendscart(false)
-  									setSelectedFriends([])
-  									setNumselectedfriends(0)
-  									setErrormsg('')
-  								}}>
-  									<Text style={style.friendsListActionHeader}>Close</Text>
-  								</TouchableOpacity>
-  								<TouchableOpacity style={style.friendsListAction} onPress={() => updateTheCallfor()}>
-  									<Text style={style.friendsListActionHeader}>Update</Text>
-  								</TouchableOpacity>
-  							</View>
-  						</View>
-  					</SafeAreaView>
-
-  					{showNotifyUser.show && (
-  						<Modal transparent={true}>
-  							<SafeAreaView style={style.notifyUserBox}>
-  								<View style={style.notifyUserContainer}>
-  									<Text style={style.notifyUserHeader}>
-  										{showNotifyUser.username} haven't provided a payment method.
-  										Notify {showNotifyUser.username} to add a payment method
-  									</Text>
-
-  									<View style={style.notifyUserActions}>
-  										<TouchableOpacity style={style.notifyUserAction} onPress={() => setShownotifyuser({ show: false, userid: 0, username: "" })}>
-  											<Text style={style.notifyUserActionHeader}>Close</Text>
-  										</TouchableOpacity>
-  										<TouchableOpacity style={style.notifyUserAction} onPress={() => requestTheUserPaymentMethod()}>
-  											<Text style={style.notifyUserActionHeader}>Ok</Text>
-  										</TouchableOpacity>
-  									</View>
-  								</View>
-  							</SafeAreaView>
-  						</Modal>
-  					)}
-  				</Modal>
-  			)}
   			{showDisabledScreen && (
   				<Modal transparent={true}>
-  					<SafeAreaView style={style.disabled}>
-  						<View style={style.disabledContainer}>
-  							<Text style={style.disabledHeader}>
+  					<SafeAreaView style={styles.disabled}>
+  						<View style={styles.disabledContainer}>
+  							<Text style={styles.disabledHeader}>
   								There is an update to the app{'\n\n'}
   								Please wait a moment{'\n\n'}
   								or tap 'Close'
   							</Text>
 
-  							<TouchableOpacity style={style.disabledClose} onPress={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}>
-  								<Text style={style.disabledCloseHeader}>Close</Text>
+  							<TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}>
+  								<Text style={styles.disabledCloseHeader}>Close</Text>
   							</TouchableOpacity>
 
   							<ActivityIndicator color="black" size="large"/>
@@ -1202,7 +686,7 @@ export default function Cart(props) {
 	);
 }
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
 	cart: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
@@ -1253,7 +737,7 @@ const style = StyleSheet.create({
 	itemInfoContainer: { height: '90%' },
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	image: { height: 200, width: 200 },
-	boxItemHeader: { fontFamily: 'appFont', fontSize: wsize(6), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
+	boxItemHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	boxItemHeaderInfo: {  fontSize: wsize(4), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
 	infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },

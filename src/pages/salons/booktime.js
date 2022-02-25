@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { 
 	SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TextInput, 
 	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
@@ -30,14 +30,13 @@ const hsize = p => {
 export default function Booktime(props) {
 	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-	const pushtime = 1000 * (60 * 5)
+	const pushtime = 1000 * (60 * 15)
 
 	const { locationid, serviceid, serviceinfo } = props.route.params
 	const func = props.route.params
 	const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
 	const [name, setName] = useState()
-	const [trialStatus, setTrialstatus] = useState()
   const [allWorkers, setAllworkers] = useState({})
 	const [scheduledTimes, setScheduledtimes] = useState([])
   const [oldTime, setOldtime] = useState(0)
@@ -80,16 +79,12 @@ export default function Booktime(props) {
 	const [times, setTimes] = useState([])
 	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ show: false, worker: null, workers: [], numWorkers: 0 })
 	const [loaded, setLoaded] = useState(false)
-	const [showPaymentrequired, setShowpaymentrequired] = useState(false)
-	const [showTrialover, setShowtrialover] = useState(false)
 	const [showAuth, setShowauth] = useState(false)
   const [step, setStep] = useState(0)
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 	const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
-
-	const isMounted = useRef(null)
 
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -102,7 +97,7 @@ export default function Booktime(props) {
 					}
 				})
 				.then((res) => {
-					if (res && isMounted.current == true) {
+					if (res) {
 						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
@@ -147,7 +142,7 @@ export default function Booktime(props) {
         }
       })
       .then((res) => {
-        if (res && isMounted.current == true) {
+        if (res) {
           const { locationId, name, time, worker } = res.appointmentInfo
 
           setName(name)
@@ -206,10 +201,10 @@ export default function Booktime(props) {
           closeDateStr = Date.parse(closeStr)
           calcDateStr = openDateStr
 
-					let newTimes = [], currenttime = Date.now()
 					let firstDay = (new Date(currTime.getFullYear(), currTime.getMonth())).getDay()
 					let numDays = 32 - new Date(currTime.getFullYear(), currTime.getMonth(), 32).getDate()
 					let daynum = 1, data = calendar.data, datetime = 0, datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
+          let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
 
 					data.forEach(function (info, rowindex) {
 						info.row.forEach(function (day, dayindex) {
@@ -295,12 +290,27 @@ export default function Booktime(props) {
             if (!timepassed && !timetaken && availableService == true) {
               timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 
-              newTimes.push({ 
-                key: newTimes.length, header: timedisplay, 
+              timesRow.push({
+                key: timesNum.toString(), header: timedisplay, 
                 time: calcDateStr, workerIds
               })
+              timesNum++
+
+              if (timesRow.length == 3) {
+                newTimes.push({ key: newTimes.length, row: timesRow })
+                timesRow = []
+              }
             }
 					}
+
+          if (timesRow.length > 0 && timesRow.length < 3) {
+            while (timesRow.length < 3) {
+              timesRow.push({ key: timesNum.toString() })
+              timesNum++
+            }
+
+            newTimes.push({ key: newTimes.length, row: timesRow })
+          }
 
 					if (selectedTime) {
             setSelecteddateinfo({ month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay, date: selectedDate, time: 0 })
@@ -415,6 +425,11 @@ export default function Booktime(props) {
 
 		let firstDay, numDays, daynum = 1, data = calendar.data, datetime
 		let datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
+    let date = month == currTime.getMonth() && year == currTime.getFullYear() ? currTime.getDate() : 1
+    let openStr = months[month] + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
+    let closeStr = months[month] + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
+    let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
+    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
 
 		firstDay = (new Date(year, month)).getDay()
 		numDays = 32 - new Date(year, month, 32).getDate()
@@ -455,12 +470,6 @@ export default function Booktime(props) {
 				}
 			})
 		})
-
-		let date = month == currTime.getMonth() && year == currTime.getFullYear() ? currTime.getDate() : 1
-		let openStr = months[month] + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
-		let closeStr = months[month] + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
-		let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
-		let currenttime = Date.now(), newTimes = []
 
 		while (currDateStr < (closeDateStr - pushtime)) {
 			currDateStr += pushtime
@@ -511,12 +520,27 @@ export default function Booktime(props) {
   		if (!timepassed && !timetaken && availableService == true) {
         timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
 
-        newTimes.push({ 
-          key: newTimes.length, header: timedisplay, 
-          time: currDateStr, workerIds
+        timesRow.push({
+          key: timesNum.toString(), header: timedisplay, 
+          time: calcDateStr, workerIds
         })
+        timesNum++
+
+        if (timesRow.length == 3) {
+          newTimes.push({ key: newTimes.length, row: timesRow })
+          timesRow = []
+        }
       }
 		}
+
+    if (timesRow.length > 0) {
+      while (timesRow.length < 3) {
+        timesRow.push({ key: timesNum.toString() })
+        timesNum++
+      }
+
+      newTimes.push({ key: newTimes.length, row: timesRow })
+    }
 
 		setSelecteddateinfo({ ...selectedDateinfo, month: months[month], year })
 		setCalendar({ firstDay, numDays, data })
@@ -530,7 +554,7 @@ export default function Booktime(props) {
     let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
     let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
     let day = new Date(openDateStr).toString()
-    let currenttime = Date.now(), newTimes = [], workerStarttime = null, workerEndtime = null, workerTime = null
+    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0, workerStarttime = null, workerEndtime = null, workerTime = null
 
     while (calcDateStr < (closeDateStr - pushtime)) {
       calcDateStr += pushtime
@@ -579,11 +603,25 @@ export default function Booktime(props) {
       }
 
       if (!timepassed && !timetaken && availableService == true) {
-        newTimes.push({ 
-          key: newTimes.length, header: timedisplay, 
+        timesRow.push({
+          key: timesNum.toString(), header: timedisplay, 
           time: calcDateStr, workerIds
         })
+        timesNum++
+
+        if (timesRow.length == 3) {
+          newTimes.push({ key: newTimes.length, row: timesRow })
+          timesRow = []
+        }
       }
+    }
+
+    if (timesRow.length > 0) {
+      for (let k = 0; k < (3 - timesRow.length); k++) {
+        timesRow.push({ key: timesNum.toString() })
+      }
+
+      newTimes.push({ key: newTimes.length, row: timesRow })
     }
 
     setSelecteddateinfo({ ...selectedDateinfo, date, day })
@@ -658,8 +696,6 @@ export default function Booktime(props) {
 	}
 
 	useEffect(() => {
-		isMounted.current = true
-
 		getTheNumCartItems()
     getAllTheWorkersTime()
 
@@ -670,15 +706,16 @@ export default function Booktime(props) {
     } else {
       getTheLocationHours()
     }
-		
-		return () => isMounted.current = false
 	}, [])
 
 	return (
 		<SafeAreaView style={styles.booktime}>
 			<View style={styles.box}>
 				<View style={styles.headers}>
-					<Text style={styles.serviceHeader}><Text style={{ fontSize: wsize(5) }}>for</Text> {name ? name : serviceinfo}</Text>
+					<Text style={styles.serviceHeader}>
+            <Text style={{ fontSize: wsize(5) }}>for </Text> 
+            {name ? name : serviceinfo}
+          </Text>
 				</View>
 
 				{loaded ? 
@@ -798,11 +835,16 @@ export default function Booktime(props) {
                   <View style={{ alignItems: 'center' }}>
     								<View style={styles.times}>
     									{times.map(info => (
-    										<View key={info.key}>
-                          <TouchableOpacity style={styles.unselect} onPress={() => selectTime(name, info.header, info.time, info.workerIds)}>
-                            <Text style={styles.unselectHeader}>{info.header}</Text>
-                          </TouchableOpacity>
-    										</View>
+                        <View key={info.key} style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+                          {info.row.map(item => (
+                            item.header ? 
+                              <TouchableOpacity key={item.key} style={styles.unselect} onPress={() => selectTime(name, item.header, item.time, item.workerIds)}>
+                                <Text style={styles.unselectHeader}>{item.header}</Text>
+                              </TouchableOpacity>
+                              :
+                              <View key={item.key} style={[styles.unselect, { borderColor: 'transparent' }]}></View>
+                          ))}
+                        </View>
     									))}
     								</View>
                   </View>
@@ -1003,55 +1045,6 @@ export default function Booktime(props) {
 				getTheNumCartItems()
 				setOpencart(false)
 			}}/></Modal>}
-			{showPaymentrequired && (
-				<Modal transparent={true}>
-					<SafeAreaView style={styles.requiredBox}>
-            <View style={styles.requiredContainer}>
-              <Text style={styles.requiredHeader}>
-                You need to provide a payment method to book
-                an appointment
-              </Text>
-
-              <View style={styles.requiredActions}>
-                <TouchableOpacity style={styles.requiredAction} onPress={() => setShowpaymentrequired(false)}>
-                  <Text style={styles.requiredActionHeader}>Close</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.requiredAction} onPress={() => {
-                  setShowpaymentrequired(false)
-                  props.navigation.navigate("account", { required: "card" })
-                }}>
-                  <Text style={styles.requiredActionHeader}>Ok</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </SafeAreaView>
-				</Modal>
-			)}
-			{showTrialover && (
-				<Modal transparent={true}>
-					<SafeAreaView style={styles.requiredBox}>
-            <View style={styles.requiredContainer}>
-              <Text style={styles.requiredHeader}>
-                Your 30 days trial period is up. A cost of $0.50
-                will be charged from you if any of your future appointment
-                is accepted by a salon
-              </Text>
-
-              <View style={styles.requiredActions}>
-                <TouchableOpacity style={styles.requiredAction} onPress={() => setShowtrialover(false)}>
-                  <Text style={styles.requiredActionHeader}>Close</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.requiredAction} onPress={() => {
-                  setShowpaymentrequired(true)
-                  setShowtrialover(false)
-                }}>
-                  <Text style={styles.requiredActionHeader}>Ok</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </SafeAreaView>
-				</Modal>
-			)}
 			{showAuth && (
 				<Modal transparent={true}>
 					<Userauth close={() => setShowauth(false)} done={(id, msg) => {
@@ -1109,12 +1102,12 @@ const styles = StyleSheet.create({
 
   timesSelection: { alignItems: 'center', height: '60%' },
 	timesHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
-	times: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', paddingBottom: 50, width: wsize(79) },
+	times: { alignItems: 'center', paddingBottom: 50, width: '100%' },
 	
-	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: wsize(25) },
+	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: wsize(30) },
 	unselectHeader: { color: 'black', fontSize: wsize(5) },
 
-	noTimeHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+	noTimeHeader: { fontFamily: 'appFont', fontSize: wsize(4) },
 
   actions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: wsize(30) },

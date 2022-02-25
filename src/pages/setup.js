@@ -37,10 +37,9 @@ export default function Setup({ navigation }) {
 	
 	const setupAccount = async() => {
 		const userid = await AsyncStorage.getItem("userid")
-		const time = Date.now()
 
 		if (username) {
-			const data = { userid, username, profile, permission: cameraPermission && pickingPermission, time }
+			const data = { userid, username, profile, permission: cameraPermission && pickingPermission }
 
 			setLoading(true)
 			setupUser(data)
@@ -217,7 +216,7 @@ export default function Setup({ navigation }) {
 		allowCamera()
 		allowChoosing()
 	}, [])
-
+  
 	if (cameraPermission === null || pickingPermission === null) return <View/>
 
 	return (

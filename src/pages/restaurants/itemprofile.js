@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { socket, logo_url } from '../../../assets/info'
-import { searchFriends, selectUser, requestUserPaymentMethod } from '../../apis/users'
 import { getProductInfo } from '../../apis/products'
 import { getNumCartItems, addItemtocart } from '../../apis/carts'
 
@@ -29,7 +28,6 @@ export default function Itemprofile(props) {
 	const func = props.route.params
 
 	const [itemName, setItemname] = useState('')
-	const [itemInfo, setIteminfo] = useState('')
 	const [itemNote, setItemnote] = useState('')
 	const [itemImage, setItemimage] = useState('')
 	const [itemPrice, setItemprice] = useState(0)
@@ -39,23 +37,14 @@ export default function Itemprofile(props) {
 	const [quantity, setQuantity] = useState(1)
 	const [cost, setCost] = useState(0)
 	const [errorMsg, setErrormsg] = useState('')
-	const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 	const [showNotifyUser, setShownotifyuser] = useState({ show: false, userid: 0, username: "" })
 	const [showAuth, setShowauth] = useState({ show: false, action: "" })
 	const [userId, setUserid] = useState(null)
 
-	// friends list
-	const [openFriendscart, setOpenfriendscart] = useState(false)
-	const [friends, setFriends] = useState([])
-	const [numFriends, setNumfriends] = useState(0)
-	const [selectedFriends, setSelectedFriends] = useState([])
-	const [numSelectedFriends, setNumSelectedFriends] = useState(0)
 	const [orderingItem, setOrderingitem] = useState({ name: "", image: "", options: [], others: [], sizes: [], quantity: 0, cost: 0 })
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(2)
-
-	const isMounted = useRef(null)
 
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -68,7 +57,7 @@ export default function Itemprofile(props) {
 					}
 				})
 				.then((res) => {
-					if (res && isMounted.current == true) {
+					if (res) {
 						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
@@ -179,96 +168,67 @@ export default function Itemprofile(props) {
 			let newOthers = JSON.parse(JSON.stringify(others))
 			let newSizes = JSON.parse(JSON.stringify(sizes))
 			let size = "", price = 0
-				
 
-			if (openFriendscart && selectedFriends.length == 0) {
-				setErrormsg("You didn't select anyone")
-			} else {	
-				selectedFriends.forEach(function (info) {
-					info.row.forEach(function (friend) {
-						if (friend.username) {
-							callfor.push({ userid: friend.id.toString(), status: friend.paymentrequested ? 'payment' : 'waiting' })
-							receiver.push("user" + friend.id)
+			if (!productinfo) {
+				if (newSizes.length > 0) {
+					newSizes.forEach(function (info) {
+						delete info['key']
+
+						if (info.selected) {
+							price = parseFloat(info.price) * quantity
 						}
 					})
+				} else {
+					price = itemPrice * quantity
+				}
+
+				newOptions.forEach(function (option) {
+					delete option['key']
 				})
 
-				if (!productinfo) {
-					if (newSizes.length > 0) {
-						newSizes.forEach(function (info) {
-							delete info['key']
+				newOthers.forEach(function (other) {
+					delete other['key']
+				})
+			}
 
-							if (info.selected) {
-								price = parseFloat(info.price) * quantity
-							}
-						})
-					} else {
-						price = itemPrice * quantity
-					}
-
-					newOptions.forEach(function (option) {
-						delete option['key']
-					})
-
-					newOthers.forEach(function (other) {
-						delete other['key']
-					})
+			if (price || productinfo) {
+				const data = { 
+					userid: userId, locationid, 
+					productid: productid ? productid : -1, 
+					productinfo: productinfo ? productinfo : "", 
+					quantity, 
+					callfor, 
+					options: newOptions, others: newOthers, sizes: newSizes, 
+					note: itemNote, 
+					receiver 
 				}
-					
 
-				if (price || productinfo) {
-					const data = { 
-						userid: userId, locationid, 
-						productid: productid ? productid : -1, 
-						productinfo: productinfo ? productinfo : "", 
-						quantity, 
-						callfor, 
-						options: newOptions, others: newOthers, sizes: newSizes, 
-						note: itemNote, 
-						receiver 
-					}
-
-					addItemtocart(data)
-						.then((res) => {
-							if (res.status == 200) {
-								return res.data
-							}
-						})
-						.then((res) => {
-							if (res) {
-								socket.emit("socket/addItemtocart", data, () => {
-									setOpenfriendscart(false)
-									showCart()
-								})
-							}
-						})
-						.catch((err) => {
-							if (err.response && err.response.status == 400) {
-								const { errormsg, status } = err.response.data
-
-								switch (status) {
-									case "cardrequired":
-										setShowpaymentrequired(true)
-
-										break;
-									default:
-								}
-							} else {
-								alert("server error")
-							}
-						})
-				} else {
-					setErrormsg("Please choose a size")
-				}
+				addItemtocart(data)
+					.then((res) => {
+						if (res.status == 200) {
+							return res.data
+						}
+					})
+					.then((res) => {
+						if (res) {
+							socket.emit("socket/addItemtocart", data, () => showCart())
+						}
+					})
+					.catch((err) => {
+						if (err.response && err.response.status == 400) {
+							const { errormsg, status } = err.response.data
+						} else {
+							alert("server error")
+						}
+					})
+			} else {
+				setErrormsg("Please choose a size")
 			}
 		} else {
 			setShowauth({ show: true, action: "addcart" })
 		}
 	}
 	const showCart = () => {
-		setOpenfriendscart(false)
-		setSelectedFriends([])
-		setNumSelectedFriends(0)
 		setOpencart(true)
 		setNumcartitems(numCartItems + 1)
 	}
@@ -281,11 +241,10 @@ export default function Itemprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
-					const { image, info, name, options, others, sizes, price } = res.productInfo
+				if (res) {
+					const { image, name, options, others, sizes, price } = res.productInfo
 
 					setItemname(name)
-					setIteminfo(info)
 					setItemimage(image)
 					setItemprice(price)
 					setOptions(options)
@@ -302,210 +261,6 @@ export default function Itemprofile(props) {
 				}
 			})
 	}
-	const getFriendsList = async(username) => {
-		const data = { userid: userId, username }
-
-		searchFriends(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setFriends(res.searchedFriends)
-					setNumfriends(res.numSearchedFriends)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
-	const selectFriend = (userid) => {
-		let newFriends = [...friends]
-		let newSelectedFriends = [...selectedFriends]
-		let selected = { id: "", key: "", profile: "", username: "", paymentrequested: false }
-		let last_row = null, next_key = null, unfill = false
-
-		if (JSON.stringify(newSelectedFriends).includes("\"id\":" + userid + ",")) {
-			return
-		}
-
-		selectUser(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const { username, cards } = res
-
-					if (cards == 0) {
-						selected.paymentrequested = true
-
-						setShownotifyuser({ show: true, userid, username })
-					}
-					
-					// get last selected friend
-					newFriends.forEach(function (info) {
-						info.row.forEach(function (friend) {
-							if (friend.id == userid) {
-								selected.id = userid
-								selected.profile = friend.profile
-								selected.username = friend.username
-							}
-						})
-					})
-
-					if (newSelectedFriends.length > 0) {
-						last_row = newSelectedFriends[newSelectedFriends.length - 1].row
-
-						for (k in last_row) {
-							if (last_row[k].id) {
-								next_key = parseInt(last_row[k].key.split("-").pop()) + 1
-							} else {
-								unfill = true
-								selected.key = "selected-friend-" + next_key
-								last_row[k] = selected
-								next_key += 1
-
-								break
-							}
-						}
-
-						if (unfill) {
-							newSelectedFriends[newSelectedFriends.length - 1].row = last_row
-							setNumSelectedFriends(numSelectedFriends + 1)
-						} else {
-							selected.key = "selected-friend-" + next_key
-							newSelectedFriends.push({
-								key: "selected-friend-row-" + (newSelectedFriends.length),
-								row: [
-									selected,
-									{ key: "selected-friend-" + (next_key + 1) },
-									{ key: "selected-friend-" + (next_key + 2) },
-									{ key: "selected-friend-" + (next_key + 3) }
-								]
-							})
-						}
-
-						setNumSelectedFriends(numSelectedFriends + 1)
-					} else {
-						selected.key = "selected-friend-0"
-						newSelectedFriends = [{
-							key: "selected-friend-row-0",
-							row: [
-								selected,
-								{ key: "selected-friend-1" },
-								{ key: "selected-friend-2" },
-								{ key: "selected-friend-3" }
-							]
-						}]
-						setNumSelectedFriends(1)
-					}
-
-					setSelectedFriends(newSelectedFriends)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("server error")
-				}
-			})
-	}
-	const requestTheUserPaymentMethod = () => {
-		const { userid } = showNotifyUser
-
-		requestUserPaymentMethod(userid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) setShownotifyuser({ show: false, userid: "", username: "" })
-			})
-	}
-	const deselectFriend = (userid) => {
-		let list = [...selectedFriends]
-		let last_row = list[list.length - 1].row
-		let newList = [], row = [], info, num = 0
-
-		list.forEach(function (listitem) {
-			listitem.row.forEach(function (info) {
-				if (info.id && info.id != userid) {
-					row.push({
-						key: "selected-friend-" + num,
-						id: info.id,
-						profile: info.profile,
-						username: info.username
-					})
-					num++
-
-					if (row.length == 4) {
-						newList.push({ key: "selected-friend-row-" + (newList.length), row })
-						row = []
-					}
-				}
-			})
-		})
-
-		if (row.length > 0) {
-			while (row.length < 4) {
-				row.push({ key: "selected-friend-" + num })
-				num++
-			}
-
-			newList.push({ key: "selected-friend-row-" + (newList.length), row })
-		}
-
-		setSelectedFriends(newList)
-		setNumSelectedFriends(numSelectedFriends - 1)
-	}
-	const openFriendsCart = async() => {
-		if (userId) {
-			let newOrderingItem = {...orderingItem}
-			let newOptions = JSON.parse(JSON.stringify(options))
-			let newOthers = JSON.parse(JSON.stringify(others))
-			let newSizes = JSON.parse(JSON.stringify(sizes))
-			let price = ""
-
-			if (sizes.length > 0) {
-				sizes.forEach(function (size) {
-					if (size.selected) {
-						price = parseFloat(size.price) * quantity
-					}
-				})
-			} else {
-				price = itemPrice * quantity
-			}
-
-			if (price) {
-				newOrderingItem.name = itemName
-				newOrderingItem.image = itemImage
-				newOrderingItem.options = options
-				newOrderingItem.others = others
-				newOrderingItem.sizes = sizes
-				newOrderingItem.quantity = quantity
-				newOrderingItem.cost = price.toFixed(2)
-
-				setOpenfriendscart(true)
-				setOrderingitem(newOrderingItem)
-				setErrormsg('')
-			} else {
-				setErrormsg("Please choose a size")
-			}
-		} else {
-			setShowauth({ show: true, action: "openfriendscart" })
-		}
-	}
 	const initialize = () => {
 		getTheNumCartItems()
 
@@ -513,13 +268,7 @@ export default function Itemprofile(props) {
 	}
 
 	useEffect(() => {
-		isMounted.current = true
-
 		initialize()
-
-		return () => {
-			isMounted.current = false
-		}
 	}, [])
 
 	return (
@@ -534,7 +283,6 @@ export default function Itemprofile(props) {
 						: null }
 					</View>
 					<Text style={styles.boxHeader}>{itemName ? itemName : productinfo}</Text>
-					<Text style={styles.boxHeaderInfo}>{itemInfo}</Text>
 
 					{options.map((option, index) => (
 						<View key={option.key} style={{ alignItems: 'center' }}>
@@ -669,10 +417,7 @@ export default function Itemprofile(props) {
 					<View style={styles.itemActions}>
 						<View style={{ flexDirection: 'row' }}>
 							<TouchableOpacity style={styles.itemAction} onPress={() => addCart()}>
-								<Text style={styles.itemActionHeader}>Add to{'\n'}your cart</Text>
-							</TouchableOpacity>
-							<TouchableOpacity style={styles.itemAction} onPress={() => openFriendsCart()}>
-								<Text style={styles.itemActionHeader}>Call for{'\n'}friend(s)</Text>
+								<Text style={styles.itemActionHeader}>Order item</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -683,12 +428,6 @@ export default function Itemprofile(props) {
 						{userId && (
 							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("account")}>
 								<FontAwesome5 name="user-circle" size={30}/>
-							</TouchableOpacity>
-						)}
-
-						{userId && (
-							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("recent")}>
-								<FontAwesome name="history" size={30}/>
 							</TouchableOpacity>
 						)}
 
@@ -724,7 +463,10 @@ export default function Itemprofile(props) {
 					</View>
 				</View>
 
-				{openCart && <Modal><Cart showNotif={() => {
+				{openCart && <Modal><Cart navigate={() => {
+          setOpencart(false)
+          props.navigation.navigate("account", { required: "card" })
+        }} showNotif={() => {
 					setOpencart(false)
 					setTimeout(function () {
 						props.navigation.dispatch(
@@ -738,174 +480,6 @@ export default function Itemprofile(props) {
 					getTheNumCartItems()
 					setOpencart(false)
 				}}/></Modal>}
-				{openFriendscart && (
-					<Modal>
-						<SafeAreaView style={styles.usersList}>
-							<View style={styles.userNameContainer}>
-								<TextInput 
-									style={styles.userNameInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Search friend to order for" 
-									onChangeText={(username) => getFriendsList(username)} autoCorrect={false} autoCapitalize="none"
-								/>
-							</View>
-
-							<View style={styles.usersListContainer}>
-								<View style={{ height: '50%', overflow: 'hidden' }}>
-									<Text style={styles.usersHeader}>{numFriends} Searched Friend(s)</Text>
-
-									<FlatList
-										data={friends}
-										renderItem={({ item, index }) => 
-											<View key={item.key} style={styles.row}>
-												{item.row.map(friend => (
-													friend.username ? 
-														<TouchableOpacity key={friend.key} style={styles.user} onPress={() => selectFriend(friend.id)}>
-															<View style={styles.userProfileHolder}>
-																<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-															</View>
-															<Text style={styles.userName}>{friend.username}</Text>
-														</TouchableOpacity>
-														:
-														<View key={friend.key} style={styles.user}></View>
-												))}
-											</View>
-										}
-									/>
-								</View>
-
-								<View style={{ height: '50%', overflow: 'hidden' }}>
-									{selectedFriends.length > 0 && (
-										<>
-											<Text style={styles.selectedUsersHeader}>{numSelectedFriends} Selected Friend(s) to order this item</Text>
-
-											<FlatList
-												data={selectedFriends}
-												renderItem={({ item, index }) => 
-													<View key={item.key} style={styles.row}>
-														{item.row.map(friend => (
-															friend.username ? 
-																<View key={friend.key} style={styles.user}>
-																	<TouchableOpacity style={styles.userDelete} onPress={() => deselectFriend(friend.id)}>
-																		<AntDesign name="closecircleo" size={15}/>
-																	</TouchableOpacity>
-																	<View style={styles.userProfileHolder}>
-																		<Image source={{ uri: logo_url + friend.profile }} style={{ height: 60, width: 60 }}/>
-																	</View>
-																	<Text style={styles.userName}>{friend.username}</Text>
-																</View>
-																:
-																<View key={friend.key} style={styles.user}></View>
-														))}
-													</View>
-												}
-											/>
-										</>
-									)}
-								</View>
-							</View>
-
-							<View style={styles.itemContainer}>
-								<View style={styles.orderingItemImageHolder}>
-									<Image style={{ height: 100, width: 100 }} source={{ uri: logo_url + orderingItem.image }}/>
-								</View>
-								<View style={styles.itemInfos}>
-									<Text style={styles.orderingItemName}>{orderingItem.name}</Text>
-									
-									{orderingItem.options.map((info, infoindex) => (
-										<Text key={info.key} style={styles.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>{info.header}: </Text> 
-											{info.selected}
-											{info.type == 'percentage' && '%'}
-										</Text>
-									))}
-
-									{orderingItem.others.map((info, infoindex) => (
-										<Text key={info.key} style={styles.itemInfo}>
-											<Text style={{ fontWeight: 'bold' }}>{info.name}: </Text> 
-											<Text>{info.input}</Text>
-										</Text>
-									))}
-
-									{orderingItem.sizes.map((info, infoindex) => (
-										info.selected ? 
-											<Text key={info.key} style={styles.itemInfo}>
-												<Text style={{ fontWeight: 'bold' }}>Size: </Text> 
-												<Text>{info.name}</Text>
-											</Text>
-										: null
-									))}
-								</View>
-								<View>
-									<Text style={styles.itemHeader}><Text style={{ fontWeight: 'bold' }}>quantity:</Text> {orderingItem.quantity}</Text>
-									<Text style={styles.itemHeader}><Text style={{ fontWeight: 'bold' }}>cost:</Text> $ {orderingItem.cost}</Text>
-								</View>
-							</View>
-
-							<View style={styles.usersListActionContainer}>
-								<Text style={styles.errorMsg}>{errorMsg}</Text>
-
-								<View style={styles.usersListActions}>
-									<TouchableOpacity style={styles.usersListAction} onPress={() => {
-										setOpenfriendscart(false)
-										setSelectedFriends([])
-										setNumSelectedFriends(0)
-										setErrormsg('')
-									}}>
-										<Text style={styles.usersListActionHeader}>Close</Text>
-									</TouchableOpacity>
-									<TouchableOpacity style={styles.usersListAction} onPress={() => addCart()}>
-										<Text style={styles.usersListActionHeader}>Add</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-						</SafeAreaView>
-
-						{showNotifyUser.show && (
-							<Modal transparent={true}>
-								<SafeAreaView style={styles.notifyUserBox}>
-									<View style={styles.notifyUserContainer}>
-										<Text style={styles.notifyUserHeader}>
-											{showNotifyUser.username} haven't provided a payment method.
-											Notify {showNotifyUser.username} to add a payment method
-										</Text>
-
-										<View style={styles.notifyUserActions}>
-											<TouchableOpacity style={styles.notifyUserAction} onPress={() => setShownotifyuser({ show: false, userid: 0, username: "" })}>
-												<Text style={styles.notifyUserActionHeader}>Close</Text>
-											</TouchableOpacity>
-											<TouchableOpacity style={styles.notifyUserAction} onPress={() => requestTheUserPaymentMethod()}>
-												<Text style={styles.notifyUserActionHeader}>Ok</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								</SafeAreaView>
-							</Modal>
-						)}
-					</Modal>
-				)}
-				{showPaymentRequired && (
-          <Modal transparent={true}>
-  					<SafeAreaView style={styles.cardRequiredBox}>
-              <View style={styles.cardRequiredContainer}>
-                <Text style={styles.cardRequiredHeader}>
-                  You need to provide a payment method 
-                  to add items to your cart
-                </Text>
-
-                <View style={styles.cardRequiredActions}>
-                  <TouchableOpacity style={styles.cardRequiredAction} onPress={() => setShowpaymentrequired(false)}>
-                    <Text style={styles.cardRequiredActionHeader}>Close</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.cardRequiredAction} onPress={() => {
-                    setShowpaymentrequired(false)
-                    props.navigation.navigate("account", { required: "card" })
-                  }}>
-                    <Text style={styles.cardRequiredActionHeader}>Ok</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </SafeAreaView>
-          </Modal>
-				)}
 				{showAuth.show && (
 					<Modal transparent={true}>
 						<Userauth close={() => setShowauth({ show: false, action: "" })} done={(id, msg) => {
@@ -919,12 +493,7 @@ export default function Itemprofile(props) {
 							} else {
 								socket.emit("socket/user/login", "user" + id, () => {
 									setUserid(id)
-
-									if (showAuth.action == "addcart") {
-										addCart()
-									} else if (showAuth.action == "openfriendscart") {
-										openFriendsCart()
-									}
+									addCart()
 								})
 							}
 
@@ -944,7 +513,6 @@ const styles = StyleSheet.create({
 	imageHolder: { borderRadius: wsize(40) / 2, height: wsize(40), overflow: 'hidden', width: wsize(40) },
 	image: { height: 200, width: 200 },
 	boxHeader: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-	boxHeaderInfo: { fontSize: wsize(4), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 
 	info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
 	infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
@@ -1006,47 +574,6 @@ const styles = StyleSheet.create({
 	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontWeight: 'bold', paddingVertical: 5 },
 	numCartItemsHeader: { fontWeight: 'bold' },
-
-	// users list
-	usersList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	userNameContainer: { height: '10%' },
-	userNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginHorizontal: 20, padding: 10 },
-	usersListContainer: { flexDirection: 'column', height: '60%', justifyContent: 'space-between' },
-	usersHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
-	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
-	user: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
-	userDelete: { marginBottom: -5, marginLeft: 60 },
-	userProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
-	userName: { textAlign: 'center' },
-	selectedUsersHeader: { fontWeight: 'bold', textAlign: 'center' },
-	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: '20%', justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
-	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
-	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
-	itemInfo: { fontSize: wsize(4) },
-	itemHeader: { fontSize: wsize(4) },
-	usersListActionContainer: { alignItems: 'center', height: '10%' },
-	usersListActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	usersListAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 60 },
-	usersListActionHeader: { textAlign: 'center' },
-
-	// search friends
-	searchFriendsHidden: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.8)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	searchFriendsBox: { backgroundColor: 'white', height: '90%', width: '90%' },
-	searchFriendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, margin: 10, padding: 10 },
-
-	cardRequiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	cardRequiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	cardRequiredHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	cardRequiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	cardRequiredAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	cardRequiredActionHeader: { },
-
-	notifyUserBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	notifyUserContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	notifyUserHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	notifyUserActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	notifyUserAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	notifyUserActionHeader: { },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },

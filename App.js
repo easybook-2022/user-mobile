@@ -13,8 +13,6 @@ LogBox.ignoreLogs([
 import Setup from './src/pages/setup'
 import Main from './src/pages/main'
 import Restaurantprofile from './src/pages/restaurants/restaurantprofile'
-import Makereservation from './src/pages/restaurants/makereservation'
-import Order from './src/pages/restaurants/order'
 import Itemprofile from './src/pages/restaurants/itemprofile'
 
 import Salonprofile from './src/pages/salons/salonprofile'
@@ -22,7 +20,6 @@ import Booktime from './src/pages/salons/booktime'
 
 // logged in pages
 import Account from './src/pages/account'
-import Recent from './src/pages/recent'
 import Cart from './src/components/cart'
 
 const { height, width } = Dimensions.get('window')
@@ -37,7 +34,7 @@ export default function App() {
     const Stack = createNativeStackNavigator();
     
     const [loaded] = Font.useFonts({ appFont: require('./assets/Chilanka-Regular.ttf') });
-    const [route, setRoute] = useState(null)
+    const [route, setRoute] = useState("main")
 
     if (loaded) {
       const retrieveId = async() => {
@@ -73,44 +70,8 @@ export default function App() {
                     )
                   )
                 })}/>
-                <Stack.Screen name="makereservation" component={Makereservation} options={({ navigation, route }) => ({
-                  headerTitle: () => <Text style={styles.header}>Make reservation</Text>,
-                  headerLeft: () => (
-                    Platform.OS == 'ios' && (
-                      <TouchableOpacity style={styles.back} onPress={() => {
-                        if (route.params && route.params.initialize) {
-                            route.params.initialize()
-                        }
-
-                        navigation.goBack()
-                      }}>
-                        <Text style={styles.backHeader}>Go Back</Text>
-                      </TouchableOpacity>
-                    )
-                  )
-                })}/>
-                <Stack.Screen name="order" component={Order} options={({ navigation }) => ({
-                  headerTitle: () => <Text style={styles.header}></Text>,
-                  headerLeft: () => (
-                    Platform.OS == 'ios' && (
-                      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-                        <Text style={styles.backHeader}>Go Back</Text>
-                      </TouchableOpacity>
-                    )
-                  )
-                })}/>
                 <Stack.Screen name="itemprofile" component={Itemprofile} options={({ navigation }) => ({
                   headerTitle: () => <Text style={styles.header}>Item Profile</Text>,
-                  headerLeft: () => (
-                    Platform.OS == 'ios' && (
-                      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-                        <Text style={styles.backHeader}>Go Back</Text>
-                      </TouchableOpacity>
-                    )
-                  )
-                })}/>
-                <Stack.Screen name="recent" component={Recent} options={({ navigation }) => ({
-                  headerTitle: () => <Text style={styles.header}>Recent(s)</Text>,
                   headerLeft: () => (
                     Platform.OS == 'ios' && (
                       <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, 
   TextInput, TouchableOpacity, Linking, StyleSheet, Modal 
@@ -38,8 +38,7 @@ export default function Salonprofile(props) {
 	const [phonenumber, setPhonenumber] = useState('')
 	const [distance, setDistance] = useState(0)
 	const [showAuth, setShowauth] = useState(false)
-	const [showStoreinfo, setShowstoreinfo] = useState(false)
-  const [showStylistsinfo, setShowstylistsinfo] = useState({ show: false, workerHours: [] })
+	const [showStoreinfo, setShowstoreinfo] = useState({ show: false, workerHours: [] })
 	const [userId, setUserid] = useState(null)
 
 	const [serviceInfo, setServiceinfo] = useState('')
@@ -49,8 +48,6 @@ export default function Salonprofile(props) {
 
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
-
-	const isMounted = useRef(null)
 
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -63,7 +60,7 @@ export default function Salonprofile(props) {
 					}
 				})
 				.then((res) => {
-					if (res && isMounted.current == true) {
+					if (res) {
 						setUserid(userid)
 						setNumcartitems(res.numCartItems)
 					}
@@ -115,7 +112,7 @@ export default function Salonprofile(props) {
 				}
 			})
 			.then((res) => {
-				if (res && isMounted.current == true) {
+				if (res) {
 					const { type, menus } = res
 
 					setMenuinfo({ type, items: menus })
@@ -213,7 +210,7 @@ export default function Salonprofile(props) {
       })
       .then((res) => {
         if (res) {
-          setShowstylistsinfo({ show: true, workerHours: res.workerHours })
+          setShowstoreinfo({ show: true, workerHours: res.workerHours })
         }
       })
       .catch((err) => {
@@ -226,11 +223,7 @@ export default function Salonprofile(props) {
   }
 	
 	useEffect(() => {
-		isMounted.current = true
-
 		initialize()
-
-		return () => isMounted.current = false
 	}, [])
 
 	return (
@@ -239,13 +232,8 @@ export default function Salonprofile(props) {
 				<View style={styles.box}>
 					<View style={styles.profileInfo}>
 						<View style={styles.column}>
-              <TouchableOpacity style={styles.headerAction} onPress={() => setShowstoreinfo(true)}>
-                <Text style={styles.headerActionHeader}>View Salon{'\n'}Info</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.column}>
               <TouchableOpacity style={styles.headerAction} onPress={() => getTheWorkersTime()}>
-                <Text style={styles.headerActionHeader}>View{'\n'}Stylists' Info</Text>
+                <Text style={styles.headerActionHeader}>View Salon{'\n'}Info</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.column}>
@@ -268,7 +256,7 @@ export default function Salonprofile(props) {
                     setServiceinfo(info)
                     setMenuinfo({ ...menuInfo, error: false })
                   }} autoCorrect={false} autoCapitalize="none"/>
-  								<TouchableOpacity style={styles.menuInputTouch} onPress={() => {
+                  <TouchableOpacity style={styles.menuInputTouch} onPress={() => {
                     if (serviceInfo) {
                       props.navigation.navigate(
                         "booktime", 
@@ -281,8 +269,8 @@ export default function Salonprofile(props) {
                       setMenuinfo({ ...menuInfo, error: true })
                     }
                   }}>
-  									<Text style={styles.menuInputTouchHeader}>Book now</Text>
-  								</TouchableOpacity>
+                    <Text style={styles.menuInputTouchHeader}>Book now</Text>
+                  </TouchableOpacity>
   							</View>
                 {menuInfo.error && <Text style={styles.menuInputError}>Your request is empty</Text>}
               </>
@@ -311,12 +299,6 @@ export default function Salonprofile(props) {
 							{userId && (
 								<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("account")}>
 									<FontAwesome5 name="user-circle" size={wsize(7)}/>
-								</TouchableOpacity>
-							)}
-
-							{userId && (
-								<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("recent")}>
-									<FontAwesome name="history" size={wsize(7)}/>
 								</TouchableOpacity>
 							)}
 
@@ -367,7 +349,10 @@ export default function Salonprofile(props) {
 						})
 					)
 				}, 1000)
-			}} close={() => {
+			}} navigate={() => {
+        setOpencart(false)
+        props.navigation.navigate("account", { required: "card" })
+      }} close={() => {
 				getTheNumCartItems()
 				setOpencart(false)
 			}}/></Modal>}
@@ -389,74 +374,58 @@ export default function Salonprofile(props) {
 					}} navigate={props.navigation.navigate}/>
 				</Modal>
 			)}
-			{showStoreinfo && (
+			{showStoreinfo.show && (
 				<Modal transparent={true}>
 					<View style={styles.showInfoContainer}>
-						<View style={styles.showInfoBox}>
-							<TouchableOpacity style={styles.showInfoClose} onPress={() => setShowstoreinfo(false)}>
-								<AntDesign name="close" size={wsize(7)}/>
-							</TouchableOpacity>
-
-							<Text style={styles.showInfoHeader}>{name}</Text>
-							<Text style={styles.showInfoHeader}>{address}</Text>
-							<View style={{ alignItems: 'center' }}>
-								<View style={{ flexDirection: 'row' }}>
-									<TouchableOpacity onPress={() => Linking.openURL('tel://' + phonenumber)}>
-										<AntDesign name="phone" size={wsize(7)}/>
-									</TouchableOpacity>
-									<Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
-								</View>
-							</View>
-							<Text style={styles.showInfoHeader}>{distance}</Text>
-						</View>
-					</View>
-				</Modal>
-			)}
-      {showStylistsinfo.show && (
-        <Modal transparent={true}>
-          <View style={styles.workerInfoContainer}>
-            <View style={styles.workerInfoBox}>
-              <TouchableOpacity style={styles.workerInfoClose} onPress={() => setShowstylistsinfo({ show: false, workerHours: [] })}>
-                <AntDesign name="close" size={wsize(7)}/>
-              </TouchableOpacity>
+            <View style={styles.showInfoBox}>
               <ScrollView style={{ width: '100%' }}>
-                <View style={styles.workerInfoList}>
-                  {showStylistsinfo.workerHours.map(worker => (
-                    <View key={worker.key} style={styles.worker}>
-                      <View style={styles.workerInfo}>
-                        <View style={styles.workerInfoProfile}>
-                          <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + worker.profile }}/>
-                        </View>
-                        <Text style={styles.workerInfoName}>{worker.name}</Text>
-                      </View>
-                      <View style={styles.workerTime}>
-                        {worker.hours.map(info => (
-                          <View style={styles.workerTimeContainer} key={info.key}>
-                            <Text style={styles.dayHeader}>{info.header}: </Text>
-                            <View style={styles.timeHeaders}>
-                              <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
-                              <View style={styles.column}><Text>:</Text></View>
-                              <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
-                              <Text style={styles.timeHeader}>{info.opentime.period}</Text>
-                            </View>
-                            <View style={styles.column}><Text> - </Text></View>
-                            <View style={styles.timeHeaders}>
-                              <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
-                              <View style={styles.column}><Text>:</Text></View>
-                              <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
-                              <Text style={styles.timeHeader}>{info.closetime.period}</Text>
-                            </View>
+                <View style={{ alignItems: 'center' }}>
+                  <TouchableOpacity style={styles.showInfoClose} onPress={() => setShowstoreinfo(false)}>
+                    <AntDesign name="close" size={wsize(7)}/>
+                  </TouchableOpacity>
+
+                  <Text style={styles.showInfoHeader}>{name}</Text>
+                  <Text style={styles.showInfoHeader}>{address}</Text>
+                  <Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
+                  <Text style={styles.showInfoHeader}>{distance}</Text>
+                  <View style={styles.workerInfoList}>
+                    {showStoreinfo.workerHours.map(worker => (
+                      <View key={worker.key} style={styles.worker}>
+                        <View style={styles.workerInfo}>
+                          <View style={styles.workerInfoProfile}>
+                            <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + worker.profile }}/>
                           </View>
-                        ))}
+                          <Text style={styles.workerInfoName}>{worker.name}</Text>
+                        </View>
+                        <View style={styles.workerTime}>
+                          {worker.hours.map(info => (
+                            <View style={styles.workerTimeContainer} key={info.key}>
+                              <Text style={styles.dayHeader}>{info.header}: </Text>
+                              <View style={styles.timeHeaders}>
+                                <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
+                                <View style={styles.column}><Text>:</Text></View>
+                                <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
+                                <Text style={styles.timeHeader}>{info.opentime.period}</Text>
+                              </View>
+                              <View style={styles.column}><Text> - </Text></View>
+                              <View style={styles.timeHeaders}>
+                                <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
+                                <View style={styles.column}><Text>:</Text></View>
+                                <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
+                                <Text style={styles.timeHeader}>{info.closetime.period}</Text>
+                              </View>
+                            </View>
+                          ))}
+                        </View>
                       </View>
-                    </View>
-                  ))}
+                    ))}
+                  </View>
                 </View>
               </ScrollView>
             </View>
-          </View>
-        </Modal>
-      )}
+					</View>
+				</Modal>
+			)}
 		</SafeAreaView>
 	)
 }
@@ -471,9 +440,9 @@ const styles = StyleSheet.create({
 
   body: { height: '83%' },
 
-  menuInputBox: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 5, marginHorizontal: 10 },
-  menuInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5, width: '68%' },
-  menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginLeft: 2, padding: 5, width: '28%' },
+  menuInputBox: { alignItems: 'center', marginBottom: 5, width: '100%' },
+  menuInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 10, width: '95%' },
+  menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginVertical: 5, padding: 10, width: '50%' },
   menuInputTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   menuInputError: { color: 'darkred', marginLeft: 10 },
   menuPhoto: { height, marginBottom: 10, marginHorizontal: width * 0.025, width: width * 0.95 },
@@ -493,19 +462,15 @@ const styles = StyleSheet.create({
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5, width: wsize(30) },
+	bottomNav: { flexDirection: 'row', justifyContent: 'space-around', margin: 5 },
 	bottomNavHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 	numCartItemsHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
 	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
-	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2 },
-	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 10, textAlign: 'center' },
+	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
+	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
 	showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
-
-  workerInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  workerInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '90%', justifyContent: 'space-around', width: '90%' },
-  workerInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2 },
   worker: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
   workerInfoList: { width: '100%' },
   workerInfo: {  },

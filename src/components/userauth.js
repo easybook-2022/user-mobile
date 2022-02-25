@@ -254,7 +254,7 @@ export default function Userauth(props) {
 					)}
 
 					{authInfo.type == 'register' && (
-						<>
+						<View style={{ width: '100%' }}>
 							<View style={style.authInputContainer}>
 								<Text style={style.authInputHeader}>Password:</Text>
 								<TextInput style={style.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, password }})} value={authInfo.info.password} autoCorrect={false}/>
@@ -269,7 +269,7 @@ export default function Userauth(props) {
 									}
 								}} value={authInfo.info.confirmPassword} autoCorrect={false}/>
 							</View>
-						</>
+						</View>
 					)}
 
 					{authInfo.type == 'verifyuser' && (

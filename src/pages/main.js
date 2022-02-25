@@ -9,7 +9,7 @@ import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { socket, logo_url } from '../../assets/info'
-import { getNumUpdates, updateNotificationToken } from '../apis/users'
+import { getNumNotifications, updateNotificationToken } from '../apis/users'
 import { getLocations, getMoreLocations } from '../apis/locations'
 import { getNumCartItems } from '../apis/carts'
 
@@ -34,8 +34,20 @@ const hsize = p => {
 
 export default function Main(props) {
 	let updateTrackUser
-	const firstTime = props.route.params ? props.route.params.firstTime ? true : false : false
-	const openNotif = props.route.params ? props.route.params.showNotif ? true : false : false
+	const firstTime = props.route.params ? 
+    props.route.params.firstTime ? 
+      true 
+      : 
+      false 
+    : 
+    false
+	const openNotif = props.route.params ? 
+    props.route.params.showNotif ? 
+      true 
+      : 
+      false 
+    : 
+    false
 
 	const [locationPermission, setLocationpermission] = useState(false)
 	const [notificationPermission, setNotificationpermission] = useState(false)
@@ -44,7 +56,7 @@ export default function Main(props) {
 	const [searchLocationname, setSearchlocationname] = useState('')
 	const [locations, setLocations] = useState([])
 	const [loaded, setLoaded] = useState(false)
-	const [openNotifications, setOpenNotifications] = useState(false)
+	const [openNotifications, setOpennotifications] = useState(false)
 	const [numNotifications, setNumnotifications] = useState(0)
 	const [userId, setUserid] = useState(null)
 
@@ -60,11 +72,10 @@ export default function Main(props) {
 
 	const fetchTheNumNotifications = async() => {
 		const userid = await AsyncStorage.getItem("userid")
-		const time = Date.now()
-		const data = { userid, time }
+		const data = { userid }
 
 		if (userid) {
-			getNumUpdates(data)
+			getNumNotifications(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -327,7 +338,7 @@ export default function Main(props) {
 		if (Constants.isDevice) getNotificationPermission()
 		if (openNotif) {
 			setTimeout(function () {
-				setOpenNotifications(true)
+				setOpennotifications(true)
 				props.navigation.setParams({ showNotif: false })
 			}, 1000)
 		}
@@ -347,21 +358,21 @@ export default function Main(props) {
 				const { data } = res.notification.request.content
 
 				if (data.type == "rescheduleAppointment") {
-					setOpenNotifications(true)
+					setOpennotifications(true)
 				} else if (data.type == "acceptRequest") {
-					setOpenNotifications(true)
+					setOpennotifications(true)
 				} else if (data.type == "receivePayment") {
 					fetchTheNumNotifications()
 				} else if (data.type == "cancelRequest") {
-					setOpenNotifications(true)
+					setOpennotifications(true)
 				} else if (data.type == "orderReady") {
-					setOpenNotifications(true)
+					setOpennotifications(true)
 				} else if (data.type == "canServeDiners") {
-					setOpenNotifications(true)
+					setOpennotifications(true)
 				} else if (data.type == "addDiners") {
-					setOpenNotifications(true)
+					setOpennotifications(true)
 				} else if (data.type == "addItemtoorder") {
-					setOpenNotifications(true)
+					setOpennotifications(true)
 				}
 			});
 		}
@@ -379,7 +390,7 @@ export default function Main(props) {
       {loaded ? 
   			<View style={styles.box}>
   				<View style={styles.headers}>
-  					<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+  					<View style={styles.headersRow}>
   						<TextInput 
   							style={styles.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
   							placeholder="Search name" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} 
@@ -387,7 +398,7 @@ export default function Main(props) {
   						/>
 
   						{userId && (
-  							<TouchableOpacity style={styles.notification} onPress={() => setOpenNotifications(true)}>
+  							<TouchableOpacity style={styles.notification} onPress={() => setOpennotifications(true)}>
   								<FontAwesome name="bell" size={wsize(7)}/>
   								{numNotifications > 0 && <Text style={styles.notificationHeader}>{numNotifications}</Text>}
   							</TouchableOpacity>
@@ -409,16 +420,7 @@ export default function Main(props) {
   							renderItem={({ item, index }) => 
                   item.locations.length > 0 && (
     								<View key={item.key} style={styles.service}>
-    									<Text style={styles.rowHeader}>{item.locations.length} {item.header} near you{'\n'}(Click to see menu)</Text>
-
-    									{item.index < item.max && (
-    										<TouchableOpacity style={styles.seeMore} onPress={() => {
-    											clearInterval(updateTrackUser)
-    											props.navigation.navigate(item.service, { initialize: () => initialize() })
-    										}}>
-    											<Text style={styles.seeMoreHeader}>See More</Text>
-    										</TouchableOpacity>
-    									)}
+    									<Text style={styles.rowHeader}>{item.locations.length} {item.header} near you</Text>
 
     									<View style={styles.row}>
     										<FlatList
@@ -440,7 +442,7 @@ export default function Main(props) {
                               props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
                             }}>
     													<View style={styles.locationPhotoHolder}>
-    														<Image source={{ uri: logo_url + item.logo }} style={{ height: wsize(15), width: wsize(15) }}/>
+    														<Image source={{ uri: logo_url + item.logo }} style={{ height: '100%', width: '100%' }}/>
     													</View>
 
     													<Text style={styles.locationHeader}>{item.name}</Text>
@@ -467,15 +469,6 @@ export default function Main(props) {
   								props.navigation.navigate("account", { refetch: () => initialize() })
   							}}>
   								<FontAwesome5 name="user-circle" size={wsize(7)}/>
-  							</TouchableOpacity>
-  						)}
-
-  						{userId && (
-  							<TouchableOpacity style={styles.bottomNav} onPress={() => {
-  								clearInterval(updateTrackUser)
-  								props.navigation.navigate("recent", { refetch: () => initialize() })
-  							}}>
-  								<FontAwesome name="history" size={wsize(7)}/>
   							</TouchableOpacity>
   						)}
 
@@ -507,18 +500,22 @@ export default function Main(props) {
           <ActivityIndicator color="black" size="small"/>
         </View>
       }
-      
+
 			{openNotifications && 
 				<Modal><NotificationsBox navigation={props.navigation} close={() => {
 					fetchTheNumNotifications()
-					setOpenNotifications(false)
+					setOpennotifications(false)
 				}}/>
 				</Modal>
 			}
 			{openCart && <Modal><Cart showNotif={() => {
 				setOpencart(false)
-				setOpenNotifications(true)
-			}} close={() => {
+				setOpennotifications(true)
+			}} navigate={() => {
+        setOpencart(false)
+        setOpennotifications(false)
+        props.navigation.navigate("account", { required: "card" })
+      }} close={() => {
 				getTheNumCartItems()
 				setOpencart(false)
 			}}/></Modal>}
@@ -569,7 +566,8 @@ const styles = StyleSheet.create({
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 	
 	headers: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
-	searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: wsize(4), height: '80%', margin: 10, paddingLeft: 5, width: width - 100 },
+	headersRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: wsize(4), height: '80%', margin: 10, paddingLeft: 5, width: width - 100 },
 	notification: { flexDirection: 'row', marginVertical: 10 },
 	notificationHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
@@ -579,12 +577,11 @@ const styles = StyleSheet.create({
 	
 	body: { flexDirection: 'column', height: '70%', justifyContent: 'space-around' },
 	service: { marginBottom: 10 },
-	rowHeader: { fontSize: wsize(4), fontWeight: 'bold', margin: 10 },
-	seeMore: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
+	rowHeader: { fontSize: wsize(6), fontWeight: 'bold', margin: 10 },
 	row: { flexDirection: 'row', marginBottom: 20 },
-	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: wsize(30) },
-	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(15) / 2, height: wsize(15), overflow: 'hidden', width: wsize(15) },
-	locationHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
+	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: wsize(40) },
+	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
+	locationHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
 	locationHours: { fontWeight: 'bold', textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },

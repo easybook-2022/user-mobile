@@ -63,52 +63,13 @@ export const updateNotificationToken = data => {
 	)
 }
 
-export const addPaymentMethod = data => {
-	return axios.post(
-		`${url}/users/add_paymentmethod`,
-		data
-	)
-}
-
-export const updatePaymentMethod = data => {
-	return axios.post(
-		`${url}/users/update_paymentmethod`,
-		data
-	)
-}
-
-export const getPaymentMethods = id => {
-	return axios.get(`${url}/users/get_payment_methods/${id}`)
-}
-
-export const setPaymentmethodDefault = data => {
-	return axios.post(
-		`${url}/users/set_paymentmethoddefault`,
-		data
-	)
-}
-
-export const getPaymentmethodInfo = data => {
-	return axios.post(
-		`${url}/users/get_paymentmethod_info`,
-		data
-	)
-}
-
-export const deleteThePaymentMethod = data => {
-	return axios.post(
-		`${url}/users/delete_paymentmethod`,
-		data
-	)
-}
-
 export const getUserInfo = id => {
 	return axios.get(`${url}/users/get_user_info/${id}`)
 }
 
-export const getNumUpdates = data => {
+export const getNumNotifications = data => {
 	return axios.post(
-		`${url}/users/get_num_updates`,
+		`${url}/users/get_num_notifications`,
 		data
 	)
 }
@@ -140,10 +101,6 @@ export const searchDiners = data => {
 
 export const selectUser = id => {
 	return axios.get(`${url}/users/select_user/${id}`)
-}
-
-export const requestUserPaymentMethod = id => {
-	return axios.get(`${url}/users/request_user_payment_method/${id}`)
 }
 
 export const cancelRequest = id => {
