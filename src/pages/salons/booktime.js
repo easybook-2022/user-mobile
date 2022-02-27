@@ -13,7 +13,7 @@ import { getWorkers, getWorkerInfo, getAllWorkersTime } from '../../apis/owners'
 import { getAppointmentInfo, makeAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
-import Cart from '../../components/cart'
+import Orders from '../../components/orders'
 import Userauth from '../../components/userauth'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'

@@ -12,7 +12,7 @@ import { getLocationProfile } from '../../apis/locations';
 import { getMenus } from '../../apis/menus';
 import { getNumCartItems } from '../../apis/carts';
 
-import Cart from '../../components/cart'
+import Orders from '../../components/orders'
 import Userauth from '../../components/userauth'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -339,7 +339,7 @@ export default function Salonprofile(props) {
 				</View>
 			}
 
-			{openCart && <Modal><Cart showNotif={() => {
+			{openCart && <Modal><Orders showNotif={() => {
 				setOpencart(false)
 				setTimeout(function () {
 					props.navigation.dispatch(

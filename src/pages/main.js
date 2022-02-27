@@ -14,7 +14,7 @@ import { getLocations, getMoreLocations } from '../apis/locations'
 import { getNumCartItems } from '../apis/carts'
 
 import NotificationsBox from '../components/notification'
-import Cart from '../components/cart'
+import Orders from '../components/orders'
 import Userauth from '../components/userauth'
 
 import Ionicons from 'react-native-vector-icons/Ionicons'
@@ -62,7 +62,7 @@ export default function Main(props) {
 
 	const [currentGeo, setCurrentgeo] = useState({ msg: "not yet" })
 	const [lastGeo, setLastgeo] = useState({ msg: "not yet" })
-	const [openCart, setOpencart] = useState(false)
+	const [openOrders, setOpenorders] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 	const [showAuth, setShowauth] = useState(false)
 	const [userName, setUsername] = useState('')
@@ -473,7 +473,7 @@ export default function Main(props) {
   						)}
 
   						{userId && (
-  							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
+  							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpenorders(true)}>
   								<Entypo name="shopping-cart" size={wsize(7)}/>
   								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
   							</TouchableOpacity>
@@ -508,16 +508,16 @@ export default function Main(props) {
 				}}/>
 				</Modal>
 			}
-			{openCart && <Modal><Cart showNotif={() => {
-				setOpencart(false)
+			{openOrders && <Modal><Orders showNotif={() => {
+				setOpenorders(false)
 				setOpennotifications(true)
 			}} navigate={() => {
-        setOpencart(false)
+        setOpenorders(false)
         setOpennotifications(false)
         props.navigation.navigate("account", { required: "card" })
       }} close={() => {
 				getTheNumCartItems()
-				setOpencart(false)
+				setOpenorders(false)
 			}}/></Modal>}
 			{showAuth && (
 				<Modal transparent={true}>
@@ -535,7 +535,7 @@ export default function Main(props) {
 
 						setShowauth(false)
 						initialize()
-					}} navigate={props.navigation.navigate}/>
+					}} navigate={props.navigation.navigate} dispatch={props.navigation.dispatch}/>
 				</Modal>
 			)}
 			{showDisabledScreen && (

@@ -20,7 +20,7 @@ const hsize = p => {
   return height * (p / 100)
 }
 
-export default function Cart(props) {
+export default function Orders(props) {
 	const [userId, setUserid] = useState(null)
 	const [items, setItems] = useState([])
 	const [loaded, setLoaded] = useState(false)
@@ -416,7 +416,7 @@ export default function Cart(props) {
   							<AntDesign name="closecircleo" size={wsize(7)}/>
   						</TouchableOpacity>
   					</View>
-  					<Text style={styles.boxHeader}>Cart</Text>
+  					<Text style={styles.boxHeader}>Order(s)</Text>
   				</View>
 
   				<View style={styles.body}>
@@ -427,70 +427,80 @@ export default function Cart(props) {
   									showsVerticalScrollIndicator={false}
   									data={items}
   									renderItem={({ item, index }) => 
-  										<View style={styles.item} key={item.key}>
-  											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-  												<TouchableOpacity disabled={item.status == "checkout"} onPress={() => removeTheCartItem(item.id)}>
-  													<AntDesign name="closecircleo" size={wsize(7)}/>
-  												</TouchableOpacity>
-  												{item.image && (
-  													<View style={styles.itemImageHolder}>
-  														<Image source={{ uri: logo_url + item.image }} style={styles.itemImage}/>
-  													</View>
-  												)}
-  												<View style={styles.itemInfos}>
-  													<Text style={styles.itemName}>{item.name}</Text>
+                      <>
+    										<View style={styles.item} key={item.key}>
+    											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+    												<TouchableOpacity disabled={item.status == "checkout"} onPress={() => removeTheCartItem(item.id)}>
+    													<AntDesign name="closecircleo" size={wsize(7)}/>
+    												</TouchableOpacity>
+    												{item.image && (
+    													<View style={styles.itemImageHolder}>
+    														<Image source={{ uri: logo_url + item.image }} style={styles.itemImage}/>
+    													</View>
+    												)}
+    												<View style={styles.itemInfos}>
+    													<Text style={styles.itemName}>{item.name}</Text>
 
-  													{item.options.map((option, infoindex) => (
-  														<Text key={option.key} style={styles.itemInfo}>
-  															<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-  															{option.selected}
-  															{option.type == 'percentage' && '%'}
-  														</Text>
-  													))}
+    													{item.options.map((option, infoindex) => (
+    														<Text key={option.key} style={styles.itemInfo}>
+    															<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
+    															{option.selected}
+    															{option.type == 'percentage' && '%'}
+    														</Text>
+    													))}
 
-  													{item.others.map((other, otherindex) => (
-  														other.selected ? 
-  															<Text key={other.key} style={styles.itemInfo}>
-  																<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-  																<Text>{other.input}</Text>
-  																<Text>($ {other.price})</Text>
-  															</Text>
-  														: null
-  													))}
+    													{item.others.map((other, otherindex) => (
+    														other.selected ? 
+    															<Text key={other.key} style={styles.itemInfo}>
+    																<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
+    																<Text>{other.input}</Text>
+    																<Text>($ {other.price})</Text>
+    															</Text>
+    														: null
+    													))}
 
-  													{item.sizes.map((size, sizeindex) => (
-  														size.selected ? 
-  															<Text key={size.key} style={styles.itemInfo}>
-  																<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-  																<Text>{size.name}</Text>
-  															</Text>
-  														: null
-  													))}
-  												</View>
-  												<View>
-  													<Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-  												</View>
-  											</View>
+    													{item.sizes.map((size, sizeindex) => (
+    														size.selected ? 
+    															<Text key={size.key} style={styles.itemInfo}>
+    																<Text style={{ fontWeight: 'bold' }}>Size: </Text>
+    																<Text>{size.name}</Text>
+    															</Text>
+    														: null
+    													))}
+    												</View>
+    												<View>
+    													<Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+    												</View>
+    											</View>
 
-  											<View style={{ alignItems: 'center' }}>
-  												<TouchableOpacity style={styles.itemChange} disabled={item.status == "checkout"} onPress={() => editTheCartItem(item.id)}>
-  													<Text style={styles.itemChangeHeader}>Edit Order</Text>
-  												</TouchableOpacity>
-  											</View>
+    											<View style={{ alignItems: 'center' }}>
+    												<TouchableOpacity style={styles.itemChange} disabled={item.status == "checkout"} onPress={() => editTheCartItem(item.id)}>
+    													<Text style={styles.itemChangeHeader}>Edit Order</Text>
+    												</TouchableOpacity>
+    											</View>
 
-  											{item.note ? 
-  												<View style={styles.note}>
-  													<Text style={styles.noteHeader}><Text style={{ fontWeight: 'bold' }}>Customer's note:</Text> {'\n' + item.note}</Text>
-  												</View>
-  											: null }
-  										</View>
+    											{item.note ? 
+    												<View style={styles.note}>
+    													<Text style={styles.noteHeader}><Text style={{ fontWeight: 'bold' }}>Customer's note:</Text> {'\n' + item.note}</Text>
+    												</View>
+    											: null }
+    										</View>
+
+                        {index == items.length - 1 && (
+                          <View style={{ alignItems: 'center' }}>
+                            <TouchableOpacity style={styles.sendAction} onPress={() => props.close()}>
+                              <Text style={styles.sendActionHeader}>Add more item +</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </>
   									}
   								/>
 
   								<View style={{ alignItems: 'center' }}>
   									<View style={styles.cartActions}>
   										<TouchableOpacity style={[styles.cartAction, { opacity: activeCheckout && !loading ? 1 : 0.3 }]} disabled={!activeCheckout || loading} onPress={() => checkout()}>
-  											<Text style={styles.cartActionHeader}>Checkout</Text>
+  											<Text style={styles.cartActionHeader}>Send Order{'\n'}to restaurant</Text>
   										</TouchableOpacity>
   									</View>
 
@@ -499,7 +509,7 @@ export default function Cart(props) {
   							</>
   							:
   							<View style={{ alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
-  								<Text style={{ fontSize: wsize(5) }}>Your cart is empty</Text>
+  								<Text style={{ fontSize: wsize(5) }}>You don't have order(s)</Text>
   							</View>
   						:
   						<View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
@@ -717,9 +727,12 @@ const styles = StyleSheet.create({
 	ordererRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
 	ordererRemoveHeader: { },
 
+  sendAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 10, padding: 5, width: wsize(30) },
+  sendActionHeader: { fontSize: wsize(5), textAlign: 'center' },
+
 	cartActions: { flexDirection: 'row', marginBottom: 5 },
-	cartAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: wsize(30) },
-	cartActionHeader: { fontSize: wsize(5), textAlign: 'center' },
+	cartAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 5, padding: 5, width: wsize(40) },
+	cartActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	// confirm & requested box
 	confirm: { backgroundColor: 'white' },

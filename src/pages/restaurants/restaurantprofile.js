@@ -11,7 +11,7 @@ import { getLocationProfile } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
 import { getNumCartItems } from '../../apis/carts'
 
-import Cart from '../../components/cart'
+import Orders from '../../components/orders'
 import Userauth from '../../components/userauth'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -45,7 +45,7 @@ export default function Restaurantprofile(props) {
 
 	const [loaded, setLoaded] = useState(false)
 	
-	const [openCart, setOpencart] = useState(false)
+	const [openOrders, setOpenorders] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 
 	const getTheNumCartItems = async() => {
@@ -283,7 +283,7 @@ export default function Restaurantprofile(props) {
 							)}
 
 							{userId && (
-								<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
+								<TouchableOpacity style={styles.bottomNav} onPress={() => setOpenorders(true)}>
 									<Entypo name="shopping-cart" size={wsize(7)}/>
 									{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
 								</TouchableOpacity>
@@ -319,8 +319,8 @@ export default function Restaurantprofile(props) {
 				</View>
 			}
 
-			{openCart && <Modal><Cart showNotif={() => {
-				setOpencart(false)
+			{openOrders && <Modal><Cart showNotif={() => {
+				setOpenorders(false)
 				setTimeout(function () {
 					props.navigation.dispatch(
 						CommonActions.reset({
@@ -330,11 +330,11 @@ export default function Restaurantprofile(props) {
 					)
 				}, 1000)
 			}} navigate={() => {
-        setOpencart(false)
+        setOpenorders(false)
         props.navigation.navigate("account", { required: "card" })
       }} close={() => {
 				getTheNumCartItems()
-				setOpencart(false)
+				setOpenorders(false)
 			}}/></Modal>}
 			{showAuth && (
 				<Modal transparent={true}>

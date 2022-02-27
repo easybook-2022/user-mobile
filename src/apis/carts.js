@@ -35,27 +35,13 @@ export const removeFromCart = id => {
 	return axios.get(`${url}/carts/remove_item_from_cart/${id}`)
 }
 
-export const editCallfor = id => {
-	return axios.get(`${url}/carts/edit_call_for/${id}`)
-}
-
-export const updateCallfor = data => {
-	return axios.post(
-		`${url}/carts/update_call_for`,
-		data
-	)
-}
-
-export const removeCallfor = data => {
-	return axios.post(
-		`${url}/carts/remove_call_for`,
-		data
-	)
-}
-
 export const checkoutCart = data => {
 	return axios.post(
 		`${url}/carts/checkout`,
 		data
 	)
+}
+
+export const seeOrders = id => {
+  return axios.get(`${url}/carts/see_orders/${id}`)
 }

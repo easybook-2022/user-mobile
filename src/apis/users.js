@@ -21,16 +21,11 @@ export const registerUser = data => {
 
 export const setupUser = data => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.profile
 
 	form.append("userid", data.userid)
 	form.append("username", data.username)
 	form.append("permission", data.permission)
 	form.append("time", data.time)
-
-	if (data.profile.uri) {
-		form.append("profile", { uri, name, type })
-	}
 
 	return axios.post(
 		`${url}/users/setup`,
@@ -40,15 +35,10 @@ export const setupUser = data => {
 
 export const updateUser = data => {
 	const form = new FormData()
-	const { uri, name, type = "image/jpeg" } = data.profile
 
 	form.append("userid", data.userid)
 	form.append("username", data.username)
 	form.append("cellnumber", data.cellnumber)
-
-	if (data.profile.uri) {
-		form.append("profile", { uri, name, type })
-	}
 
 	return axios.post(
 		`${url}/users/update_user`,
@@ -76,27 +66,6 @@ export const getNumNotifications = data => {
 
 export const getNotifications = id => {
 	return axios.get(`${url}/users/get_notifications/${id}`)
-}
-
-export const getTrialInfo = data => {
-	return axios.post(
-		`${url}/users/get_trial_info`,
-		data
-	)
-}
-
-export const searchFriends = data => {
-	return axios.post(
-		`${url}/users/search_friends`,
-		data
-	)
-}
-
-export const searchDiners = data => {
-	return axios.post(
-		`${url}/users/search_diners`,
-		data
-	)
 }
 
 export const selectUser = id => {

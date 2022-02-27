@@ -10,7 +10,7 @@ import { socket, url, logo_url, displayTime, stripeFee } from '../../assets/info
 import { getNotifications, getTrialInfo } from '../apis/users'
 import { getWorkers, searchWorkers } from '../apis/owners'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
-import { acceptRequest, closeSchedule, confirmRequest, cancelRequest, allowPayment, sendServicePayment } from '../apis/schedules'
+import { acceptRequest, closeSchedule, cancelRequest, allowPayment, sendServicePayment } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -185,40 +185,6 @@ export default function Notification(props) {
 				})
 		}
 	}
-	const confirmTheRequest = async(index) => {
-		const newItems = [...items]
-    let { id } = newItems[index], type
-		let data = { userid: userId, time: Date.now() }
-
-		data = { userid: userId, scheduleid: id, type: "confirmRequest", socketType: type, time: Date.now() }
-
-		confirmRequest(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					data = { ...data, receivers: res.receivers, worker: items[index].worker }
-					socket.emit("socket/confirmRequest", data, () => {
-						newItems[index].action = "confirmed"
-            newItems[index].time = parseInt(res.time)
-						newItems[index].nextTime = 0
-						newItems[index].confirm = true
-
-						setItems(newItems)
-					})
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					const { errormsg, status } = err.response.data
-				} else {
-					alert("server error")
-				}
-			})
-	}
 
 	const getTheNotifications = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -247,6 +213,17 @@ export default function Notification(props) {
 				}
 			})
 	}
+  const removeFromList = id => {
+    let newItems = [...cartOrderers]
+
+    newItems.forEach(function (item, index) {
+      if (item.orderNumber == id) {
+        newItems.splice(index, 1)
+      }
+    })
+
+    setCartorderers(newItems)
+  }
 
 	// websockets
 	const startWebsocket = async() => {
@@ -261,34 +238,12 @@ export default function Notification(props) {
         })
 
 				setItems(newItems)
-			} else if (data.type == "requestPayment") {
-        const newItems = [...items]
-
-        newItems.forEach(function(item, index) {
-          if (item.id == data.id) {
-            item.requestPayment = true
-            item.workerInfo = data.workerInfo
-            item.action = "confirmed"
-          }
-        })
-
-				setItems(newItems)
 			} else if (data.type == "closeSchedule") {
         const newItems = [...items]
 
         newItems.forEach(function (item, index) {
           if (item.id == data.scheduleid) {
             newItems.splice(index, 1)
-          }
-        })
-
-				setItems(newItems)
-			} else if (data.type == "confirmRequest") {
-        const newItems = [...items]
-
-        newItems.forEach(function (item) {
-          if (item.id == data.scheduleid) {
-            item.action = "confirmed"
           }
         })
 
@@ -343,14 +298,17 @@ export default function Notification(props) {
 				setItems(newItems)
 			} else if (data.type == "orderDone") {
         const newItems = [...items]
+        const numItems = newItems.length
 
-        newItems.forEach(function (item, index) {
-          if (item.orderNumber == data.ordernumber) {
-            newItems.splice(index, 1)
-          }
-        })
+        for (let k = 0; k < numItems; k++) {
+          newItems.forEach(function (item, index) {
+            if (item.orderNumber == data.ordernumber) {
+              newItems.splice(index, 1)
+            }
+          })
+        }
 
-				setItems(newItems)
+        setItems(newItems)
 			} else {
 				setNumunreaded(numUnreaded + 1)
 			}
@@ -375,7 +333,27 @@ export default function Notification(props) {
 				const { data } = res.notification.request.content
 				const newItems = [...items]
 
-				if (data.type == "rescheduleAppointment") {
+				if (data.type == "cancelAppointment") {
+          const newItems = [...items]
+
+          newItems.forEach(function (item, index) {
+            if (item.id == data.id) {
+              newItems.splice(index, 1)
+            }
+          })
+
+          setItems(newItems)
+        } else if (data.type == "closeSchedule") {
+          const newItems = [...items]
+
+          newItems.forEach(function (item, index) {
+            if (item.id == data.scheduleid) {
+              newItems.splice(index, 1)
+            }
+          })
+
+          setItems(newItems)
+        } else if (data.type == "rescheduleAppointment") {
           const newItems = [...items]
 					const { appointmentid, time } = data
 
@@ -414,16 +392,28 @@ export default function Notification(props) {
 					setItems(newItems)
 				} else if (data.type == "orderReady") {
           const newItems = [...items]
-					const { ordernumber } = data
 
           newItems.forEach(function (item) {
-            if (item.orderNumber == ordernumber) {
+            if (item.orderNumber == data.ordernumber) {
               item.status = "ready"
             }
           })
 
 					setItems(newItems)
-				}
+				} else if (data.type == "orderDone") {
+          const newItems = [...items]
+          const numItems = newItems.length
+
+          for (let k = 0; k < numItems; k++) {
+            newItems.forEach(function (item, index) {
+              if (item.orderNumber == data.ordernumber) {
+                newItems.splice(index, 1)
+              }
+            })
+          }
+
+          setItems(newItems)
+        }
 			});
 		}
 
@@ -460,54 +450,19 @@ export default function Notification(props) {
 									<View style={styles.item} key={item.key}>
 										{item.type == "cart-order-self" && (
 											<>
-												<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-													{item.image && (
-														<View style={styles.itemImageHolder}>
-															<Image source={{ uri: logo_url + item.image }} style={{ height: '100%', width: '100%' }}/>
-														</View>
-													)}
-														
-													<View style={styles.itemInfos}>
-														<Text style={styles.itemName}>{item.name}</Text>
-
-														{item.options.map((option, infoindex) => (
-															<Text key={option.key} style={styles.itemInfo}>
-																<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-																{option.selected}
-																{option.type == 'percentage' && '%'}
-															</Text>
-														))}
-
-														{item.others.map((other, otherindex) => (
-															other.selected ? 
-																<Text key={other.key} style={styles.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-																	<Text>{other.input}</Text>
-																</Text>
-															: null
-														))}
-
-														{item.sizes.map((size, sizeindex) => (
-															size.selected ? 
-																<Text key={size.key} style={styles.itemInfo}>
-																	<Text style={{ fontWeight: 'bold' }}>Size: </Text>
-																	<Text>{size.name}</Text>
-																</Text>
-															: null
-														))}
-													</View>
-													<View>
-														<Text style={styles.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-
-														{item.cost && <Text style={styles.itemInfoHeader}><Text style={{ fontWeight: 'bold' }}>Total cost:</Text> ${item.cost.toFixed(2)}</Text>}	
-													</View>
-												</View>
 												<Text style={styles.itemOrderNumber}>Your order#: {item.orderNumber}</Text>
 
-												<Text style={styles.itemHeader}>
-													{item.status == 'checkout' && 'Order ready soon'}
-													{item.status == 'ready' && 'Order ready for pickup'}
-												</Text>
+												<Text style={styles.itemHeader}>Order ready in {item.numOrders * 5} minutes</Text>
+
+                        <View style={{ alignItems: 'center' }}>
+                          <TouchableOpacity style={styles.action} onPress={() => {
+                            props.close()
+
+                            props.navigation.navigate("seeorders", { ordernumber: item.orderNumber })
+                          }}>
+                            <Text style={styles.actionHeader}>See order ({item.numOrders})</Text>
+                          </TouchableOpacity>
+                        </View>
 											</>
 										)}
 										{item.type == "service" && (

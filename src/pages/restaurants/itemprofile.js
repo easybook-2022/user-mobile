@@ -7,7 +7,7 @@ import { socket, logo_url } from '../../../assets/info'
 import { getProductInfo } from '../../apis/products'
 import { getNumCartItems, addItemtocart } from '../../apis/carts'
 
-import Cart from '../../components/cart'
+import Orders from '../../components/orders'
 import Userauth from '../../components/userauth'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -43,7 +43,7 @@ export default function Itemprofile(props) {
 
 	const [orderingItem, setOrderingitem] = useState({ name: "", image: "", options: [], others: [], sizes: [], quantity: 0, cost: 0 })
 
-	const [openCart, setOpencart] = useState(false)
+	const [openOrders, setOpenorders] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(2)
 
 	const getTheNumCartItems = async() => {
@@ -211,7 +211,7 @@ export default function Itemprofile(props) {
 					})
 					.then((res) => {
 						if (res) {
-							socket.emit("socket/addItemtocart", data, () => showCart())
+							socket.emit("socket/addItemtocart", data, () => showOrders())
 						}
 					})
 					.catch((err) => {
@@ -228,8 +228,8 @@ export default function Itemprofile(props) {
 			setShowauth({ show: true, action: "addcart" })
 		}
 	}
-	const showCart = () => {
-		setOpencart(true)
+	const showOrders = () => {
+		setOpenorders(true)
 		setNumcartitems(numCartItems + 1)
 	}
 
@@ -432,7 +432,7 @@ export default function Itemprofile(props) {
 						)}
 
 						{userId && (
-							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpenorders(true)}>
 								<Entypo name="shopping-cart" size={30}/>
 								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
 							</TouchableOpacity>
@@ -463,11 +463,11 @@ export default function Itemprofile(props) {
 					</View>
 				</View>
 
-				{openCart && <Modal><Cart navigate={() => {
-          setOpencart(false)
+				{openOrders && <Modal><Orders navigate={() => {
+          setOpenorders(false)
           props.navigation.navigate("account", { required: "card" })
         }} showNotif={() => {
-					setOpencart(false)
+					setOpenorders(false)
 					setTimeout(function () {
 						props.navigation.dispatch(
 							CommonActions.reset({
@@ -478,7 +478,7 @@ export default function Itemprofile(props) {
 					}, 1000)
 				}} close={() => {
 					getTheNumCartItems()
-					setOpencart(false)
+					setOpenorders(false)
 				}}/></Modal>}
 				{showAuth.show && (
 					<Modal transparent={true}>
