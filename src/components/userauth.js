@@ -17,7 +17,7 @@ const hsize = p => {
 }
 
 export default function Userauth(props) {
-	const [authInfo, setAuthinfo] = useState({ type: '', info: { username, cellnumber, password, confirmPassword }, loading: false, verifycode: null, codesent: false, errormsg: "" })
+	const [authInfo, setAuthinfo] = useState({ type: '', info: { username, cellnumber, password, confirmPassword, resetcode: '111111' }, loading: false, verifycode: null, codesent: false, errormsg: "" })
 
 	const login = () => {
 		const { info } = authInfo

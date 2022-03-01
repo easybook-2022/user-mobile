@@ -34,11 +34,6 @@ export default function Orders(props) {
 	})
 
 	// friends cart
-	const [friends, setFriends] = useState([])
-	const [numFriends, setNumfriends] = useState(0)
-	const [selectedFriends, setSelectedFriends] = useState([])
-	const [numSelectedFriends, setNumselectedfriends] = useState(0)
-	const [orderingItem, setOrderingItem] = useState({ name: "", image: "", options: [], quantity: 0, cost: 0, price: 0 })
 	const [errorMsg, setErrormsg] = useState('')
 	const [showNotifyUser, setShownotifyuser] = useState({ show: false, userid: 0, username: "" })
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
@@ -496,7 +491,7 @@ export default function Orders(props) {
                       </>
   									}
   								/>
-
+                  
   								<View style={{ alignItems: 'center' }}>
   									<View style={styles.cartActions}>
   										<TouchableOpacity style={[styles.cartAction, { opacity: activeCheckout && !loading ? 1 : 0.3 }]} disabled={!activeCheckout || loading} onPress={() => checkout()}>
@@ -811,30 +806,6 @@ const styles = StyleSheet.create({
 	quantityHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
 	price: { fontSize: wsize(4), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
-
-	// friends list
-	friendsList: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
-	friendNameContainer: { height: '10%' },
-	friendNameInput: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, margin: 10, padding: 10 },
-	friendsListContainer: { flexDirection: 'column', height: '60%', justifyContent: 'space-between' },
-	friendsListSearched: { height: '50%', overflow: 'hidden' },
-	friendsListSelected: { height: '50%', overflow: 'hidden' },
-	selectedFriendsHeader: { fontWeight: 'bold', textAlign: 'center' },
-	friendsHeader: { fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
-	row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10 },
-	friend: { alignItems: 'center', height: width * 0.2, margin: 5, width: width * 0.2 },
-	friendDelete: { marginBottom: -5, marginLeft: 60 },
-	friendProfileHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 30, height: 60, overflow: 'hidden', width: 60 },
-	friendName: { textAlign: 'center' },
-	itemContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, flexDirection: 'row', height: '20%', justifyContent: 'space-between', marginHorizontal: 10, padding: 10 },
-	orderingItemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
-	orderingItemName: { fontWeight: 'bold', marginBottom: 20 },
-	itemInfo: { fontSize: wsize(4) },
-	itemHeader: { fontSize: wsize(4) },
-	friendsListActionContainer: { alignItems: 'center', height: '10%' },
-	friendsListActions: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
-	friendsListAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginHorizontal: 5, padding: 5, width: 70 },
-	friendsListActionHeader: { textAlign: 'center' },
 
 	notifyUserBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	notifyUserContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },

@@ -309,7 +309,18 @@ export default function Notification(props) {
         }
 
         setItems(newItems)
-			} else {
+			} else if (data.type == "setWaitTime") {
+        const newItems = [...items]
+
+        newItems.forEach(function (item) {
+          if (item.orderNumber == data.ordernumber) {
+            item.status = 'inprogress'
+            item.waitTime = data.waitTime
+          }
+        })
+
+        setItems(newItems)
+      } else {
 				setNumunreaded(numUnreaded + 1)
 			}
 		})
@@ -413,6 +424,17 @@ export default function Notification(props) {
           }
 
           setItems(newItems)
+        } else if (data.type == "setWaitTime") {
+          const newItems = [...items]
+
+          newItems.forEach(function (item) {
+            if (item.orderNumber == data.ordernumber) {
+              item.status = 'inprogress'
+              item.waitTime = data.waitTime
+            }
+          })
+
+          setItems(newItems)
         }
 			});
 		}
@@ -452,7 +474,13 @@ export default function Notification(props) {
 											<>
 												<Text style={styles.itemOrderNumber}>Your order#: {item.orderNumber}</Text>
 
-												<Text style={styles.itemHeader}>Order ready in {item.numOrders * 5} minutes</Text>
+												<Text style={styles.itemHeader}>
+                          {item.status == 'checkout' ? 
+                            'The restaurant will respond\nyou with wait time'
+                            :
+                            'The order will be ready for pickup in ' + item.waitTime + ' minutes'
+                          }
+                        </Text>
 
                         <View style={{ alignItems: 'center' }}>
                           <TouchableOpacity style={styles.action} onPress={() => {
