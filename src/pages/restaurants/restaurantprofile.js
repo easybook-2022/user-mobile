@@ -68,7 +68,7 @@ export default function Restaurantprofile(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("server error")
+						alert("get num cart items")
 					}
 				})
 		}
@@ -99,7 +99,7 @@ export default function Restaurantprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get location profile")
 				}
 			})
 	}
@@ -124,7 +124,7 @@ export default function Restaurantprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get all menus")
 				}
 			})
 	}

@@ -93,7 +93,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-						alert("server error")
+						alert("fetch num notifications")
 					}
 				})
 		}
@@ -115,7 +115,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-            alert("server error")	
+            alert("get num cart items")	
 					}
 				})
 		}
@@ -152,7 +152,7 @@ export default function Main(props) {
 						default:
 					}
 				} else {
-          alert("server error")	
+          alert("get locations")
 				}
 			})
 	}
@@ -187,7 +187,7 @@ export default function Main(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-          alert("server error")	
+          alert("get more locations")
 				}
 			})
 	}
@@ -268,7 +268,7 @@ export default function Main(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-            alert("server error")	
+            alert("get notification permission")
 					}
 				})
 		}

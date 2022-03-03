@@ -66,7 +66,7 @@ export default function Itemprofile(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("server error")
+						alert("get num cart items")
 					}
 				})
 		}
@@ -218,7 +218,7 @@ export default function Itemprofile(props) {
 						if (err.response && err.response.status == 400) {
 							const { errormsg, status } = err.response.data
 						} else {
-							alert("server error")
+							alert("add cart")
 						}
 					})
 			} else {
@@ -257,7 +257,7 @@ export default function Itemprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get product info")
 				}
 			})
 	}

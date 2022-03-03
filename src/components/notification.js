@@ -56,7 +56,7 @@ export default function Notification(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
+					alert("cancel cart order")
 				}
 			})
 	}
@@ -110,38 +110,7 @@ export default function Notification(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
-				}
-			})
-	}
-	const acceptTheRequest = index => {
-		const newItems = [...items]
-		const { id, table } = newItems[index]
-		let data = { scheduleid: id, tablenum: table, type: "acceptRequest" }
-
-		acceptRequest(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					data = { ...data, receivers: res.receivers }
-					socket.emit("socket/acceptRequest", data, () => {
-						newItems[index].action = "accepted"
-						newItems[index].nextTime = 0
-						newItems[index].confirm = true
-
-						setItems(newItems)
-					})
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("server error")
+					alert("close schedule")
 				}
 			})
 	}
@@ -180,7 +149,7 @@ export default function Notification(props) {
 					if (err.response && err.response.status == 400) {
 
 					} else {
-						alert("server error")
+						alert("cancel request")
 					}
 				})
 		}
@@ -209,7 +178,7 @@ export default function Notification(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
+					alert("get notifications")
 				}
 			})
 	}

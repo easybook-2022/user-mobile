@@ -39,7 +39,7 @@ export default function Account(props) {
 	const [username, setUsername] = useState('')
 	const [cellnumber, setCellnumber] = useState('')
 	const [password, setPassword] = useState('')
-	const [confirmpassword, setConfirmpassword] = useState('')
+	const [confirmPassword, setConfirmpassword] = useState('')
 	const [loaded, setLoaded] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [errorMsg, setErrormsg] = useState('')
@@ -66,7 +66,7 @@ export default function Account(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					setErrormsg("an error has occurred in server")
+					alert("get user info")
 				}
 			})
 	}
@@ -75,7 +75,7 @@ export default function Account(props) {
 		const userid = await AsyncStorage.getItem("userid")
 
 		if (username && cellnumber) {
-			const data = { userid, username, cellnumber }
+			const data = { userid, username, cellnumber, password, confirmPassword }
 
 			setLoading(true)
 
@@ -88,7 +88,7 @@ export default function Account(props) {
 				.then((res) => {
 					if (res) {
             setLoading(false)
-            
+
 						props.navigation.dispatch(
 							CommonActions.reset({
 								index: 0,
@@ -101,21 +101,10 @@ export default function Account(props) {
 					if (err.response && err.response.status == 400) {
 						const { errormsg, status } = err.response.data
 
-						switch (status) {
-							case "sameusername":
-								setLoading(false)
-								setErrormsg(errormsg)
-
-								break
-							case "samecellnumber":
-								setLoading(false)
-								setErrormsg(errormsg)
-
-								break
-							default:
-						}
+						setErrormsg(errormsg)
+            setLoading(false)
 					} else {
-						setErrormsg("an error has occurred in server")
+						alert("update user")
 					}
 				})
 		} else {
@@ -130,6 +119,16 @@ export default function Account(props) {
 
 				return
 			}
+
+      if (password || confirmPassword) {
+        if (!password) {
+          setErrormsg("Please enter your new password")
+        } else {
+          setErrormsg("Please confirm your new password")
+        }
+
+        return
+      }
 		}
 	}
 
@@ -138,19 +137,19 @@ export default function Account(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={style.account}>
-			<View style={style.box}>
+		<SafeAreaView style={styles.account}>
+			<View style={styles.box}>
 				{loaded ? 
 					<ScrollView>
-						<View style={style.inputsBox}>
-							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Username:</Text>
-								<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="username" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
+						<View style={styles.inputsBox}>
+							<View style={styles.inputContainer}>
+								<Text style={styles.inputHeader}>Username:</Text>
+								<TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Username" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
 							</View>
 
-							<View style={style.inputContainer}>
-								<Text style={style.inputHeader}>Cell number:</Text>
-								<TextInput style={style.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="cell phone number" onKeyPress={(e) => {
+							<View style={styles.inputContainer}>
+								<Text style={styles.inputHeader}>Cell number:</Text>
+								<TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Cell phone number" onKeyPress={(e) => {
 									let newValue = e.nativeEvent.key
 
 									if (newValue >= "0" && newValue <= "9") {
@@ -171,14 +170,26 @@ export default function Account(props) {
 								}} keyboardType="numeric" value={cellnumber} autoCorrect={false}/>
 							</View>
 
+              <View style={{ alignItems: 'center', marginVertical: 30, width: '100%' }}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputHeader}>New password:</Text>
+                  <TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="New password" secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputHeader}>Confirm your new password:</Text>
+                  <TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Confirm password" secureTextEntry={true} onChangeText={(password) => setConfirmpassword(password)} value={confirmPassword} autoCorrect={false}/>
+                </View>
+              </View>
+
 							<View style={{ alignItems: 'center' }}>
-								<TouchableOpacity style={style.updateButton} onPress={() => updateAccount()}>
-									<Text style={style.updateButtonHeader}>Save</Text>
+								<TouchableOpacity style={styles.updateButton} onPress={() => updateAccount()}>
+									<Text style={styles.updateButtonHeader}>Save</Text>
 								</TouchableOpacity>
 							</View>
 						</View>
 
-						{errorMsg ? <Text style={style.errorMsg}>{errorMsg}</Text> : null }
+						{errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null }
 					</ScrollView>
 					:
 					<View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
@@ -196,12 +207,12 @@ export default function Account(props) {
 	);
 }
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
 	account: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
 	inputsBox: { alignItems: 'center', marginBottom: 50 },
-	inputContainer: { marginVertical: 20, width: '90%' },
+	inputContainer: { backgroundColor: 'rgba(127, 127, 127, 0.1)', borderRadius: 10, marginVertical: 10, padding: 10, width: '90%' },
 	inputHeader: { fontFamily: 'appFont', fontSize: wsize(6), fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5 },
 

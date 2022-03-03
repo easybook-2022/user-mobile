@@ -176,7 +176,7 @@ export default function Orders(props) {
 				if (err.response && err.response.status == 400) {
 
 				} else {
-					alert("server error")
+					alert("get cart items")
 				}
 			})
 	}
@@ -205,7 +205,7 @@ export default function Orders(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("edit cart item")
 				}
 			})
 	}
@@ -250,7 +250,7 @@ export default function Orders(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("update cart item")
 				}
 			})
 	}
@@ -316,7 +316,7 @@ export default function Orders(props) {
             default:
           }
 				} else {
-					alert("server error")
+					alert("checkout")
 				}
 			})
 	}
@@ -463,9 +463,7 @@ export default function Orders(props) {
     														: null
     													))}
     												</View>
-    												<View>
-    													<Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
-    												</View>
+    												<Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
     											</View>
 
     											<View style={{ alignItems: 'center' }}>
@@ -491,7 +489,7 @@ export default function Orders(props) {
                       </>
   									}
   								/>
-                  
+
   								<View style={{ alignItems: 'center' }}>
   									<View style={styles.cartActions}>
   										<TouchableOpacity style={[styles.cartAction, { opacity: activeCheckout && !loading ? 1 : 0.3 }]} disabled={!activeCheckout || loading} onPress={() => checkout()}>

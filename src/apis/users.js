@@ -19,30 +19,10 @@ export const registerUser = data => {
 	)
 }
 
-export const setupUser = data => {
-	const form = new FormData()
-
-	form.append("userid", data.userid)
-	form.append("username", data.username)
-	form.append("permission", data.permission)
-	form.append("time", data.time)
-
-	return axios.post(
-		`${url}/users/setup`,
-		form
-	)
-}
-
 export const updateUser = data => {
-	const form = new FormData()
-
-	form.append("userid", data.userid)
-	form.append("username", data.username)
-	form.append("cellnumber", data.cellnumber)
-
 	return axios.post(
 		`${url}/users/update_user`,
-		form
+		data
 	)
 }
 

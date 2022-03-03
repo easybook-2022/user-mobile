@@ -77,7 +77,7 @@ export default function Booktime(props) {
 	], loading: false, errorMsg: "" })
   const [userId, setUserid] = useState(null)
 	const [times, setTimes] = useState([])
-	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ show: false, worker: null, workers: [], numWorkers: 0 })
+	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ show: false, worker: null, workers: [], numWorkers: 0, loading: false })
 	const [loaded, setLoaded] = useState(false)
 	const [showAuth, setShowauth] = useState(false)
   const [step, setStep] = useState(0)
@@ -106,7 +106,7 @@ export default function Booktime(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("server error")
+						alert("get num cart items")
 					}
 				})
 		}
@@ -130,7 +130,7 @@ export default function Booktime(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get service info")
 				}
 			})
 	}
@@ -342,6 +342,8 @@ export default function Booktime(props) {
 			})
 	}
 	const getTheWorkers = () => {
+    setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
+
 		getWorkers(locationid)
 			.then((res) => {
 				if (res.status == 200) {
@@ -350,7 +352,7 @@ export default function Booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					setSelectedworkerinfo({ show: true, worker: null, workers: res.owners, numWorkers: res.numWorkers })
+					setSelectedworkerinfo({ show: true, worker: null, workers: res.owners, numWorkers: res.numWorkers, loading: false })
 				}
 			})
 			.catch((err) => {
@@ -377,11 +379,13 @@ export default function Booktime(props) {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
         } else {
-          alert("server error")
+          alert("get all workers time")
         }
       })
   }
 	const selectWorker = id => {
+    setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
+
 		let workerinfo
 
 		getWorkerInfo(id)
@@ -397,7 +401,7 @@ export default function Booktime(props) {
 							if (worker.id == id) {
 								workerinfo = {...worker, days: res.days }
 
-								setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, worker: workerinfo })
+								setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, worker: workerinfo, loading: false })
 							}
 						})
 					})
@@ -686,7 +690,7 @@ export default function Booktime(props) {
 					if (err.response && err.response.status == 400) {
 						const { errormsg, status } = err.response.data
 					} else {
-						alert("server error")
+						alert("make appointment")
 					}
 				})
 		} else {
@@ -736,7 +740,7 @@ export default function Booktime(props) {
                     </View>
 									)}
 										
-									<TouchableOpacity style={styles.chooseWorkerAction} onPress={() => getTheWorkers()}>
+									<TouchableOpacity style={[styles.chooseWorkerAction, { opacity: selectedWorkerinfo.loading ? 0.5 : 1 }]} disabled={selectedWorkerinfo.loading} onPress={() => getTheWorkers()}>
 										<Text style={styles.chooseWorkerActionHeader}>{selectedWorkerinfo.worker == null ? 'Tap to choose your stylist' : 'Tap to choose a different stylist'}</Text>
 									</TouchableOpacity>
 								</View>
@@ -1020,7 +1024,7 @@ export default function Booktime(props) {
 										<View key={item.key} style={styles.workersRow}>
 											{item.row.map(info => (
 												info.id ? 
-													<TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: info.selected ? 'rgba(0, 0, 0, 0.3)' : null }]} onPress={() => selectWorker(info.id)}>
+													<TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: info.selected ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
 														<View style={styles.workerProfile}>
 															<Image source={{ uri: logo_url + info.profile }} style={{ height: wsize(20), width: wsize(20) }}/>
 														</View>
@@ -1034,7 +1038,7 @@ export default function Booktime(props) {
 								/>
 							</View>
 
-							<TouchableOpacity style={styles.workersClose} onPress={() => setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, workers: [] })}>
+							<TouchableOpacity style={styles.workersClose} disabled={selectedWorkerinfo.loading} onPress={() => setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, workers: [] })}>
 								<Text style={styles.workersCloseHeader}>Cancel</Text>
 							</TouchableOpacity>
 						</View>

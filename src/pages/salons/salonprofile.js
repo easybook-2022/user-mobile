@@ -69,7 +69,7 @@ export default function Salonprofile(props) {
 					if (err.response && err.response.status == 400) {
 						
 					} else {
-						alert("server error")
+						alert("get num cart items")
 					}
 				})
 		}
@@ -100,7 +100,7 @@ export default function Salonprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get location profile")
 				}
 			})
 	}
@@ -123,7 +123,7 @@ export default function Salonprofile(props) {
 				if (err.response && err.response.status == 400) {
 					
 				} else {
-					alert("server error")
+					alert("get all menus")
 				}
 			})
 	}
@@ -217,7 +217,7 @@ export default function Salonprofile(props) {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
         } else {
-          alert("server error")
+          alert("get workers time")
         }
       })
   }

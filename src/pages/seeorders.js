@@ -40,7 +40,7 @@ export default function Seeorders(props) {
         if (err.response && err.response.status == 400) {
           
         } else {
-          alert("server error")
+          alert("see orders")
         }
       })
   }
