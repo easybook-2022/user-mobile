@@ -18,7 +18,7 @@ export default function Seeorders(props) {
 
   const [userId, setUserid] = useState(null)
   const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [showDisabledScreen, setShowdisabledscreen] = useState(false)
   
   const seeTheOrders = async() => {
@@ -34,6 +34,7 @@ export default function Seeorders(props) {
         if (res) {
           setUserid(userid)
           setOrders(res.orders)
+          setLoading(false)
         }
       })
       .catch((err) => {
@@ -61,7 +62,7 @@ export default function Seeorders(props) {
       socket.off("updateSeeorders")
     }
   }, [orders.length])
-
+  
   return (
     <SafeAreaView style={[styles.seeorders, { opacity: loading ? 0.5 : 1 }]}>
       {!loading ? 
@@ -71,11 +72,11 @@ export default function Seeorders(props) {
             renderItem={({ item, index }) => 
               <View style={styles.item} key={item.key}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  {item.image && (
+                  {item.image ? 
                     <View style={styles.itemImageHolder}>
-                      <Image source={{ uri: logo_url + item.image }} style={styles.itemImage}/>
+                      <Image source={{ uri: logo_url + item.image.name }} style={styles.itemImage}/>
                     </View>
-                  )}
+                  : null }
 
                   <View style={styles.itemInfos}>
                     <Text style={styles.itemName}>{item.name}</Text>

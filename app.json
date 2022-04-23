@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.geottuse.serviceapp.user",
-      "buildNumber": "21",
+      "buildNumber": "10",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (User) uses camera to allow you to take a profile picture",
         "NSMicrophoneUsageDescription": "EasyGO (User) does not need microphone",
@@ -30,7 +30,8 @@
     },
     "android": {
       "package": "com.geottuse.serviceapp.user",
-      "versionCode": 0
+      "versionCode": 9,
+      "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "notification": {
       "icon": "./assets/notification.png"

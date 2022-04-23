@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
-	SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, 
+	SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, 
 	Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { cardInfo, logo_url } from '../../assets/info'
+import { logo_url, displayPhonenumber } from '../../assets/info'
 import { getUserInfo, updateUser } from '../apis/users'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -24,18 +24,6 @@ const hsize = p => {
 }
 
 export default function Account(props) {
-	const amexLogo = require("../../assets/amex.jpg")
-	const dinersclubLogo = require("../../assets/dinersclub.png")
-	const discoverLogo = require("../../assets/discover.png")
-	const jbcLogo = require("../../assets/jbc.png")
-	const mastercardLogo = require("../../assets/mastercard.png")
-	const unionpayLogo = require("../../assets/unionpay.png")
-	const visaLogo = require("../../assets/visa.png")
-
-	const { params } = props.route
-	const refetch = params && params.refetch ? params.refetch : null
-	const required = params && params.required ? params.required : null
-
 	const [username, setUsername] = useState('')
 	const [cellnumber, setCellnumber] = useState('')
 	const [password, setPassword] = useState('')
@@ -70,7 +58,6 @@ export default function Account(props) {
 				}
 			})
 	}
-
 	const updateAccount = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
@@ -149,28 +136,10 @@ export default function Account(props) {
 
 							<View style={styles.inputContainer}>
 								<Text style={styles.inputHeader}>Cell number:</Text>
-								<TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Cell phone number" onKeyPress={(e) => {
-									let newValue = e.nativeEvent.key
-
-									if (newValue >= "0" && newValue <= "9") {
-										if (cellnumber.length == 3) {
-											setCellnumber("(" + cellnumber + ") " + newValue)
-										} else if (cellnumber.length == 9) {
-											setCellnumber(cellnumber + "-" + newValue)
-										} else if (cellnumber.length == 13) {
-											setCellnumber(cellnumber + newValue)
-
-											Keyboard.dismiss()
-										} else {
-											setCellnumber(cellnumber + newValue)
-										}
-									} else if (newValue == "Backspace") {
-										setCellnumber(cellnumber.substr(0, cellnumber.length - 1))
-									}
-								}} keyboardType="numeric" value={cellnumber} autoCorrect={false}/>
+								<TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Cell phone number" onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} keyboardType="numeric" value={cellnumber} autoCorrect={false}/>
 							</View>
 
-              <View style={{ alignItems: 'center', marginVertical: 30, width: '100%' }}>
+              <View style={{ alignItems: 'center', marginVertical: 120, width: '100%' }}>
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputHeader}>New password:</Text>
                   <TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="New password" secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
@@ -182,14 +151,14 @@ export default function Account(props) {
                 </View>
               </View>
 
+              {errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null }
+
 							<View style={{ alignItems: 'center' }}>
 								<TouchableOpacity style={styles.updateButton} onPress={() => updateAccount()}>
 									<Text style={styles.updateButtonHeader}>Save</Text>
 								</TouchableOpacity>
 							</View>
 						</View>
-
-						{errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null }
 					</ScrollView>
 					:
 					<View style={{ flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
@@ -198,11 +167,7 @@ export default function Account(props) {
 				}
 			</View>
 
-      {loading && (
-        <Modal transparent={true}>
-          <Loadingprogress/>
-        </Modal>
-      )}
+      {loading && <Modal transparent={true}><Loadingprogress/></Modal>}
 		</SafeAreaView>
 	);
 }

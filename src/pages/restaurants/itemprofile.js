@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { SafeAreaView, Platform, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
 import Constants from 'expo-constants';
@@ -232,7 +232,6 @@ export default function Itemprofile(props) {
 		setOpenorders(true)
 		setNumcartitems(numCartItems + 1)
 	}
-
 	const getTheProductInfo = async() => {
 		getProductInfo(productid)
 			.then((res) => {
@@ -276,9 +275,9 @@ export default function Itemprofile(props) {
 			<View style={styles.box}>
 				<ScrollView style={{ height: '100%' }}>
 					<View style={{ alignItems: 'center', marginTop: 20 }}>
-						{itemImage ? 
+						{itemImage.name ? 
 							<View style={styles.imageHolder}>
-								<Image source={{ uri: logo_url + itemImage }} style={styles.image}/>
+								<Image source={{ uri: logo_url + itemImage.name }} style={styles.image}/>
 							</View>
 						: null }
 					</View>
@@ -451,9 +450,10 @@ export default function Itemprofile(props) {
 
 						<TouchableOpacity style={styles.bottomNav} onPress={() => {
 							if (userId) {
-								AsyncStorage.clear()
-
-								setUserid(null)
+								socket.emit("socket/user/logout", userId, () => {
+                  AsyncStorage.clear()
+                  setUserid(null)
+                })
 							} else {
 								setShowauth({ show: true, action: false })
 							}
@@ -465,7 +465,7 @@ export default function Itemprofile(props) {
 
 				{openOrders && <Modal><Orders navigate={() => {
           setOpenorders(false)
-          props.navigation.navigate("account", { required: "card" })
+          props.navigation.navigate("account")
         }} showNotif={() => {
 					setOpenorders(false)
 					setTimeout(function () {
@@ -482,21 +482,11 @@ export default function Itemprofile(props) {
 				}}/></Modal>}
 				{showAuth.show && (
 					<Modal transparent={true}>
-						<Userauth close={() => setShowauth({ show: false, action: "" })} done={(id, msg) => {
-							if (msg == "setup") {
-								props.navigation.dispatch(
-									CommonActions.reset({
-										index: 1,
-										routes: [{ name: "setup" }]
-									})
-								);
-							} else {
-								socket.emit("socket/user/login", "user" + id, () => {
-									setUserid(id)
-									addCart()
-								})
-							}
-
+						<Userauth close={() => setShowauth({ show: false, action: "" })} done={id => {
+							socket.emit("socket/user/login", "user" + id, () => {
+                setUserid(id)
+                addCart()
+              })
 							setShowauth({ show: false, action: false })
 						}} navigate={props.navigation.navigate}/>
 					</Modal>

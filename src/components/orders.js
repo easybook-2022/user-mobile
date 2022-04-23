@@ -32,13 +32,8 @@ export default function Orders(props) {
 		image: "", price: "", options: [], others: [], sizes: [], quantity: 1, cost: 0,
 		errorMsg: ""
 	})
-
-	// friends cart
 	const [errorMsg, setErrormsg] = useState('')
-	const [showNotifyUser, setShownotifyuser] = useState({ show: false, userid: 0, username: "" })
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
-
-  const [showPaymentRequired, setShowpaymentrequired] = useState(false)
 	
 	const changeOption = (index, selected) => {
 		let { options } = itemInfo
@@ -209,7 +204,7 @@ export default function Orders(props) {
 				}
 			})
 	}
-	const updateTheCartItem = async() => {
+	const updateTheCartItem = () => {
 		const { cartid, quantity, options, others, sizes, note } = itemInfo
 		const newOptions = JSON.parse(JSON.stringify(options))
 		const newOthers = JSON.parse(JSON.stringify(others))
@@ -276,7 +271,7 @@ export default function Orders(props) {
 			})
 	}
 
-	const checkout = async() => {
+	const checkout = () => {
 		const time = Date.now()
 		let data = { userid: userId, time, type: "checkout" }
 
@@ -307,14 +302,6 @@ export default function Orders(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					const { errormsg, status } = err.response.data
-
-          switch (status) {
-            case "cardrequired":
-              setShowpaymentrequired(true)
-
-              break
-            default:
-          }
 				} else {
 					alert("checkout")
 				}
@@ -403,7 +390,7 @@ export default function Orders(props) {
 
 	return (
     <SafeAreaView>
-  		<View style={[styles.cart, { opacity: loading ? 0.5 : 1 }]}>
+  		<View style={[styles.orders, { opacity: loading ? 0.5 : 1 }]}>
   			<View style={styles.box}>
   				<View style={styles.headers}>
   					<View style={{ alignItems: 'center', width: '100%' }}>
@@ -430,7 +417,7 @@ export default function Orders(props) {
     												</TouchableOpacity>
     												{item.image && (
     													<View style={styles.itemImageHolder}>
-    														<Image source={{ uri: logo_url + item.image }} style={styles.itemImage}/>
+    														<Image source={{ uri: logo_url + item.image.name }} style={styles.itemImage}/>
     													</View>
     												)}
     												<View style={styles.itemInfos}>
@@ -530,11 +517,14 @@ export default function Orders(props) {
   							</TouchableOpacity>
   						</View>
   						<ScrollView style={styles.itemInfoContainer}>
-  							<View style={{ alignItems: 'center', marginBottom: 20 }}>
-  								<View style={styles.imageHolder}>
-  									<Image source={{ uri: logo_url + itemInfo.image }} style={styles.image}/>
-  								</View>
-  							</View>
+    						{itemInfo.image ? 
+                  <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                    <View style={styles.imageHolder}>
+                      <Image source={{ uri: logo_url + itemInfo.image.name }} style={styles.image}/>
+                    </View>
+                  </View>
+                : null }
+
   							<Text style={styles.boxItemHeader}>{itemInfo.name}</Text>
   							<Text style={styles.boxItemHeaderInfo}>{itemInfo.info}</Text>
 
@@ -690,7 +680,7 @@ export default function Orders(props) {
 }
 
 const styles = StyleSheet.create({
-	cart: { backgroundColor: 'white', height: '100%', width: '100%' },
+	orders: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
 	headers: { flexDirection: 'column', height: '15%', justifyContent: 'space-around' },
@@ -706,19 +696,6 @@ const styles = StyleSheet.create({
 	header: { fontSize: wsize(4) },
 	itemChange: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 5 },
 	itemChangeHeader: { fontSize: wsize(4), textAlign: 'center' },
-	orderersContainer: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 5, marginVertical: 10, padding: 5 },
-	orderersEdit: { flexDirection: 'row' },
-	orderersEditHeader: { fontSize: wsize(4), fontWeight: 'bold', marginRight: 10, marginTop: 7, textAlign: 'center' },
-	orderersEditTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-	orderersEditTouchHeader: { fontSize: wsize(4) },
-	orderers: {  },
-	orderer: { alignItems: 'center', margin: 10, width: width / 4 },
-	ordererProfileHolder: { backgroundColor: 'white', borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
-	ordererProfile: { height: 40, width: 40 },
-	ordererHeader: {  },
-	ordererStatus: { fontWeight: 'bold' },
-	ordererRemove: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-	ordererRemoveHeader: { },
 
   sendAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 10, padding: 5, width: wsize(30) },
   sendActionHeader: { fontSize: wsize(5), textAlign: 'center' },
@@ -734,7 +711,6 @@ const styles = StyleSheet.create({
 	confirmHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row', justifyContent: 'space-around' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	confirmOptionHeader: { },
 
 	// item info
 	itemInfoBox: { flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
@@ -744,18 +720,12 @@ const styles = StyleSheet.create({
 	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
 	image: { height: 200, width: 200 },
 	boxItemHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
-	boxItemHeaderInfo: {  fontSize: wsize(4), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
+	boxItemHeaderInfo: { fontSize: wsize(4), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },
 	info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
 	infoHeader: { fontWeight: 'bold', marginVertical: 7, marginRight: 20 },
 	itemActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	itemAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, marginHorizontal: 10, marginVertical: 30, padding: 10, width: wsize(30) },
 	itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
-
-	// payment details
-	paymentDetailsContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	paymentDetailsBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
-	paymentDetailsHeader: { fontSize: wsize(6) },
-	paymentDetailHeader: { fontSize: wsize(5) },
 
 	// amount
 	amount: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
@@ -802,15 +772,6 @@ const styles = StyleSheet.create({
 	quantityAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, margin: 10, padding: 15 },
   quantityActionHeader: { fontSize: wsize(4) },
 	quantityHeader: { fontSize: wsize(5), fontWeight: 'bold' },
-
-	price: { fontSize: wsize(4), fontWeight: 'bold', marginTop: 20, textAlign: 'center' },
-
-	notifyUserBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	notifyUserContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	notifyUserHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	notifyUserActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	notifyUserAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
-	notifyUserActionHeader: { },
 
 	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
 	disabledContainer: { alignItems: 'center', width: '100%' },

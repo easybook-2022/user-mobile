@@ -27,8 +27,9 @@ const emptyUser = { username: "", cellnumber: "", password: "", confirmPassword:
 
 const useInput = true
 
-const login = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
-const register = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
+const login = test_input ? testUsers[1] : useInput ? realUsers[0] : emptyUser
+const register = test_input ? testUsers[1] : useInput ? realUsers[0] : emptyUser
+
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
 const server_api_url = "https://www.easygo.tk/flask"
@@ -42,7 +43,7 @@ export const url = local_url ? wifi_api_url : server_api_url
 export const isLocal = test_input
 export const logo_url = url + "/static/"
 export const displayTime = unixtime => {
-	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
+	const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 	const currTime = new Date(Date.now())
 	const currentDate = Date.parse(months[currTime.getMonth()] + " " + currTime.getDate() + ", " + currTime.getFullYear() + " 23:59")
@@ -54,9 +55,9 @@ export const displayTime = unixtime => {
 	minute = minute < 10 ? '0' + minute : minute
 	period = hour < 12 ? 'am' : 'pm'
 	hour = hour > 12 ? 
-			hour - 12 
-			: 
-      hour == 0 ? 12 : hour
+		hour - 12 
+		: 
+    hour == 0 ? 12 : hour
 
 	timeheader = hour + ":" + minute + " " + period
 
@@ -89,6 +90,26 @@ export const displayTime = unixtime => {
 
 	return timeStr
 }
-export const stripeFee = amount => {
-	return (amount + 0.30) / (1 - 0.029)
+export const displayPhonenumber = (oldValues, newValue, hideKeyboard) => {
+  let newValues = ""
+
+  if (oldValues.length - newValue.length == 1) {
+    newValues = newValue
+  } else {
+    for (let k = 0; k < newValue.length; k++) {
+      newValues += newValue.substr(k, 1) >= "0" && newValue.substr(k, 1) <= "9" ? newValue.substr(k, 1) : ""
+    }
+
+    if (newValues.length == 10) { // 1231231234
+      newValues = "(" + newValues.substr(0, 3) + ") " + newValues.substr(3, 3) + "-" + newValues.substr(6, 4)
+
+      hideKeyboard()
+    } else if (newValues.length >= 1 && newValues.length <= 6) {
+      newValues = "(" + newValues.substr(0, 3) + ") " + newValues.substr(3, 3)
+    } else if (newValues.length >= 6 && newValues.length <= 10) {
+      newValues = "(" + newValues.substr(0, 3) + ") " + newValues.substr(3, 3) + "-" + newValues.substr(6, 4)
+    }
+  }
+
+  return newValues
 }

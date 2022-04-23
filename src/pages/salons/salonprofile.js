@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, 
+  SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, 
   TextInput, TouchableOpacity, Linking, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -38,11 +38,11 @@ export default function Salonprofile(props) {
 	const [phonenumber, setPhonenumber] = useState('')
 	const [distance, setDistance] = useState(0)
 	const [showAuth, setShowauth] = useState(false)
-	const [showStoreinfo, setShowstoreinfo] = useState({ show: false, workerHours: [] })
+	const [showInfo, setShowinfo] = useState({ show: false, workerHours: [] })
 	const [userId, setUserid] = useState(null)
 
 	const [serviceInfo, setServiceinfo] = useState('')
-	const [menuInfo, setMenuinfo] = useState({ type: '', items: [], error: false })
+	const [menuInfo, setMenuinfo] = useState({ items: [], error: false })
 
 	const [loaded, setLoaded] = useState(false)
 
@@ -104,7 +104,7 @@ export default function Salonprofile(props) {
 				}
 			})
 	}
-	const getAllMenus = async() => {
+	const getAllMenus = () => {
 		getMenus(locationid)
 			.then((res) => {
 				if (res.status == 200) {
@@ -113,9 +113,9 @@ export default function Salonprofile(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { type, menus } = res
+					const { menus } = res
 
-					setMenuinfo({ type, items: menus })
+					setMenuinfo({ ...menuInfo, items: menus })
 					setLoaded(true)
 				}
 			})
@@ -133,40 +133,44 @@ export default function Salonprofile(props) {
 		getAllMenus()
 	}
 	const displayList = info => {
-		let { id, image, name, list, listType, left } = info
-		let add = name ? true : false
+		let { id, image, name, list, left } = info
 
 		return (
 			<View style={{ marginLeft: left }}>
 				{name ?
 					<View style={styles.menu}>
 						<View style={{ flexDirection: 'row' }}>
-							<View style={styles.menuImageHolder}>
-								<Image style={styles.menuImage} source={{ uri: logo_url + image }}/>
-							</View>
-							<Text style={styles.menuName}>{name} (Menu)</Text>
+  						{image.name ? 
+                <View style={styles.menuImageHolder}>
+                  <Image style={styles.menuImage} source={{ uri: logo_url + image.name }}/>
+                </View>
+              : null }
+              <View style={styles.column}>
+                <Text style={styles.menuName}>{name} (Menu)</Text>
+              </View>
 						</View>
-						{info.info ? <Text style={styles.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
 						{list.length > 0 && list.map((info, index) => (
 							<View key={"list-" + index}>
 								{info.listType == "list" ? 
-									displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
+									displayList({ id: info.id, name: info.name, image: info.image, list: info.list, left: left + 10 })
 									:
 									<View style={styles.item}>
-										<View style={{ flexDirection: 'row', }}>
-											<View style={styles.itemImageHolder}>
-												<Image style={styles.itemImage} source={{ uri: logo_url + info.image }}/>
-											</View>
-											<Text style={styles.itemHeader}>{info.name}</Text>
-											<Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-											{info.listType == "service" && <Text style={styles.itemHeader}>{info.duration}</Text>}
-										</View>
-										{info.info ? <Text style={styles.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
-										<View style={styles.itemActions}>
-											<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
-												<Text style={styles.itemActionHeader}>Book a time</Text>
-											</TouchableOpacity>
-										</View>
+  									{info.image.name ? 
+                      <View style={styles.itemImageHolder}>
+                        <Image style={styles.itemImage} source={{ uri: logo_url + info.image.name }}/>
+                      </View>
+                    : null }
+										<View style={styles.column}>
+                      <Text style={styles.itemHeader}>{info.name}</Text>
+                    </View>
+                    <View style={styles.column}>
+                      <Text style={styles.itemHeader}>$ {info.price}</Text>
+                    </View>
+                    <View style={styles.column}>
+  										<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
+                        <Text style={styles.itemActionHeader}>Book a time</Text>
+                      </TouchableOpacity>
+                    </View>
 									</View>
 								}
 							</View>
@@ -176,23 +180,25 @@ export default function Salonprofile(props) {
 					list.map((info, index) => (
 						<View key={"list-" + index}>
 							{info.listType == "list" ? 
-								displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
+								displayList({ id: info.id, name: info.name, image: info.image, list: info.list, left: left + 10 })
 								:
 								<View style={styles.item}>
-									<View style={{ flexDirection: 'row', }}>
-										<View style={styles.itemImageHolder}>
-											<Image style={styles.itemImage} source={{ uri: logo_url + info.image }}/>
-										</View>
-										<Text style={styles.itemHeader}>{info.name}</Text>
-										<Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-										{info.listType == "service" && <Text style={styles.itemHeader}>{info.duration}</Text>}
-									</View>
-									{info.info ? <Text style={styles.itemInfo}><Text style={{ fontWeight: 'bold' }}>More Info</Text>: {info.info}</Text> : null}
-									<View style={styles.itemActions}>
-										<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
-											<Text style={styles.itemActionHeader}>Book a time</Text>
-										</TouchableOpacity>
-									</View>
+  								{info.image.name ? 
+                    <View style={styles.itemImageHolder}>
+                      <Image style={styles.itemImage} source={{ uri: logo_url + info.image.name }}/>
+                    </View>
+                  : null }
+                  <View style={styles.column}>
+                    <Text style={styles.itemHeader}>{info.name}</Text>
+                  </View>
+                  <View style={styles.column}>
+                    <Text style={styles.itemHeader}>$ {info.price}</Text>
+                  </View>
+                  <View style={styles.column}>
+  									<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
+                      <Text style={styles.itemActionHeader}>Book a time</Text>
+                    </TouchableOpacity>
+                  </View>
 								</View>
 							}
 						</View>
@@ -201,6 +207,15 @@ export default function Salonprofile(props) {
 			</View>
 		)
 	}
+  const resizePhoto = (info, width) => {
+    let s_width = info.width, s_height = info.height
+    let photo_width = width
+
+    return {
+      width: photo_width,
+      height: (photo_width * s_height) / s_width
+    }
+  }
   const getTheWorkersTime = () => {
     getWorkersTime(locationid)
       .then((res) => {
@@ -210,7 +225,7 @@ export default function Salonprofile(props) {
       })
       .then((res) => {
         if (res) {
-          setShowstoreinfo({ show: true, workerHours: res.workerHours })
+          setShowinfo({ show: true, workerHours: res.workerHours })
         }
       })
       .catch((err) => {
@@ -238,8 +253,8 @@ export default function Salonprofile(props) {
             </View>
             <View style={styles.column}>
               <TouchableOpacity style={styles.headerAction} onPress={() => getAllMenus()}>
-              <Text style={styles.headerActionHeader}>Refresh{'\n'}Menu</Text>
-            </TouchableOpacity>
+                <Text style={styles.headerActionHeader}>Refresh{'\n'}Menu</Text>
+              </TouchableOpacity>
             </View>
             <View style={styles.column}>
               <TouchableOpacity style={styles.headerAction} onPress={() => Linking.openURL('tel://' + phonenumber)}>
@@ -249,7 +264,7 @@ export default function Salonprofile(props) {
 					</View>
 					
 					<View style={styles.body}>
-						{(menuInfo.type && menuInfo.type == "photos") && (
+						{(menuInfo.items.length > 0 && menuInfo.items[0].row) && (
               <>
   							<View style={styles.menuInputBox}>
   								<TextInput style={styles.menuInput} type="text" placeholder="Enter service # or name" onChangeText={(info) => {
@@ -277,19 +292,19 @@ export default function Salonprofile(props) {
 						)}
 
 						<ScrollView style={{ width: '100%' }}>
-							{menuInfo.type ? 
-								menuInfo.type == "photos" ? 
+							{menuInfo.items.length ? 
+								menuInfo.items[0].row ? 
 									menuInfo.items.map(info => (
 										info.row.map(item => (
-                      item.photo && (
-                        <View key={item.key} style={styles.menuPhoto}>
-                          <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo }}/>
+                      (item.photo && item.photo.name) && (
+                        <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, width * 0.95)]}>
+                          <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
                         </View>
                       )
 										))
 									))
 									:
-									displayList({ name: "", image: "", list: menuInfo.items, listType: "list", left: 0 })
+									displayList({ id: "", name: "", image: "", list: menuInfo.items, left: 0 })
 							: null }
 						</ScrollView>
 					</View>
@@ -321,9 +336,10 @@ export default function Salonprofile(props) {
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								if (userId) {
-									AsyncStorage.clear()
-
-									setUserid(null)
+									socket.emit("socket/user/logout", userId, () => {
+                    AsyncStorage.clear()
+                    setUserid(null)
+                  })
 								} else {
 									setShowauth({ show: true, action: false })
 								}
@@ -351,36 +367,26 @@ export default function Salonprofile(props) {
 				}, 1000)
 			}} navigate={() => {
         setOpencart(false)
-        props.navigation.navigate("account", { required: "card" })
+        props.navigation.navigate("account")
       }} close={() => {
 				getTheNumCartItems()
 				setOpencart(false)
 			}}/></Modal>}
 			{showAuth.show && (
 				<Modal transparent={true}>
-					<Userauth close={() => setShowauth({ show: false, action: "" })} done={(id, msg) => {
-						if (msg == "setup") {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: "setup" }]
-								})
-							);
-						} else {
-							socket.emit("socket/user/login", "user" + id, () => setUserid(id))
-						}
-
+					<Userauth close={() => setShowauth({ show: false, action: "" })} done={id => {
+						socket.emit("socket/user/login", "user" + id, () => setUserid(id))
 						setShowauth({ show: false, action: false })
 					}} navigate={props.navigation.navigate}/>
 				</Modal>
 			)}
-			{showStoreinfo.show && (
+			{showInfo.show && (
 				<Modal transparent={true}>
 					<View style={styles.showInfoContainer}>
             <View style={styles.showInfoBox}>
               <ScrollView style={{ width: '100%' }}>
                 <View style={{ alignItems: 'center' }}>
-                  <TouchableOpacity style={styles.showInfoClose} onPress={() => setShowstoreinfo(false)}>
+                  <TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo(false)}>
                     <AntDesign name="close" size={wsize(7)}/>
                   </TouchableOpacity>
 
@@ -389,32 +395,34 @@ export default function Salonprofile(props) {
                   <Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
                   <Text style={styles.showInfoHeader}>{distance}</Text>
                   <View style={styles.workerInfoList}>
-                    {showStoreinfo.workerHours.map(worker => (
+                    {showInfo.workerHours.map(worker => (
                       <View key={worker.key} style={styles.worker}>
                         <View style={styles.workerInfo}>
                           <View style={styles.workerInfoProfile}>
-                            <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + worker.profile }}/>
+                            <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + worker.profile.name }}/>
                           </View>
                           <Text style={styles.workerInfoName}>{worker.name}</Text>
                         </View>
                         <View style={styles.workerTime}>
                           {worker.hours.map(info => (
-                            <View style={styles.workerTimeContainer} key={info.key}>
-                              <Text style={styles.dayHeader}>{info.header}: </Text>
-                              <View style={styles.timeHeaders}>
-                                <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
-                                <View style={styles.column}><Text>:</Text></View>
-                                <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
-                                <Text style={styles.timeHeader}>{info.opentime.period}</Text>
+                            info.working && (
+                              <View style={styles.workerTimeContainer} key={info.key}>
+                                <Text style={styles.dayHeader}>{info.header}: </Text>
+                                <View style={styles.timeHeaders}>
+                                  <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
+                                  <View style={styles.column}><Text>:</Text></View>
+                                  <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
+                                  <Text style={styles.timeHeader}>{info.opentime.period}</Text>
+                                </View>
+                                <View style={styles.column}><Text> - </Text></View>
+                                <View style={styles.timeHeaders}>
+                                  <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
+                                  <View style={styles.column}><Text>:</Text></View>
+                                  <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
+                                  <Text style={styles.timeHeader}>{info.closetime.period}</Text>
+                                </View>
                               </View>
-                              <View style={styles.column}><Text> - </Text></View>
-                              <View style={styles.timeHeaders}>
-                                <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
-                                <View style={styles.column}><Text>:</Text></View>
-                                <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
-                                <Text style={styles.timeHeader}>{info.closetime.period}</Text>
-                              </View>
-                            </View>
+                            )
                           ))}
                         </View>
                       </View>
@@ -445,20 +453,19 @@ const styles = StyleSheet.create({
   menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginVertical: 5, padding: 10, width: '50%' },
   menuInputTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   menuInputError: { color: 'darkred', marginLeft: 10 },
-  menuPhoto: { height, marginBottom: 10, marginHorizontal: width * 0.025, width: width * 0.95 },
+  menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
-	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3, width: '98%' },
+	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3, width: '98%' },
 	menuImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
 	menuImage: { height: wsize(10), width: wsize(10) },
-	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5 },
-	itemActions: { flexDirection: 'row', marginTop: 0 },
-	itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5 },
-	itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
-	item: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 10, margin: '2%', paddingHorizontal: 3, paddingBottom: 30 },
+	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
+  item: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, width: '100%' },
 	itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), margin: 5, overflow: 'hidden', width: wsize(10) },
 	itemImage: { height: wsize(10), width: wsize(10) },
-	itemHeader: { fontSize: wsize(6), fontWeight: 'bold', marginRight: 20, textDecorationStyle: 'solid' },
-	itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
+	itemHeader: { fontSize: wsize(6) },
+  itemActions: { flexDirection: 'row' },
+  itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+  itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
@@ -471,8 +478,8 @@ const styles = StyleSheet.create({
 	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
 	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
 	showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
-  worker: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
   workerInfoList: { width: '100%' },
+  worker: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
   workerInfo: {  },
   workerInfoProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
   workerInfoName: { color: 'black', textAlign: 'center' },

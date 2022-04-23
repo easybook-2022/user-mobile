@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  SafeAreaView, ActivityIndicator, Dimensions, View, FlatList, Text, 
+  SafeAreaView, Platform, ActivityIndicator, Dimensions, View, FlatList, Text, 
   TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { socket, url, logo_url, displayTime, stripeFee } from '../../assets/info'
-import { getNotifications, getTrialInfo } from '../apis/users'
+import { getNotifications } from '../apis/users'
 import { getWorkers, searchWorkers } from '../apis/owners'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
-import { acceptRequest, closeSchedule, cancelRequest, allowPayment, sendServicePayment } from '../apis/schedules'
+import { acceptRequest, closeSchedule, cancelRequest } from '../apis/schedules'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
@@ -182,17 +182,6 @@ export default function Notification(props) {
 				}
 			})
 	}
-  const removeFromList = id => {
-    let newItems = [...cartOrderers]
-
-    newItems.forEach(function (item, index) {
-      if (item.orderNumber == id) {
-        newItems.splice(index, 1)
-      }
-    })
-
-    setCartorderers(newItems)
-  }
 
 	// websockets
 	const startWebsocket = async() => {
@@ -311,7 +300,6 @@ export default function Notification(props) {
 		if (Constants.isDevice) {
 			Notifications.addNotificationResponseReceivedListener(res => {
 				const { data } = res.notification.request.content
-				const newItems = [...items]
 
 				if (data.type == "cancelAppointment") {
           const newItems = [...items]
@@ -412,7 +400,7 @@ export default function Notification(props) {
 			socket.off("updateNotifications")
 		}
 	}, [items.length])
-	
+
 	return (
 		<SafeAreaView style={styles.notifications}>
 			{loaded ? 
@@ -466,238 +454,77 @@ export default function Notification(props) {
 											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 												<View style={styles.itemImageHolders}>
 													<View style={styles.itemLocationImageHolder}>
-														<Image source={{ uri: logo_url + item.locationimage }} style={{ height: '100%', width: '100%' }}/>
+														<Image source={{ uri: logo_url + item.locationimage.name }} style={{ height: '100%', width: '100%' }}/>
 													</View>
-													{item.serviceimage != '' ? 
+													{item.serviceimage.name != '' ? 
 														<View style={styles.itemServiceImageHolder}>
-															<Image source={{ uri: logo_url + item.serviceimage }} style={{ height: '100%', width: '100%' }}/>
+															<Image source={{ uri: logo_url + item.serviceimage.name }} style={{ height: '100%', width: '100%' }}/>
 														</View>
 													: null }
 												</View>
 												<View style={{ flexDirection: 'column', width: wsize(70) }}>
-													{item.locationtype == "restaurant" ? 
-														item.booker ? 
-															<Text style={styles.itemServiceHeader}>
-																Reservation requested
-                                <Text style={{ fontSize: wsize(4.5) }}>
-  																{'\n\n' + ((item.diners) > 0 && ((item.diners) + ' ' + ((item.diners) == 1 ? 'person' : 'people')))}
-  																{'\nat ' + item.location}
-  																{'\n' + displayTime(item.time)}
-                                </Text>
-															</Text>
-															:
-															<Text style={styles.itemServiceHeader}>
-																Reservation {item.action == "accepted" ? 'made' : 'requested'}
-
-                                <Text style={{ fontSize: wsize(4.5) }}>
-                                  {'\n\nby ' + item.bookerName}
-  																{item.diners > 0 ? 
-  																	<>
-  																		{'\n'}and{' '}
-  																		{
-  																			item.diners - 1 == 0 ? 
-  																				item.bookerName
-  																				:
-  																				(item.diners - 1) + " other " + ((item.diners - 1) <= 1 ? "person" : "people") + " " 
-  																		}
-  																	</>
-  																: null}
-  																{'\nat ' + item.location}
-                                  {'\n' + displayTime(item.time)}
-                                </Text>
-															</Text>
-														:
-														<Text style={styles.itemServiceHeader}>
-															Appointment booking 
-															{'\n\nfor ' + item.service}
-														  {'\nat ' + item.location}
-															{'\n' + displayTime(item.time)}
-                              {'\n' + (item.worker != null && '\nwith stylist: ' + item.worker.username)}
-														</Text>
-													}
+													<Text style={styles.itemServiceHeader}>
+                            Appointment booking 
+                            {'\n\nfor ' + item.service}
+                            {'\nat ' + item.location}
+                            {'\n' + displayTime(item.time)}
+                            {'\n' + (item.worker != null && '\nwith stylist: ' + item.worker.username)}
+                          </Text>
 
 													{(item.action == "requested" || item.action == "change") && 
-														<Text style={styles.itemHeader}>
-                              waiting for the restaurant's response
-                            </Text>
+														<Text style={styles.itemHeader}>waiting for the restaurant's response</Text>
 													}
 
-													{item.action == "accepted" && (
-														<>
-															<Text style={styles.itemHeader}>
-																{item.locationtype == 'restaurant' ? 
-																	item.booker ? "Reservation accepted" : ""
-																	:
-																	"Appointment accepted"
-																}
-																{'\n\n'}
-																{item.locationtype == 'restaurant' && "Table #" + item.table}
-															</Text>
-															
-															<View style={{ alignItems: 'center' }}>
-																{item.locationtype == "restaurant" ? 
-																	item.booker ? 
-																		<View style={{ alignItems: 'center' }}>
-																			<TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
-                                        <Text style={styles.actionHeader}>Cancel</Text>
-                                      </TouchableOpacity>
-                                      <TouchableOpacity style={styles.action} onPress={() => confirmTheRequest(index)}>
-                                        <Text style={styles.actionHeader}>Accept</Text>
-                                      </TouchableOpacity>
-																		</View>
-																		:
-																		item.confirm ? 
-																			<View style={{ alignItems: 'center' }}>
-																				<TouchableOpacity style={styles.action} onPress={() => {
-																					props.close()
-																					props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
-																				}}>
-																					<Text style={styles.actionHeader}>See the menu</Text>
-																				</TouchableOpacity>
-																				<TouchableOpacity style={styles.action} onPress={() => {
-																					props.close()
-																					props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
-																				}}>
-																					<Text style={styles.actionHeader}>Rebook</Text>
-																				</TouchableOpacity>
-																				<View style={[styles.action, { opacity: 0.5 }]}>
-																					<Text style={styles.actionHeader}>
-																						Awaits seating{'\n'}
-																						<Text>........</Text>
-																					</Text>
-																				</View>
-																			</View>
-																			:
-																			<View style={{ alignItems: 'center' }}>
-																				<TouchableOpacity style={styles.action} onPress={() => cancelTheReservationJoining(item.id)}>
-                                          <Text style={styles.actionHeader}>Not Coming</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={styles.action} onPress={() => acceptTheReservationJoining(index)}>
-                                          <Text style={styles.actionHeader}>Accept</Text>
-                                        </TouchableOpacity>
-																			</View>
-																	:
-																	<View style={{ alignItems: 'center' }}>
-																		<TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
+													{item.action == "confirmed" && (
+														<View style={{ alignItems: 'center' }}>
+                              {item.serviceid ? 
+                                <View style={{ alignItems: 'center' }}>
+                                  <TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
+                                    <Text style={styles.actionHeader}>Cancel</Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity style={styles.action} onPress={() => {
+                                    props.close()
+                                    props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id })
+                                  }}>
+                                    <Text style={styles.actionHeader}>Rebook</Text>
+                                  </TouchableOpacity>
+                                </View>
+                                :
+                                <View style={{ alignItems: 'center' }}>
+                                  <View style={{ alignItems: 'center' }}>
+                                    <TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
                                       <Text style={styles.actionHeader}>Cancel</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={styles.action} onPress={() => confirmTheRequest(index)}>
-                                      <Text style={styles.actionHeader}>Confirm</Text>
+                                    <TouchableOpacity style={styles.action} onPress={() => {
+                                      props.close()
+                                      props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id, serviceinfo: item.service })
+                                    }}>
+                                      <Text style={styles.actionHeader}>Rebook</Text>
                                     </TouchableOpacity>
-																	</View>
-																}
-															</View>
-														</>
+                                  </View>
+                                </View>
+                              }
+                            </View>
 													)}
 
-													{item.action == "confirmed" && (
-														<>
-															<Text style={styles.itemServiceHeader}>{item.locationtype == 'restaurant' && "Table #" + item.table}</Text>
-
-															{item.locationtype == "restaurant" ?
-																item.confirm ? 
-																	<View style={{ alignItems: 'center' }}>
-																		{item.seated ?
-																			<View style={{ alignItems: 'center' }}>
-																				<TouchableOpacity style={styles.action} onPress={() => {
-																					props.close()
-																					props.navigation.navigate("order", { 
-                                            locationid: item.locationid, 
-                                            scheduleid: item.id, numOrders: item.numOrders,
-                                            allowPayment: item.allowPayment
-                                          })
-																				}}>
-																					<Text style={styles.actionHeader}>Order your meals</Text>
-																				</TouchableOpacity>
-
-                                        {item.numOrders && item.numOrders > 0 && (
-                                          <TouchableOpacity style={styles.action} onPress={() => {}}>
-                                            <Text style={styles.actionHeader}>Send payment{item.allowPayment ? " again" : ""}</Text>
-                                          </TouchableOpacity>
-                                        )}
-																			</View>
-																			:
-																			<View style={{ alignItems: 'center' }}>
-																				<TouchableOpacity style={styles.action} onPress={() => {
-																					props.close()
-																					props.navigation.navigate("order", { locationid: item.locationid, scheduleid: item.id })
-																				}}>
-																					<Text style={styles.actionHeader}>See food menu</Text>
-																				</TouchableOpacity>
-																				<TouchableOpacity style={styles.action} onPress={() => {
-																					props.close()
-																					props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
-																				}}>
-																					<Text style={styles.actionHeader}>Rebook</Text>
-																				</TouchableOpacity>
-																			</View>
-																		}
-																	</View>
-																	:
-																	item.booker ? 
-																		<View style={{ alignItems: 'center' }}>
-																			<TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
-                                        <Text style={styles.actionHeader}>Cancel</Text>
-                                      </TouchableOpacity>
-                                      <TouchableOpacity style={styles.action} onPress={() => confirmTheRequest(index)}>
-                                        <Text style={styles.actionHeader}>Accept</Text>
-                                      </TouchableOpacity>
-																		</View>
-																		:
-																		<View style={{ alignItems: 'center' }}>
-																			<TouchableOpacity style={styles.action} onPress={() => cancelTheReservationJoining(item.id)}>
-                                        <Text style={styles.actionHeader}>Not Coming</Text>
-                                      </TouchableOpacity>
-                                      <TouchableOpacity style={styles.action} onPress={() => acceptTheReservationJoining(index)}>
-                                        <Text style={styles.actionHeader}>Accept</Text>
-                                      </TouchableOpacity>
-																		</View>
-																:
-																<View style={{ alignItems: 'center' }}>
-																	{item.serviceid ? 
-																		<View style={{ alignItems: 'center' }}>
-																			<TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
-																				<Text style={styles.actionHeader}>Cancel</Text>
-																			</TouchableOpacity>
-																			<TouchableOpacity style={styles.action} onPress={() => {
-																				props.close()
-																				props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id })
-																			}}>
-																				<Text style={styles.actionHeader}>Rebook</Text>
-																			</TouchableOpacity>
-																		</View>
-																		:
-																		<View style={{ alignItems: 'center' }}>
-																			<View style={{ alignItems: 'center' }}>
-                                        <TouchableOpacity style={styles.action} onPress={() => cancelTheRequest(item, index)}>
-                                          <Text style={styles.actionHeader}>Cancel</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={styles.action} onPress={() => {
-                                          props.close()
-                                          props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id, serviceinfo: item.service })
-                                        }}>
-                                          <Text style={styles.actionHeader}>Rebook</Text>
-                                        </TouchableOpacity>
-                                      </View>
-																		</View>
-																	}
-																</View>
-															}
-														</>
-													)}
-
-													{(item.action == "cancel" || item.action == "rebook") ? 
+													{(item.action == "cancel" || item.action == "rebook") && 
 														<View style={styles.storeRequested}>
 															<Text style={styles.itemServiceHeader}>
-																{item.action == "cancel" ? item.locationtype == 'restaurant' ? "Reservation cancelled" : "Appointment cancelled" : "Time taken"}
+																{item.action == "cancel" ? "Appointment cancelled" : "Time taken"}
                                 {'\n'}
                                 {item.reason && <Text>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>}
 															</Text>
 															{item.action == "cancel" && (
 																<View style={{ alignItems: 'center' }}>
 																	<TouchableOpacity style={styles.action} onPress={() => closeTheSchedule(index)}>
-																		<Text style={styles.actionHeader}>Ok</Text>
+																		<Text style={styles.actionHeader}>Cancel</Text>
 																	</TouchableOpacity>
+                                  <TouchableOpacity style={styles.action} onPress={() => {
+                                    props.close()
+                                    props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.service })
+                                  }}>
+                                    <Text style={styles.actionHeader}>Rebook</Text>
+                                  </TouchableOpacity>
 																</View>
 															)}
 															{(item.action == "rebook" && item.nextTime > 0) && (
@@ -713,12 +540,7 @@ export default function Notification(props) {
                                     </TouchableOpacity>
                                     <TouchableOpacity style={styles.action} onPress={() => {
                                       props.close()
-                                      
-                                      if (item.locationtype == "restaurant") {
-                                        props.navigation.navigate("makereservation", { locationid: item.locationid, scheduleid: item.id })
-                                      } else {
-                                        props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.service })
-                                      }
+                                      props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.service })
                                     }}>
                                       <Text style={styles.actionHeader}>Rebook</Text>
                                     </TouchableOpacity>
@@ -729,7 +551,7 @@ export default function Notification(props) {
 																</>
 															)}
 														</View>
-													: null }
+													}
 												</View>
 											</View>
 										)}
@@ -819,7 +641,7 @@ export default function Notification(props) {
 }
 
 const styles = StyleSheet.create({
-	notifications: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+	notifications: { backgroundColor: '#EAEAEA', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { height: '100%', width: '100%' },
 	close: { marginTop: 20, marginHorizontal: 20 },
 	boxHeader: { fontFamily: 'appFont', fontSize: wsize(7), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
@@ -830,23 +652,14 @@ const styles = StyleSheet.create({
 	body: { flexDirection: 'column', height: '80%', justifyContent: 'space-around' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, paddingHorizontal: 10, paddingVertical: 30 },
 	itemImageHolders: { alignItems: 'center', width: wsize(30) },
-  itemImageHolder: { borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
-	itemLocationImageHolder: { borderRadius: (wsize(30) - 5) / 2, height: wsize(30) - 5, overflow: 'hidden', width: wsize(30) - 5 },
+  itemLocationImageHolder: { borderRadius: (wsize(30) - 5) / 2, height: wsize(30) - 5, overflow: 'hidden', width: wsize(30) - 5 },
 	itemServiceImageHolder: { borderRadius: (wsize(30) - 10) / 2, height: wsize(30) - 10, overflow: 'hidden', width: wsize(30) - 10 },
 
 	// service
 	itemServiceHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 10, textAlign: 'center' },
-	itemServiceResponseTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: 60 },
-	itemServiceResponseTouchHeader: { fontWeight: 'bold', textAlign: 'center' },
 	storeRequested: { backgroundColor: 'rgba(127, 127, 127, 0.3)', borderRadius: 3, padding: 5 },
 
 	// order
-	itemName: { fontSize: wsize(5), marginBottom: 10 },
-	itemInfo: { fontSize: wsize(4) },
-	itemInfoHeader: { fontSize: wsize(4) },
-	adderInfo: { alignItems: 'center' },
-	adderInfoProfile: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: 20, height: 40, overflow: 'hidden', width: 40 },
-	adderInfoHeader: { padding: 10 },
 	itemOrderNumber: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
 	itemHeader: { fontSize: wsize(5), textAlign: 'center' },
 	

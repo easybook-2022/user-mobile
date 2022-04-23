@@ -37,11 +37,8 @@ export const getUserInfo = id => {
 	return axios.get(`${url}/users/get_user_info/${id}`)
 }
 
-export const getNumNotifications = data => {
-	return axios.post(
-		`${url}/users/get_num_notifications`,
-		data
-	)
+export const getNumNotifications = id => {
+	return axios.get(`${url}/users/get_num_notifications/${id}`)
 }
 
 export const getNotifications = id => {

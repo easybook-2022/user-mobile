@@ -19,6 +19,9 @@ import Userauth from '../../components/userauth'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
 
+// components
+import Loadingprogress from '../../components/loadingprogress';
+
 const { height, width } = Dimensions.get('window')
 const wsize = p => {
   return width * (p / 100)
@@ -77,7 +80,7 @@ export default function Booktime(props) {
 	], loading: false, errorMsg: "" })
   const [userId, setUserid] = useState(null)
 	const [times, setTimes] = useState([])
-	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ show: false, worker: null, workers: [], numWorkers: 0, loading: false })
+	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ worker: null, workers: [], numWorkers: 0, loading: false })
 	const [loaded, setLoaded] = useState(false)
 	const [showAuth, setShowauth] = useState(false)
   const [step, setStep] = useState(0)
@@ -111,7 +114,6 @@ export default function Booktime(props) {
 				})
 		}
 	}
-
 	const getTheServiceInfo = async() => {
 		getServiceInfo(serviceid)
 			.then((res) => {
@@ -147,418 +149,70 @@ export default function Booktime(props) {
 
           setName(name)
           setOldtime(time)
-          setSelectedworkerinfo({ ...selectedWorkerinfo, worker })
+          setSelectedworkerinfo(prev => ({ ...prev, worker }))
           getTheLocationHours(time)
         }
       })
   }
-	const getTheLocationHours = async(time) => {
-		const day = new Date(Date.now()).toString().split(" ")[0]
-		const data = { locationid, day }
+  const getCalendar = (month, year) => {
+    let currTime = new Date(), currDate = 0, currDay = ''
+    let datenow = Date.parse(days[currTime.getDay()] + " " + months[currTime.getMonth()] + " " + currTime.getDate() + " " + year)
+    let firstDay = (new Date(year, month)).getDay()
+    let numDays = 32 - new Date(year, month, 32).getDate()
+    let daynum = 1, data = calendar.data, datetime = 0
 
-    setCalendar({ ...calendar, loading: true })
+    data.forEach(function (info, rowindex) {
+      info.row.forEach(function (day, dayindex) {
+        day.num = 0
+        day.noservice = false
 
-		getLocationHours(data)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					const { openTime, closeTime, scheduled } = res
+        if (rowindex == 0) {
+          if (dayindex >= firstDay) {
+            datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
-					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
-					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
+            day.passed = datenow > datetime
 
-					const currTime = new Date(Date.now())
-					const currDay = days[currTime.getDay()]
-					const currDate = currTime.getDate()
-					const currMonth = months[currTime.getMonth()]
-
-          let selectedTime = time > 0 ? new Date(time) : null
-          let selectedDay = null, selectedDate = null, selectedMonth = null
-          let openStr, closeStr, openDateStr, closeDateStr, calcDateStr
-          let calcDay = ""
-
-          if (selectedTime) {
-            selectedDay = days[selectedTime.getDay()]
-            selectedDate = selectedTime.getDate()
-            selectedMonth = months[selectedTime.getMonth()]
-
-            openStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + openHour + ":" + openMinute
-            closeStr = selectedDay + " " + selectedMonth + " " + selectedTime.getDate() + " " + selectedTime.getFullYear() + " " + closeHour + ":" + closeMinute
-
-            calcDay = selectedDay
-          } else {
-            openStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + openHour + ":" + openMinute
-            closeStr = currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear() + " " + closeHour + ":" + closeMinute
-
-            calcDay = currDay
+            day.noservice = selectedWorkerinfo.worker != null ? 
+              !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
+              :
+              !(days[dayindex].substr(0, 3) in allWorkers)
+            
+            day.num = daynum
+            daynum++
           }
+        } else if (daynum <= numDays) {
+          datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
-          openDateStr = Date.parse(openStr)
-          closeDateStr = Date.parse(closeStr)
-          calcDateStr = openDateStr
+          day.passed = datenow > datetime
 
-					let firstDay = (new Date(currTime.getFullYear(), currTime.getMonth())).getDay()
-					let numDays = 32 - new Date(currTime.getFullYear(), currTime.getMonth(), 32).getDate()
-					let daynum = 1, data = calendar.data, datetime = 0, datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
-          let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
+          day.noservice = selectedWorkerinfo.worker != null ? 
+            !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
+            :
+            !(days[dayindex].substr(0, 3) in allWorkers)
+          
+          day.num = daynum
+          daynum++
+        }
 
-					data.forEach(function (info, rowindex) {
-						info.row.forEach(function (day, dayindex) {
-							day.num = 0
-              day.noservice = false
-
-							if (rowindex == 0) {
-								if (dayindex >= firstDay) {
-									datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
-
-									day.passed = datenow > datetime
-
-                  day.noservice = selectedWorkerinfo.worker != null ? 
-                    !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
-                    :
-                    !(days[dayindex].substr(0, 3) in allWorkers)
-                  
-									day.num = daynum
-									daynum++
-								}
-							} else if (daynum <= numDays) {
-								datetime = Date.parse(days[dayindex] + " " + currMonth + " " + daynum + " " + currTime.getFullYear())
-
-								day.passed = datenow > datetime
-
-                day.noservice = selectedWorkerinfo.worker != null ? 
-                  !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
-                  :
-                  !(days[dayindex].substr(0, 3) in allWorkers)
-                
-								day.num = daynum
-								daynum++
-							}
-						})
-					})
-
-					while (calcDateStr < (closeDateStr - pushtime)) {
-						calcDateStr += pushtime
-
-						let timestr = new Date(calcDateStr)
-						let hour = timestr.getHours()
-						let minute = timestr.getMinutes()
-						let period = hour < 12 ? "am" : "pm"
-
-						let timepassed = currenttime > calcDateStr
-						let timetaken = scheduled.indexOf(calcDateStr) > -1
-            let availableService = false
-            let timedisplay = "", workerIds = []
-
-            if (selectedWorkerinfo.worker != null && calcDay.substr(0, 3) in selectedWorkerinfo.worker.days) {
-              let startTime = selectedWorkerinfo.worker.days[calcDay.substr(0, 3)]["start"]
-              let endTime = selectedWorkerinfo.worker.days[calcDay.substr(0, 3)]["end"]
-
-              if (
-                calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
-                && 
-                calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
-              ) {
-                availableService = true
-                workerIds = [selectedWorkerinfo.worker.days[calcDay.substr(0, 3)]["workerId"]]
-              }
-            } else {
-              if (calcDay.substr(0, 3) in allWorkers) {
-                let times = allWorkers[calcDay.substr(0, 3)]
-                let startTime = "", endTime = ""
-
-                times.forEach(function (info) {
-                  workerIds.push(info.workerId)
-                  startTime = info.start
-                  endTime = info.end
-
-                  if (
-                    calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
-                    && 
-                    calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
-                  ) {
-                    availableService = true
-                  }
-                })
-              }
-            }
-
-            if (!timepassed && !timetaken && availableService == true) {
-              timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
-
-              timesRow.push({
-                key: timesNum.toString(), header: timedisplay, 
-                time: calcDateStr, workerIds
-              })
-              timesNum++
-
-              if (timesRow.length == 3) {
-                newTimes.push({ key: newTimes.length, row: timesRow })
-                timesRow = []
-              }
-            }
-					}
-
-          if (timesRow.length > 0 && timesRow.length < 3) {
-            while (timesRow.length < 3) {
-              timesRow.push({ key: timesNum.toString() })
-              timesNum++
-            }
-
-            newTimes.push({ key: newTimes.length, row: timesRow })
-          }
-
-					if (selectedTime) {
-            setSelecteddateinfo({ month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay, date: selectedDate, time: 0 })
-          } else {
-            setSelecteddateinfo({
-              month: currMonth, year: currTime.getFullYear(), day: currDay,
-              date: selectedWorkerinfo.worker == null || calcDay.substr(0, 3) in selectedWorkerinfo.worker.days ? 
-                currDate 
-                : 
-                0,
-              time: 0
-            })
-          }
-
-					setCalendar({ firstDay, numDays, data, loading: false })
-					setScheduledtimes(scheduled)
-					setTimes(newTimes)
-          setOpentime({ hour: openHour, minute: openMinute })
-          setClosetime({ hour: closeHour, minute: closeMinute })
-					setLoaded(true)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					const { errormsg, status } = err.response.data
-				} else {
-					alert(err.message)
-				}
-			})
-	}
-	const getTheWorkers = () => {
-    setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
-
-		getWorkers(locationid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setSelectedworkerinfo({ show: true, worker: null, workers: res.owners, numWorkers: res.numWorkers, loading: false })
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-
-				} else {
-
-				}
-			})
-	}
-  const getAllTheWorkersTime = () => {
-    getAllWorkersTime(locationid)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
+        if (day.num > 0 && (!day.passed && !day.noservice) && currDate == 0) {
+          currDate = day.num
+          currDay = days[dayindex]
         }
       })
-      .then((res) => {
-        if (res) {
-          setAllworkers(res.workers)
-        }
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
-        } else {
-          alert("get all workers time")
-        }
-      })
+    })
+
+    setCalendar({ firstDay, numDays, data, loading: false })
+
+    return { currDate, currDay }
   }
-	const selectWorker = id => {
-    setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
-
-		let workerinfo
-
-		getWorkerInfo(id)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					selectedWorkerinfo.workers.forEach(function (item) {
-						item.row.forEach(function (worker) {
-							if (worker.id == id) {
-								workerinfo = {...worker, days: res.days }
-
-								setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, worker: workerinfo, loading: false })
-							}
-						})
-					})
-				}
-			})
-	}
-	const dateNavigate = (dir) => {
-		setLoaded(false)
-
-		const currTime = new Date(Date.now())
-		const currDay = days[currTime.getDay()]
-		const currMonth = months[currTime.getMonth()]
-
-		let month = months.indexOf(selectedDateinfo.month), year = selectedDateinfo.year
-
-		month = dir == 'left' ? month - 1 : month + 1
-
-		if (month < 0) {
-			month = 11
-			year--
-		} else if (month > 11) {
-			month = 0
-			year++
-		}
-
-		let firstDay, numDays, daynum = 1, data = calendar.data, datetime
-		let datenow = Date.parse(currDay + " " + currMonth + " " + currTime.getDate() + " " + currTime.getFullYear())
-    let date = month == currTime.getMonth() && year == currTime.getFullYear() ? currTime.getDate() : 1
-    let openStr = months[month] + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
-    let closeStr = months[month] + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
-    let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), currDateStr = openDateStr
-    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
-
-		firstDay = (new Date(year, month)).getDay()
-		numDays = 32 - new Date(year, month, 32).getDate()
-
-		data.forEach(function (info, rowindex) {
-			info.row.forEach(function (day, dayindex) {
-				day.num = 0
-				day.noservice = false
-
-				if (rowindex == 0) {
-					if (dayindex >= firstDay) {
-						datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
-
-						day.passed = datenow > datetime
-
-            if (selectedWorkerinfo.worker != null) {
-              day.noservice = !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
-            } else {
-              day.noservice = !(days[dayindex].substr(0, 3) in allWorkers)
-            }
-
-						day.num = daynum
-						daynum++
-					}
-				} else if (daynum <= numDays) {
-					datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
-
-					day.passed = datenow > datetime
-
-          if (selectedWorkerinfo.worker != null) {
-            day.noservice = !(days[dayindex].substr(0, 3) in selectedWorkerinfo.worker.days)
-          } else {
-            day.noservice = !(days[dayindex].substr(0, 3) in allWorkers)
-          }
-
-					day.num = daynum
-					daynum++
-				}
-			})
-		})
-
-		while (currDateStr < (closeDateStr - pushtime)) {
-			currDateStr += pushtime
-
-			let timestr = new Date(currDateStr)
-			let hour = timestr.getHours()
-			let minute = timestr.getMinutes()
-			let period = hour < 12 ? "am" : "pm"
-			
-			let timepassed = currenttime > currDateStr
-			let timetaken = scheduledTimes.indexOf(currDateStr) > -1
-      let availableService = false
-      let timedisplay = "", workerIds = []
-
-      if (selectedWorkerinfo.worker != null && currDay.substr(0, 3) in selectedWorkerinfo.worker.days) {
-        let startTime = selectedWorkerinfo.worker.days[currDay.substr(0, 3)]["start"]
-        let endTime = selectedWorkerinfo.worker.days[currDay.substr(0, 3)]["end"]
-
-        if (
-          calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
-          && 
-          calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
-        ) {
-          availableService = true
-          workerIds = [selectedWorkerinfo.worker.days[currDay.substr(0, 3)]["workerId"]]
-        }
-      } else {
-        if (currDay.substr(0, 3) in allWorkers) {
-          let times = allWorkers[currDay.substr(0, 3)]
-          let startTime = "", endTime = ""
-
-          times.forEach(function (info) {
-            startTime = info.start
-            endTime = info.end
-
-            if (
-              calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
-              && 
-              calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
-            ) {
-              availableService = true
-              workerIds.push(info.workerId)
-            }
-          })
-        }
-      }
-
-  		if (!timepassed && !timetaken && availableService == true) {
-        timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
-
-        timesRow.push({
-          key: timesNum.toString(), header: timedisplay, 
-          time: calcDateStr, workerIds
-        })
-        timesNum++
-
-        if (timesRow.length == 3) {
-          newTimes.push({ key: newTimes.length, row: timesRow })
-          timesRow = []
-        }
-      }
-		}
-
-    if (timesRow.length > 0) {
-      while (timesRow.length < 3) {
-        timesRow.push({ key: timesNum.toString() })
-        timesNum++
-      }
-
-      newTimes.push({ key: newTimes.length, row: timesRow })
-    }
-
-		setSelecteddateinfo({ ...selectedDateinfo, month: months[month], year })
-		setCalendar({ firstDay, numDays, data })
-		setTimes(newTimes)
-		setLoaded(true)
-	}
-	const selectDate = async(date) => {
-    const { month, year } = selectedDateinfo
-
-    let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
-    let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
+  const getTimes = () => {
+    const { month, day, date, year } = selectedDateinfo
+    let start = day in allWorkers ? allWorkers[day][0]["start"] : openTime.hour + ":" + openTime.minute
+    let end = day in allWorkers ? allWorkers[day][0]["end"] : closeTime.hour + ":" + closeTime.minute
+    let openStr = month + " " + date + ", " + year + " " + start
+    let closeStr = month + " " + date + ", " + year + " " + end
     let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
-    let day = new Date(openDateStr).toString()
-    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0, workerStarttime = null, workerEndtime = null, workerTime = null
+    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0, firstTime = true
 
     while (calcDateStr < (closeDateStr - pushtime)) {
       calcDateStr += pushtime
@@ -568,7 +222,15 @@ export default function Booktime(props) {
       let minute = timestr.getMinutes()
       let period = hour < 12 ? "am" : "pm"
 
-      let timedisplay = (hour <= 12 ? (hour == 0 ? "12" : hour) : hour - 12) + ":" + (minute < 10 ? '0' + minute : minute) + " " + period
+      let timedisplay = (
+        hour <= 12 ? 
+          (hour == 0 ? 12 : hour) 
+          : 
+          hour - 12
+        ) 
+        + ":" + 
+        (minute < 10 ? '0' + minute : minute) + " " + period
+
       let timepassed = currenttime > calcDateStr
       let timetaken = scheduledTimes.indexOf(calcDateStr) > -1
       let availableService = false, workerIds = []
@@ -598,7 +260,7 @@ export default function Booktime(props) {
               calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
               && 
               calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
-            ) {
+            ) {              
               availableService = true
               workerIds.push(info.workerId)
             }
@@ -628,8 +290,160 @@ export default function Booktime(props) {
       newTimes.push({ key: newTimes.length, row: timesRow })
     }
 
-    setSelecteddateinfo({ ...selectedDateinfo, date, day })
     setTimes(newTimes)
+  }
+	const getTheLocationHours = async(time) => {
+    const day = selectedDateinfo.day != "" ? selectedDateinfo.day : new Date(Date.now()).toString().split(" ")[0]
+		const data = { locationid, day: day.substr(0, 3) }
+
+    setCalendar({ ...calendar, loading: true })
+
+		getLocationHours(data)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					const { openTime, closeTime, scheduled } = res
+
+					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
+					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
+
+					const currTime = new Date(Date.now())
+					const currMonth = months[currTime.getMonth()]
+
+          let selectedTime = time > 0 ? new Date(time) : null
+          let selectedDay = null, selectedDate = null, selectedMonth = null
+
+          let { currDate, currDay } = getCalendar(currTime.getMonth(), currTime.getFullYear())
+
+					if (selectedTime) {
+            selectedDay = days[selectedTime.getDay()]
+            selectedDate = selectedTime.getDate()
+            selectedMonth = months[selectedTime.getMonth()]
+
+            getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
+            setSelecteddateinfo({ month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time: 0 })
+          } else {
+            setSelecteddateinfo({
+              month: currMonth, year: currTime.getFullYear(), day: currDay.substr(0, 3),
+              date: currDate,
+              time: 0
+            })
+          }
+
+					setScheduledtimes(scheduled)
+          setOpentime({ hour: openHour, minute: openMinute })
+          setClosetime({ hour: closeHour, minute: closeMinute })
+					setLoaded(true)
+				}
+			})
+			.catch((err) => {
+				if (err.response && err.response.status == 400) {
+					const { errormsg, status } = err.response.data
+				} else {
+					alert(err.message)
+				}
+			})
+	}
+	const getTheWorkers = () => {
+		getWorkers(locationid)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					setSelectedworkerinfo(prev => ({ ...prev, workers: res.owners, numWorkers: res.numWorkers, loading: false }))
+				}
+			})
+			.catch((err) => {
+				if (err.response && err.response.status == 400) {
+
+				} else {
+          alert("get workers")
+				}
+			})
+	}
+  const getAllTheWorkersTime = () => {
+    getAllWorkersTime(locationid)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          setAllworkers(res.workers)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        } else {
+          alert("get all workers time")
+        }
+      })
+  }
+	const selectWorker = id => {
+    setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
+
+		getWorkerInfo(id)
+			.then((res) => {
+				if (res.status == 200) {
+					return res.data
+				}
+			})
+			.then((res) => {
+				if (res) {
+					selectedWorkerinfo.workers.forEach(function (item) {
+						item.row.forEach(function (worker) {
+							if (worker.id == id) {
+								let workerinfo = {...worker, days: res.days }
+
+								setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, worker: workerinfo, loading: false })
+							}
+						})
+					})
+				}
+			})
+	}
+	const dateNavigate = (dir) => {
+		setLoaded(false)
+
+		const currTime = new Date(Date.now())
+		const currDay = days[currTime.getDay()]
+		const currMonth = months[currTime.getMonth()]
+
+		let month = months.indexOf(selectedDateinfo.month), year = selectedDateinfo.year
+
+		month = dir == 'left' ? month - 1 : month + 1
+
+		if (month < 0) {
+			month = 11
+			year--
+		} else if (month > 11) {
+			month = 0
+			year++
+		}
+
+    let { currDate } = getCalendar(month, year)
+
+		setSelecteddateinfo({ ...selectedDateinfo, month: months[month], date: currDate, year })
+		setLoaded(true)
+	}
+	const selectDate = async(date) => {
+    const { month, year } = selectedDateinfo
+
+    let openStr = month + " " + date + ", " + year + " " + openTime.hour + ":" + openTime.minute
+    let closeStr = month + " " + date + ", " + year + " " + closeTime.hour + ":" + closeTime.minute
+    let openDateStr = Date.parse(openStr), day = new Date(openDateStr).toString().split(" ")[0]
+
+    setSelecteddateinfo({ ...selectedDateinfo, date, day: day.substr(0, 3) })
+    getAllTheWorkersTime()
 	}
 	const selectTime = (name, timeheader, time, workerIds) => {
 		const { month, date, year } = selectedDateinfo
@@ -689,6 +503,8 @@ export default function Booktime(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						const { errormsg, status } = err.response.data
+
+            setConfirm({ ...confirm, errorMsg: errormsg })
 					} else {
 						alert("make appointment")
 					}
@@ -701,15 +517,13 @@ export default function Booktime(props) {
 
 	useEffect(() => {
 		getTheNumCartItems()
+    getTheWorkers()
     getAllTheWorkersTime()
 
 		if (serviceid) getTheServiceInfo()
+    if (scheduleid) getTheAppointmentInfo()
 
-    if (scheduleid) {
-      getTheAppointmentInfo()
-    } else {
-      getTheLocationHours()
-    }
+    getTheLocationHours()
 	}, [])
 
 	return (
@@ -728,29 +542,36 @@ export default function Booktime(props) {
 							<View style={styles.workerSelection}>
 								<Text style={styles.workerSelectionHeader}>Pick a stylist (Optional)</Text>
 
-								<View style={styles.chooseWorkerActions}>
-									{selectedWorkerinfo.worker != null && (
-                    <View style={styles.column}>
-  										<TouchableOpacity style={styles.chooseWorkerAction} onPress={() => {
-                        setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
-                        getAllTheWorkersTime()
-                      }}>
-  											 <Text style={styles.chooseWorkerActionHeader}>Cancel</Text>
-  										</TouchableOpacity>
-                    </View>
-									)}
-										
-									<TouchableOpacity style={[styles.chooseWorkerAction, { opacity: selectedWorkerinfo.loading ? 0.5 : 1 }]} disabled={selectedWorkerinfo.loading} onPress={() => getTheWorkers()}>
-										<Text style={styles.chooseWorkerActionHeader}>{selectedWorkerinfo.worker == null ? 'Tap to choose your stylist' : 'Tap to choose a different stylist'}</Text>
-									</TouchableOpacity>
-								</View>
-
-								{selectedWorkerinfo.worker != null && (
-									<View style={styles.selectedWorker}>
-										<Image style={styles.selectedWorkerImage} source={{ uri: logo_url + selectedWorkerinfo.worker.profile }}/>
-										<Text style={styles.selectedWorkerHeader}>{selectedWorkerinfo.worker.username}</Text>
-									</View>
-								)}
+                <View style={styles.workersList}>
+                  <FlatList
+                    data={selectedWorkerinfo.workers}
+                    renderItem={({ item, index }) => 
+                      <View key={item.key} style={styles.workersRow}>
+                        {item.row.map(info => (
+                          info.id ? 
+                            <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.worker && selectedWorkerinfo.worker.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
+                              <View style={styles.workerProfile}>
+                                <Image source={{ uri: logo_url + info.profile.name }} style={{ height: wsize(20), width: wsize(20) }}/>
+                              </View>
+                              <Text style={styles.workerHeader}>{info.username}</Text>
+                            </TouchableOpacity>
+                            :
+                            <View key={info.key} style={styles.worker}></View>
+                        ))}
+                      </View>
+                    }
+                  />
+                </View>
+                {selectedWorkerinfo.worker != null && (
+                  <View style={styles.chooseWorkerActions}>
+                    <TouchableOpacity style={styles.chooseWorkerAction} onPress={() => {
+                      setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
+                      getAllTheWorkersTime()
+                    }}>
+                       <Text style={styles.chooseWorkerActionHeader}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
 							</View>
             )}
 
@@ -758,7 +579,7 @@ export default function Booktime(props) {
 							<View style={styles.dateSelection}>
 								<Text style={styles.dateSelectionHeader}>Tap a date below</Text>
 
-                {!calendar.loading ? 
+                {!calendar.loading && (
                   <>
     								<View style={styles.dateHeaders}>
                       <View style={styles.column}>
@@ -787,7 +608,7 @@ export default function Booktime(props) {
                                     <Text style={styles.dayTouchHeader}>{day.num}</Text>
                                   </TouchableOpacity>
                                   :
-                                  <TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { opacity: 0.1 }]}>
+                                  <TouchableOpacity key={day.key} disabled={true} style={[styles.dayTouch, { backgroundColor: 'rgba(0, 0, 0, 0.1)' }]}>
                                     <Text style={styles.dayTouchHeader}>{day.num}</Text>
                                   </TouchableOpacity>
     														:
@@ -823,11 +644,7 @@ export default function Booktime(props) {
     								</View>
                     <Text style={styles.errorMsg}>{calendar.errorMsg}</Text>
                   </>
-                  :
-                  <View style={styles.loading}>
-                    <ActivityIndicator color="black" size="small"/>
-                  </View>
-                }
+                )}
   						</View>
             )}
 
@@ -858,7 +675,7 @@ export default function Booktime(props) {
 
             <View style={styles.actions}>
               {step > 0 && (
-                <TouchableOpacity style={styles.action} onPress={async() => {
+                <TouchableOpacity style={styles.action} onPress={() => {
                   if (selectedWorkerinfo.worker != null) {
                     selectWorker(selectedWorkerinfo.worker.id)
                   } else {
@@ -877,8 +694,6 @@ export default function Booktime(props) {
                     case 0:
                       if (selectedWorkerinfo.worker != null) {
                         selectWorker(selectedWorkerinfo.worker.id)
-                      } else {
-                        getAllTheWorkersTime()
                       }
 
                       getTheLocationHours(oldTime)
@@ -889,6 +704,7 @@ export default function Booktime(props) {
                     case 1:
                       if (selectedDateinfo.date > 0) {
                         setStep(2)
+                        getTimes()
                       } else {
                         setCalendar({ ...calendar, errorMsg: "Please tap on a day" })
                       }
@@ -931,9 +747,10 @@ export default function Booktime(props) {
 
 						<TouchableOpacity style={styles.bottomNav} onPress={() => {
 							if (userId) {
-								AsyncStorage.clear()
-
-								setUserid(null)
+                socket.emit("socket/user/logout", userId, () => {
+                  AsyncStorage.clear()
+                  setUserid(null)
+                })
 							} else {
 								setShowauth(true)
 							}
@@ -961,7 +778,7 @@ export default function Booktime(props) {
 											<Text style={styles.confirmHeader}>
 												Change Appointment for
 												{'\nService: ' + confirm.service + '\n\n'}
-												{displayTime(oldTime) + '\n\nto'}
+												{displayTime(oldTime) + '\nto'}
 												{'\n' + displayTime(confirm.time) + '\n'}
 											</Text>
 										}
@@ -974,11 +791,11 @@ export default function Booktime(props) {
 											/>
 										</View>
 
-										{confirm.errormsg ? <Text style={styles.errorMsg}>You already made an appointment for this service</Text> : null}
+										{confirm.errormsg ? <Text style={styles.errorMsg}>{confirm.errormsg}</Text> : null}
 
 										<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
 											<View style={styles.confirmOptions}>
-												<TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => setConfirm({ show: false, service: "", time: 0, note: "", requested: false, errormsg: "" })}>
+												<TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => setConfirm({ ...confirm, show: false, service: "", time: 0, note: "", requested: false, errormsg: "" })}>
 													<Text style={styles.confirmOptionHeader}>No</Text>
 												</TouchableOpacity>
 												<TouchableOpacity style={[styles.confirmOption, { opacity: confirm.loading ? 0.3 : 1 }]} disabled={confirm.loading} onPress={() => makeAnAppointment()}>
@@ -997,8 +814,7 @@ export default function Booktime(props) {
 									<View style={styles.requestedHeaders}>
                     <Text style={styles.requestedHeader}>Appointment made for{'\n'}</Text>
                     <Text style={styles.requestedHeaderInfo}>
-                      {confirm.service} {'\n'}
-                      {displayTime(confirm.time)}
+                      {confirm.service + '\n' + displayTime(confirm.time)}
                     </Text>
                   </View>
 								}
@@ -1007,66 +823,22 @@ export default function Booktime(props) {
 					</TouchableWithoutFeedback>
 				</Modal>
 			)}
-			{selectedWorkerinfo.show && (
-				<Modal transparent={true}>
-					<SafeAreaView style={styles.workersContainer}>
-						<View style={styles.workersBox}>
-							<Text style={styles.workersHeader}>Tap the stylist you want</Text>
-
-              <TouchableOpacity style={styles.workersRefresh} onPress={() => getTheWorkers()}>
-                <Text style={styles.workersRefreshHeader}>Refresh</Text>
-              </TouchableOpacity>
-
-							<View style={styles.workersList}>
-								<FlatList
-									data={selectedWorkerinfo.workers}
-									renderItem={({ item, index }) => 
-										<View key={item.key} style={styles.workersRow}>
-											{item.row.map(info => (
-												info.id ? 
-													<TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: info.selected ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
-														<View style={styles.workerProfile}>
-															<Image source={{ uri: logo_url + info.profile }} style={{ height: wsize(20), width: wsize(20) }}/>
-														</View>
-														<Text style={styles.workerHeader}>{info.username}</Text>
-													</TouchableOpacity>
-													:
-													<View key={info.key} style={styles.worker}></View>
-											))}
-										</View>
-									}
-								/>
-							</View>
-
-							<TouchableOpacity style={styles.workersClose} disabled={selectedWorkerinfo.loading} onPress={() => setSelectedworkerinfo({ ...selectedWorkerinfo, show: false, workers: [] })}>
-								<Text style={styles.workersCloseHeader}>Cancel</Text>
-							</TouchableOpacity>
-						</View>
-					</SafeAreaView>
-				</Modal>
-			)}
 			{openCart && <Modal><Cart navigation={props.navigation} close={() => {
 				getTheNumCartItems()
 				setOpencart(false)
 			}}/></Modal>}
 			{showAuth && (
 				<Modal transparent={true}>
-					<Userauth close={() => setShowauth(false)} done={(id, msg) => {
-						if (msg == "setup") {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 1,
-									routes: [{ name: "setup" }]
-								})
-							);
-						} else {
-							socket.emit("socket/user/login", "user" + id, () => setUserid(id))
-						}
-
-						setShowauth(false)
+					<Userauth close={() => setShowauth(false)} done={id => {
+						socket.emit("socket/user/login", "user" + id, () => {
+              setUserid(id)
+              setShowauth(false)
+            })
 					}} navigate={props.navigation.navigate}/>
 				</Modal>
 			)}
+
+      {selectedWorkerinfo.loading && <Modal transparent={true}><Loadingprogress/></Modal>}
 		</SafeAreaView>
 	)
 }
@@ -1078,9 +850,14 @@ const styles = StyleSheet.create({
 	headers: { height: '10%' },
 	serviceHeader: { fontSize: wsize(8), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 
-	workerSelection: { alignItems: 'center', marginVertical: 50 },
+	workerSelection: { alignItems: 'center', marginTop: 20 },
   workerSelectionHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
-	chooseWorkerActions: { flexDirection: 'row', justifyContent: 'space-around' },
+	workersList: { height: '60%' },
+  workersRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  worker: { alignItems: 'center', borderRadius: 10, marginHorizontal: 5, padding: 5, width: (width / 3) - 30 },
+  workerProfile: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
+  workerHeader: { fontSize: wsize(4), fontWeight: 'bold'  },
+  chooseWorkerActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	chooseWorkerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 2, padding: 5, width: wsize(40) },
 	chooseWorkerActionHeader: { fontSize: wsize(5), textAlign: 'center' },
 	selectedWorker: { marginVertical: 10 },
@@ -1090,10 +867,9 @@ const styles = StyleSheet.create({
 	dateSelection: { alignItems: 'center', width: '100%' },
   dateSelectionHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
   dateHeaders: { flexDirection: 'row', justifyContent: 'space-between', width: '70%' },
-  column: { flexDirection: 'column', justifyContent: 'space-around' },
   dateHeader: { fontSize: wsize(6), marginVertical: 5, textAlign: 'center', width: wsize(50) },
+  
   days: { alignItems: 'center', width: '100%' },
-
   daysHeaderRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   daysHeader: { fontSize: wsize(12) * 0.3, fontWeight: 'bold', marginVertical: 1, textAlign: 'center', width: wsize(12) },
 
@@ -1111,8 +887,6 @@ const styles = StyleSheet.create({
 	unselect: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 2, paddingVertical: 10, width: wsize(30) },
 	unselectHeader: { color: 'black', fontSize: wsize(5) },
 
-	noTimeHeader: { fontFamily: 'appFont', fontSize: wsize(4) },
-
   actions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
   action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: wsize(30) },
   actionHeader: { color: 'black', fontSize: wsize(5), textAlign: 'center' },
@@ -1126,8 +900,8 @@ const styles = StyleSheet.create({
 
 	// confirm & requested box
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', justifyContent: 'space-around', paddingVertical: 20, width: '80%' },
-	confirmHeader: { fontSize: wsize(4), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', justifyContent: 'space-around', padding: 10, width: '80%' },
+	confirmHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
 	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(4), height: 100, padding: 5, width: '80%' },
 	confirmOptions: { flexDirection: 'row' },
@@ -1138,26 +912,6 @@ const styles = StyleSheet.create({
 	requestedCloseHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
 	requestedHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
 	requestedHeaderInfo: { fontSize: wsize(5), textAlign: 'center' },
-
-	workersContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	workersBox: { alignItems: 'center', backgroundColor: 'white', height: '90%', width: '90%' },
-	workersHeader: { fontSize: wsize(5), fontWeight: 'bold', paddingVertical: 20, textAlign: 'center' },
-  workersRefresh: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-  workersRefreshHeader: { textAlign: 'center' },
-	workersList: { height: '70%' },
-	workersRow: { flexDirection: 'row', justifyContent: 'space-between' },
-	worker: { alignItems: 'center', marginHorizontal: 5, padding: 5, width: (width / 3) - 30 },
-	workerProfile: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
-	workerHeader: { fontSize: wsize(4), fontWeight: 'bold'  },
-	workersClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: wsize(30) },
-	workersCloseHeader: { fontSize: wsize(4), textAlign: 'center' },
-
-	requiredBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	requiredContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	requiredHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
-	requiredActions: { flexDirection: 'row', justifyContent: 'space-around' },
-	requiredAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
-	requiredActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
