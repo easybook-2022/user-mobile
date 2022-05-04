@@ -54,9 +54,7 @@ export default function Notification(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("cancel cart order")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -108,9 +106,7 @@ export default function Notification(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("close schedule")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -147,9 +143,7 @@ export default function Notification(props) {
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
-
-					} else {
-						alert("cancel request")
+            const { errormsg, status } = err.response.data
 					}
 				})
 		}
@@ -176,9 +170,7 @@ export default function Notification(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("get notifications")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -433,7 +425,10 @@ export default function Notification(props) {
 
 												<Text style={styles.itemHeader}>
                           {item.status == 'checkout' ? 
-                            'The restaurant will respond\nyou with wait time'
+                            item.locationType == "restaurant" ? 
+                              'The restaurant will respond\nyou with wait time'
+                              :
+                              ''
                             :
                             'The order will be ready for pickup in ' + item.waitTime + ' minutes'
                           }
@@ -592,7 +587,7 @@ export default function Notification(props) {
 						<View style={styles.confirmBox}>
 							<View style={styles.confirmContainer}>
 								<Text style={styles.confirmHeader}>
-									<Text style={{ fontFamily: 'Arial', fontWeight: 'bold' }}>Cancel Appointment</Text>
+									<Text style={{ fontWeight: 'bold' }}>Cancel Appointment</Text>
 									{cancelSchedule.service ? '\n\nfor ' + cancelSchedule.service : '\n'}
 									{'\nat ' + cancelSchedule.location + '\n'}
 									{displayTime(cancelSchedule.time)}

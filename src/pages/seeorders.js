@@ -39,9 +39,7 @@ export default function Seeorders(props) {
       })
       .catch((err) => {
         if (err.response && err.response.status == 400) {
-          
-        } else {
-          alert("see orders")
+          const { errormsg, status } = err.response.data
         }
       })
   }

@@ -3,12 +3,12 @@ import { SafeAreaView, Platform, Dimensions, ScrollView, View, FlatList, Image, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
 import Constants from 'expo-constants';
-import { socket, logo_url } from '../../../assets/info'
-import { getProductInfo } from '../../apis/products'
-import { getNumCartItems, addItemtocart } from '../../apis/carts'
+import { socket, logo_url } from '../../assets/info'
+import { getProductInfo } from '../apis/products'
+import { getNumCartItems, addItemtocart } from '../apis/carts'
 
-import Orders from '../../components/orders'
-import Userauth from '../../components/userauth'
+import Orders from '../components/orders'
+import Userauth from '../components/userauth'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -24,7 +24,7 @@ const hsize = p => {
 }
 
 export default function Itemprofile(props) {
-	const { locationid, productid, productinfo } = props.route.params
+	const { locationid, productid, productinfo, type } = props.route.params
 	const func = props.route.params
 
 	const [itemName, setItemname] = useState('')
@@ -64,9 +64,7 @@ export default function Itemprofile(props) {
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
-						
-					} else {
-						alert("get num cart items")
+            const { errormsg, status } = err.response.data
 					}
 				})
 		}
@@ -168,7 +166,7 @@ export default function Itemprofile(props) {
 			let newOthers = JSON.parse(JSON.stringify(others))
 			let newSizes = JSON.parse(JSON.stringify(sizes))
 			let size = "", price = 0
-
+      
 			if (!productinfo) {
 				if (newSizes.length > 0) {
 					newSizes.forEach(function (info) {
@@ -190,7 +188,7 @@ export default function Itemprofile(props) {
 					delete other['key']
 				})
 			}
-
+      
 			if (price || productinfo) {
 				const data = { 
 					userid: userId, locationid, 
@@ -199,8 +197,8 @@ export default function Itemprofile(props) {
 					quantity, 
 					callfor, 
 					options: newOptions, others: newOthers, sizes: newSizes, 
-					note: itemNote, 
-					receiver 
+					note: itemNote, type, 
+					receiver
 				}
 
 				addItemtocart(data)
@@ -217,8 +215,6 @@ export default function Itemprofile(props) {
 					.catch((err) => {
 						if (err.response && err.response.status == 400) {
 							const { errormsg, status } = err.response.data
-						} else {
-							alert("add cart")
 						}
 					})
 			} else {
@@ -254,9 +250,7 @@ export default function Itemprofile(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get product info")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -381,7 +375,7 @@ export default function Itemprofile(props) {
 							<Text style={styles.noteHeader}>Add some instruction if you want ?</Text>
 							<TextInput 
 								style={styles.noteInput} multiline textAlignVertical="top" 
-								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder={"example: add 2 cream and 1 sugar"}
+								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder={"example: " + (type == "store" ? "make it medium size" : "add 2 cream and 1 sugar")}
 								maxLength={100} onChangeText={(note) => setItemnote(note)} 
 								autoCorrect={false} autoCapitalize="none"
 							/>

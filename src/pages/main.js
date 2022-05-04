@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { 
 	SafeAreaView, Platform, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, 
-	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal, PermissionsAndroid 
+	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -49,7 +49,7 @@ export default function Main(props) {
     : 
     false
 
-	const [locationPermission, setLocationpermission] = useState(false)
+	const [locationPermission, setLocationpermission] = useState(null)
 	const [notificationPermission, setNotificationpermission] = useState(false)
 	const [localnetworkPermission, setLocalnetworkpermission] = useState(false)
 	const [geolocation, setGeolocation] = useState({ longitude: null, latitude: null })
@@ -87,9 +87,7 @@ export default function Main(props) {
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
-
-					} else {
-						alert("fetch num notifications")
+            const { errormsg, status } = err.response.data
 					}
 				})
 		}
@@ -109,9 +107,7 @@ export default function Main(props) {
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
-
-					} else {
-            alert("get num cart items")	
+            const { errormsg, status } = err.response.data
 					}
 				})
 		}
@@ -148,8 +144,6 @@ export default function Main(props) {
 							break;
 						default:
 					}
-				} else {
-          alert("get locations")
 				}
 			})
 	}
@@ -182,105 +176,54 @@ export default function Main(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-          alert("get more locations")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
 	const getLocationPermission = async() => {
-		let longitude = await AsyncStorage.getItem("longitude")
-		let latitude = await AsyncStorage.getItem("latitude")
+		let longitude = parseFloat(await AsyncStorage.getItem("longitude"))
+		let latitude = parseFloat(await AsyncStorage.getItem("latitude"))
     
-		if (!longitude || !latitude) {
-      if (Platform.OS === "ios") {
-        const { status } = await Location.getForegroundPermissionsAsync()
+		const { status } = await Location.getForegroundPermissionsAsync()
+    let realStatus = status == "granted"
 
-        if (status != 'granted') {
-          const fore = await Location.requestForegroundPermissionsAsync()
+    if (status != 'granted') {
+      const fore = await Location.requestForegroundPermissionsAsync()
 
-          if (fore.status == 'granted') {
-            setLocationpermission(true)
-          }
-        }
+      if (fore.status == 'granted') {
+        setLocationpermission(true)
+        realStatus = true
+      }
+    } else {
+      setLocationpermission(true)
+    }
 
-        const last = await Location.getLastKnownPositionAsync()
+    if (realStatus) {
+      const last = await Location.getLastKnownPositionAsync()
 
-        if (last) {
-          longitude = last.coords.longitude
-          latitude = last.coords.latitude
-        } else {
-          const current = await Location.getCurrentPositionAsync()
-
-          if (current.coords.longitude && current.coords.latitude) {
-            longitude = current.coords.longitude
-            latitude = current.coords.latitude
-          }
-        }
+      if (last) {
+        longitude = last.coords.longitude
+        latitude = last.coords.latitude
       } else {
-        const status = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION)
+        const current = await Location.getCurrentPositionAsync()
 
-        if (!status) {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-            {
-              title: "Location Permission",
-              message: 
-                "EasyGO User tracks your phone location so that it can keep you " + 
-                "updated on the closest salons and restaurants",
-              buttonNegative: "Cancel",
-              buttonPositive: "OK"
-            }
-          )
-
-          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            setLocationpermission(true)
-
-            const last = await Location.getLastKnownPositionAsync()
-
-            if (last) {
-              longitude = last.coords.longitude
-              latitude = last.coords.latitude
-            } else {
-              const current = await Location.getCurrentPositionAsync()
-
-              if (current.coords.longitude && current.coords.latitude) {
-                longitude = current.coords.longitude
-                latitude = current.coords.latitude
-              }
-            }
-          }
-        } else {
-          setLocationpermission(true)
-
-          const last = await Location.getLastKnownPositionAsync()
-
-          if (last) {
-            longitude = last.coords.longitude
-            latitude = last.coords.latitude
-          } else {
-            const current = await Location.getCurrentPositionAsync()
-
-            if (current.coords.longitude && current.coords.latitude) {
-              longitude = current.coords.longitude
-              latitude = current.coords.latitude
-            }
-          }
+        if (current.coords.longitude && current.coords.latitude) {
+          longitude = current.coords.longitude
+          latitude = current.coords.latitude
         }
       }
 
-			if (!longitude && !latitude) {
-				const longitude = parseFloat(await AsyncStorage.getItem("longitude"))
-				const latitude = parseFloat(await AsyncStorage.getItem("latitude"))
-			}
-		}
+      if (longitude && latitude) {
+        AsyncStorage.setItem("longitude", longitude.toString())
+        AsyncStorage.setItem("latitude", latitude.toString())
 
-		AsyncStorage.setItem("longitude", longitude.toString())
-		AsyncStorage.setItem("latitude", latitude.toString())
-
-		updateTrackUser = setInterval(() => trackUserLocation(), 2000)
-		setGeolocation({ longitude, latitude })
-		getTheLocations(longitude, latitude, "")
+        updateTrackUser = setInterval(() => trackUserLocation(), 2000)
+        setGeolocation({ longitude, latitude })
+        getTheLocations(longitude, latitude, "")
+      }
+    } else {
+      setLoaded(true)
+    }
 	}
 	const getNotificationPermission = async() => {
 		const userid = await AsyncStorage.getItem("userid")
@@ -297,7 +240,7 @@ export default function Main(props) {
 		}
 
 		const { data } = await Notifications.getExpoPushTokenAsync({
-			experienceId: "@robogram/easygo-user"
+			experienceId: "@robogram/EasyGO (User)"
 		})
 
 		if (userid) {
@@ -314,9 +257,7 @@ export default function Main(props) {
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
-
-					} else {
-            alert("get notification permission")
+            const { errormsg, status } = err.response.data
 					}
 				})
 		}
@@ -389,17 +330,9 @@ export default function Main(props) {
 					setOpennotifications(true)
 				} else if (data.type == "acceptRequest") {
 					setOpennotifications(true)
-				} else if (data.type == "receivePayment") {
-					fetchTheNumNotifications()
 				} else if (data.type == "cancelRequest") {
 					setOpennotifications(true)
 				} else if (data.type == "orderReady") {
-					setOpennotifications(true)
-				} else if (data.type == "canServeDiners") {
-					setOpennotifications(true)
-				} else if (data.type == "addDiners") {
-					setOpennotifications(true)
-				} else if (data.type == "addItemtoorder") {
 					setOpennotifications(true)
 				}
 			});
@@ -439,55 +372,67 @@ export default function Main(props) {
   				</View>
 
   				<View style={styles.body}>
-  					{geolocation.longitude && geolocation.latitude && !loading ? 
-  						<FlatList
-  							showsVerticalScrollIndicator={false}
-  							data={locations}
-  							renderItem={({ item, index }) => 
-                  item.locations.length > 0 && (
-                    <View key={item.key} style={styles.service}>
-                      <Text style={styles.rowHeader}>{item.locations.length} {item.header} near you</Text>
+            {locationPermission != null && ( 
+              locationPermission == true ? 
+      					geolocation.longitude && geolocation.latitude && !loading ? 
+      						<FlatList
+      							showsVerticalScrollIndicator={false}
+      							data={locations}
+      							renderItem={({ item, index }) => 
+                      item.locations.length > 0 && (
+                        <View key={item.key} style={styles.service}>
+                          <Text style={styles.rowHeader}>{item.locations.length} {item.header} near you</Text>
 
-                      <View style={styles.row}>
-                        <FlatList
-                          ListFooterComponent={() => {
-                            if (item.loading && item.index < item.max) {
-                              return <ActivityIndicator style={{ marginVertical: 50 }} color="black" size="large"/>
-                            }
+                          <View style={styles.row}>
+                            <FlatList
+                              ListFooterComponent={() => {
+                                if (item.loading && item.index < item.max) {
+                                  return <ActivityIndicator style={{ marginVertical: 50 }} color="black" size="large"/>
+                                }
 
-                            return null
-                          }}
-                          horizontal
-                          onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
-                          onEndReachedThreshold={0}
-                          showsHorizontalScrollIndicator={false}
-                          data={item.locations}
-                          renderItem={({ item, index }) => 
-                            <TouchableOpacity style={styles.location} onPress={() => {
-                              clearInterval(updateTrackUser)
-                              props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
-                            }}>
-                              <View style={styles.locationPhotoHolder}>
-                                <Image source={{ uri: logo_url + item.logo.name }} style={{ height: '100%', width: '100%' }}/>
-                              </View>
-                              
-                              <Text style={styles.locationHeader}>{item.name}</Text>
-                              <Text style={styles.locationHeader}>{item.distance}</Text>
+                                return null
+                              }}
+                              horizontal
+                              onEndReached={() => getTheMoreLocations(item.service, index, item.index)}
+                              onEndReachedThreshold={0}
+                              showsHorizontalScrollIndicator={false}
+                              data={item.locations}
+                              renderItem={({ item, index }) => 
+                                <TouchableOpacity style={styles.location} onPress={() => {
+                                  clearInterval(updateTrackUser)
+                                  props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
+                                }}>
+                                  <View style={styles.locationPhotoHolder}>
+                                    <Image source={{ uri: logo_url + item.logo.name }} style={{ height: '100%', width: '100%' }}/>
+                                  </View>
+                                  
+                                  <Text style={styles.locationHeader}>{item.name}</Text>
+                                  <Text style={styles.locationHeader}>{item.distance}</Text>
 
-                              <View style={styles.locationAction}>
-                                <Text>{item.service == "restaurant" ? "Order" : "Book"} now</Text>
-                              </View>
-                            </TouchableOpacity>
-                          }
-                        />
-                      </View>
-                    </View>
-                  )
-                }
-  						/>
-  						:
-  						<ActivityIndicator color="black" size="large"/>
-  					}
+                                  <View style={styles.locationAction}>
+                                    <Text>
+                                      {item.service == "restaurant" && "Order"}
+                                      {(item.service == "hair" || item.service == "nail") && "Book"}
+                                      {item.service == "store" && "Order"}
+                                      {' '}now
+                                    </Text>
+                                  </View>
+                                </TouchableOpacity>
+                              }
+                            />
+                          </View>
+                        </View>
+                      )
+                    }
+      						/>
+      						:
+      						<ActivityIndicator color="black" size="large"/>
+                :
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={styles.requestLocationHeader}>You need to allow location permission in your settings</Text>
+                  <Text style={styles.requestLocationHeader}>in order to see nearest places</Text>
+                </View>
+            )}
   				</View>
 
   				<View style={styles.bottomNavs}>
@@ -604,6 +549,8 @@ const styles = StyleSheet.create({
 	locationHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   locationActionHeader: { textAlign: 'center' },
+
+  requestLocationHeader: { textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },

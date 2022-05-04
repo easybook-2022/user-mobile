@@ -52,9 +52,7 @@ export default function Account(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get user info")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -90,8 +88,6 @@ export default function Account(props) {
 
 						setErrormsg(errormsg)
             setLoading(false)
-					} else {
-						alert("update user")
 					}
 				})
 		} else {

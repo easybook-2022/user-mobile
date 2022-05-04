@@ -7,18 +7,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
 
 LogBox.ignoreLogs([
-    'Non-serializable values were found in the navigation state',
+  'Non-serializable values were found in the navigation state',
 ]);
 
 import Main from './src/pages/main'
-import Restaurantprofile from './src/pages/restaurants/restaurantprofile'
-import Itemprofile from './src/pages/restaurants/itemprofile'
+
+import Restaurantprofile from './src/pages/restaurants/profile'
+
 import Seeorders from './src/pages/seeorders'
 
-import Salonprofile from './src/pages/salons/salonprofile'
+import Salonprofile from './src/pages/salons/profile'
 import Booktime from './src/pages/salons/booktime'
 
+import Storeprofile from './src/pages/stores/profile'
+
 import Account from './src/pages/account'
+import Itemprofile from './src/components/itemprofile'
 import Orders from './src/components/orders'
 
 const { height, width } = Dimensions.get('window')
@@ -80,6 +84,16 @@ export default function App() {
               )
             )
           })}/>
+          <Stack.Screen name="storeprofile" component={Storeprofile} options={({ navigation }) => ({
+            headerTitle: () => <Text style={styles.header}>Store Profile</Text>,
+            headerLeft: () => (
+              Platform.OS == 'ios' && (
+                <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+                  <Text style={styles.backHeader}>Go Back</Text>
+                </TouchableOpacity>
+              )
+            )
+          })}/>
           <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({
             headerTitle: () => <Text style={styles.header}>{route.params.scheduleid ? 'Rebook' : 'Book'} an appointment</Text>,
             headerLeft: () => (
@@ -114,9 +128,9 @@ export default function App() {
           })}/>
         </Stack.Navigator>
       </NavigationContainer>
-    ) 
+    )
   }
-  
+
   return null
 }
 

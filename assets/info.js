@@ -27,8 +27,8 @@ const emptyUser = { username: "", cellnumber: "", password: "", confirmPassword:
 
 const useInput = true
 
-const login = test_input ? testUsers[1] : useInput ? realUsers[0] : emptyUser
-const register = test_input ? testUsers[1] : useInput ? realUsers[0] : emptyUser
+const login = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
+const register = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
 
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"

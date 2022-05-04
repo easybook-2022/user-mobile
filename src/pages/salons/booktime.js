@@ -108,8 +108,6 @@ export default function Booktime(props) {
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
 						
-					} else {
-						alert("get num cart items")
 					}
 				})
 		}
@@ -131,8 +129,6 @@ export default function Booktime(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					
-				} else {
-					alert("get service info")
 				}
 			})
 	}
@@ -157,9 +153,8 @@ export default function Booktime(props) {
   const getCalendar = (month, year) => {
     let currTime = new Date(), currDate = 0, currDay = ''
     let datenow = Date.parse(days[currTime.getDay()] + " " + months[currTime.getMonth()] + " " + currTime.getDate() + " " + year)
-    let firstDay = (new Date(year, month)).getDay()
-    let numDays = 32 - new Date(year, month, 32).getDate()
-    let daynum = 1, data = calendar.data, datetime = 0
+    let firstDay = (new Date(year, month)).getDay(), numDays = 32 - new Date(year, month, 32).getDate(), daynum = 1
+    let data = calendar.data, datetime = 0
 
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
@@ -293,7 +288,7 @@ export default function Booktime(props) {
     setTimes(newTimes)
   }
 	const getTheLocationHours = async(time) => {
-    const day = selectedDateinfo.day != "" ? selectedDateinfo.day : new Date(Date.now()).toString().split(" ")[0]
+    const day = selectedDateinfo.day ? selectedDateinfo.day : new Date(Date.now()).toString().split(" ")[0]
 		const data = { locationid, day: day.substr(0, 3) }
 
     setCalendar({ ...calendar, loading: true })
@@ -343,8 +338,6 @@ export default function Booktime(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					const { errormsg, status } = err.response.data
-				} else {
-					alert(err.message)
 				}
 			})
 	}
@@ -362,9 +355,7 @@ export default function Booktime(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-
-				} else {
-          alert("get workers")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -383,8 +374,6 @@ export default function Booktime(props) {
       .catch((err) => {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
-        } else {
-          alert("get all workers time")
         }
       })
   }
@@ -453,6 +442,8 @@ export default function Booktime(props) {
 	}
 	const makeAnAppointment = async() => {
 		if (userId) {
+      setConfirm({ ...confirm, loading: true })
+
 			const { month, date, year, time } = selectedDateinfo
 			const { worker } = selectedWorkerinfo
 			const { note, workerIds } = confirm
@@ -470,8 +461,6 @@ export default function Booktime(props) {
 				time: dateInfo, note: note ? note : "", 
 				type: "makeAppointment"
 			}
-
-      setConfirm({ ...confirm, loading: true })
 
 			makeAppointment(data)
 				.then((res) => {
@@ -505,8 +494,6 @@ export default function Booktime(props) {
 						const { errormsg, status } = err.response.data
 
             setConfirm({ ...confirm, errorMsg: errormsg })
-					} else {
-						alert("make appointment")
 					}
 				})
 		} else {
@@ -837,7 +824,6 @@ export default function Booktime(props) {
 					}} navigate={props.navigation.navigate}/>
 				</Modal>
 			)}
-
       {selectedWorkerinfo.loading && <Modal transparent={true}><Loadingprogress/></Modal>}
 		</SafeAreaView>
 	)

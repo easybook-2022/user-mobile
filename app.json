@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "easygo-user",
+    "name": "EasyGO (User)",
     "slug": "easygo-user",
-    "version": "0.0.0",
+    "version": "0.0.13",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -19,19 +19,20 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.geottuse.serviceapp.user",
-      "buildNumber": "10",
+      "buildNumber": "4",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (User) uses camera to allow you to take a profile picture",
         "NSMicrophoneUsageDescription": "EasyGO (User) does not need microphone",
-        "NSLocationWhenInUseUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants and salons",
-        "NSLocationUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants and salons",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "EasyGO (User) uses your location to show you the nearest restaurants and salons"
+        "NSLocationUsageDescription": "EasyGO (User) tracks you to show you the nearest restaurants, salons and stores",
+        "NSLocationWhenInUseUsageDescription": "EasyGO (User) tracks you to show you the nearest restaurants, salons and stores",
+        "NSLocationAlwaysUsageDescription": "EasyGO (User) tracks you to show you the nearest restaurants, salons and stores"
       }
     },
     "android": {
       "package": "com.geottuse.serviceapp.user",
-      "versionCode": 9,
-      "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "versionCode": 16,
+      "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_FINE_LOCATION"],
+      "googleServicesFile": "./google-services.json"
     },
     "notification": {
       "icon": "./assets/notification.png"

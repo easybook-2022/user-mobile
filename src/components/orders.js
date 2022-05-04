@@ -169,9 +169,7 @@ export default function Orders(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-
-				} else {
-					alert("get cart items")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -198,9 +196,7 @@ export default function Orders(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("edit cart item")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -243,9 +239,7 @@ export default function Orders(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("update cart item")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -302,8 +296,6 @@ export default function Orders(props) {
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
 					const { errormsg, status } = err.response.data
-				} else {
-					alert("checkout")
 				}
 			})
 	}
@@ -480,7 +472,7 @@ export default function Orders(props) {
   								<View style={{ alignItems: 'center' }}>
   									<View style={styles.cartActions}>
   										<TouchableOpacity style={[styles.cartAction, { opacity: activeCheckout && !loading ? 1 : 0.3 }]} disabled={!activeCheckout || loading} onPress={() => checkout()}>
-  											<Text style={styles.cartActionHeader}>Send Order{'\n'}to restaurant</Text>
+  											<Text style={styles.cartActionHeader}>Send Order</Text>
   										</TouchableOpacity>
   									</View>
 

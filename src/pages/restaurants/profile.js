@@ -27,7 +27,7 @@ const hsize = p => {
   return height * (p / 100)
 }
 
-export default function Restaurantprofile(props) {
+export default function Profile(props) {
 	const { locationid, refetch } = props.route.params
 	const func = props.route.params
 
@@ -66,9 +66,7 @@ export default function Restaurantprofile(props) {
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
-						
-					} else {
-						alert("get num cart items")
+            const { errormsg, status } = err.response.data
 					}
 				})
 		}
@@ -97,9 +95,7 @@ export default function Restaurantprofile(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get location profile")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -122,9 +118,7 @@ export default function Restaurantprofile(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get all menus")
+          const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -224,7 +218,7 @@ export default function Restaurantprofile(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={styles.restaurantprofile}>
+		<SafeAreaView style={styles.profile}>
 			{loaded ? 
 				<View style={styles.box}>
 					<View style={styles.profileInfo}>
@@ -244,7 +238,7 @@ export default function Restaurantprofile(props) {
               </TouchableOpacity>
             </View>
 					</View>
-					
+          
 					<View style={styles.body}>
 						{(menuInfo.items.length > 0 && menuInfo.items[0].row) && (
               <>
@@ -257,7 +251,8 @@ export default function Restaurantprofile(props) {
                           "itemprofile", 
                           { 
                             locationid, menuid: "", productid: "", 
-                            productinfo: productInfo, initialize: () => getAllMenus() 
+                            productinfo: productInfo, initialize: () => getAllMenus(), 
+                            type: "restaurant"
                           }
                         )
                       } else {
@@ -389,7 +384,7 @@ export default function Restaurantprofile(props) {
 }
 
 const styles = StyleSheet.create({
-	restaurantprofile: { backgroundColor: 'white', height: '100%', width: '100%' },
+	profile: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	profileInfo: { flexDirection: 'row', height: '7%', justifyContent: 'space-around', width: '100%' },

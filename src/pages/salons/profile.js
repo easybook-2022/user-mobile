@@ -28,7 +28,7 @@ const hsize = p => {
   return height * (p / 100)
 }
 
-export default function Salonprofile(props) {
+export default function Profile(props) {
 	const { locationid, refetch } = props.route.params
 	const func = props.route.params
 
@@ -67,9 +67,7 @@ export default function Salonprofile(props) {
 				})
 				.catch((err) => {
 					if (err.response && err.response.status == 400) {
-						
-					} else {
-						alert("get num cart items")
+						const { errormsg, status } = err.response.data
 					}
 				})
 		}
@@ -98,9 +96,7 @@ export default function Salonprofile(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get location profile")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -121,9 +117,7 @@ export default function Salonprofile(props) {
 			})
 			.catch((err) => {
 				if (err.response && err.response.status == 400) {
-					
-				} else {
-					alert("get all menus")
+					const { errormsg, status } = err.response.data
 				}
 			})
 	}
@@ -231,8 +225,6 @@ export default function Salonprofile(props) {
       .catch((err) => {
         if (err.response && err.response.status == 400) {
           const { errormsg, status } = err.response.data
-        } else {
-          alert("get workers time")
         }
       })
   }
@@ -242,7 +234,7 @@ export default function Salonprofile(props) {
 	}, [])
 
 	return (
-		<SafeAreaView style={styles.salonprofile}>
+		<SafeAreaView style={styles.profile}>
 			{loaded ? 
 				<View style={styles.box}>
 					<View style={styles.profileInfo}>
@@ -277,7 +269,8 @@ export default function Salonprofile(props) {
                         "booktime", 
                         { 
                           locationid, menuid: "", serviceid: "", 
-                          serviceinfo: serviceInfo, initialize: () => getAllMenus() 
+                          serviceinfo: serviceInfo, initialize: () => getAllMenus(), 
+                          type: "salon"
                         }
                       )
                     } else {
@@ -439,7 +432,7 @@ export default function Salonprofile(props) {
 }
 
 const styles = StyleSheet.create({
-	salonprofile: { backgroundColor: 'white', height: '100%', width: '100%' },
+	profile: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
 	profileInfo: { flexDirection: 'row', height: '7%', justifyContent: 'space-around' },
