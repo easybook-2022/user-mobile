@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../../assets/info'
+import { resizePhoto } from 'geottuse-tools'
 import { getLocationProfile } from '../../apis/locations'
 import { getMenus } from '../../apis/menus'
 import { getNumCartItems } from '../../apis/carts'
@@ -138,7 +139,7 @@ export default function Profile(props) {
 						<View style={{ flexDirection: 'row' }}>
   						{image.name ? 
                 <View style={styles.menuImageHolder}>
-                  <Image style={styles.menuImage} source={{ uri: logo_url + image.name }}/>
+                  <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>
                 </View>
               : null }
 							<View style={styles.column}>
@@ -153,7 +154,7 @@ export default function Profile(props) {
 									<View style={styles.item}>
 										{info.image.name ? 
                       <View style={styles.itemImageHolder}>
-                        <Image style={styles.itemImage} source={{ uri: logo_url + info.image.name }}/>
+                        <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>
                       </View>
                     : null }
 										<View style={styles.column}>
@@ -163,7 +164,7 @@ export default function Profile(props) {
                       <Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
                     </View>
 										<View style={styles.column}>
-											<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus() })}>
+											<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus(), type: "restaurant" })}>
 												<Text style={styles.itemActionHeader}>See / Buy</Text>
 											</TouchableOpacity>
 										</View>
@@ -181,7 +182,7 @@ export default function Profile(props) {
 								<View style={styles.item}>
 									{info.image.name ? 
                     <View style={styles.itemImageHolder}>
-                      <Image style={styles.itemImage} source={{ uri: logo_url + info.image.name }}/>
+                      <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>
                     </View>
                   : null }
 									<View style={styles.column}>
@@ -191,7 +192,7 @@ export default function Profile(props) {
                     <Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
                   </View>
 									<View style={styles.column}>
-										<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus() })}>
+										<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus(), type: "restaurant" })}>
 											<Text style={styles.itemActionHeader}>See / Buy</Text>
 										</TouchableOpacity>
 									</View>
@@ -203,15 +204,6 @@ export default function Profile(props) {
 			</View>
 		)
 	}
-  const resizePhoto = (info, width) => {
-    let s_width = info.width, s_height = info.height
-    let photo_width = width
-
-    return {
-      width: photo_width,
-      height: (photo_width * s_height) / s_width
-    }
-  }
 
 	useEffect(() => {
 		initialize()
@@ -273,8 +265,8 @@ export default function Profile(props) {
 									menuInfo.items.map(info => (
 										info.row.map(item => (
 											(item.photo && item.photo.name) && (
-												<View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, width * 0.95)]}>
-													<Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
+												<View key={item.key} style={styles.menuPhoto}>
+													<Image style={resizePhoto(item.photo, width * 0.95)} source={{ uri: logo_url + item.photo.name }}/>
 												</View>
 											)
 										))
@@ -399,15 +391,15 @@ const styles = StyleSheet.create({
   menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), margin: 5, padding: 10, width: '40%' },
 	menuInputTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   menuInputError: { color: 'darkred', marginLeft: 10 },
-	menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
+	menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025, width: wsize(95) },
 
 	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3 },
-	menuImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
+	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden', width: wsize(10) },
 	menuImage: { height: wsize(10), width: wsize(10) },
 	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
 	itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
   item: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, width: '100%' },
-  itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), margin: 5, overflow: 'hidden', width: wsize(10) },
+  itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(10) },
   itemImage: { height: wsize(10), width: wsize(10) },
   itemHeader: { fontSize: wsize(6) },
   itemActions: { flexDirection: 'row', marginTop: 0 },

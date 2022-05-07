@@ -6,7 +6,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { logo_url, displayPhonenumber } from '../../assets/info'
+import { logo_url } from '../../assets/info'
+import { displayPhonenumber } from 'geottuse-tools'
 import { getUserInfo, updateUser } from '../apis/users'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'

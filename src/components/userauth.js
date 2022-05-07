@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import { SafeAreaView, ActivityIndicator, Dimensions, View, Text, Image, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
-import { isLocal, loginInfo, registerInfo, displayPhonenumber } from '../../assets/info'
+import { isLocal, loginInfo, registerInfo } from '../../assets/info'
+import { displayPhonenumber } from 'geottuse-tools'
 import { getCode, verifyUser, resetPassword, registerUser, loginUser } from '../apis/users'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'

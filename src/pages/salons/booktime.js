@@ -6,7 +6,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { socket, url, logo_url, displayTime } from '../../../assets/info'
+import { socket, url, logo_url } from '../../../assets/info'
+import { displayTime, resizePhoto } from 'geottuse-tools'
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours } from '../../apis/locations'
 import { getWorkers, getWorkerInfo, getAllWorkersTime } from '../../apis/owners'
@@ -538,7 +539,7 @@ export default function Booktime(props) {
                           info.id ? 
                             <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.worker && selectedWorkerinfo.worker.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
                               <View style={styles.workerProfile}>
-                                <Image source={{ uri: logo_url + info.profile.name }} style={{ height: wsize(20), width: wsize(20) }}/>
+                                <Image source={{ uri: logo_url + info.profile.name }} style={resizePhoto(info.profile, wsize(20))}/>
                               </View>
                               <Text style={styles.workerHeader}>{info.username}</Text>
                             </TouchableOpacity>
@@ -841,7 +842,7 @@ const styles = StyleSheet.create({
 	workersList: { height: '60%' },
   workersRow: { flexDirection: 'row', justifyContent: 'space-between' },
   worker: { alignItems: 'center', borderRadius: 10, marginHorizontal: 5, padding: 5, width: (width / 3) - 30 },
-  workerProfile: { borderRadius: wsize(20) / 2, height: wsize(20), overflow: 'hidden', width: wsize(20) },
+  workerProfile: { borderRadius: wsize(20) / 2, flexDirection: 'column', height: wsize(20), justifyContent: 'space-around', overflow: 'hidden', width: wsize(20) },
   workerHeader: { fontSize: wsize(4), fontWeight: 'bold'  },
   chooseWorkerActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	chooseWorkerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 2, padding: 5, width: wsize(40) },

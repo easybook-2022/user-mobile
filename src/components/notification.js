@@ -6,7 +6,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
-import { socket, url, logo_url, displayTime, stripeFee } from '../../assets/info'
+import { socket, url, logo_url } from '../../assets/info'
+import { displayTime, resizePhoto } from 'geottuse-tools'
 import { getNotifications } from '../apis/users'
 import { getWorkers, searchWorkers } from '../apis/owners'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
@@ -28,7 +29,7 @@ export default function Notification(props) {
 	const [loaded, setLoaded] = useState(false)
 	const [numUnreaded, setNumunreaded] = useState(0)
 	const [confirm, setConfirm] = useState({ show: false, type: "", index: 0, name: "", price: "", quantity: 0 })
-	const [cancelSchedule, setCancelschedule] = useState({ show: false, id: -1, location: "", type: "", service: "", time: 0, index: -1 })
+	const [cancelSchedule, setCancelschedule] = useState({ show: false, id: -1, location: "", type: "", service: "", time: 0, index: -1, loading: false })
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
 
 	const cancelTheCartOrder = async(cartid, index) => {
@@ -594,10 +595,10 @@ export default function Notification(props) {
 								</Text>
 
 								<View style={styles.confirmOptions}>
-									<TouchableOpacity style={styles.confirmOption} onPress={() => setCancelschedule({ show: false, service: "", time: 0, index: -1 })}>
+									<TouchableOpacity style={[styles.confirmOption, { opacity: cancelSchedule.loading ? 0.5 : 1 }]} disabled={cancelSchedule.loading} onPress={() => setCancelschedule({ show: false, service: "", time: 0, index: -1 })}>
 										<Text style={styles.confirmOptionHeader}>No</Text>
 									</TouchableOpacity>
-									<TouchableOpacity style={styles.confirmOption} onPress={() => cancelTheRequest()}>
+									<TouchableOpacity style={[styles.confirmOption, { opacity: cancelSchedule.loading ? 0.5 : 1 }]} disabled={cancelSchedule.loading} onPress={() => cancelTheRequest()}>
 										<Text style={styles.confirmOptionHeader}>Yes</Text>
 									</TouchableOpacity>
 								</View>

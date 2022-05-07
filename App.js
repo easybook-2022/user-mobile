@@ -37,7 +37,7 @@ export default function App() {
   const Stack = createNativeStackNavigator();
   
   const [loaded] = Font.useFonts({ appFont: require('./assets/Chilanka-Regular.ttf') });
-
+  
   if (loaded) {
     return (
       <NavigationContainer>

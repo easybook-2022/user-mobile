@@ -9,6 +9,7 @@ import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { socket, logo_url } from '../../assets/info'
+import { resizePhoto } from 'geottuse-tools';
 import { getNumNotifications, updateNotificationToken } from '../apis/users'
 import { getLocations, getMoreLocations } from '../apis/locations'
 import { getNumCartItems } from '../apis/carts'
@@ -357,7 +358,13 @@ export default function Main(props) {
   						/>
 
   						{userId && (
-  							<TouchableOpacity style={styles.notification} onPress={() => setOpennotifications(true)}>
+  							<TouchableOpacity style={styles.notification} onPress={() => {
+                  if (userId) {
+                    setOpennotifications(true)
+                  } else {
+                    setShowauth(true)
+                  }
+                }}>
   								<FontAwesome name="bell" size={wsize(7)}/>
   								{numNotifications > 0 && <Text style={styles.notificationHeader}>{numNotifications}</Text>}
   							</TouchableOpacity>
@@ -403,7 +410,7 @@ export default function Main(props) {
                                   props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
                                 }}>
                                   <View style={styles.locationPhotoHolder}>
-                                    <Image source={{ uri: logo_url + item.logo.name }} style={{ height: '100%', width: '100%' }}/>
+                                    <Image source={{ uri: logo_url + item.logo.name }} style={resizePhoto(item.logo, wsize(30))}/>
                                   </View>
                                   
                                   <Text style={styles.locationHeader}>{item.name}</Text>
@@ -545,7 +552,7 @@ const styles = StyleSheet.create({
 	rowHeader: { fontSize: wsize(6), fontWeight: 'bold', margin: 10 },
 	
 	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: wsize(40) },
-	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
+	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(30) / 2, flexDirection: 'column', height: wsize(30), justifyContent: 'space-around', overflow: 'hidden', width: wsize(30) },
 	locationHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   locationActionHeader: { textAlign: 'center' },

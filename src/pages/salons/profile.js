@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../../assets/info';
+import { resizePhoto } from 'geottuse-tools'
 import { getWorkersTime } from '../../apis/owners';
 import { getLocationProfile } from '../../apis/locations';
 import { getMenus } from '../../apis/menus';
@@ -136,7 +137,7 @@ export default function Profile(props) {
 						<View style={{ flexDirection: 'row' }}>
   						{image.name ? 
                 <View style={styles.menuImageHolder}>
-                  <Image style={styles.menuImage} source={{ uri: logo_url + image.name }}/>
+                  <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>
                 </View>
               : null }
               <View style={styles.column}>
@@ -151,7 +152,7 @@ export default function Profile(props) {
 									<View style={styles.item}>
   									{info.image.name ? 
                       <View style={styles.itemImageHolder}>
-                        <Image style={styles.itemImage} source={{ uri: logo_url + info.image.name }}/>
+                        <Image source={{ uri: logo_url + info.image.name }} style={resizePhoto(info.image, wsize(10))}/>
                       </View>
                     : null }
 										<View style={styles.column}>
@@ -179,7 +180,7 @@ export default function Profile(props) {
 								<View style={styles.item}>
   								{info.image.name ? 
                     <View style={styles.itemImageHolder}>
-                      <Image style={styles.itemImage} source={{ uri: logo_url + info.image.name }}/>
+                      <Image source={{ uri: logo_url + info.image.name }} style={resizePhoto(info.image, wsize(10))}/>
                     </View>
                   : null }
                   <View style={styles.column}>
@@ -201,15 +202,6 @@ export default function Profile(props) {
 			</View>
 		)
 	}
-  const resizePhoto = (info, width) => {
-    let s_width = info.width, s_height = info.height
-    let photo_width = width
-
-    return {
-      width: photo_width,
-      height: (photo_width * s_height) / s_width
-    }
-  }
   const getTheWorkersTime = () => {
     getWorkersTime(locationid)
       .then((res) => {
@@ -285,20 +277,22 @@ export default function Profile(props) {
 						)}
 
 						<ScrollView style={{ width: '100%' }}>
-							{menuInfo.items.length ? 
+							{menuInfo.items.length && ( 
 								menuInfo.items[0].row ? 
 									menuInfo.items.map(info => (
 										info.row.map(item => (
                       (item.photo && item.photo.name) && (
                         <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, width * 0.95)]}>
-                          <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
+                          <Image source={{ uri: logo_url + item.photo.name }} style={{ height: '100%', width: '100%' }}/>
                         </View>
                       )
 										))
 									))
 									:
-									displayList({ id: "", name: "", image: "", list: menuInfo.items, left: 0 })
-							: null }
+                  <View style={{ marginHorizontal: 10 }}>
+									 {displayList({ id: "", name: "", image: "", list: menuInfo.items, left: 0 })}
+                  </View>
+							)}
 						</ScrollView>
 					</View>
 
@@ -392,7 +386,7 @@ export default function Profile(props) {
                       <View key={worker.key} style={styles.worker}>
                         <View style={styles.workerInfo}>
                           <View style={styles.workerInfoProfile}>
-                            <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + worker.profile.name }}/>
+                            <Image style={resizePhoto(worker.profile, 50)} source={{ uri: logo_url + worker.profile.name }}/>
                           </View>
                           <Text style={styles.workerInfoName}>{worker.name}</Text>
                         </View>
@@ -449,11 +443,11 @@ const styles = StyleSheet.create({
   menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
 	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3, width: '98%' },
-	menuImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
+	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden', width: wsize(10) },
 	menuImage: { height: wsize(10), width: wsize(10) },
 	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
   item: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, width: '100%' },
-	itemImageHolder: { borderRadius: wsize(10) / 2, height: wsize(10), margin: 5, overflow: 'hidden', width: wsize(10) },
+	itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(10) },
 	itemImage: { height: wsize(10), width: wsize(10) },
 	itemHeader: { fontSize: wsize(6) },
   itemActions: { flexDirection: 'row' },

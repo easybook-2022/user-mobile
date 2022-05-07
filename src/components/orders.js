@@ -490,7 +490,7 @@ export default function Orders(props) {
   					}
   				</View>
   			</View>
-        
+         
   			{showConfirm && (
   				<Modal transparent={true}>
   					<SafeAreaView style={styles.confirmBox}>
