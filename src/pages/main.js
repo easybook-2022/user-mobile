@@ -26,12 +26,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Main(props) {
 	let updateTrackUser
@@ -371,7 +366,7 @@ export default function Main(props) {
   						)}
   					</View>
   				</View>
-
+          
   				<View style={styles.refresh}>
   					<TouchableOpacity style={styles.refreshTouch} onPress={() => getLocationPermission()}>
   						<Text style={styles.refreshTouchHeader}>Reload</Text>
@@ -396,7 +391,7 @@ export default function Main(props) {
                                 if (item.loading && item.index < item.max) {
                                   return <ActivityIndicator style={{ marginVertical: 50 }} color="black" size="large"/>
                                 }
-
+                                
                                 return null
                               }}
                               horizontal
@@ -412,7 +407,7 @@ export default function Main(props) {
                                   <View style={styles.locationPhotoHolder}>
                                     <Image source={{ uri: logo_url + item.logo.name }} style={resizePhoto(item.logo, wsize(30))}/>
                                   </View>
-                                  
+
                                   <Text style={styles.locationHeader}>{item.name}</Text>
                                   <Text style={styles.locationHeader}>{item.distance}</Text>
 

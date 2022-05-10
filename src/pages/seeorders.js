@@ -6,12 +6,7 @@ import { socket, logo_url } from '../../assets/info'
 import { seeOrders } from '../apis/carts'
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Seeorders(props) {
   const { ordernumber, refetch } = props.route.params

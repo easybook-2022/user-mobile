@@ -16,12 +16,7 @@ import { acceptRequest, closeSchedule, cancelRequest } from '../apis/schedules'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Notification(props) {
   const [userId, setUserid] = useState(null)
@@ -130,7 +125,7 @@ export default function Notification(props) {
 				})
 				.then((res) => {
 					if (res) {
-						data = { ...data, receivers: res.receivers, locationType: res.type }
+						data = { ...data, receivers: res.receivers, locationType: res.type, speak: res.speak }
 						socket.emit("socket/cancelRequest", data, () => {
 							const newItems = [...items]
 
@@ -189,7 +184,7 @@ export default function Notification(props) {
         })
 
 				setItems(newItems)
-			} else if (data.type == "closeSchedule") {
+      } else if (data.type == "closeSchedule") {
         const newItems = [...items]
 
         newItems.forEach(function (item, index) {
@@ -199,15 +194,14 @@ export default function Notification(props) {
         })
 
 				setItems(newItems)
-			} else if (data.type == "rescheduleAppointment") {
+			} else if (data.type == "salonChangeAppointment") {
         const newItems = [...items]
-				const { appointmentid, time, worker } = data
+				const { id, time } = data
 
         newItems.forEach(function (item) {
-          if (item.id == appointmentid) {
-            item.action = "rebook"
-            item.nextTime = parseInt(time)
-            item.worker = worker
+          if (item.id == id) {
+            item.action = "confirmed"
+            item.time = time
           }
         })
 
@@ -513,7 +507,7 @@ export default function Notification(props) {
 															{item.action == "cancel" && (
 																<View style={{ alignItems: 'center' }}>
 																	<TouchableOpacity style={styles.action} onPress={() => closeTheSchedule(index)}>
-																		<Text style={styles.actionHeader}>Cancel</Text>
+																		<Text style={styles.actionHeader}>Cancsdfdsfel</Text>
 																	</TouchableOpacity>
                                   <TouchableOpacity style={styles.action} onPress={() => {
                                     props.close()

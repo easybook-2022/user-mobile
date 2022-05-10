@@ -26,18 +26,13 @@ import Itemprofile from './src/components/itemprofile'
 import Orders from './src/components/orders'
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function App() {
   const Stack = createNativeStackNavigator();
   
   const [loaded] = Font.useFonts({ appFont: require('./assets/Chilanka-Regular.ttf') });
-  
+
   if (loaded) {
     return (
       <NavigationContainer>

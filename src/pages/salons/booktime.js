@@ -6,8 +6,9 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
-import { socket, url, logo_url } from '../../../assets/info'
+import { socket, logo_url } from '../../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
+
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours } from '../../apis/locations'
 import { getWorkers, getWorkerInfo, getAllWorkersTime } from '../../apis/owners'
@@ -24,15 +25,10 @@ import Entypo from 'react-native-vector-icons/Entypo'
 import Loadingprogress from '../../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Booktime(props) {
-	const months = ['January', 'February', 'March', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December']
+	const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 	const pushtime = 1000 * (60 * 15)
 
@@ -144,14 +140,24 @@ export default function Booktime(props) {
         if (res) {
           const { locationId, name, time, worker } = res.appointmentInfo
 
+          const { day, month, date, year, hour, minute } = time
+          const unixtime = Date.parse(day + " " + month + " " + date + " " + year + " " + hour + ":" + minute)
+
           setName(name)
-          setOldtime(time)
+          setOldtime(unixtime)
           setSelectedworkerinfo(prev => ({ ...prev, worker }))
           getTheLocationHours(time)
         }
       })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
   }
   const getCalendar = (month, year) => {
+    setCalendar({ ...calendar, loading: true })
+
     let currTime = new Date(), currDate = 0, currDay = ''
     let datenow = Date.parse(days[currTime.getDay()] + " " + months[currTime.getMonth()] + " " + currTime.getDate() + " " + year)
     let firstDay = (new Date(year, month)).getDay(), numDays = 32 - new Date(year, month, 32).getDate(), daynum = 1
@@ -197,7 +203,7 @@ export default function Booktime(props) {
       })
     })
 
-    setCalendar({ firstDay, numDays, data, loading: false })
+    setCalendar({ ...calendar, firstDay, numDays, data, loading: false })
 
     return { currDate, currDay }
   }
@@ -292,8 +298,6 @@ export default function Booktime(props) {
     const day = selectedDateinfo.day ? selectedDateinfo.day : new Date(Date.now()).toString().split(" ")[0]
 		const data = { locationid, day: day.substr(0, 3) }
 
-    setCalendar({ ...calendar, loading: true })
-
 		getLocationHours(data)
 			.then((res) => {
 				if (res.status == 200) {
@@ -313,8 +317,6 @@ export default function Booktime(props) {
           let selectedTime = time > 0 ? new Date(time) : null
           let selectedDay = null, selectedDate = null, selectedMonth = null
 
-          let { currDate, currDay } = getCalendar(currTime.getMonth(), currTime.getFullYear())
-
 					if (selectedTime) {
             selectedDay = days[selectedTime.getDay()]
             selectedDate = selectedTime.getDate()
@@ -323,6 +325,8 @@ export default function Booktime(props) {
             getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
             setSelecteddateinfo({ month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time: 0 })
           } else {
+             let { currDate, currDay } = getCalendar(currTime.getMonth(), currTime.getFullYear())
+
             setSelecteddateinfo({
               month: currMonth, year: currTime.getFullYear(), day: currDay.substr(0, 3),
               date: currDate,
@@ -352,6 +356,7 @@ export default function Booktime(props) {
 			.then((res) => {
 				if (res) {
 					setSelectedworkerinfo(prev => ({ ...prev, workers: res.owners, numWorkers: res.numWorkers, loading: false }))
+          
 				}
 			})
 			.catch((err) => {
@@ -436,8 +441,6 @@ export default function Booktime(props) {
     getAllTheWorkersTime()
 	}
 	const selectTime = (name, timeheader, time, workerIds) => {
-		const { month, date, year } = selectedDateinfo
-
 		setSelecteddateinfo({ ...selectedDateinfo, name, time })
     setConfirm({ ...confirm, show: true, service: name ? name : serviceinfo, time, workerIds })
 	}
@@ -445,12 +448,13 @@ export default function Booktime(props) {
 		if (userId) {
       setConfirm({ ...confirm, loading: true })
 
-			const { month, date, year, time } = selectedDateinfo
+			const { time } = selectedDateinfo
 			const { worker } = selectedWorkerinfo
 			const { note, workerIds } = confirm
-			const selecteddate = new Date(time)
-			const selectedtime = selecteddate.getHours() + ":" + selecteddate.getMinutes()
-			const dateInfo = Date.parse(month + " " + date + ", " + year + " " + selectedtime).toString()
+      const selectedinfo = new Date(time)
+      const day = days[selectedinfo.getDay()], month = months[selectedinfo.getMonth()], date = selectedinfo.getDate(), year = selectedinfo.getFullYear()
+      const hour = selectedinfo.getHours(), minute = selectedinfo.getMinutes()
+      const selecteddate = JSON.stringify({ day, month, date, year, hour, minute })
 			let data = { 
         id: scheduleid, // id for socket purpose (updating)
 				userid: userId, 
@@ -458,9 +462,8 @@ export default function Booktime(props) {
 				locationid, 
 				serviceid: serviceid ? serviceid : -1, 
 				serviceinfo: serviceinfo ? serviceinfo : "",
-				oldtime: oldTime, 
-				time: dateInfo, note: note ? note : "", 
-				type: "makeAppointment"
+				time: selecteddate, note: note ? note : "", 
+				type: scheduleid ? "remakeAppointment" : "makeAppointment"
 			}
 
 			makeAppointment(data)
@@ -471,7 +474,7 @@ export default function Booktime(props) {
 				})
 				.then((res) => {
 					if (res) {
-            data = { ...data, receiver: res.receiver, time: res.time }
+            data = { ...data, receiver: res.receiver, time, speak: res.speak }
             socket.emit("socket/makeAppointment", data, () => {
               setConfirm({ ...confirm, requested: true, loading: false })
 
@@ -508,10 +511,13 @@ export default function Booktime(props) {
     getTheWorkers()
     getAllTheWorkersTime()
 
-		if (serviceid) getTheServiceInfo()
-    if (scheduleid) getTheAppointmentInfo()
+    if (serviceid) getTheServiceInfo()
 
-    getTheLocationHours()
+    if (scheduleid) {
+      getTheAppointmentInfo()
+    } else {
+      getTheLocationHours()
+    }
 	}, [])
 
 	return (
@@ -582,9 +588,7 @@ export default function Booktime(props) {
     								</View>
     								<View style={styles.days}>
     									<View style={styles.daysHeaderRow}>
-    										{days.map((day, index) => (
-                          <Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>
-    										))}
+    										{days.map((day, index) => <Text key={"day-header-" + index} style={styles.daysHeader}>{day.substr(0, 3)}</Text>)}
     									</View>
     									{calendar.data.map((info, rowindex) => (
     										<View key={info.key} style={styles.daysDataRow}>

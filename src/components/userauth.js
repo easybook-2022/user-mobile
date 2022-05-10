@@ -10,12 +10,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { username, cellnumber, password, confirmPassword } = loginInfo
 const { height, width } = Dimensions.get('window')
-const wsize = p => {
-  return width * (p / 100)
-}
-const hsize = p => {
-  return height * (p / 100)
-}
+const wsize = p => {return width * (p / 100)}
 
 export default function Userauth(props) {
 	const [authInfo, setAuthinfo] = useState({ type: '', info: { username, cellnumber, password, confirmPassword }, loading: false, verifycode: null, codesent: false, errormsg: "" })

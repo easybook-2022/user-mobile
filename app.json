@@ -30,7 +30,7 @@
     },
     "android": {
       "package": "com.geottuse.serviceapp.user",
-      "versionCode": 18,
+      "versionCode": 0,
       "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_FINE_LOCATION"],
       "googleServicesFile": "./google-services.json"
     },
