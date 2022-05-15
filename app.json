@@ -24,8 +24,7 @@
         "NSCameraUsageDescription": "EasyGO (User) uses camera to allow you to take a profile picture",
         "NSMicrophoneUsageDescription": "EasyGO (User) does not need microphone",
         "NSLocationUsageDescription": "EasyGO (User) tracks you to show you the nearest restaurants, salons and stores",
-        "NSLocationWhenInUseUsageDescription": "EasyGO (User) tracks you to show you the nearest restaurants, salons and stores",
-        "NSLocationAlwaysUsageDescription": "EasyGO (User) tracks you to show you the nearest restaurants, salons and stores"
+        "NSLocationWhenInUseUsageDescription": "EasyGO (User) tracks you to show you the nearest restaurants, salons and stores"
       }
     },
     "android": {

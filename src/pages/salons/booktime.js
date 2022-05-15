@@ -815,7 +815,7 @@ export default function Booktime(props) {
 					</TouchableWithoutFeedback>
 				</Modal>
 			)}
-			{openCart && <Modal><Cart navigation={props.navigation} close={() => {
+			{openCart && <Modal><Orders navigation={props.navigation} close={() => {
 				getTheNumCartItems()
 				setOpencart(false)
 			}}/></Modal>}

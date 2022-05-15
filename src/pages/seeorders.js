@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import * as Speech from 'expo-speech';
 import { socket, logo_url } from '../../assets/info'
 import { seeOrders } from '../apis/carts'
 
@@ -41,7 +42,11 @@ export default function Seeorders(props) {
   const startWebsocket = () => {
     socket.on("updateSeeorders", data => {
       if (data.type == "orderDone") {
+        Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
+
         props.navigation.goBack()
+      } else if (data.type == "setWaitTime") {
+        Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
       }
     })
     socket.io.on("close", () => userId != null ? setShowdisabledscreen(true) : {})
@@ -123,19 +128,7 @@ export default function Seeorders(props) {
       {showDisabledScreen && (
         <Modal transparent={true}>
           <SafeAreaView style={styles.disabled}>
-            <View style={styles.disabledContainer}>
-              <Text style={styles.disabledHeader}>
-                There is an update to the app{'\n\n'}
-                Please wait a moment{'\n\n'}
-                or tap 'Close'
-              </Text>
-
-              <TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}>
-                <Text style={styles.disabledCloseHeader}>Close</Text>
-              </TouchableOpacity>
-
-              <ActivityIndicator size="large"/>
-            </View>
+            <ActivityIndicator size="large"/>
           </SafeAreaView>
         </Modal>
       )}
@@ -161,10 +154,7 @@ const styles = StyleSheet.create({
   orderersNumHolder: { backgroundColor: 'black', padding: 5 },
   orderersNumHeader: { color: 'white', fontWeight: 'bold' },
 
-  disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
-  disabledContainer: { alignItems: 'center', width: '100%' },
-  disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
-  disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
+  disabled: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.1)', flexDirection: 'column', justifyContent: 'space-around', height: '100%', width: '100%' },
 
   loading: { flexDirection: 'column', height: '100%', justifyContent: 'space-around' },
 })

@@ -37,7 +37,7 @@ export default function Profile(props) {
   const [showInfo, setShowinfo] = useState(false)
   
   const [productInfo, setProductinfo] = useState('')
-  const [menuInfo, setMenuinfo] = useState({ items: [], error: false })
+  const [menuInfo, setMenuinfo] = useState({ list: [], photos: [], error: false })
 
   const [loaded, setLoaded] = useState(false)
   
@@ -106,9 +106,7 @@ export default function Profile(props) {
       })
       .then((res) => {
         if (res) {
-          const { type, menus } = res
-
-          setMenuinfo({ type, items: menus })
+          setMenuinfo({ ...menuInfo, list: res.list, photos: res.photos })
           setLoaded(true)
         }
       })
@@ -227,7 +225,7 @@ export default function Profile(props) {
           </View>
           
           <View style={styles.body}>
-            {(menuInfo.items.length > 0 && menuInfo.items[0].row) && (
+            {(menuInfo.photos.length > 0 || menuInfo.list.length > 0) && (
               <>
                 <View style={styles.menuInputBox}>
                   <TextInput style={styles.menuInput} type="text" placeholder="Enter product # or name" onChangeText={(info) => setProductinfo(info)} autoCorrect={false} autoCapitalize="none"/>
@@ -255,20 +253,23 @@ export default function Profile(props) {
             )}
 
             <ScrollView style={{ height: '90%', width: '100%' }}>
-              {menuInfo.items.length && ( 
-                menuInfo.items[0].row ? 
-                  menuInfo.items.map(info => (
+              {menuInfo.photos.length > 0 && ( 
+                menuInfo.photos[0].row && (
+                  menuInfo.photos.map(info => (
                     info.row.map(item => (
                       (item.photo && item.photo.name) && (
-                        <View key={item.key} style={styles.menuPhoto}>
-                          <Image style={resizePhoto(item.photo, wsize(95))} source={{ uri: logo_url + item.photo.name }}/>
+                        <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95))]}>
+                          <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
                         </View>
                       )
                     ))
                   ))
-                  :
-                  displayList({ id: "", name: "", image: "", list: menuInfo.items, left: 0 })
+                )
               )}
+
+              <View style={{ marginTop: 20 }}>
+                {displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}
+              </View>
             </ScrollView>
           </View>
 
@@ -318,7 +319,7 @@ export default function Profile(props) {
         </View>
       }
 
-      {openOrders && <Modal><Cart showNotif={() => {
+      {openOrders && <Modal><Orders showNotif={() => {
         setOpenorders(false)
         setTimeout(function () {
           props.navigation.dispatch(
@@ -393,7 +394,7 @@ const styles = StyleSheet.create({
   menuImage: { height: wsize(10), width: wsize(10) },
   menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
   itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
-  item: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, width: '100%' },
+  item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
   itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(10) },
   itemImage: { height: wsize(10), width: wsize(10) },
   itemHeader: { fontSize: wsize(6) },

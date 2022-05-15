@@ -2,13 +2,9 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Platform, Text, View, TouchableOpacity, StyleSheet, Dimensions, LogBox } from 'react-native';
+import { Platform, Text, View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Font from 'expo-font';
-
-LogBox.ignoreLogs([
-  'Non-serializable values were found in the navigation state',
-]);
 
 import Main from './src/pages/main'
 
@@ -32,7 +28,7 @@ export default function App() {
   const Stack = createNativeStackNavigator();
   
   const [loaded] = Font.useFonts({ appFont: require('./assets/Chilanka-Regular.ttf') });
-
+  
   if (loaded) {
     return (
       <NavigationContainer>
@@ -125,7 +121,7 @@ export default function App() {
       </NavigationContainer>
     )
   }
-
+  
   return null
 }
 

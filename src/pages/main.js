@@ -8,6 +8,7 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import * as Speech from 'expo-speech';
 import { socket, logo_url } from '../../assets/info'
 import { resizePhoto } from 'geottuse-tools';
 import { getNumNotifications, updateNotificationToken } from '../apis/users'
@@ -288,7 +289,13 @@ export default function Main(props) {
 		}
 	}
 	const startWebsocket = async() => {
-		socket.on("updateNumNotifications", () => fetchTheNumNotifications())
+		socket.on("updateNumNotifications", data => {
+      fetchTheNumNotifications()
+
+      if (data.type == "orderDone") {
+        Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
+      }
+    })
 		socket.io.on("open", () => {
 			if (userId != null) {
 				socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))
@@ -314,7 +321,7 @@ export default function Main(props) {
 	useEffect(() => {	
 		initialize()
 	}, [])
-	
+
 	useEffect(() => {
 		startWebsocket()
 
@@ -339,7 +346,7 @@ export default function Main(props) {
 			socket.off("updateNumNotifications")
 		}
 	}, [numNotifications])
-
+  
 	return (
 		<SafeAreaView style={styles.main}>
       {loaded ? 
@@ -347,8 +354,8 @@ export default function Main(props) {
   				<View style={styles.headers}>
   					<View style={styles.headersRow}>
   						<TextInput 
-  							style={styles.searchInput} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
-  							placeholder="Search name" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} 
+  							style={[styles.searchInput, { width: userId ? width - 100 : '90%' }]} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
+  							placeholder="Search salons, restaurants and stores" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} 
   							autoCorrect={false}
   						/>
 
@@ -509,19 +516,7 @@ export default function Main(props) {
 			{showDisabledScreen && (
 				<Modal transparent={true}>
 					<SafeAreaView style={styles.disabled}>
-						<View style={styles.disabledContainer}>
-							<Text style={styles.disabledHeader}>
-								There is an update to the app{'\n\n'}
-								Please wait a moment{'\n\n'}
-								or tap 'Close'
-							</Text>
-
-							<TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}>
-								<Text style={styles.disabledCloseHeader}>Close</Text>
-							</TouchableOpacity>
-
-							<ActivityIndicator color="black" size="large"/>
-						</View>
+						<ActivityIndicator color="black" size="large"/>
 					</SafeAreaView>
 				</Modal>
 			)}
@@ -535,7 +530,7 @@ const styles = StyleSheet.create({
 	
 	headers: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	headersRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: wsize(4), height: '80%', margin: 10, paddingLeft: 5, width: width - 100 },
+  searchInput: { backgroundColor: '#EFEFEF', borderRadius: 5, fontSize: wsize(4), height: '80%', margin: 10, paddingLeft: 5 },
 	notification: { flexDirection: 'row', marginVertical: 10 },
 	notificationHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
@@ -560,11 +555,7 @@ const styles = StyleSheet.create({
 	bottomNavHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 	numCartItemsHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
-	disabled: { backgroundColor: 'rgba(0, 0, 0, 0.8)', flexDirection: 'column', justifyContent: 'space-around', height: '100%', width: '100%' },
-	disabledContainer: { alignItems: 'center', width: '100%' },
-	disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
-	disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
-	disabledCloseHeader: {  },
+	disabled: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.1)', flexDirection: 'column', justifyContent: 'space-around', height: '100%', width: '100%' },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   row: { flexDirection: 'row' },

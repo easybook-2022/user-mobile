@@ -8,6 +8,7 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { socket, url, logo_url } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
+import * as Speech from 'expo-speech';
 import { getNotifications } from '../apis/users'
 import { getWorkers, searchWorkers } from '../apis/owners'
 import { cancelCartOrder, confirmCartOrder } from '../apis/products'
@@ -218,6 +219,7 @@ export default function Notification(props) {
 				setItems(newItems)
 			} else if (data.type == "cancelSchedule") {
         const newItems = [...items]
+        let message
 
         newItems.forEach(function (item) {
           if (item.id == data.scheduleid) {
@@ -226,17 +228,11 @@ export default function Notification(props) {
             if (data.reason) {
               item.reason = data.reason
             }
-          }
-        })
 
-				setItems(newItems)
-			} else if (data.type == "orderReady") {
-        const newItems = [...items]
-				const { ordernumber } = data
+            message = "Your appointment " + displayTime(item.time) + " is cancelled with "
+            message += data.reason ? "reason: " + data.reason : "no reason"
 
-        newItems.forEach(function (item) {
-          if (item.orderNumber == ordernumber) {
-            item.status = "ready"
+            Speech.speak(message, { rate: 0.7 })
           }
         })
 
@@ -249,6 +245,8 @@ export default function Notification(props) {
           newItems.forEach(function (item, index) {
             if (item.orderNumber == data.ordernumber) {
               newItems.splice(index, 1)
+
+              Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
             }
           })
         }
@@ -261,6 +259,8 @@ export default function Notification(props) {
           if (item.orderNumber == data.ordernumber) {
             item.status = 'inprogress'
             item.waitTime = data.waitTime
+
+            Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
           }
         })
 
@@ -345,16 +345,6 @@ export default function Notification(props) {
           })
 
 					setItems(newItems)
-				} else if (data.type == "orderReady") {
-          const newItems = [...items]
-
-          newItems.forEach(function (item) {
-            if (item.orderNumber == data.ordernumber) {
-              item.status = "ready"
-            }
-          })
-
-					setItems(newItems)
 				} else if (data.type == "orderDone") {
           const newItems = [...items]
           const numItems = newItems.length
@@ -425,7 +415,7 @@ export default function Notification(props) {
                               :
                               ''
                             :
-                            'The order will be ready for pickup in ' + item.waitTime + ' minutes'
+                            'The order will be ready for pickup in ' + item.waitTime + (item.waitTime.includes("minute") ? '' : ' minutes')
                           }
                         </Text>
 

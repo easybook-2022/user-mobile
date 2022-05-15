@@ -38,7 +38,7 @@ export default function Profile(props) {
 	const [userId, setUserid] = useState(null)
 
 	const [serviceInfo, setServiceinfo] = useState('')
-	const [menuInfo, setMenuinfo] = useState({ items: [], error: false })
+	const [menuInfo, setMenuinfo] = useState({ list: [], photos: [], error: false })
 
 	const [loaded, setLoaded] = useState(false)
 
@@ -105,9 +105,7 @@ export default function Profile(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { menus } = res
-
-					setMenuinfo({ ...menuInfo, items: menus })
+					setMenuinfo({ ...menuInfo, list: res.list, photos: res.photos })
 					setLoaded(true)
 				}
 			})
@@ -243,7 +241,7 @@ export default function Profile(props) {
 					</View>
 					
 					<View style={styles.body}>
-						{(menuInfo.items.length > 0 && menuInfo.items[0].row) && (
+						{(menuInfo.photos.length > 0 || menuInfo.list.length > 0) && (
               <>
   							<View style={styles.menuInputBox}>
   								<TextInput style={styles.menuInput} type="text" placeholder="Enter service # or name" onChangeText={(info) => {
@@ -272,22 +270,23 @@ export default function Profile(props) {
 						)}
 
 						<ScrollView style={{ width: '100%' }}>
-							{menuInfo.items.length && ( 
-								menuInfo.items[0].row ? 
-									menuInfo.items.map(info => (
-										info.row.map(item => (
+							{menuInfo.photos.length > 0 && ( 
+								menuInfo.photos[0].row && (
+									menuInfo.photos.map(info => (
+                    info.row.map(item => (
                       (item.photo && item.photo.name) && (
-                        <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, width * 0.95)]}>
+                        <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95))]}>
                           <Image source={{ uri: logo_url + item.photo.name }} style={{ height: '100%', width: '100%' }}/>
                         </View>
                       )
-										))
+                    ))
 									))
-									:
-                  <View style={{ marginHorizontal: 10 }}>
-									 {displayList({ id: "", name: "", image: "", list: menuInfo.items, left: 0 })}
-                  </View>
+                )
 							)}
+
+              <View style={{ marginHorizontal: 10 }}>
+                {displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}
+              </View>
 						</ScrollView>
 					</View>
 
@@ -441,7 +440,7 @@ const styles = StyleSheet.create({
 	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden', width: wsize(10) },
 	menuImage: { height: wsize(10), width: wsize(10) },
 	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
-  item: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10, width: '100%' },
+  item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
 	itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(10) },
 	itemImage: { height: wsize(10), width: wsize(10) },
 	itemHeader: { fontSize: wsize(6) },
@@ -472,4 +471,5 @@ const styles = StyleSheet.create({
   timeHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
+  row: { flexDirection: 'row', justifyContent: 'space-around' },
 })
