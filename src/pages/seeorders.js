@@ -28,9 +28,11 @@ export default function Seeorders(props) {
       })
       .then((res) => {
         if (res) {
-          setUserid(userid)
-          setOrders(res.orders)
-          setLoading(false)
+          socket.emit("socket/user/login", userid, () => {
+            setUserid(userid)
+            setOrders(res.orders)
+            setLoading(false)
+          })
         }
       })
       .catch((err) => {
@@ -47,6 +49,11 @@ export default function Seeorders(props) {
         props.navigation.goBack()
       } else if (data.type == "setWaitTime") {
         Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
+      }
+    })
+    socket.io.on("open", () => {
+      if (userId !== null) {
+        socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))
       }
     })
     socket.io.on("close", () => userId != null ? setShowdisabledscreen(true) : {})

@@ -123,7 +123,7 @@ export default function Account(props) {
 						<View style={styles.inputsBox}>
 							<View style={styles.inputContainer}>
 								<Text style={styles.inputHeader}>Username:</Text>
-								<TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Username" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false}/>
+								<TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Username" onChangeText={(username) => setUsername(username)} value={username} autoCorrect={false} autoCapitalize="none"/>
 							</View>
 
 							<View style={styles.inputContainer}>

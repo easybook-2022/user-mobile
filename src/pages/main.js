@@ -346,42 +346,42 @@ export default function Main(props) {
 			socket.off("updateNumNotifications")
 		}
 	}, [numNotifications])
-  
+
 	return (
-		<SafeAreaView style={styles.main}>
-      {loaded ? 
-  			<View style={styles.box}>
-  				<View style={styles.headers}>
-  					<View style={styles.headersRow}>
-  						<TextInput 
-  							style={[styles.searchInput, { width: userId ? width - 100 : '90%' }]} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
-  							placeholder="Search salons, restaurants and stores" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} 
-  							autoCorrect={false}
-  						/>
+		<SafeAreaView style={styles.main}> 
+			<View style={styles.box}>
+				<View style={styles.headers}>
+					<View style={styles.headersRow}>
+						<TextInput 
+							style={[styles.searchInput, { width: userId ? width - 100 : '90%' }]} placeholderTextColor="rgba(127, 127, 127, 0.5)" 
+							placeholder="Search salons, restaurants and stores" onChangeText={(name) => getTheLocations(geolocation.longitude, geolocation.latitude, name)} 
+							autoCorrect={false}
+						/>
 
-  						{userId && (
-  							<TouchableOpacity style={styles.notification} onPress={() => {
-                  if (userId) {
-                    setOpennotifications(true)
-                  } else {
-                    setShowauth(true)
-                  }
-                }}>
-  								<FontAwesome name="bell" size={wsize(7)}/>
-  								{numNotifications > 0 && <Text style={styles.notificationHeader}>{numNotifications}</Text>}
-  							</TouchableOpacity>
-  						)}
-  					</View>
-  				</View>
-          
-  				<View style={styles.refresh}>
-  					<TouchableOpacity style={styles.refreshTouch} onPress={() => getLocationPermission()}>
-  						<Text style={styles.refreshTouchHeader}>Reload</Text>
-  					</TouchableOpacity>
-  				</View>
+						{userId && (
+							<TouchableOpacity style={styles.notification} onPress={() => {
+                if (userId) {
+                  setOpennotifications(true)
+                } else {
+                  setShowauth(true)
+                }
+              }}>
+								<FontAwesome name="bell" size={wsize(7)}/>
+								{numNotifications > 0 && <Text style={styles.notificationHeader}>{numNotifications}</Text>}
+							</TouchableOpacity>
+						)}
+					</View>
+				</View>
+        
+				<View style={styles.refresh}>
+					<TouchableOpacity style={styles.refreshTouch} onPress={() => getLocationPermission()}>
+						<Text style={styles.refreshTouchHeader}>Reload</Text>
+					</TouchableOpacity>
+				</View>
 
-  				<View style={styles.body}>
-            {locationPermission != null && ( 
+				<View style={styles.body}>
+          {loaded ?
+            locationPermission != null ?  
               locationPermission == true ? 
       					geolocation.longitude && geolocation.latitude && !loading ? 
       						<FlatList
@@ -411,8 +411,8 @@ export default function Main(props) {
                                   clearInterval(updateTrackUser)
                                   props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
                                 }}>
-                                  <View style={styles.locationPhotoHolder}>
-                                    <Image source={{ uri: logo_url + item.logo.name }} style={resizePhoto(item.logo, wsize(30))}/>
+                                  <View style={[styles.locationPhotoHolder, resizePhoto(item.logo, wsize(30))]}>
+                                    <Image source={{ uri: logo_url + item.logo.name }} style={{ height: '100%', width: '100%' }}/>
                                   </View>
 
                                   <Text style={styles.locationHeader}>{item.name}</Text>
@@ -439,55 +439,63 @@ export default function Main(props) {
                 :
                 <View style={{ alignItems: 'center' }}>
                   <Text style={styles.requestLocationHeader}>You need to allow location permission in your settings</Text>
-                  <Text style={styles.requestLocationHeader}>in order to see nearest places</Text>
+                  <Text style={styles.requestLocationHeader}>in order to see the nearest salons, restaurants and stores</Text>
                 </View>
-            )}
-  				</View>
+              :
+              <View style={{ alignItems: 'center' }}>
+                <Text style={styles.requestLocationHeader}>You need to allow location permission in your settings</Text>
+                <Text style={styles.requestLocationHeader}>in order to see the nearest salons, restaurants and stores</Text>
+              </View>
+            :
+            <View style={styles.loading}>
+              <ActivityIndicator color="black" size="small"/>
+            </View>
+          }
+				</View>
 
-  				<View style={styles.bottomNavs}>
-  					<View style={styles.bottomNavsRow}>
-  						{userId && (
-  							<TouchableOpacity style={styles.bottomNav} onPress={() => {
-  								clearInterval(updateTrackUser)
-  								props.navigation.navigate("account", { refetch: () => initialize() })
-  							}}>
-  								<FontAwesome5 name="user-circle" size={wsize(7)}/>
-  							</TouchableOpacity>
-  						)}
+				<View style={styles.bottomNavs}>
+					<View style={styles.bottomNavsRow}>
+						{userId && (
+							<TouchableOpacity style={styles.bottomNav} onPress={() => {
+								clearInterval(updateTrackUser)
+								props.navigation.navigate("account", { refetch: () => initialize() })
+							}}>
+								<FontAwesome5 name="user-circle" size={wsize(7)}/>
+							</TouchableOpacity>
+						)}
 
-  						{userId && (
-  							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpenorders(true)}>
-  								<Entypo name="shopping-cart" size={wsize(7)}/>
-  								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
-  							</TouchableOpacity>
-  						)}
+						{userId && (
+							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpenorders(true)}>
+								<Entypo name="shopping-cart" size={wsize(7)}/>
+								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
+							</TouchableOpacity>
+						)}
 
-  						<TouchableOpacity style={styles.bottomNav} onPress={() => {
-  							if (userId) {
-  								socket.emit("socket/user/logout", userId, () => {
-  									clearInterval(updateTrackUser)
-  									AsyncStorage.clear()
-  									setUserid(null)
-  								})
-  							} else {
-  								setShowauth(true)
-  							}
-  						}}>
-  							<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
-  						</TouchableOpacity>
-  					</View>
-  				</View>
-  			</View>
-        :
-        <View style={styles.loading}>
-          <ActivityIndicator color="black" size="small"/>
-        </View>
-      }
+						<TouchableOpacity style={styles.bottomNav} onPress={() => {
+							if (userId) {
+								socket.emit("socket/user/logout", userId, () => {
+									clearInterval(updateTrackUser)
+									AsyncStorage.clear()
+									setUserid(null)
+								})
+							} else {
+								setShowauth(true)
+							}
+						}}>
+							<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</View>
 
 			{openNotifications && 
-				<Modal><NotificationsBox navigation={props.navigation} close={() => {
-					fetchTheNumNotifications()
-					setOpennotifications(false)
+				<Modal><NotificationsBox navigation={props.navigation} close={async() => {
+          const userid = await AsyncStorage.getItem("userid")
+
+          socket.emit("socket/user/login", userid, () => {
+            fetchTheNumNotifications()
+            setOpennotifications(false)
+          })
 				}}/>
 				</Modal>
 			}
@@ -542,7 +550,7 @@ const styles = StyleSheet.create({
 	rowHeader: { fontSize: wsize(6), fontWeight: 'bold', margin: 10 },
 	
 	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: wsize(40) },
-	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(30) / 2, flexDirection: 'column', height: wsize(30), justifyContent: 'space-around', overflow: 'hidden', width: wsize(30) },
+	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(30) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden' },
 	locationHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   locationActionHeader: { textAlign: 'center' },

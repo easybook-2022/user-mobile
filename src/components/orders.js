@@ -6,6 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
+import { resizePhoto } from 'geottuse-tools'
 import { socket, logo_url } from '../../assets/info'
 import { searchFriends, selectUser, requestUserPaymentMethod } from '../apis/users'
 import { getCartItems, getCartItemsTotal, editCartItem, updateCartItem, removeFromCart, changeCartItem, checkoutCart } from '../apis/carts'
@@ -403,8 +404,8 @@ export default function Orders(props) {
     													<AntDesign name="closecircleo" size={wsize(7)}/>
     												</TouchableOpacity>
     												{item.image && (
-    													<View style={styles.itemImageHolder}>
-    														<Image source={{ uri: logo_url + item.image.name }} style={styles.itemImage}/>
+    													<View style={[styles.itemImageHolder, resizePhoto(item.image, 70), { borderRadius: 35 }]}>
+    														<Image source={{ uri: logo_url + item.image.name }} style={{ height: '100%', width: '100%' }}/>
     													</View>
     												)}
     												<View style={styles.itemInfos}>
@@ -663,8 +664,7 @@ const styles = StyleSheet.create({
 
 	body: { height: '85%' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: 35, height: 70, overflow: 'hidden', width: 70 },
-	itemImage: { height: 70, width: 70 },
+	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', overflow: 'hidden' },
 	itemInfos: {  },
 	itemName: { fontSize: wsize(5), marginBottom: 10 },
 	itemInfo: { fontSize: wsize(4) },

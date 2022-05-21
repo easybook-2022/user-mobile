@@ -106,9 +106,7 @@ export default function Profile(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { type, menus } = res
-
-					setMenuinfo({ type, items: menus })
+					setMenuinfo({ ...menuInfo, list: res.list, photos: res.photos })
 					setLoaded(true)
 				}
 			})
@@ -259,8 +257,8 @@ export default function Profile(props) {
                 menuInfo.photos[0].row && (
 									menuInfo.photos.map(info => (
                     info.row.map(item => (
-                      (item.photo && item.photo.name) && (
-                        <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsie(95))]}>
+                      item.photo.name && (
+                        <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
                           <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
                         </View>
                       )
@@ -389,7 +387,7 @@ const styles = StyleSheet.create({
   menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), margin: 5, padding: 10, width: '40%' },
 	menuInputTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
   menuInputError: { color: 'darkred', marginLeft: 10 },
-	menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025, width: wsize(95) },
+	menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
 	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3 },
 	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden', width: wsize(10) },

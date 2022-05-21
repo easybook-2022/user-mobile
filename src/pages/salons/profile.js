@@ -129,8 +129,8 @@ export default function Profile(props) {
 					<View style={styles.menu}>
 						<View style={{ flexDirection: 'row' }}>
   						{image.name ? 
-                <View style={styles.menuImageHolder}>
-                  <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>
+                <View style={[styles.menuImageHolder, resizePhoto(image, wsize(10))]}>
+                  <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + image.name }}/>
                 </View>
               : null }
               <View style={styles.column}>
@@ -143,11 +143,9 @@ export default function Profile(props) {
 									displayList({ id: info.id, name: info.name, image: info.image, list: info.list, left: left + 10 })
 									:
 									<View style={styles.item}>
-  									{info.image.name ? 
-                      <View style={styles.itemImageHolder}>
-                        <Image source={{ uri: logo_url + info.image.name }} style={resizePhoto(info.image, wsize(10))}/>
-                      </View>
-                    : null }
+                    <View style={[styles.itemImageHolder, resizePhoto(info.image, wsize(10))]}>
+                      {info.image.name && <Image source={{ uri: logo_url + info.image.name }} style={{ height: '100%', width: '100%' }}/>}
+                    </View>
 										<View style={styles.column}>
                       <Text style={styles.itemHeader}>{info.name}</Text>
                     </View>
@@ -172,8 +170,8 @@ export default function Profile(props) {
 								:
 								<View style={styles.item}>
   								{info.image.name ? 
-                    <View style={styles.itemImageHolder}>
-                      <Image source={{ uri: logo_url + info.image.name }} style={resizePhoto(info.image, wsize(10))}/>
+                    <View style={[styles.itemImageHolder, resizePhoto(info.image, wsize(10))]}>
+                      <Image source={{ uri: logo_url + info.image.name }} style={{ height: '100%', width: '100%' }}/>
                     </View>
                   : null }
                   <View style={styles.column}>
@@ -275,7 +273,7 @@ export default function Profile(props) {
 									menuInfo.photos.map(info => (
                     info.row.map(item => (
                       (item.photo && item.photo.name) && (
-                        <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95))]}>
+                        <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
                           <Image source={{ uri: logo_url + item.photo.name }} style={{ height: '100%', width: '100%' }}/>
                         </View>
                       )
@@ -379,8 +377,8 @@ export default function Profile(props) {
                     {showInfo.workerHours.map(worker => (
                       <View key={worker.key} style={styles.worker}>
                         <View style={styles.workerInfo}>
-                          <View style={styles.workerInfoProfile}>
-                            <Image style={resizePhoto(worker.profile, 50)} source={{ uri: logo_url + worker.profile.name }}/>
+                          <View style={[styles.workerInfoProfile, resizePhoto(worker.profile, 50)]}>
+                            <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + worker.profile.name }}/>
                           </View>
                           <Text style={styles.workerInfoName}>{worker.name}</Text>
                         </View>
@@ -437,11 +435,11 @@ const styles = StyleSheet.create({
   menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
 	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3, width: '98%' },
-	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden', width: wsize(10) },
+	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden' },
 	menuImage: { height: wsize(10), width: wsize(10) },
 	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
   item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
-	itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(10) },
+	itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', justifyContent: 'space-around', margin: 5, overflow: 'hidden' },
 	itemImage: { height: wsize(10), width: wsize(10) },
 	itemHeader: { fontSize: wsize(6) },
   itemActions: { flexDirection: 'row' },
@@ -462,7 +460,7 @@ const styles = StyleSheet.create({
   workerInfoList: { width: '100%' },
   worker: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
   workerInfo: {  },
-  workerInfoProfile: { borderRadius: 25, height: 50, overflow: 'hidden', width: 50 },
+  workerInfoProfile: { borderRadius: 25, overflow: 'hidden' },
   workerInfoName: { color: 'black', textAlign: 'center' },
   workerTime: {  },
   workerTimeContainer: { flexDirection: 'row', marginBottom: 10 },

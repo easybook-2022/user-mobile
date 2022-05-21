@@ -201,7 +201,6 @@ export default function Notification(props) {
 
         newItems.forEach(function (item) {
           if (item.id == id) {
-            item.action = "confirmed"
             item.time = time
           }
         })
@@ -433,11 +432,11 @@ export default function Notification(props) {
 										{item.type == "service" && (
 											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 												<View style={styles.itemImageHolders}>
-													<View style={styles.itemLocationImageHolder}>
+													<View style={[styles.itemLocationImageHolder, resizePhoto(item.locationimage, wsize(30) - 5), { borderRadius: (wsize(30) - 5) / 2 }]}>
 														<Image source={{ uri: logo_url + item.locationimage.name }} style={{ height: '100%', width: '100%' }}/>
 													</View>
-													{item.serviceimage.name != '' ? 
-														<View style={styles.itemServiceImageHolder}>
+													{item.serviceimage ? 
+														<View style={[styles.itemServiceImageHolder, resizePhoto(item.serviceimage, wsize(30) - 10), { borderRadius: (wsize(30) - 10) / 2 }]}>
 															<Image source={{ uri: logo_url + item.serviceimage.name }} style={{ height: '100%', width: '100%' }}/>
 														</View>
 													: null }
@@ -450,10 +449,6 @@ export default function Notification(props) {
                             {'\n' + displayTime(item.time)}
                             {'\n' + (item.worker != null && '\nwith stylist: ' + item.worker.username)}
                           </Text>
-
-													{(item.action == "requested" || item.action == "change") && 
-														<Text style={styles.itemHeader}>waiting for the restaurant's response</Text>
-													}
 
 													{item.action == "confirmed" && (
 														<View style={{ alignItems: 'center' }}>
@@ -497,7 +492,7 @@ export default function Notification(props) {
 															{item.action == "cancel" && (
 																<View style={{ alignItems: 'center' }}>
 																	<TouchableOpacity style={styles.action} onPress={() => closeTheSchedule(index)}>
-																		<Text style={styles.actionHeader}>Cancsdfdsfel</Text>
+																		<Text style={styles.actionHeader}>Cancel</Text>
 																	</TouchableOpacity>
                                   <TouchableOpacity style={styles.action} onPress={() => {
                                     props.close()
@@ -632,8 +627,8 @@ const styles = StyleSheet.create({
 	body: { flexDirection: 'column', height: '80%', justifyContent: 'space-around' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, paddingHorizontal: 10, paddingVertical: 30 },
 	itemImageHolders: { alignItems: 'center', width: wsize(30) },
-  itemLocationImageHolder: { borderRadius: (wsize(30) - 5) / 2, height: wsize(30) - 5, overflow: 'hidden', width: wsize(30) - 5 },
-	itemServiceImageHolder: { borderRadius: (wsize(30) - 10) / 2, height: wsize(30) - 10, overflow: 'hidden', width: wsize(30) - 10 },
+  itemLocationImageHolder: { overflow: 'hidden' },
+	itemServiceImageHolder: { overflow: 'hidden' },
 
 	// service
 	itemServiceHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 10, textAlign: 'center' },
