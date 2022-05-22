@@ -113,8 +113,8 @@ export default function Notification(props) {
 
 			setCancelschedule({ show: true, id, location, type: locationtype, service, time, index })
 		} else {
-			const { id, index } = cancelSchedule
-			let data = { userid: userId, scheduleid: id, type: "cancelRequest" }
+			const { id, time, index } = cancelSchedule
+			let data = { userid: userId, scheduleid: id, type: "cancelRequest", timeDisplay: displayTime(time) }
 
       setCancelschedule({ ...cancelSchedule, loading: true })
 
@@ -545,7 +545,7 @@ export default function Notification(props) {
 					<ActivityIndicator color="black" size="large"/>
 				</View>
 			}
-
+      
 			{confirm.show && (
 				<Modal transparent={true}>
 					<SafeAreaView style={styles.hiddenBox}>

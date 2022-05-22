@@ -52,7 +52,6 @@ export default function Main(props) {
 	const [geolocation, setGeolocation] = useState({ longitude: null, latitude: null })
 	const [searchLocationname, setSearchlocationname] = useState('')
 	const [locations, setLocations] = useState([])
-  const [loading, setLoading] = useState(false)
 	const [loaded, setLoaded] = useState(false)
 	const [openNotifications, setOpennotifications] = useState(false)
 	const [numNotifications, setNumnotifications] = useState(0)
@@ -114,7 +113,7 @@ export default function Main(props) {
 		const d = new Date(), day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 		const data = { longitude, latitude, locationName, day: day[d.getDay()] }
 
-		setLoading(true)
+    setLoaded(false)
 
 		getLocations(data)
 			.then((res) => {
@@ -127,7 +126,6 @@ export default function Main(props) {
 					setLocations(res.locations)
 					setSearchlocationname(locationName)
 					setLoaded(true)
-          setLoading(false)
 				}
 			})
 			.catch((err) => {
@@ -237,7 +235,7 @@ export default function Main(props) {
 		}
 
 		const { data } = await Notifications.getExpoPushTokenAsync({
-			experienceId: "@robogram/EasyGO (User)"
+			experienceId: "@robogram/easygo-user"
 		})
 
 		if (userid) {
@@ -383,7 +381,7 @@ export default function Main(props) {
           {loaded ?
             locationPermission != null ?  
               locationPermission == true ? 
-      					geolocation.longitude && geolocation.latitude && !loading ? 
+      					geolocation.longitude && geolocation.latitude ? 
       						<FlatList
       							showsVerticalScrollIndicator={false}
       							data={locations}
@@ -524,7 +522,19 @@ export default function Main(props) {
 			{showDisabledScreen && (
 				<Modal transparent={true}>
 					<SafeAreaView style={styles.disabled}>
-						<ActivityIndicator color="black" size="large"/>
+						<View style={styles.disabledContainer}>
+              <Text style={styles.disabledHeader}>
+                There is an update to the app{'\n\n'}
+                Please wait a moment{'\n\n'}
+                or tap 'Close'
+              </Text>
+
+              <TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}>
+                <Text style={styles.disabledCloseHeader}>Close</Text>
+              </TouchableOpacity>
+
+              <ActivityIndicator size="large"/>
+            </View>
 					</SafeAreaView>
 				</Modal>
 			)}
@@ -563,7 +573,10 @@ const styles = StyleSheet.create({
 	bottomNavHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 	numCartItemsHeader: { fontSize: wsize(4), fontWeight: 'bold' },
 
-	disabled: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.1)', flexDirection: 'column', justifyContent: 'space-around', height: '100%', width: '100%' },
+	disabled: { backgroundColor: 'black', flexDirection: 'column', justifyContent: 'space-around', height: '100%', opacity: 0.8, width: '100%' },
+  disabledContainer: { alignItems: 'center', width: '100%' },
+  disabledHeader: { color: 'white', fontWeight: 'bold', textAlign: 'center' },
+  disabledClose: { backgroundColor: 'white', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 50, padding: 10 },
 
   loading: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
   row: { flexDirection: 'row' },

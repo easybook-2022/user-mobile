@@ -17,6 +17,15 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification.png",
+          "color": "#ffffff"
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.geottuse.serviceapp.user",
@@ -32,9 +41,6 @@
       "versionCode": 0,
       "permissions": ["CAMERA","ACCESS_MEDIA_LOCATION", "ACCESS_FINE_LOCATION"],
       "googleServicesFile": "./google-services.json"
-    },
-    "notification": {
-      "icon": "./assets/notification.png"
     }
   }
 }
