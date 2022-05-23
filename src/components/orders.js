@@ -505,13 +505,11 @@ export default function Orders(props) {
   							</TouchableOpacity>
   						</View>
   						<ScrollView style={styles.itemInfoContainer}>
-    						{itemInfo.image ? 
-                  <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                    <View style={styles.imageHolder}>
-                      <Image source={{ uri: logo_url + itemInfo.image.name }} style={styles.image}/>
-                    </View>
+    						<View style={{ alignItems: 'center', marginBottom: 20 }}>
+                  <View style={styles.imageHolder}>
+                    {itemInfo.image.name != "" && <Image source={{ uri: logo_url + itemInfo.image.name }} style={styles.image}/>}
                   </View>
-                : null }
+                </View>
 
   							<Text style={styles.boxItemHeader}>{itemInfo.name}</Text>
   							<Text style={styles.boxItemHeaderInfo}>{itemInfo.info}</Text>
@@ -692,7 +690,7 @@ const styles = StyleSheet.create({
 	itemInfoHeader: { alignItems: 'center', flexDirection: 'column', height: '10%', justifyContent: 'space-around' },
 	itemClose: { alignItems: 'center', borderRadius: 15, borderStyle: 'solid', borderWidth: 2, flexDirection: 'column', justifyContent: 'space-around', padding: 2 },
 	itemInfoContainer: { height: '90%' },
-	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden', width: 200 },
+	imageHolder: { borderRadius: 100, height: 200, overflow: 'hidden' },
 	image: { height: 200, width: 200 },
 	boxItemHeader: { fontSize: wsize(6), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	boxItemHeaderInfo: { fontSize: wsize(4), fontWeight: 'bold', marginBottom: 50, textAlign: 'center' },

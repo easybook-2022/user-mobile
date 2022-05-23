@@ -432,14 +432,12 @@ export default function Notification(props) {
 										{item.type == "service" && (
 											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 												<View style={styles.itemImageHolders}>
-													<View style={[styles.itemLocationImageHolder, resizePhoto(item.locationimage, wsize(30) - 5), { borderRadius: (wsize(30) - 5) / 2 }]}>
-														<Image source={{ uri: logo_url + item.locationimage.name }} style={{ height: '100%', width: '100%' }}/>
+													<View style={styles.itemLocationImageHolder}>
+														<Image source={{ uri: logo_url + item.locationimage.name }} style={resizePhoto(item.locationimage, wsize(30) - 5)}/>
 													</View>
-													{item.serviceimage ? 
-														<View style={[styles.itemServiceImageHolder, resizePhoto(item.serviceimage, wsize(30) - 10), { borderRadius: (wsize(30) - 10) / 2 }]}>
-															<Image source={{ uri: logo_url + item.serviceimage.name }} style={{ height: '100%', width: '100%' }}/>
-														</View>
-													: null }
+													<View style={styles.itemServiceImageHolder}>
+														{(item.serviceimage && item.serviceimage.name != "") && <Image source={{ uri: logo_url + item.serviceimage.name }} style={resizePhoto(item.serviceimage, wsize(30) - 10)}/>}
+													</View>
 												</View>
 												<View style={{ flexDirection: 'column', width: wsize(70) }}>
 													<Text style={styles.itemServiceHeader}>
@@ -627,8 +625,8 @@ const styles = StyleSheet.create({
 	body: { flexDirection: 'column', height: '80%', justifyContent: 'space-around' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, paddingHorizontal: 10, paddingVertical: 30 },
 	itemImageHolders: { alignItems: 'center', width: wsize(30) },
-  itemLocationImageHolder: { overflow: 'hidden' },
-	itemServiceImageHolder: { overflow: 'hidden' },
+  itemLocationImageHolder: { borderRadius: (wsize(30) - 5) / 2, height: wsize(30) - 5, overflow: 'hidden' },
+	itemServiceImageHolder: { borderRadius: (wsize(30) - 10) / 2, height: wsize(30) - 10, overflow: 'hidden' },
 
 	// service
 	itemServiceHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 10, textAlign: 'center' },
