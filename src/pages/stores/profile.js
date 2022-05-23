@@ -130,11 +130,9 @@ export default function Profile(props) {
         {name ?
           <View style={styles.menu}>
             <View style={{ flexDirection: 'row' }}>
-              {image.name ? 
-                <View style={[styles.menuImageHolder, resizePhoto(image, wsize(10))]}>
-                  <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + image.name }}/>
-                </View>
-              : null }
+              <View style={styles.menuImageHolder}>
+                {image.name != "" && <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>}
+              </View>
               <View style={styles.column}>
                 <Text style={styles.menuName}>{name} (Menu)</Text>
               </View>
@@ -145,17 +143,11 @@ export default function Profile(props) {
                   displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
                   :
                   <View style={styles.item}>
-                    {info.image.name ? 
-                      <View style={[styles.itemImageHolder, resizePhoto(info.image, wsize(10))]}>
-                        <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + info.image.name }}/>
-                      </View>
-                    : null }
-                    <View style={styles.column}>
-                      <Text style={styles.itemHeader}>{info.name}</Text>
+                    <View style={styles.itemImageHolder}>
+                      {info.image.name != "" && <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>}
                     </View>
-                    <View style={styles.column}>
-                      <Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-                    </View>
+                    <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+                    <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
                     <View style={styles.column}>
                       <TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus(), type: "store" })}>
                         <Text style={styles.itemActionHeader}>See / Buy</Text>
@@ -173,17 +165,11 @@ export default function Profile(props) {
                 displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
                 :
                 <View style={styles.item}>
-                  {info.image.name ? 
-                    <View style={[styles.itemImageHolder, resizePhoto(info.image, wsize(10))]}>
-                      <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + info.image.name }}/>
-                    </View>
-                  : null }
-                  <View style={styles.column}>
-                    <Text style={styles.itemHeader}>{info.name}</Text>
+                  <View style={styles.itemImageHolder}>
+                    {info.image.name != "" && <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>}
                   </View>
-                  <View style={styles.column}>
-                    <Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-                  </View>
+                  <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+                  <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
                   <View style={styles.column}>
                     <TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus(), type: "store" })}>
                       <Text style={styles.itemActionHeader}>See / Buy</Text>
@@ -257,7 +243,7 @@ export default function Profile(props) {
                 menuInfo.photos[0].row && (
                   menuInfo.photos.map(info => (
                     info.row.map(item => (
-                      item.photo.name && (
+                      item.photo && item.photo.name && (
                         <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
                           <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
                         </View>
@@ -391,12 +377,10 @@ const styles = StyleSheet.create({
 
   menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3 },
   menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden' },
-  menuImage: { height: wsize(10), width: wsize(10) },
   menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
   itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
   item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
   itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', justifyContent: 'space-around', margin: 5, overflow: 'hidden' },
-  itemImage: { height: wsize(10), width: wsize(10) },
   itemHeader: { fontSize: wsize(6) },
   itemActions: { flexDirection: 'row', marginTop: 0 },
   itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5 },

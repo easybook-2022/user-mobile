@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { resizePhoto } from 'geottuse-tools';
 import * as Speech from 'expo-speech';
 import { socket, logo_url } from '../../assets/info'
 import { seeOrders } from '../apis/carts'
@@ -78,7 +79,7 @@ export default function Seeorders(props) {
               <View style={styles.item} key={item.key}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <View style={styles.itemImageHolder}>
-                    {item.image != "" && <Image source={{ uri: logo_url + item.image.name }} style={styles.itemImage}/>}
+                    {(item.image && item.image.name != "") && <Image source={{ uri: logo_url + item.image.name }} style={resizePhoto(item.image, wsize(30))}/>}
                   </View>
 
                   <View style={styles.itemInfos}>
@@ -159,7 +160,6 @@ const styles = StyleSheet.create({
 
   item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
   itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden' },
-  itemImage: { height: wsize(30), width: wsize(30) },
   itemInfos: {  },
   itemName: { fontSize: wsize(5), marginBottom: 10 },
   itemInfo: { fontSize: wsize(4) },

@@ -403,11 +403,9 @@ export default function Orders(props) {
     												<TouchableOpacity disabled={item.status == "checkout"} onPress={() => removeTheCartItem(item.id)}>
     													<AntDesign name="closecircleo" size={wsize(7)}/>
     												</TouchableOpacity>
-    												{item.image && (
-    													<View style={[styles.itemImageHolder, resizePhoto(item.image, 70), { borderRadius: 35 }]}>
-    														<Image source={{ uri: logo_url + item.image.name }} style={{ height: '100%', width: '100%' }}/>
-    													</View>
-    												)}
+    												<View style={styles.itemImageHolder}>
+                              {(item.image && item.image.name != "") && <Image source={{ uri: logo_url + item.image.name }} style={resizePhoto(item.image, 70)}/>}
+                            </View>
     												<View style={styles.itemInfos}>
     													<Text style={styles.itemName}>{item.name}</Text>
 
@@ -486,7 +484,7 @@ export default function Orders(props) {
   					}
   				</View>
   			</View>
-         
+
   			{showConfirm && (
   				<Modal transparent={true}>
   					<SafeAreaView style={styles.confirmBox}>
@@ -662,7 +660,7 @@ const styles = StyleSheet.create({
 
 	body: { height: '85%' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
-	itemImageHolder: { backgroundColor: 'rgba(0, 0, 0, 0.1)', overflow: 'hidden' },
+	itemImageHolder: { borderRadius: 35, overflow: 'hidden', width: 70 },
 	itemInfos: {  },
 	itemName: { fontSize: wsize(5), marginBottom: 10 },
 	itemInfo: { fontSize: wsize(4) },

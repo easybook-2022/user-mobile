@@ -409,8 +409,8 @@ export default function Main(props) {
                                   clearInterval(updateTrackUser)
                                   props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
                                 }}>
-                                  <View style={[styles.locationPhotoHolder, resizePhoto(item.logo, wsize(30))]}>
-                                    <Image source={{ uri: logo_url + item.logo.name }} style={{ height: '100%', width: '100%' }}/>
+                                  <View style={styles.locationPhotoHolder}>
+                                    <Image source={{ uri: logo_url + item.logo.name }} style={resizePhoto(item.logo, wsize(30))}/>
                                   </View>
 
                                   <Text style={styles.locationHeader}>{item.name}</Text>
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
 	rowHeader: { fontSize: wsize(6), fontWeight: 'bold', margin: 10 },
 	
 	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: wsize(40) },
-	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(30) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden' },
+	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(30) / 2, flexDirection: 'column', height: wsize(30), justifyContent: 'space-around', overflow: 'hidden', width: wsize(30) },
 	locationHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   locationActionHeader: { textAlign: 'center' },

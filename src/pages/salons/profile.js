@@ -422,11 +422,9 @@ const styles = StyleSheet.create({
 
 	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3, width: '98%' },
 	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-	menuImage: { height: wsize(10), width: wsize(10) },
 	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
   item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
 	itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-	itemImage: { height: wsize(10), width: wsize(10) },
 	itemHeader: { fontSize: wsize(6) },
   itemActions: { flexDirection: 'row' },
   itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5 },

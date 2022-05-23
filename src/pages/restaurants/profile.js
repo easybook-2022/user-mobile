@@ -249,7 +249,7 @@ export default function Profile(props) {
                 menuInfo.photos[0].row && (
 									menuInfo.photos.map(info => (
                     info.row.map(item => (
-                      item.photo.name != "" && (
+                      item.photo && item.photo.name != "" && (
                         <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
                           <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
                         </View>
@@ -388,7 +388,6 @@ const styles = StyleSheet.create({
 	itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
   item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
   itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', margin: 5, overflow: 'hidden' },
-  itemImage: { height: wsize(10), width: wsize(10) },
   itemHeader: { fontSize: wsize(6) },
   itemActions: { flexDirection: 'row', marginTop: 0 },
 	itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, marginLeft: 10, padding: 5 },

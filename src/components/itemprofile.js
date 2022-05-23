@@ -3,6 +3,7 @@ import { SafeAreaView, Platform, Dimensions, ScrollView, View, FlatList, Image, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
 import Constants from 'expo-constants';
+import { resizePhoto } from 'geottuse-tools';
 import { socket, logo_url } from '../../assets/info'
 import { getProductInfo } from '../apis/products'
 import { getNumCartItems, addItemtocart } from '../apis/carts'
@@ -24,7 +25,7 @@ export default function Itemprofile(props) {
 
 	const [itemName, setItemname] = useState('')
 	const [itemNote, setItemnote] = useState('')
-	const [itemImage, setItemimage] = useState('')
+	const [itemImage, setItemimage] = useState({ name: "", height: 0, width: 0 })
 	const [itemPrice, setItemprice] = useState(0)
 	const [options, setOptions] = useState([])
 	const [others, setOthers] = useState([])
@@ -264,12 +265,11 @@ export default function Itemprofile(props) {
 			<View style={styles.box}>
 				<ScrollView style={{ height: '100%' }}>
 					<View style={{ alignItems: 'center', marginTop: 20 }}>
-						{itemImage.name ? 
-							<View style={styles.imageHolder}>
-								<Image source={{ uri: logo_url + itemImage.name }} style={styles.image}/>
-							</View>
-						: null }
+						<View style={styles.imageHolder}>
+              {itemImage.name != "" && <Image source={{ uri: logo_url + itemImage.name }} style={resizePhoto(itemImage, wsize(40))}/>}
+            </View>
 					</View>
+
 					<Text style={styles.boxHeader}>{itemName ? itemName : productinfo}</Text>
 
 					{options.map((option, index) => (
@@ -489,8 +489,7 @@ const styles = StyleSheet.create({
 	itemprofile: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
-	imageHolder: { borderRadius: wsize(40) / 2, height: wsize(40), overflow: 'hidden', width: wsize(40) },
-	image: { height: 200, width: 200 },
+	imageHolder: { borderRadius: wsize(40) / 2, overflow: 'hidden', width: wsize(40) },
 	boxHeader: { fontSize: wsize(7), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 
 	info: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, paddingHorizontal: 5 },
