@@ -268,9 +268,7 @@ export default function Profile(props) {
                 )
 							)}
 
-              <View style={{ marginHorizontal: 10 }}>
-                {displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}
-              </View>
+              {displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}
 						</ScrollView>
 					</View>
 
@@ -420,7 +418,7 @@ const styles = StyleSheet.create({
   menuInputError: { color: 'darkred', marginLeft: 10 },
   menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
-	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3, width: '98%' },
+	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30 },
 	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
 	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
   item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },

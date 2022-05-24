@@ -123,7 +123,6 @@ export default function Profile(props) {
   }
   const displayList = info => {
     let { id, image, name, list, listType, left } = info
-    let add = name ? true : false
 
     return (
       <View style={{ marginLeft: left }}>
@@ -133,9 +132,7 @@ export default function Profile(props) {
               <View style={styles.menuImageHolder}>
                 {image.name != "" && <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>}
               </View>
-              <View style={styles.column}>
-                <Text style={styles.menuName}>{name} (Menu)</Text>
-              </View>
+              <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
             </View>
             {list.length > 0 && list.map((info, index) => (
               <View key={"list-" + index}>

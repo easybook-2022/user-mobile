@@ -123,7 +123,6 @@ export default function Profile(props) {
 	}
 	const displayList = info => {
 		let { id, image, name, list, listType, left } = info
-		let add = name ? true : false
 
 		return (
 			<View style={{ marginLeft: left }}>
@@ -144,12 +143,8 @@ export default function Profile(props) {
 										<View style={styles.itemImageHolder}>
                       {info.image.name != "" && <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>}
                     </View>
-										<View style={styles.column}>
-                      <Text style={styles.itemHeader}>{info.name}</Text>
-                    </View>
-										<View style={styles.column}>
-                      <Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-                    </View>
+										<View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+										<View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
 										<View style={styles.column}>
 											<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus(), type: "restaurant" })}>
 												<Text style={styles.itemActionHeader}>See / Buy</Text>
@@ -170,12 +165,8 @@ export default function Profile(props) {
 									<View style={styles.itemImageHolder}>
                     {info.image.name != "" && <Image style={resizePhoto(info.image, wsize(10))} source={{ uri: logo_url + info.image.name }}/>}
                   </View>
-									<View style={styles.column}>
-                    <Text style={styles.itemHeader}>{info.name}</Text>
-                  </View>
-									<View style={styles.column}>
-                    <Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text>
-                  </View>
+									<View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+									<View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
 									<View style={styles.column}>
 										<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("itemprofile", { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus(), type: "restaurant" })}>
 											<Text style={styles.itemActionHeader}>See / Buy</Text>
@@ -383,7 +374,6 @@ const styles = StyleSheet.create({
 
 	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3 },
 	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-	menuImage: { height: wsize(10), width: wsize(10) },
 	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
 	itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
   item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
