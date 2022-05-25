@@ -15,9 +15,12 @@ import { getNumNotifications, updateNotificationToken } from '../apis/users'
 import { getLocations, getMoreLocations } from '../apis/locations'
 import { getNumCartItems } from '../apis/carts'
 
-import NotificationsBox from '../components/notification'
+// components
 import Orders from '../components/orders'
-import Userauth from '../components/userauth'
+
+// widgets
+import Userauth from '../widgets/userauth'
+import NotificationsBox from '../widgets/notification'
 
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'

@@ -2,19 +2,19 @@ import axios from 'axios'
 import { url } from '../../assets/info'
 
 export const verifyUser = cellnumber => {
-	return axios.get(`${url}/users/verify/${cellnumber}`)
+	return axios.get(`${url}/users/user_verify/${cellnumber}`)
 }
 
 export const loginUser = data => {
 	return axios.post(
-		`${url}/users/login`, 
+		`${url}/users/user_login`, 
 		data
 	)
 }
 
 export const registerUser = data => {
 	return axios.post(
-		`${url}/users/register`,
+		`${url}/users/user_register`,
 		data
 	)
 }
@@ -28,7 +28,7 @@ export const updateUser = data => {
 
 export const updateNotificationToken = data => {
 	return axios.post(
-		`${url}/users/update_notification_token`,
+		`${url}/users/update_user_notification_token`,
 		data
 	)
 }

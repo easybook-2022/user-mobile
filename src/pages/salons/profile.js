@@ -13,8 +13,12 @@ import { getLocationProfile } from '../../apis/locations';
 import { getMenus } from '../../apis/menus';
 import { getNumCartItems } from '../../apis/carts';
 
+// components
 import Orders from '../../components/orders'
-import Userauth from '../../components/userauth'
+
+// widgets
+import Userauth from '../../widgets/userauth'
+import Menus from '../../widgets/menus'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -35,10 +39,8 @@ export default function Profile(props) {
 	const [distance, setDistance] = useState(0)
 	const [showAuth, setShowauth] = useState(false)
 	const [showInfo, setShowinfo] = useState({ show: false, workerHours: [] })
+  const [refetchMenu, setRefetchmenu] = useState(false)
 	const [userId, setUserid] = useState(null)
-
-	const [serviceInfo, setServiceinfo] = useState('')
-	const [menuInfo, setMenuinfo] = useState({ list: [], photos: [], error: false })
 
 	const [loaded, setLoaded] = useState(false)
 
@@ -88,25 +90,7 @@ export default function Profile(props) {
 					setAddress(fullAddress)
 					setPhonenumber(phonenumber)
 					setDistance(distance)
-				}
-			})
-			.catch((err) => {
-				if (err.response && err.response.status == 400) {
-					const { errormsg, status } = err.response.data
-				}
-			})
-	}
-	const getAllMenus = () => {
-		getMenus(locationid)
-			.then((res) => {
-				if (res.status == 200) {
-					return res.data
-				}
-			})
-			.then((res) => {
-				if (res) {
-					setMenuinfo({ ...menuInfo, list: res.list, photos: res.photos })
-					setLoaded(true)
+          setLoaded(true)
 				}
 			})
 			.catch((err) => {
@@ -118,66 +102,6 @@ export default function Profile(props) {
 	const initialize = () => {
 		getTheNumCartItems()
 		getTheLocationProfile()
-		getAllMenus()
-	}
-	const displayList = info => {
-		let { id, image, name, list, left } = info
-
-		return (
-			<View style={{ marginLeft: left }}>
-				{name ?
-					<View style={styles.menu}>
-						<View style={{ flexDirection: 'row' }}>
-  						<View style={styles.menuImageHolder}>
-                {image.name != "" && <Image style={resizePhoto(image, wsize(10))} source={{ uri: logo_url + image.name }}/>}
-              </View>
-              <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
-						</View>
-						{list.length > 0 && list.map((info, index) => (
-							<View key={"list-" + index}>
-								{info.listType == "list" ? 
-									displayList({ id: info.id, name: info.name, image: info.image, list: info.list, left: left + 10 })
-									:
-									<View style={styles.item}>
-                    <View style={styles.itemImageHolder}>
-                      {info.image.name != "" && <Image source={{ uri: logo_url + info.image.name }} style={resizePhoto(info.image, wsize(10))}/>}
-                    </View>
-										<View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
-                    <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price}</Text></View>
-                    <View style={styles.column}>
-  										<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
-                        <Text style={styles.itemActionHeader}>Book a time</Text>
-                      </TouchableOpacity>
-                    </View>
-									</View>
-								}
-							</View>
-						))}
-					</View>
-					:
-					list.map((info, index) => (
-						<View key={"list-" + index}>
-							{info.listType == "list" ? 
-								displayList({ id: info.id, name: info.name, image: info.image, list: info.list, left: left + 10 })
-								:
-								<View style={styles.item}>
-  								<View style={styles.itemImageHolder}>
-                    {info.image.name != "" && <Image source={{ uri: logo_url + info.image.name }} style={resizePhoto(info.image, wsize(10))}/>}
-                  </View>
-                  <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
-                  <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price}</Text></View>
-                  <View style={styles.column}>
-  									<TouchableOpacity style={styles.itemAction} onPress={() => props.navigation.navigate("booktime", { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() })}>
-                      <Text style={styles.itemActionHeader}>Book a time</Text>
-                    </TouchableOpacity>
-                  </View>
-								</View>
-							}
-						</View>
-					))
-				}
-			</View>
-		)
 	}
   const getTheWorkersTime = () => {
     getWorkersTime(locationid)
@@ -198,9 +122,7 @@ export default function Profile(props) {
       })
   }
 	
-	useEffect(() => {
-		initialize()
-	}, [])
+	useEffect(() => initialize(), [])
 
 	return (
 		<SafeAreaView style={styles.profile}>
@@ -213,7 +135,7 @@ export default function Profile(props) {
               </TouchableOpacity>
             </View>
             <View style={styles.column}>
-              <TouchableOpacity style={styles.headerAction} onPress={() => getAllMenus()}>
+              <TouchableOpacity style={styles.headerAction} onPress={() => setRefetchmenu(!refetchMenu)}>
                 <Text style={styles.headerActionHeader}>Refresh{'\n'}Menu</Text>
               </TouchableOpacity>
             </View>
@@ -225,52 +147,13 @@ export default function Profile(props) {
 					</View>
 					
 					<View style={styles.body}>
-						{(menuInfo.photos.length > 0 || menuInfo.list.length > 0) && (
-              <>
-  							<View style={styles.menuInputBox}>
-  								<TextInput style={styles.menuInput} type="text" placeholder="Enter service # or name" onChangeText={(info) => {
-                    setServiceinfo(info)
-                    setMenuinfo({ ...menuInfo, error: false })
-                  }} autoCorrect={false} autoCapitalize="none"/>
-                  <TouchableOpacity style={styles.menuInputTouch} onPress={() => {
-                    if (serviceInfo) {
-                      props.navigation.navigate(
-                        "booktime", 
-                        { 
-                          locationid, menuid: "", serviceid: "", 
-                          serviceinfo: serviceInfo, initialize: () => getAllMenus(), 
-                          type: "salon"
-                        }
-                      )
-                    } else {
-                      setMenuinfo({ ...menuInfo, error: true })
-                    }
-                  }}>
-                    <Text style={styles.menuInputTouchHeader}>Book now</Text>
-                  </TouchableOpacity>
-  							</View>
-                {menuInfo.error && <Text style={styles.menuInputError}>Your request is empty</Text>}
-              </>
-						)}
-
-						<ScrollView style={{ width: '100%' }}>
-							{menuInfo.photos.length > 0 && ( 
-								menuInfo.photos[0].row && (
-									menuInfo.photos.map(info => (
-                    info.row.map(item => (
-                      item.photo && (
-                        <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
-                          <Image source={{ uri: logo_url + item.photo.name }} style={{ height: '100%', width: '100%' }}/>
-                        </View>
-                      )
-                    ))
-									))
-                )
-							)}
-
-              {displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}
-						</ScrollView>
-					</View>
+            <Menus 
+              locationid={locationid} 
+              navigation={props.navigation} 
+              type="salon"
+              refetchMenu={refetchMenu}
+            />
+          </View>
 
 					<View style={styles.bottomNavs}>
 						<View style={styles.bottomNavsRow}>
@@ -304,7 +187,7 @@ export default function Profile(props) {
                     setUserid(null)
                   })
 								} else {
-									setShowauth({ show: true, action: false })
+									setShowauth(true)
 								}
 							}}>
 								<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
@@ -335,11 +218,13 @@ export default function Profile(props) {
 				getTheNumCartItems()
 				setOpencart(false)
 			}}/></Modal>}
-			{showAuth.show && (
+			{showAuth && (
 				<Modal transparent={true}>
-					<Userauth close={() => setShowauth({ show: false, action: "" })} done={id => {
-						socket.emit("socket/user/login", "user" + id, () => setUserid(id))
-						setShowauth({ show: false, action: false })
+					<Userauth close={() => setShowauth(false)} done={id => {
+						socket.emit("socket/user/login", "user" + id, () => {
+              setUserid(id)
+              setShowauth(false)
+            })
 					}} navigate={props.navigation.navigate}/>
 				</Modal>
 			)}
@@ -410,23 +295,6 @@ const styles = StyleSheet.create({
   headerActionHeader: { color: 'black', fontSize: wsize(3), fontWeight: 'bold', textAlign: 'center' },
 
   body: { height: '83%' },
-
-  menuInputBox: { alignItems: 'center', marginBottom: 5, width: '100%' },
-  menuInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 10, width: '95%' },
-  menuInputTouch: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), marginVertical: 5, padding: 10, width: '50%' },
-  menuInputTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
-  menuInputError: { color: 'darkred', marginLeft: 10 },
-  menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
-
-	menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30 },
-	menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-	menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, textDecorationLine: 'underline' },
-  item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, width: '100%' },
-	itemImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-	itemHeader: { fontSize: wsize(6) },
-  itemActions: { flexDirection: 'row' },
-  itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-  itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
 	bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },
 	bottomNavsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },

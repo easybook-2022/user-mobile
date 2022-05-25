@@ -385,9 +385,9 @@ const styles = StyleSheet.create({
 	authInputHeader: { fontSize: wsize(5) },
 	authInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 5 },
 
-  resend: { alignItems: 'center', backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'appFont', marginVertical: 40, padding: 10 },
+  resend: { alignItems: 'center', backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontFamily: 'Chilanka_400Regular', marginVertical: 40, padding: 10 },
 	resendHeader: { fontSize: wsize(5), fontWeight: 'bold' },
-
+  
 	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 
 	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10 },

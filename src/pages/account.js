@@ -10,11 +10,11 @@ import { logo_url } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'
 import { getUserInfo, updateUser } from '../apis/users'
 
+// widgets
+import Loadingprogress from '../widgets/loadingprogress';
+
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
-
-// components
-import Loadingprogress from '../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -131,7 +131,7 @@ export default function Account(props) {
 								<TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Cell phone number" onChangeText={(num) => setCellnumber(displayPhonenumber(cellnumber, num, () => Keyboard.dismiss()))} keyboardType="numeric" value={cellnumber} autoCorrect={false}/>
 							</View>
 
-              <View style={{ alignItems: 'center', marginVertical: 120, width: '100%' }}>
+              <View style={{ alignItems: 'center', marginTop: 120, width: '100%' }}>
                 <View style={styles.inputContainer}>
                   <Text style={styles.inputHeader}>New password:</Text>
                   <TextInput style={styles.input} placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="New password" secureTextEntry={true} onChangeText={(password) => setPassword(password)} value={password} autoCorrect={false}/>
@@ -168,13 +168,13 @@ const styles = StyleSheet.create({
 	account: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
 
-	inputsBox: { alignItems: 'center', marginBottom: 50 },
+	inputsBox: { alignItems: 'center' },
 	inputContainer: { backgroundColor: 'rgba(127, 127, 127, 0.1)', borderRadius: 10, marginVertical: 10, padding: 10, width: '90%' },
-	inputHeader: { fontFamily: 'appFont', fontSize: wsize(6), fontWeight: 'bold' },
+	inputHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), fontWeight: 'bold' },
 	input: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), padding: 5 },
 
-	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 20, padding: 10, width: wsize(30) },
-	updateButtonHeader: { fontFamily: 'appFont', fontSize: wsize(5) },
+	updateButton: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, marginVertical: 100, padding: 10, width: wsize(30) },
+	updateButtonHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5) },
 
 	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
 })

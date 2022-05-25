@@ -15,7 +15,7 @@ export default function Seeorders(props) {
 
   const [userId, setUserid] = useState(null)
   const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loaded, setLoaded] = useState(true)
   const [showDisabledScreen, setShowdisabledscreen] = useState(false)
   
   const seeTheOrders = async() => {
@@ -32,7 +32,7 @@ export default function Seeorders(props) {
           socket.emit("socket/user/login", userid, () => {
             setUserid(userid)
             setOrders(res.orders)
-            setLoading(false)
+            setLoaded(true)
           })
         }
       })
@@ -45,11 +45,11 @@ export default function Seeorders(props) {
   const startWebsocket = () => {
     socket.on("updateSeeorders", data => {
       if (data.type == "orderDone") {
-        Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
+        if (Constants.isDevice) Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
 
         props.navigation.goBack()
       } else if (data.type == "setWaitTime") {
-        Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
+        if (Constants.isDevice) Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
       }
     })
     socket.io.on("open", () => {
@@ -70,8 +70,8 @@ export default function Seeorders(props) {
   }, [orders.length])
   
   return (
-    <SafeAreaView style={[styles.seeorders, { opacity: loading ? 0.5 : 1 }]}>
-      {!loading ? 
+    <SafeAreaView style={[styles.seeorders, { opacity: !loaded ? 0.5 : 1 }]}>
+      {loaded ? 
         <View style={styles.box}>
           <FlatList
             data={orders}
@@ -79,7 +79,10 @@ export default function Seeorders(props) {
               <View style={styles.item} key={item.key}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <View style={styles.itemImageHolder}>
-                    {(item.image && item.image.name != "") && <Image source={{ uri: logo_url + item.image.name }} style={resizePhoto(item.image, wsize(30))}/>}
+                    <Image 
+                      source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")} 
+                      style={resizePhoto(item.image, wsize(30))}
+                    />
                   </View>
 
                   <View style={styles.itemInfos}>

@@ -11,6 +11,8 @@ import { socket, logo_url } from '../../assets/info'
 import { searchFriends, selectUser, requestUserPaymentMethod } from '../apis/users'
 import { getCartItems, getCartItemsTotal, editCartItem, updateCartItem, removeFromCart, changeCartItem, checkoutCart } from '../apis/carts'
 
+import Loadingprogress from '../widgets/loadingprogress'
+
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
@@ -377,8 +379,8 @@ export default function Orders(props) {
 	}, [items.length])
 
 	return (
-    <SafeAreaView>
-  		<View style={[styles.orders, { opacity: loading ? 0.5 : 1 }]}>
+    <SafeAreaView style={[styles.orders, { opacity: loading ? 0.5 : 1 }]}>
+      {loaded ? 
   			<View style={styles.box}>
   				<View style={styles.headers}>
   					<View style={{ alignItems: 'center', width: '100%' }}>
@@ -404,7 +406,10 @@ export default function Orders(props) {
     													<AntDesign name="closecircleo" size={wsize(7)}/>
     												</TouchableOpacity>
     												<View style={styles.itemImageHolder}>
-                              {(item.image && item.image.name != "") && <Image source={{ uri: logo_url + item.image.name }} style={resizePhoto(item.image, 70)}/>}
+                              <Image 
+                                source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")} 
+                                style={resizePhoto(item.image, 70)}
+                              />
                             </View>
     												<View style={styles.itemInfos}>
     													<Text style={styles.itemName}>{item.name}</Text>
@@ -483,180 +488,185 @@ export default function Orders(props) {
   						</View>
   					}
   				</View>
-  			</View>
+        </View>
+        :
+        <Loadingprogress/>
+      }
 
-  			{showConfirm && (
-  				<Modal transparent={true}>
-  					<SafeAreaView style={styles.confirmBox}>
-  						<View style={styles.confirmContainer}>
-  							<Text style={styles.confirmHeader}>Orders sent</Text>
-  						</View>
-  					</SafeAreaView>
-  				</Modal>
-  			)}
-  			{itemInfo.show && (
-  				<Modal>
-  					<SafeAreaView style={styles.itemInfoBox}>
-  						<View style={styles.itemInfoHeader}>
-  							<TouchableOpacity style={styles.itemClose} onPress={() => setIteminfo({ ...itemInfo, show: false })}>
-  								<AntDesign name="close" size={wsize(7)}/>
-  							</TouchableOpacity>
-  						</View>
-  						<ScrollView style={styles.itemInfoContainer}>
-    						<View style={{ alignItems: 'center', marginBottom: 20 }}>
-                  <View style={styles.imageHolder}>
-                    {itemInfo.image.name != "" && <Image source={{ uri: logo_url + itemInfo.image.name }} style={styles.image}/>}
-                  </View>
-                </View>
-
-  							<Text style={styles.boxItemHeader}>{itemInfo.name}</Text>
-  							<Text style={styles.boxItemHeaderInfo}>{itemInfo.info}</Text>
-
-  							{itemInfo.options.map((option, index) => (
-  								<View key={option.key} style={{ alignItems: 'center' }}>
-  									<View style={styles.info}>
-  										<Text style={styles.infoHeader}>{option.header}:</Text>
-
-  										{option.type == "amount" && (
-  											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  												<View style={styles.amount}>
-  													<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "-")}>
-  														<Text style={styles.amountActionHeader}>-</Text>
-  													</TouchableOpacity>
-  													<Text style={styles.amountHeader}>{option.selected}</Text>
-  													<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "+")}>
-  														<Text style={styles.amountActionHeader}>+</Text>
-  													</TouchableOpacity>
-  												</View>
-  											</View>
-  										)}
-
-  										{option.type == "percentage" && (
-  											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  												<View style={styles.percentage}>
-  													<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "-")}>
-  														<Text style={styles.percentageActionHeader}>-</Text>
-  													</TouchableOpacity>
-  													<Text style={styles.percentageHeader}>{option.selected}%</Text>
-  													<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "+")}>
-  														<Text style={styles.percentageActionHeader}>+</Text>
-  													</TouchableOpacity>
-  												</View>
-  											</View>
-  										)}
-  									</View>
-  								</View>
-  							))}
-
-  							{itemInfo.others.length > 0 && (
-  								<View style={styles.othersBox}>
-  									<Text style={styles.othersHeader}>Other options</Text>
-
-  									<View style={styles.others}>
-  										{itemInfo.others.map((other, index) => (
-  											<View key={other.key} style={{ alignItems: 'center' }}>
-  												<View style={styles.other}>
-  													<View style={{ flexDirection: 'row' }}>
-  														<Text style={styles.otherName}># {other.name}:</Text>
-  														<Text style={styles.otherInput}>{other.input}</Text>
-  													</View>
-  													<View style={{ flexDirection: 'row', marginTop: 10 }}>
-  														<Text style={styles.otherPrice}>$ {other.price}</Text>
-
-  														<View style={styles.otherActions}>
-  															<TouchableOpacity style={other.selected ? styles.otherActionLeftDisabled : styles.otherActionLeft} onPress={() => selectOther(index)}>
-  																<Text style={[styles.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
-  															</TouchableOpacity>
-  															<TouchableOpacity style={!other.selected ? styles.otherActionRightDisabled : styles.otherActionRight} onPress={() => selectOther(index)}>
-  																<Text style={[styles.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
-  															</TouchableOpacity>
-  														</View>
-  													</View>
-  												</View>
-  											</View>
-  										))}
-  									</View>
-  								</View>
-  							)}
-
-  							{itemInfo.sizes.length > 0 && (
-  								<View style={styles.sizesBox}>
-  									<Text style={styles.sizesHeader}>Select a Size</Text>
-
-  									<View style={styles.sizes}>
-  										{itemInfo.sizes.map((size, index) => (
-  											<View key={size.key} style={styles.size}>
-  												<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectSize(index)}>
-  													<Text style={size.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{size.name}</Text>
-  												</TouchableOpacity>
-  												<Text style={styles.sizePrice}>$ {size.price}</Text>
-  											</View>
-  										))}
-  									</View>
-  								</View>
-  							)}
-
-  							<View style={styles.note}>
-  								<TextInput 
-                    style={styles.noteInput} multiline textAlignVertical="top" 
-                    placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" 
-                    maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} 
-                    value={itemInfo.note} autoCorrect={false} autoCapitalize="none"
+			{showConfirm && (
+				<Modal transparent={true}>
+					<SafeAreaView style={styles.confirmBox}>
+						<View style={styles.confirmContainer}>
+							<Text style={styles.confirmHeader}>Orders sent</Text>
+						</View>
+					</SafeAreaView>
+				</Modal>
+			)}
+			{itemInfo.show && (
+				<Modal>
+					<SafeAreaView style={styles.itemInfoBox}>
+						<View style={styles.itemInfoHeader}>
+							<TouchableOpacity style={styles.itemClose} onPress={() => setIteminfo({ ...itemInfo, show: false })}>
+								<AntDesign name="close" size={wsize(7)}/>
+							</TouchableOpacity>
+						</View>
+						<ScrollView style={styles.itemInfoContainer}>
+  						<View style={{ alignItems: 'center', marginBottom: 20 }}>
+                <View style={styles.imageHolder}>
+                  <Image 
+                    source={itemInfo.image.name ? { uri: logo_url + itemInfo.image.name } : require("../../assets/noimage.jpeg")} 
+                    style={styles.image}
                   />
-  							</View>
+                </View>
+              </View>
 
-  							<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  								<View style={styles.quantity}>
-                    <View style={styles.column}>
-                      <Text style={styles.quantityHeader}>Quantity</Text>
-                    </View>
-                    <View style={styles.column}>
-    									<TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("-")}>
-    										<Text style={styles.quantityActionHeader}>-</Text>
-    									</TouchableOpacity>
-                    </View>
-                    <View style={styles.column}>
-    									<Text style={styles.quantityHeader}>{itemInfo.quantity}</Text>
-                    </View>
-                    <View style={styles.column}>
-    									<TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("+")}>
-    										<Text style={styles.quantityActionHeader}>+</Text>
-    									</TouchableOpacity>
-                    </View>
-  								</View>
-  							</View>
+							<Text style={styles.boxItemHeader}>{itemInfo.name}</Text>
+							<Text style={styles.boxItemHeaderInfo}>{itemInfo.info}</Text>
 
-  							{itemInfo.errorMsg ? <Text style={styles.errorMsg}>{itemInfo.errorMsg}</Text> : null}
+							{itemInfo.options.map((option, index) => (
+								<View key={option.key} style={{ alignItems: 'center' }}>
+									<View style={styles.info}>
+										<Text style={styles.infoHeader}>{option.header}:</Text>
 
-  							<View style={styles.itemActions}>
-  								<View style={{ flexDirection: 'row' }}>
-  									<TouchableOpacity style={styles.itemAction} onPress={() => updateTheCartItem()}>
-  										<Text style={styles.itemActionHeader}>Update{'\n'}order</Text>
+										{option.type == "amount" && (
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={styles.amount}>
+													<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "-")}>
+														<Text style={styles.amountActionHeader}>-</Text>
+													</TouchableOpacity>
+													<Text style={styles.amountHeader}>{option.selected}</Text>
+													<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "+")}>
+														<Text style={styles.amountActionHeader}>+</Text>
+													</TouchableOpacity>
+												</View>
+											</View>
+										)}
+
+										{option.type == "percentage" && (
+											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+												<View style={styles.percentage}>
+													<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "-")}>
+														<Text style={styles.percentageActionHeader}>-</Text>
+													</TouchableOpacity>
+													<Text style={styles.percentageHeader}>{option.selected}%</Text>
+													<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "+")}>
+														<Text style={styles.percentageActionHeader}>+</Text>
+													</TouchableOpacity>
+												</View>
+											</View>
+										)}
+									</View>
+								</View>
+							))}
+
+							{itemInfo.others.length > 0 && (
+								<View style={styles.othersBox}>
+									<Text style={styles.othersHeader}>Other options</Text>
+
+									<View style={styles.others}>
+										{itemInfo.others.map((other, index) => (
+											<View key={other.key} style={{ alignItems: 'center' }}>
+												<View style={styles.other}>
+													<View style={{ flexDirection: 'row' }}>
+														<Text style={styles.otherName}># {other.name}:</Text>
+														<Text style={styles.otherInput}>{other.input}</Text>
+													</View>
+													<View style={{ flexDirection: 'row', marginTop: 10 }}>
+														<Text style={styles.otherPrice}>$ {other.price}</Text>
+
+														<View style={styles.otherActions}>
+															<TouchableOpacity style={other.selected ? styles.otherActionLeftDisabled : styles.otherActionLeft} onPress={() => selectOther(index)}>
+																<Text style={[styles.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+															</TouchableOpacity>
+															<TouchableOpacity style={!other.selected ? styles.otherActionRightDisabled : styles.otherActionRight} onPress={() => selectOther(index)}>
+																<Text style={[styles.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+															</TouchableOpacity>
+														</View>
+													</View>
+												</View>
+											</View>
+										))}
+									</View>
+								</View>
+							)}
+
+							{itemInfo.sizes.length > 0 && (
+								<View style={styles.sizesBox}>
+									<Text style={styles.sizesHeader}>Select a Size</Text>
+
+									<View style={styles.sizes}>
+										{itemInfo.sizes.map((size, index) => (
+											<View key={size.key} style={styles.size}>
+												<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectSize(index)}>
+													<Text style={size.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{size.name}</Text>
+												</TouchableOpacity>
+												<Text style={styles.sizePrice}>$ {size.price}</Text>
+											</View>
+										))}
+									</View>
+								</View>
+							)}
+
+							<View style={styles.note}>
+								<TextInput 
+                  style={styles.noteInput} multiline textAlignVertical="top" 
+                  placeholderTextColor="rgba(127, 127, 127, 0.5)" placeholder="Leave a note if you want" 
+                  maxLength={100} onChangeText={(note) => setIteminfo({ ...itemInfo, note })} 
+                  value={itemInfo.note} autoCorrect={false} autoCapitalize="none"
+                />
+							</View>
+
+							<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+								<View style={styles.quantity}>
+                  <View style={styles.column}>
+                    <Text style={styles.quantityHeader}>Quantity</Text>
+                  </View>
+                  <View style={styles.column}>
+  									<TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("-")}>
+  										<Text style={styles.quantityActionHeader}>-</Text>
   									</TouchableOpacity>
-  								</View>
-  							</View>
-  						</ScrollView>
-  					</SafeAreaView>
-  				</Modal>
-  			)}
-  			{showDisabledScreen && (
-  				<Modal transparent={true}>
-  					<SafeAreaView style={styles.disabled}>
-  						<ActivityIndicator color="black" size="large"/>
-  					</SafeAreaView>
-  				</Modal>
-  			)}
-  		</View>
+                  </View>
+                  <View style={styles.column}>
+  									<Text style={styles.quantityHeader}>{itemInfo.quantity}</Text>
+                  </View>
+                  <View style={styles.column}>
+  									<TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("+")}>
+  										<Text style={styles.quantityActionHeader}>+</Text>
+  									</TouchableOpacity>
+                  </View>
+								</View>
+							</View>
+
+							{itemInfo.errorMsg ? <Text style={styles.errorMsg}>{itemInfo.errorMsg}</Text> : null}
+
+							<View style={styles.itemActions}>
+								<View style={{ flexDirection: 'row' }}>
+									<TouchableOpacity style={styles.itemAction} onPress={() => updateTheCartItem()}>
+										<Text style={styles.itemActionHeader}>Update{'\n'}order</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</ScrollView>
+					</SafeAreaView>
+				</Modal>
+			)}
+			{showDisabledScreen && (
+				<Modal transparent={true}>
+					<SafeAreaView style={styles.disabled}>
+						<ActivityIndicator color="black" size="large"/>
+					</SafeAreaView>
+				</Modal>
+			)}
     </SafeAreaView>
 	);
 }
 
 const styles = StyleSheet.create({
-	orders: { backgroundColor: 'white', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
+	orders: { backgroundColor: 'white', height: '100%', width: '100%' },
 	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
-
+  
 	headers: { flexDirection: 'column', height: '15%', justifyContent: 'space-around' },
-	boxHeader: { fontFamily: 'appFont', fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
+	boxHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
 
 	body: { height: '85%' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, padding: 10 },
@@ -679,7 +689,7 @@ const styles = StyleSheet.create({
 	confirm: { backgroundColor: 'white' },
 	confirmBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	confirmHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	confirmHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
 	confirmOptions: { flexDirection: 'row', justifyContent: 'space-around' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: 100 },
 

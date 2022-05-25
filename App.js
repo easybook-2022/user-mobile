@@ -4,22 +4,16 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform, Text, View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Font from 'expo-font';
+import { useFonts, Chilanka_400Regular } from '@expo-google-fonts/chilanka';
 
 import Main from './src/pages/main'
-
 import Restaurantprofile from './src/pages/restaurants/profile'
-
 import Seeorders from './src/pages/seeorders'
-
 import Salonprofile from './src/pages/salons/profile'
 import Booktime from './src/pages/salons/booktime'
-
 import Storeprofile from './src/pages/stores/profile'
-
 import Account from './src/pages/account'
 import Itemprofile from './src/components/itemprofile'
-import Orders from './src/components/orders'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -27,9 +21,9 @@ const wsize = p => {return width * (p / 100)}
 export default function App() {
   const Stack = createNativeStackNavigator();
   
-  const [loaded] = Font.useFonts({ appFont: require('./assets/Chilanka-Regular.ttf') });
+  const [fontLoaded] = useFonts({ Chilanka_400Regular });
   
-  if (loaded) {
+  if (fontLoaded) {
     return (
       <NavigationContainer>
         <Stack.Navigator initialRouteName="main">
@@ -64,7 +58,6 @@ export default function App() {
               )
             )
           })}/>
-          <Stack.Screen name="orders" component={Orders} options={{ headerShown: false }}/>
           <Stack.Screen name="salonprofile" component={Salonprofile} options={({ navigation }) => ({
             headerTitle: () => <Text style={styles.header}>Salon Profile</Text>,
             headerLeft: () => (

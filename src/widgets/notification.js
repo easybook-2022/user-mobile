@@ -231,7 +231,7 @@ export default function Notification(props) {
             message = "Your appointment " + displayTime(item.time) + " is cancelled with "
             message += data.reason ? "reason: " + data.reason : "no reason"
 
-            Speech.speak(message, { rate: 0.7 })
+            if (Constants.isDevice) Speech.speak(message, { rate: 0.7 })
           }
         })
 
@@ -245,7 +245,7 @@ export default function Notification(props) {
             if (item.orderNumber == data.ordernumber) {
               newItems.splice(index, 1)
 
-              Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
+              if (Constants.isDevice) Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
             }
           })
         }
@@ -259,7 +259,7 @@ export default function Notification(props) {
             item.status = 'inprogress'
             item.waitTime = data.waitTime
 
-            Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
+            if (Constants.isDevice) Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
           }
         })
 
@@ -436,7 +436,10 @@ export default function Notification(props) {
 														<Image source={{ uri: logo_url + item.locationimage.name }} style={resizePhoto(item.locationimage, wsize(30) - 5)}/>
 													</View>
 													<View style={styles.itemServiceImageHolder}>
-														{(item.serviceimage && item.serviceimage.name != "") && <Image source={{ uri: logo_url + item.serviceimage.name }} style={resizePhoto(item.serviceimage, wsize(30) - 10)}/>}
+														<Image 
+                              source={item.serviceimage.name ? { uri: logo_url + item.serviceimage.name } : require("../../assets/noimage.jpeg")} 
+                              style={resizePhoto(item.serviceimage, wsize(30) - 10)}
+                            />
 													</View>
 												</View>
 												<View style={{ flexDirection: 'column', width: wsize(70) }}>
@@ -617,7 +620,7 @@ const styles = StyleSheet.create({
 	notifications: { backgroundColor: '#EAEAEA', height: '100%', paddingTop: Platform.OS == "ios" ? 0 : Constants.statusBarHeight, width: '100%' },
 	box: { height: '100%', width: '100%' },
 	close: { marginTop: 20, marginHorizontal: 20 },
-	boxHeader: { fontFamily: 'appFont', fontSize: wsize(7), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
+	boxHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), fontWeight: 'bold', marginTop: 10, textAlign: 'center' },
 
 	refresh: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(30) },
 	refreshHeader: { fontSize: wsize(4), textAlign: 'center' },
@@ -655,7 +658,7 @@ const styles = StyleSheet.create({
 
 	popBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	popContainer: { backgroundColor: 'white', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '80%' },
-	popHeader: { fontFamily: 'appFont', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
+	popHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), fontWeight: 'bold', paddingHorizontal: 20, textAlign: 'center' },
   popInput: { borderColor: 'lightblue', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 10, width: '80%' },
 	list: { flexDirection: 'row', justifyContent: 'space-around' },
   touch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, padding: 5 },

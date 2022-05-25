@@ -8,8 +8,12 @@ import { socket, logo_url } from '../../assets/info'
 import { getProductInfo } from '../apis/products'
 import { getNumCartItems, addItemtocart } from '../apis/carts'
 
+// components
 import Orders from '../components/orders'
-import Userauth from '../components/userauth'
+
+// widgets
+import Loadingprogress from '../widgets/loadingprogress'
+import Userauth from '../widgets/userauth'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -34,8 +38,9 @@ export default function Itemprofile(props) {
 	const [cost, setCost] = useState(0)
 	const [errorMsg, setErrormsg] = useState('')
 	const [showNotifyUser, setShownotifyuser] = useState({ show: false, userid: 0, username: "" })
-	const [showAuth, setShowauth] = useState({ show: false, action: "" })
+	const [showAuth, setShowauth] = useState({ show: false, addcart: false })
 	const [userId, setUserid] = useState(null)
+  const [loaded, setLoaded] = useState(false)
 
 	const [orderingItem, setOrderingitem] = useState({ name: "", image: "", options: [], others: [], sizes: [], quantity: 0, cost: 0 })
 
@@ -155,8 +160,10 @@ export default function Itemprofile(props) {
 		setQuantity(newQuantity)
 		setCost(newCost)
 	}
-	const addCart = async() => {
-		if (userId) {
+	const addCart = async(id) => {
+		if (userId || id) {
+      setShowauth({ ...showAuth, show: false })
+
 			let callfor = [], receiver = []
 			let newOptions = JSON.parse(JSON.stringify(options))
 			let newOthers = JSON.parse(JSON.stringify(others))
@@ -187,7 +194,7 @@ export default function Itemprofile(props) {
       
 			if (price || productinfo) {
 				const data = { 
-					userid: userId, locationid, 
+					userid: userId || id, locationid, 
 					productid: productid ? productid : -1, 
 					productinfo: productinfo ? productinfo : "", 
 					quantity, 
@@ -217,7 +224,7 @@ export default function Itemprofile(props) {
 				setErrormsg("Please choose a size")
 			}
 		} else {
-			setShowauth({ show: true, action: "addcart" })
+			setShowauth({ ...showAuth, show: true, addcart: true })
 		}
 	}
 	const showOrders = () => {
@@ -242,6 +249,7 @@ export default function Itemprofile(props) {
 					setOthers(others)
 					setSizes(sizes)
 					setCost(quantity * price)
+          setLoaded(true)
 				}
 			})
 			.catch((err) => {
@@ -253,234 +261,245 @@ export default function Itemprofile(props) {
 	const initialize = () => {
 		getTheNumCartItems()
 
-		if (productid) getTheProductInfo()
+		if (productid) {
+      getTheProductInfo()
+    } else {
+      setLoaded(true)
+    }
 	}
 
-	useEffect(() => {
-		initialize()
-	}, [])
+	useEffect(() => initialize(), [])
 
 	return (
 		<SafeAreaView style={styles.itemprofile}>
-			<View style={styles.box}>
-				<ScrollView style={{ height: '100%' }}>
-					<View style={{ alignItems: 'center', marginTop: 20 }}>
-						<View style={styles.imageHolder}>
-              {itemImage.name != "" && <Image source={{ uri: logo_url + itemImage.name }} style={resizePhoto(itemImage, wsize(40))}/>}
-            </View>
-					</View>
-
-					<Text style={styles.boxHeader}>{itemName ? itemName : productinfo}</Text>
-
-					{options.map((option, index) => (
-						<View key={option.key} style={{ alignItems: 'center' }}>
-							<View style={styles.info}>
-								<Text style={styles.infoHeader}>{option.header}:</Text>
-
-								{option.type == "amount" && (
-									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<View style={styles.amount}>
-											<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "-")}>
-												<Text style={styles.amountActionHeader}>-</Text>
-											</TouchableOpacity>
-											<Text style={styles.amountHeader}>{option.selected}</Text>
-											<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "+")}>
-												<Text style={styles.amountActionHeader}>+</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								)}
-
-								{option.type == "percentage" && (
-									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-										<View style={styles.percentage}>
-											<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "-")}>
-												<Text style={styles.percentageActionHeader}>-</Text>
-											</TouchableOpacity>
-											<Text style={styles.percentageHeader}>{option.selected}%</Text>
-											<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "+")}>
-												<Text style={styles.percentageActionHeader}>+</Text>
-											</TouchableOpacity>
-										</View>
-									</View>
-								)}
-							</View>
-						</View>
-					))}
-
-					{others.length > 0 && (
-						<View style={styles.othersBox}>
-							<Text style={styles.othersHeader}>Other options</Text>
-
-							<View style={styles.others}>
-								{others.map((other, index) => (
-									<View key={other.key} style={{ alignItems: 'center' }}>
-										<View style={styles.other}>
-											<View style={{ flexDirection: 'row' }}>
-												<Text style={styles.otherName}># {other.name}:</Text>
-												<Text style={styles.otherInput}>{other.input}</Text>
-											</View>
-											<View style={{ flexDirection: 'row', marginTop: 10 }}>
-												<Text style={styles.otherPrice}>$ {other.price}</Text>
-
-												<View style={styles.otherActions}>
-													<TouchableOpacity style={other.selected ? styles.otherActionLeftDisabled : styles.otherActionLeft} onPress={() => selectOther(index)}>
-														<Text style={[styles.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
-													</TouchableOpacity>
-													<TouchableOpacity style={!other.selected ? styles.otherActionRightDisabled : styles.otherActionRight} onPress={() => selectOther(index)}>
-														<Text style={[styles.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
-													</TouchableOpacity>
-												</View>
-											</View>
-										</View>
-									</View>
-								))}
-							</View>
-						</View>
-					)}
-
-					{sizes.length > 0 && (
-						<View style={styles.sizesBox}>
-							<Text style={styles.sizesHeader}>Select a Size</Text>
-
-							<View style={styles.sizes}>
-								{sizes.map((size, index) => (
-									<View key={size.key} style={styles.size}>
-										<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectSize(index)}>
-											<Text style={size.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{size.name}</Text>
-										</TouchableOpacity>
-										<Text style={styles.sizePrice}>$ {size.price}</Text>
-									</View>
-								))}
-							</View>
-						</View>
-					)}
-
-					{!productinfo ? 
-						<View style={styles.note}>
-							<TextInput 
-								style={styles.noteInput} multiline textAlignVertical="top" 
-								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder="Leave a note if you want" 
-								maxLength={100} onChangeText={(note) => setItemnote(note)} 
-								autoCorrect={false} autoCapitalize="none"
-							/>
-						</View>
-						:
-						<View style={styles.note}>
-							<Text style={styles.noteHeader}>Add some instruction if you want ?</Text>
-							<TextInput 
-								style={styles.noteInput} multiline textAlignVertical="top" 
-								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder={"example: " + (type == "store" ? "make it medium size" : "add 2 cream and 1 sugar")}
-								maxLength={100} onChangeText={(note) => setItemnote(note)} 
-								autoCorrect={false} autoCapitalize="none"
-							/>
-						</View>
-					}
-
-					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-						<View style={styles.quantity}>
-              <View style={styles.column}>
-                <Text style={styles.quantityHeader}>Quantity:</Text>
+      {loaded ? 
+  			<View style={styles.box}>
+  				<ScrollView style={{ height: '100%' }}>
+  					<View style={{ alignItems: 'center', marginTop: 20 }}>
+  						<View style={styles.imageHolder}>
+                <Image 
+                  source={itemImage.name ? { uri: logo_url + itemImage.name } : require("../../assets/noimage.jpeg")} 
+                  style={resizePhoto(itemImage, wsize(40))}
+                />
               </View>
-              <View style={styles.column}>
-                <TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("-")}>
-                  <Text style={styles.quantityActionHeader}>-</Text>
-                </TouchableOpacity>
+  					</View>
+
+  					<Text style={styles.boxHeader}>{itemName ? itemName : productinfo}</Text>
+
+  					{options.map((option, index) => (
+  						<View key={option.key} style={{ alignItems: 'center' }}>
+  							<View style={styles.info}>
+  								<Text style={styles.infoHeader}>{option.header}:</Text>
+
+  								{option.type == "amount" && (
+  									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+  										<View style={styles.amount}>
+  											<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "-")}>
+  												<Text style={styles.amountActionHeader}>-</Text>
+  											</TouchableOpacity>
+  											<Text style={styles.amountHeader}>{option.selected}</Text>
+  											<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "+")}>
+  												<Text style={styles.amountActionHeader}>+</Text>
+  											</TouchableOpacity>
+  										</View>
+  									</View>
+  								)}
+
+  								{option.type == "percentage" && (
+  									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+  										<View style={styles.percentage}>
+  											<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "-")}>
+  												<Text style={styles.percentageActionHeader}>-</Text>
+  											</TouchableOpacity>
+  											<Text style={styles.percentageHeader}>{option.selected}%</Text>
+  											<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "+")}>
+  												<Text style={styles.percentageActionHeader}>+</Text>
+  											</TouchableOpacity>
+  										</View>
+  									</View>
+  								)}
+  							</View>
+  						</View>
+  					))}
+
+  					{others.length > 0 && (
+  						<View style={styles.othersBox}>
+  							<Text style={styles.othersHeader}>Other options</Text>
+
+  							<View style={styles.others}>
+  								{others.map((other, index) => (
+  									<View key={other.key} style={{ alignItems: 'center' }}>
+  										<View style={styles.other}>
+  											<View style={{ flexDirection: 'row' }}>
+  												<Text style={styles.otherName}># {other.name}:</Text>
+  												<Text style={styles.otherInput}>{other.input}</Text>
+  											</View>
+  											<View style={{ flexDirection: 'row', marginTop: 10 }}>
+  												<Text style={styles.otherPrice}>$ {other.price}</Text>
+
+  												<View style={styles.otherActions}>
+  													<TouchableOpacity style={other.selected ? styles.otherActionLeftDisabled : styles.otherActionLeft} onPress={() => selectOther(index)}>
+  														<Text style={[styles.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
+  													</TouchableOpacity>
+  													<TouchableOpacity style={!other.selected ? styles.otherActionRightDisabled : styles.otherActionRight} onPress={() => selectOther(index)}>
+  														<Text style={[styles.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
+  													</TouchableOpacity>
+  												</View>
+  											</View>
+  										</View>
+  									</View>
+  								))}
+  							</View>
+  						</View>
+  					)}
+
+  					{sizes.length > 0 && (
+  						<View style={styles.sizesBox}>
+  							<Text style={styles.sizesHeader}>Select a Size</Text>
+
+  							<View style={styles.sizes}>
+  								{sizes.map((size, index) => (
+  									<View key={size.key} style={styles.size}>
+  										<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectSize(index)}>
+  											<Text style={size.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{size.name}</Text>
+  										</TouchableOpacity>
+  										<Text style={styles.sizePrice}>$ {size.price}</Text>
+  									</View>
+  								))}
+  							</View>
+  						</View>
+  					)}
+
+  					{!productinfo ? 
+  						<View style={styles.note}>
+  							<TextInput 
+  								style={styles.noteInput} multiline textAlignVertical="top" 
+  								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder="Leave a note if you want" 
+  								maxLength={100} onChangeText={(note) => setItemnote(note)} 
+  								autoCorrect={false} autoCapitalize="none"
+  							/>
+  						</View>
+  						:
+  						<View style={styles.note}>
+  							<Text style={styles.noteHeader}>Add some instruction if you want ?</Text>
+  							<TextInput 
+  								style={styles.noteInput} multiline textAlignVertical="top" 
+  								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder={"example: " + (type == "store" ? "make it medium size" : "add 2 cream and 1 sugar")}
+  								maxLength={100} onChangeText={(note) => setItemnote(note)} 
+  								autoCorrect={false} autoCapitalize="none"
+  							/>
+  						</View>
+  					}
+
+  					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+  						<View style={styles.quantity}>
+                <View style={styles.column}>
+                  <Text style={styles.quantityHeader}>Quantity:</Text>
+                </View>
+                <View style={styles.column}>
+                  <TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("-")}>
+                    <Text style={styles.quantityActionHeader}>-</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.column}>
+                  <Text style={styles.quantityHeader}>{quantity}</Text>
+                </View>
+                <View style={styles.column}>
+                  <TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("+")}>
+                    <Text style={styles.quantityActionHeader}>+</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-              <View style={styles.column}>
-                <Text style={styles.quantityHeader}>{quantity}</Text>
-              </View>
-              <View style={styles.column}>
-                <TouchableOpacity style={styles.quantityAction} onPress={() => changeQuantity("+")}>
-                  <Text style={styles.quantityActionHeader}>+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-					</View>
+  					</View>
 
-					{!productinfo ? <Text style={styles.price}>Cost: $ {cost.toFixed(2)}</Text> : null}
+  					{!productinfo ? <Text style={styles.price}>Cost: $ {cost.toFixed(2)}</Text> : null}
 
-					{errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null}
+  					{errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null}
 
-					<View style={styles.itemActions}>
-						<View style={{ flexDirection: 'row' }}>
-							<TouchableOpacity style={styles.itemAction} onPress={() => addCart()}>
-								<Text style={styles.itemActionHeader}>Order item</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-				</ScrollView>
+  					<View style={styles.itemActions}>
+  						<View style={{ flexDirection: 'row' }}>
+  							<TouchableOpacity style={styles.itemAction} onPress={() => addCart()}>
+  								<Text style={styles.itemActionHeader}>Order item</Text>
+  							</TouchableOpacity>
+  						</View>
+  					</View>
+  				</ScrollView>
 
-				<View style={styles.bottomNavs}>
-					<View style={styles.bottomNavsRow}>
-						{userId && (
-							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("account")}>
-								<FontAwesome5 name="user-circle" size={30}/>
-							</TouchableOpacity>
-						)}
+  				<View style={styles.bottomNavs}>
+  					<View style={styles.bottomNavsRow}>
+  						{userId && (
+  							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.navigate("account")}>
+  								<FontAwesome5 name="user-circle" size={30}/>
+  							</TouchableOpacity>
+  						)}
 
-						{userId && (
-							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpenorders(true)}>
-								<Entypo name="shopping-cart" size={30}/>
-								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
-							</TouchableOpacity>
-						)}
+  						{userId && (
+  							<TouchableOpacity style={styles.bottomNav} onPress={() => setOpenorders(true)}>
+  								<Entypo name="shopping-cart" size={30}/>
+  								{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
+  							</TouchableOpacity>
+  						)}
 
-						<TouchableOpacity style={styles.bottomNav} onPress={() => {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 0,
-									routes: [{ name: "main" }]
-								})
-							)
-						}}>
-							<Entypo name="home" size={30}/>
-						</TouchableOpacity>
+  						<TouchableOpacity style={styles.bottomNav} onPress={() => {
+  							props.navigation.dispatch(
+  								CommonActions.reset({
+  									index: 0,
+  									routes: [{ name: "main" }]
+  								})
+  							)
+  						}}>
+  							<Entypo name="home" size={30}/>
+  						</TouchableOpacity>
 
-						<TouchableOpacity style={styles.bottomNav} onPress={() => {
-							if (userId) {
-								socket.emit("socket/user/logout", userId, () => {
-                  AsyncStorage.clear()
-                  setUserid(null)
+  						<TouchableOpacity style={styles.bottomNav} onPress={() => {
+  							if (userId) {
+  								socket.emit("socket/user/logout", userId, () => {
+                    AsyncStorage.clear()
+                    setUserid(null)
+                  })
+  							} else {
+  								setShowauth({ ...showAuth, show: true, action: false })
+  							}
+  						}}>
+  							<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
+  						</TouchableOpacity>
+  					</View>
+  				</View>
+
+  				{openOrders && <Modal><Orders navigate={() => {
+            setOpenorders(false)
+            props.navigation.navigate("account")
+          }} showNotif={() => {
+  					setOpenorders(false)
+  					setTimeout(function () {
+  						props.navigation.dispatch(
+  							CommonActions.reset({
+  								index: 0,
+  								routes: [{ name: "main", params: { showNotif: true } }]
+  							})
+  						)
+  					}, 1000)
+  				}} close={() => {
+  					getTheNumCartItems()
+  					setOpenorders(false)
+  				}}/></Modal>}
+  				{showAuth.show && (
+  					<Modal transparent={true}>
+  						<Userauth close={() => setShowauth({ ...showAuth, show: false })} done={id => {
+  							socket.emit("socket/user/login", "user" + id, () => {
+                  setUserid(id)
+
+                  if (showAuth.addcart == true) {
+                    addCart(id)
+                  }
                 })
-							} else {
-								setShowauth({ show: true, action: false })
-							}
-						}}>
-							<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-
-				{openOrders && <Modal><Orders navigate={() => {
-          setOpenorders(false)
-          props.navigation.navigate("account")
-        }} showNotif={() => {
-					setOpenorders(false)
-					setTimeout(function () {
-						props.navigation.dispatch(
-							CommonActions.reset({
-								index: 0,
-								routes: [{ name: "main", params: { showNotif: true } }]
-							})
-						)
-					}, 1000)
-				}} close={() => {
-					getTheNumCartItems()
-					setOpenorders(false)
-				}}/></Modal>}
-				{showAuth.show && (
-					<Modal transparent={true}>
-						<Userauth close={() => setShowauth({ show: false, action: "" })} done={id => {
-							socket.emit("socket/user/login", "user" + id, () => {
-                setUserid(id)
-                addCart()
-              })
-							setShowauth({ show: false, action: false })
-						}} navigate={props.navigation.navigate}/>
-					</Modal>
-				)}
-			</View>
+  						}} navigate={props.navigation.navigate}/>
+  					</Modal>
+  				)}
+  			</View>
+        :
+        <Loadingprogress/>
+      }
 		</SafeAreaView>
 	);
 }

@@ -15,14 +15,15 @@ import { getWorkers, getWorkerInfo, getAllWorkersTime } from '../../apis/owners'
 import { getAppointmentInfo, makeAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
+// components
 import Orders from '../../components/orders'
-import Userauth from '../../components/userauth'
+
+// widgets
+import Userauth from '../../widgets/userauth'
+import Loadingprogress from '../../widgets/loadingprogress';
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
-
-// components
-import Loadingprogress from '../../components/loadingprogress';
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
@@ -79,7 +80,7 @@ export default function Booktime(props) {
 	const [times, setTimes] = useState([])
 	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ worker: null, workers: [], numWorkers: 0, loading: false })
 	const [loaded, setLoaded] = useState(false)
-	const [showAuth, setShowauth] = useState(false)
+	const [showAuth, setShowauth] = useState({ show: false, booking: false })
   const [step, setStep] = useState(0)
 
 	const [openCart, setOpencart] = useState(false)
@@ -444,9 +445,10 @@ export default function Booktime(props) {
 		setSelecteddateinfo({ ...selectedDateinfo, name, time })
     setConfirm({ ...confirm, show: true, service: name ? name : serviceinfo, time, workerIds })
 	}
-	const makeAnAppointment = async() => {
-		if (userId) {
+	const makeAnAppointment = async(id) => {
+		if (userId || id) {
       setConfirm({ ...confirm, loading: true })
+      setShowauth({ ...showAuth, show: false })
 
 			const { time } = selectedDateinfo
 			const { worker } = selectedWorkerinfo
@@ -457,7 +459,7 @@ export default function Booktime(props) {
       const selecteddate = JSON.stringify({ day, month, date, year, hour, minute })
 			let data = { 
         id: scheduleid, // id for socket purpose (updating)
-				userid: userId, 
+				userid: userId || id, 
 				workerid: worker != null ? worker.id : workerIds[Math.floor(Math.random() * (workerIds.length - 1)) + 0], 
 				locationid, 
 				serviceid: serviceid ? serviceid : -1, 
@@ -477,7 +479,7 @@ export default function Booktime(props) {
 					if (res) {
             data = { ...data, receiver: res.receiver, time, speak: res.speak }
             socket.emit("socket/makeAppointment", data, () => {
-              setConfirm({ ...confirm, requested: true, loading: false })
+              setConfirm({ ...confirm, show: true, requested: true, loading: false })
 
               setTimeout(function () {
                 setConfirm({ ...confirm, show: false, requested: false })
@@ -503,7 +505,7 @@ export default function Booktime(props) {
 				})
 		} else {
 			setConfirm({ ...confirm, show: false })
-			setShowauth(true)
+			setShowauth({ ...showAuth, show: true, booking: true })
 		}
 	}
 
@@ -745,7 +747,7 @@ export default function Booktime(props) {
                   setUserid(null)
                 })
 							} else {
-								setShowauth(true)
+								setShowauth({ ...showAuth, show: true })
 							}
 						}}>
 							<Text style={styles.bottomNavHeader}>{userId ? 'Log-Out' : 'Log-In'}</Text>
@@ -753,7 +755,7 @@ export default function Booktime(props) {
 					</View>
 				</View>
 			</View>
-
+      
 			{confirm.show && (
 				<Modal transparent={true}>
 					<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -763,7 +765,7 @@ export default function Booktime(props) {
 									<>
 										{oldTime == 0 ? 
 											<Text style={styles.confirmHeader}>
-												<Text style={{ fontFamily: 'appFont' }}>Make an appointment for</Text>
+												<Text style={{ fontFamily: 'Chilanka_400Regular' }}>Make an appointment for</Text>
 												{'\n' + confirm.service + '\n'}
 												{displayTime(confirm.time) + '\n'}
 											</Text>
@@ -820,12 +822,15 @@ export default function Booktime(props) {
 				getTheNumCartItems()
 				setOpencart(false)
 			}}/></Modal>}
-			{showAuth && (
+			{showAuth.show && (
 				<Modal transparent={true}>
-					<Userauth close={() => setShowauth(false)} done={id => {
+					<Userauth close={() => setShowauth({ ...showAuth, show: false })} done={id => {
 						socket.emit("socket/user/login", "user" + id, () => {
               setUserid(id)
-              setShowauth(false)
+
+              if (showAuth.booking == true) {
+                makeAnAppointment(id)
+              }
             })
 					}} navigate={props.navigation.navigate}/>
 				</Modal>
@@ -901,8 +906,8 @@ const styles = StyleSheet.create({
 	confirmOptionHeader: { fontSize: wsize(4) },
 	requestedHeaders: { alignItems: 'center', paddingHorizontal: 20 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
-	requestedCloseHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
-	requestedHeader: { fontFamily: 'appFont', fontSize: wsize(5), textAlign: 'center' },
+	requestedCloseHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
+	requestedHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
 	requestedHeaderInfo: { fontSize: wsize(5), textAlign: 'center' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
