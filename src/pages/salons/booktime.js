@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { CommonActions } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
@@ -485,12 +485,7 @@ export default function Booktime(props) {
                 setConfirm({ ...confirm, show: false, requested: false })
 
                 setTimeout(function () {
-                  props.navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{ name: "main", params: { showNotif: true } }]
-                    })
-                  )
+                  props.navigation.dispatch(StackActions.replace("main", { showNotif: true }))
                 }, 1000)
               }, 2000)
             })
@@ -547,8 +542,11 @@ export default function Booktime(props) {
                         {item.row.map(info => (
                           info.id ? 
                             <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.worker && selectedWorkerinfo.worker.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
-                              <View style={[styles.workerProfile, resizePhoto(info.profile, wsize(20))]}>
-                                <Image source={{ uri: logo_url + info.profile.name }} style={{ height: '100%', width: '100%' }}/>
+                              <View style={styles.workerProfile}>
+                                <Image 
+                                  source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../../assets/profilepicture.jpeg")} 
+                                  style={resizePhoto(info.profile, wsize(20))}
+                                />
                               </View>
                               <Text style={styles.workerHeader}>{info.username}</Text>
                             </TouchableOpacity>
@@ -730,12 +728,7 @@ export default function Booktime(props) {
 						)}
 
 						<TouchableOpacity style={styles.bottomNav} onPress={() => {
-							props.navigation.dispatch(
-								CommonActions.reset({
-									index: 0,
-									routes: [{ name: "main" }]
-								})
-							)
+							props.navigation.dispatch(StackActions.replace("main"))
 						}}>
 							<Entypo name="home" size={wsize(7)}/>
 						</TouchableOpacity>
@@ -852,7 +845,7 @@ const styles = StyleSheet.create({
 	workersList: { height: '60%' },
   workersRow: { flexDirection: 'row', justifyContent: 'space-between' },
   worker: { alignItems: 'center', borderRadius: 10, marginHorizontal: 5, padding: 5, width: (width / 3) - 30 },
-  workerProfile: { borderRadius: wsize(20) / 2, flexDirection: 'column', justifyContent: 'space-around', overflow: 'hidden' },
+  workerProfile: { borderRadius: wsize(20) / 2, flexDirection: 'column', height: wsize(20), justifyContent: 'space-around', overflow: 'hidden', width: wsize(20) },
   workerHeader: { fontSize: wsize(4), fontWeight: 'bold'  },
   chooseWorkerActions: { flexDirection: 'row', justifyContent: 'space-around' },
 	chooseWorkerAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, margin: 2, padding: 5, width: wsize(40) },

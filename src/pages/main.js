@@ -6,7 +6,6 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
-import { CommonActions } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import * as Speech from 'expo-speech';
 import { socket, logo_url } from '../../assets/info'

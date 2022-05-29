@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "115860999535",
+    "project_id": "serviceapp-user",
+    "storage_bucket": "serviceapp-user.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:115860999535:android:67a3199b4b55f45f57ac9a",
+        "android_client_info": {
+          "package_name": "com.geottuse.serviceapp.user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "115860999535-a90r9i206ko9vqadef17437o0h7flg1s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAX7u_rBcbZWM4l1YK5hjmmWF3FChPRp_s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "115860999535-a90r9i206ko9vqadef17437o0h7flg1s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, Platform, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CommonActions } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { resizePhoto } from 'geottuse-tools';
 import { socket, logo_url } from '../../assets/info'
@@ -240,10 +240,10 @@ export default function Itemprofile(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { image, name, options, others, sizes, price } = res.productInfo
+					const { productImage, name, options, others, sizes, price } = res.productInfo
 
 					setItemname(name)
-					setItemimage(image)
+					setItemimage(productImage)
 					setItemprice(price)
 					setOptions(options)
 					setOthers(others)
@@ -264,6 +264,7 @@ export default function Itemprofile(props) {
 		if (productid) {
       getTheProductInfo()
     } else {
+      setItemimage({ ...itemImage, height: 360, width: 360 })
       setLoaded(true)
     }
 	}
@@ -278,7 +279,7 @@ export default function Itemprofile(props) {
   					<View style={{ alignItems: 'center', marginTop: 20 }}>
   						<View style={styles.imageHolder}>
                 <Image 
-                  source={itemImage.name ? { uri: logo_url + itemImage.name } : require("../../assets/noimage.jpeg")} 
+                  source={itemImage.name && itemImage.name != "" ? { uri: logo_url + itemImage.name } : require("../../assets/noimage.jpeg")} 
                   style={resizePhoto(itemImage, wsize(40))}
                 />
               </View>
@@ -440,14 +441,7 @@ export default function Itemprofile(props) {
   							</TouchableOpacity>
   						)}
 
-  						<TouchableOpacity style={styles.bottomNav} onPress={() => {
-  							props.navigation.dispatch(
-  								CommonActions.reset({
-  									index: 0,
-  									routes: [{ name: "main" }]
-  								})
-  							)
-  						}}>
+  						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.replace("main"))}>
   							<Entypo name="home" size={30}/>
   						</TouchableOpacity>
 
@@ -472,12 +466,7 @@ export default function Itemprofile(props) {
           }} showNotif={() => {
   					setOpenorders(false)
   					setTimeout(function () {
-  						props.navigation.dispatch(
-  							CommonActions.reset({
-  								index: 0,
-  								routes: [{ name: "main", params: { showNotif: true } }]
-  							})
-  						)
+  						props.navigation.dispatch(StackActions.replace("main", { showNotif: true }))
   					}, 1000)
   				}} close={() => {
   					getTheNumCartItems()

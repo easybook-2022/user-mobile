@@ -145,7 +145,7 @@ export default function Menus(props) {
                   (type == "restaurant" && "meal" || type == "store" && "product" || type == "salon" && "service") 
                   + " # or name"
                 } 
-                onChangeText={(info) => setRequestinfo({ ...requestInfo, search: info, error: false })} autoCorrect={false} autoCapitalize="none"
+                onChangeText={(info) => setRequestinfo({ ...requestInfo, search: info, error: false })} maxLength={37} autoCorrect={false} autoCapitalize="none"
               />
               <View style={styles.menuInputActions}>
                 <TouchableOpacity style={styles.menuInputTouch} onPress={() => {
@@ -188,7 +188,7 @@ export default function Menus(props) {
             menuInfo.photos[0].row && (
               menuInfo.photos.map(info => (
                 info.row.map(item => (
-                  item.photo && item.photo.name != "" && (
+                  item.photo && item.photo.name && (
                     <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
                       <Image style={{ height: '100%', width: '100%' }} source={{ uri: logo_url + item.photo.name }}/>
                     </View>
