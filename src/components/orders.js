@@ -662,7 +662,7 @@ export default function Orders(props) {
 
 const styles = StyleSheet.create({
 	orders: { backgroundColor: 'white', height: '100%', width: '100%' },
-	box: { backgroundColor: '#EAEAEA', height: '100%', width: '100%' },
+	box: { height: '100%', width: '100%' },
   
 	headers: { flexDirection: 'column', height: '15%', justifyContent: 'space-around' },
 	boxHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
