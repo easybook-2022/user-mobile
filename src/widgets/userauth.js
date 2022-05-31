@@ -12,7 +12,7 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Userauth(props) {
-	const [authInfo, setAuthinfo] = useState({ type: '', info: { username, cellnumber, password, confirmPassword }, loading: false, verifycode: null, codesent: false, errormsg: "" })
+	const [authInfo, setAuthinfo] = useState({ info: { username, cellnumber, password, confirmPassword }, loading: false, verifycode: null, verified: false, codesent: false, noAccount: false, errormsg: "" })
 
 	const login = () => {
 		const { info } = authInfo
@@ -41,7 +41,10 @@ export default function Userauth(props) {
 				if (err.response && err.response.status == 400) {
 					const { errormsg, status } = err.response.data
 
-					setAuthinfo({ ...authInfo, loading: false, errormsg })
+          switch (status) {
+            case "nonexist":
+              verify()
+          }
 				}
 			})
 	}
@@ -61,7 +64,7 @@ export default function Userauth(props) {
 				if (res) {
 					const { verifycode } = res
 
-					setAuthinfo({ ...authInfo, type: 'verifyuser', loading: false, verifycode })
+					setAuthinfo({ ...authInfo, type: 'verifyuser', loading: false, verifycode, noAccount: true })
 				}
 			})
 			.catch((err) => {
@@ -180,194 +183,82 @@ export default function Userauth(props) {
 		<View style={styles.authContainer}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
 				<View style={styles.authBox}>
-					<AntDesign name="closecircleo" size={wsize(8)} onPress={() => props.close()}/>
+					<AntDesign style={styles.authBoxClose} name="closecircleo" size={wsize(8)} onPress={() => props.close()}/>
 
-					<Text style={styles.authBoxHeader}>
-						{authInfo.type == 'login' && 'Log-In'}
-						{(authInfo.type == 'verifyuser' || authInfo.type == 'register') && 'Sign-Up'}
-						{authInfo.type == 'forgotpassword' && 'Forgot Password'}
-						{authInfo.type == 'resetpassword' && 'Reset Password'}
-					</Text>
+          <View style={styles.welcomeBox}>
+            <Text style={styles.boxHeader}>Welcome to EasyGO</Text>
+            <Text style={styles.boxHeader}>We show you the nearest services</Text>
 
-					{authInfo.type == 'login' && (
-            <View style={{ alignItems: 'center', width: '100%' }}>
-  						<View style={styles.authInputContainer}>
-  							<Text style={styles.authInputHeader}>Cell number:</Text>
-  							<TextInput style={styles.authInput} onChangeText={(num) => setAuthinfo({ 
-                  ...authInfo, 
-                  info: { 
-                    ...authInfo.info, 
-                    cellnumber: displayPhonenumber(authInfo.info.cellnumber, num, () => Keyboard.dismiss())
-                  }
-                })} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
-  						</View>
-              <View style={styles.authInputContainer}>
-                <Text style={styles.authInputHeader}>Password:</Text>
-                <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: {...authInfo.info, password }})} secureTextEntry={true} value={authInfo.info.password} autoCorrect={false}/>
-              </View>
-            </View>
-					)}
-
-					{authInfo.type == 'register' && (
-						<View style={{ width: '100%' }}>
-              <View style={styles.authInputContainer}>
-                <Text style={styles.authInputHeader}>Enter your name:</Text>
-                <TextInput style={styles.authInput} onChangeText={(username) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, username }})} value={authInfo.info.username} autoCorrect={false} autoCapitalize="none"/>
-              </View>
-							<View style={styles.authInputContainer}>
-								<Text style={styles.authInputHeader}>Password:</Text>
-								<TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, password }})} value={authInfo.info.password} autoCorrect={false}/>
-							</View>
-							<View style={styles.authInputContainer}>
-								<Text style={styles.authInputHeader}>Confirm password:</Text>
-								<TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => {
-									setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})
-
-									if (password.length == authInfo.info.password.length) {
-										Keyboard.dismiss()
-									}
-								}} value={authInfo.info.confirmPassword} autoCorrect={false}/>
-							</View>
-						</View>
-					)}
-
-					{authInfo.type == 'verifyuser' && (
-						authInfo.verifycode ? 
-							<View style={styles.authInputContainer}>
-								<Text style={styles.authInputHeader}>Please enter verify code from your message:</Text>
-								<TextInput style={styles.authInput} onChangeText={(usercode) => {
-									if (usercode.length == 6) {
-										Keyboard.dismiss()
-
-                    if ((isLocal && usercode == '111111') || usercode == authInfo.verifycode) {
-                      setAuthinfo({ ...authInfo, type: 'register', errormsg: "" })
-                    } else {
-                      setAuthinfo({ ...authInfo, errormsg: "Code is incorrect" })
+            {!authInfo.noAccount ? 
+              <View style={{ alignItems: 'center', width: '100%' }}>
+                <View style={styles.authInputContainer}>
+                  <Text style={styles.authInputHeader}>Cell number:</Text>
+                  <TextInput style={styles.authInput} onChangeText={(num) => setAuthinfo({ 
+                    ...authInfo, 
+                    info: { 
+                      ...authInfo.info, 
+                      cellnumber: displayPhonenumber(authInfo.info.cellnumber, num, () => Keyboard.dismiss())
                     }
-									}
-								}} value={authInfo.info.usercode} keyboardType="numeric" autoCorrect={false}/>
-							</View>
-							:
-							<View style={styles.authInputContainer}>
-								<Text style={styles.authInputHeader}>Cell number:</Text>
-								<TextInput style={styles.authInput} onChangeText={(num) => setAuthinfo({ 
-                  ...authInfo, 
-                  info: {
-                    ...authInfo.info, 
-                    cellnumber: displayPhonenumber(authInfo.info.cellnumber, num, () => Keyboard.dismiss())
-                  }
-                })} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
-							</View>
-					)}
-
-					{authInfo.type == 'resetpassword' && (
-						<View>
-							<View style={styles.authInputContainer}>
-								<Text style={styles.authInputHeader}>New password:</Text>
-								<TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, newPassword: password }})} value={authInfo.info.newPassword} autoCorrect={false}/>
-							</View>
-
-							<View style={styles.authInputContainer}>
-								<Text style={styles.authInputHeader}>Confirm password:</Text>
-								<TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})} value={authInfo.info.confirmPassword} autoCorrect={false}/>
-							</View>
-						</View>
-					)}
-
-					{authInfo.type == 'forgotpassword' && (
-						!authInfo.codesent ? 
-							<View style={styles.authInputContainer}>
-								<Text style={styles.authInputHeader}>Cell number:</Text>
-								<TextInput style={styles.authInput} onChangeText={(num) => setAuthinfo({ 
-                  ...authInfo, 
-                  info: {
-                    ...authInfo.info, 
-                    cellnumber: displayPhonenumber(authInfo.info.cellnumber, num, () => Keyboard.dismiss())
-                  }
-                })} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
-							</View>
-							:
-							<View style={styles.authInputContainer}>
-								<Text style={styles.userCodeHeader}>Please enter the reset code from your message</Text>
-
-								<Text style={styles.authInputHeader}>Reset Code:</Text>
-								<TextInput style={styles.authInput} onChangeText={(usercode) => setAuthinfo({ ...authInfo, info: {...authInfo.info, usercode }})} keyboardType="numeric" value={authInfo.info.usercode} autoCorrect={false}/>
-
-								<View style={{ alignItems: 'center' }}>
-									<TouchableOpacity style={styles.resend} onPress={() => getTheCode()}>
-										<Text style={styles.resendHeader}>Resend</Text>
-									</TouchableOpacity>
-								</View>
-							</View>
-					)}
-
-					<Text style={styles.errorMsg}>{authInfo.errormsg}</Text>
-
-					{authInfo.type ? 
-            (
-              authInfo.type == 'forgotpassword' || 
-              (authInfo.type == 'verifyuser' && !authInfo.verifycode) || 
-              authInfo.type == 'resetpassword' || 
-              authInfo.type == 'register' || 
-              authInfo.type == 'login'
-            ) ?
-  						<TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => {
-  							if (authInfo.type == 'forgotpassword') {
-  								if (authInfo.codesent) {
-  									done()
-  								} else {
-  									getTheCode()
-  								}
-  							} else if (authInfo.type == 'resetpassword') {
-  								reset()
-  							} else if (authInfo.type == 'login') {
-  								login()
-  							} else if (authInfo.type == 'verifyuser') {
-  								verify()
-  							} else if (authInfo.type == 'register') {
-  								register()
-  							}
-  						}}>
-  							<Text style={styles.submitHeader}>
-  								{authInfo.type == 'forgotpassword' && (authInfo.codesent ? 'Done' : 'Get Code')}
-  								{authInfo.type == 'verifyuser' && (!authInfo.verifycode && 'Register')}
-  								{authInfo.type == 'resetpassword' && 'Done'}
-  								{authInfo.type == 'register' && 'Register'}
-  								{authInfo.type == 'login' && 'Sign-In'}
-  							</Text>
-  						</TouchableOpacity>
-              :
-              null
-						:
-						<View style={styles.welcomeBox}>
-							<Text style={styles.boxHeader}>Welcome to EasyGO (User)</Text>
-							<Text style={styles.boxHeader}>We hope our service will get you the best service</Text>
-
-							<View style={styles.boxOptions}>
-                <View style={{ marginBottom: 50 }}>
-                  <View style={styles.boxOption}>
-                    <View style={styles.column}><Text style={styles.boxOptionHeader}>Are you new ?</Text></View>
-                    <TouchableOpacity style={styles.boxOptionTouch} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser' })}><Text>Click to{'\n'}Register</Text></TouchableOpacity>
-                  </View>
-                  <Text style={{ fontWeight: 'bold', marginTop: -5, textAlign: 'center' }}>Register to re-book easily (30 seconds)</Text>
+                  })} value={authInfo.info.cellnumber} keyboardType="numeric" autoCorrect={false}/>
                 </View>
-                <View style={styles.boxOption}>
-                  <View style={styles.column}><Text style={styles.boxOptionHeader}>Already registered ?</Text></View>
-                  <TouchableOpacity style={styles.boxOptionTouch} onPress={() => setAuthinfo({ ...authInfo, type: 'login' })}><Text>Click to{'\n'}Login</Text></TouchableOpacity>
+                <View style={styles.authInputContainer}>
+                  <Text style={styles.authInputHeader}>Password:</Text>
+                  <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: {...authInfo.info, password }})} secureTextEntry={true} value={authInfo.info.password} autoCorrect={false}/>
                 </View>
               </View>
-						</View>
-					}
-					{authInfo.loading && authInfo.type ? <ActivityIndicator color="black" size="small"/> : null }
-					{authInfo.type ? 
-						<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-							<View style={styles.options}>
-								<Text style={styles.optionHeader} onPress={() => setAuthinfo({ ...authInfo, type: 'verifyuser', errormsg: "" })}>Sign-Up instead</Text>
-                <Text style={styles.optionHeader} onPress={() => setAuthinfo({ ...authInfo, type: 'login', errormsg: "" })}>Log-In instead</Text>
-								<Text style={styles.optionHeader} onPress={() => setAuthinfo({ ...authInfo, type: 'forgotpassword', errormsg: "" })}>Forgot your password ? Reset here</Text>
-							</View>
-						</View>
-					: null}
+              :
+              !authInfo.verified ? 
+                <View style={styles.authInputContainer}>
+                  <Text style={styles.authInputHeader}>Please enter verify code from your message:</Text>
+                  <TextInput style={styles.authInput} onChangeText={(usercode) => {
+                    if (usercode.length == 6) {
+                      Keyboard.dismiss()
+
+                      if ((isLocal && usercode == '111111') || usercode == authInfo.verifycode) {
+                        setAuthinfo({ ...authInfo, verified: true, errorMsg: "" })
+                      } else {
+                        setAuthinfo({ ...authInfo, errormsg: "Code is incorrect" })
+                      }
+                    }
+                  }} value={authInfo.info.usercode} keyboardType="numeric" autoCorrect={false}/>
+                </View>
+                :
+                <View style={{ width: '100%' }}>
+                  <View style={styles.authInputContainer}>
+                    <Text style={styles.authInputHeader}>Enter your name:</Text>
+                    <TextInput style={styles.authInput} onChangeText={(username) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, username }})} value={authInfo.info.username} autoCorrect={false} autoCapitalize="none"/>
+                  </View>
+                  <View style={styles.authInputContainer}>
+                    <Text style={styles.authInputHeader}>Password:</Text>
+                    <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, password }})} value={authInfo.info.password} autoCorrect={false}/>
+                  </View>
+                  <View style={styles.authInputContainer}>
+                    <Text style={styles.authInputHeader}>Confirm password:</Text>
+                    <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => {
+                      setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})
+
+                      if (password.length == authInfo.info.password.length) {
+                        Keyboard.dismiss()
+                      }
+                    }} value={authInfo.info.confirmPassword} autoCorrect={false}/>
+                  </View>
+                </View>
+            }
+
+            <Text style={styles.errorMsg}>{authInfo.errormsg}</Text>
+
+            {!authInfo.noAccount ? 
+              <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => login()}>
+                <Text style={styles.submitHeader}>Get in</Text>
+              </TouchableOpacity>
+              :
+              authInfo.verified && (  
+                <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => register()}>
+                  <Text style={styles.submitHeader}>Get in</Text>
+                </TouchableOpacity>
+              )
+            }
+          </View>
 				</View>
 			</TouchableWithoutFeedback>
 		</View>
@@ -376,7 +267,8 @@ export default function Userauth(props) {
 
 const styles = StyleSheet.create({
 	authContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-	authBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', paddingHorizontal: 10, width: '80%' },
+	authBox: { alignItems: 'center', backgroundColor: 'white', height: '80%', paddingHorizontal: 10, width: '80%' },
+  authBoxClose: { marginVertical: 30 },
 	authBoxHeader: { color: 'black', fontSize: wsize(6), fontWeight: 'bold' },
 
 	authInputContainer: { marginBottom: 10, width: '100%' },
@@ -392,8 +284,8 @@ const styles = StyleSheet.create({
 	submit: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 10 },
 	submitHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
 
-	welcomeBox: { alignItems: 'center', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '100%' },
-	boxHeader: { fontSize: wsize(5), paddingHorizontal: 10, textAlign: 'center' },
+	welcomeBox: { alignItems: 'center', width: '100%' },
+	boxHeader: { fontSize: wsize(5), marginVertical: '5%', paddingHorizontal: 10, textAlign: 'center' },
 	boxOptions: { alignItems: 'center' },
   boxOption: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
   boxOptionHeader: { fontSize: wsize(5), fontWeight: 'bold'  },

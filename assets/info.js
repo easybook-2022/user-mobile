@@ -32,8 +32,8 @@ const register = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
 
 const wifi_api_url = "http://192.168.0.172:5001/flask"
 const wifi_socket_url = "http://192.168.0.172:5002"
-const server_api_url = "https://www.easygo-dev/flask"
-const server_socket_url = "wss://www.easygo-dev"
+const server_api_url = "https://www.easygo-dev.tk/flask"
+const server_socket_url = "wss://www.easygo-dev.tk"
 const socket_url = local_url ? wifi_socket_url : server_socket_url
 
 export const loginInfo = { username: login.username, cellnumber: login.cellnumber, password: login.password, latitude: 43.663631, longitude: -79.351501 }
@@ -41,4 +41,5 @@ export const socket = io.connect(socket_url)
 export const registerInfo = { username: register.username, cellnumber: register.cellnumber, password: register.password, confirmPassword: register.confirmPassword, latitude: 43.663631, longitude: -79.351501 }
 export const url = local_url ? wifi_api_url : server_api_url
 export const isLocal = test_input
+export const useSpeech = true
 export const logo_url = url + "/static/"

@@ -8,7 +8,7 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
 import * as Speech from 'expo-speech';
-import { socket, logo_url } from '../../assets/info'
+import { socket, logo_url, useSpeech } from '../../assets/info'
 import { resizePhoto } from 'geottuse-tools';
 import { getNumNotifications, updateNotificationToken } from '../apis/users'
 import { getLocations, getMoreLocations } from '../apis/locations'
@@ -293,7 +293,7 @@ export default function Main(props) {
       fetchTheNumNotifications()
 
       if (data.type == "orderDone") {
-        Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
+        if (Constants.isDevice && useSpeech == true) Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
       }
     })
 		socket.io.on("open", () => {
