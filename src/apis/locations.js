@@ -35,3 +35,10 @@ export const getLocationHours = data => {
 		data
 	)
 }
+
+export const getDayHours = data => {
+  return axios.post(
+    `${url}/locations/get_day_hours`,
+    data
+  )
+}

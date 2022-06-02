@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { SafeAreaView, ActivityIndicator, Dimensions, View, Text, Image, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isLocal, loginInfo, registerInfo } from '../../assets/info'
@@ -179,6 +179,14 @@ export default function Userauth(props) {
 			})
 	}
 
+  useEffect(() => {
+    const { password, confirmPassword } = authInfo.info
+
+    if (password == confirmPassword) {
+      register()
+    }
+  }, [authInfo.info.confirmPassword && authInfo.info.confirmPassword.length])
+
 	return (
 		<View style={styles.authContainer}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -234,13 +242,7 @@ export default function Userauth(props) {
                   </View>
                   <View style={styles.authInputContainer}>
                     <Text style={styles.authInputHeader}>Confirm password:</Text>
-                    <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => {
-                      setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})
-
-                      if (password.length == authInfo.info.password.length) {
-                        Keyboard.dismiss()
-                      }
-                    }} value={authInfo.info.confirmPassword} autoCorrect={false}/>
+                    <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})} value={authInfo.info.confirmPassword} autoCorrect={false}/>
                   </View>
                 </View>
             }
@@ -287,7 +289,7 @@ const styles = StyleSheet.create({
 	submitHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
 
 	welcomeBox: { alignItems: 'center', width: '100%' },
-	boxHeader: { fontSize: wsize(5), marginVertical: '5%', paddingHorizontal: 10, textAlign: 'center' },
+	boxHeader: { fontSize: wsize(5), marginVertical: '5%', textAlign: 'center' },
 	boxOptions: { alignItems: 'center' },
   boxOption: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
   boxOptionHeader: { fontSize: wsize(5), fontWeight: 'bold'  },

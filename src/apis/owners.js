@@ -1,8 +1,8 @@
 import axios from 'axios'
 import { url } from '../../assets/info'
 
-export const getWorkers = locationid => {
-	return axios.get(`${url}/owners/get_workers/${locationid}`)
+export const getAllStylists = locationid => {
+	return axios.get(`${url}/owners/get_all_stylists/${locationid}`)
 }
 
 export const getWorkerInfo = id => {

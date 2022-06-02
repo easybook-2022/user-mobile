@@ -10,8 +10,8 @@ import { socket, logo_url } from '../../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
 import { getServiceInfo } from '../../apis/services'
-import { getLocationHours } from '../../apis/locations'
-import { getWorkers, getWorkerInfo, getAllWorkersTime } from '../../apis/owners'
+import { getLocationHours, getDayHours } from '../../apis/locations'
+import { getAllStylists, getWorkerInfo, getAllWorkersTime } from '../../apis/owners'
 import { getAppointmentInfo, makeAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
@@ -39,7 +39,6 @@ export default function Booktime(props) {
 
 	const [name, setName] = useState()
   const [allWorkers, setAllworkers] = useState({})
-	const [scheduledTimes, setScheduledtimes] = useState([])
   const [oldTime, setOldtime] = useState(0)
 	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
 	const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
@@ -79,6 +78,7 @@ export default function Booktime(props) {
   const [userId, setUserid] = useState(null)
 	const [times, setTimes] = useState([])
 	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ worker: null, workers: [], numWorkers: 0, loading: false })
+  const [scheduledInfo, setScheduledinfo] = useState({ scheduledIds: {}, scheduledWorkers: {}, workers: [] })
 	const [loaded, setLoaded] = useState(false)
 	const [showAuth, setShowauth] = useState({ show: false, booking: false })
   const [step, setStep] = useState(0)
@@ -139,7 +139,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          const { locationId, name, time, worker } = res.appointmentInfo
+          const { locationId, name, time, worker } = res
 
           const { day, month, date, year, hour, minute } = time
           const unixtime = Date.parse(day + " " + month + " " + date + " " + year + " " + hour + ":" + minute)
@@ -217,14 +217,13 @@ export default function Booktime(props) {
     let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
     let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0, firstTime = true
 
-    while (calcDateStr < (closeDateStr - pushtime)) {
+    while (calcDateStr < closeDateStr - pushtime) {
       calcDateStr += pushtime
 
       let timestr = new Date(calcDateStr)
       let hour = timestr.getHours()
       let minute = timestr.getMinutes()
       let period = hour < 12 ? "am" : "pm"
-
       let timedisplay = (
         hour <= 12 ? 
           (hour == 0 ? 12 : hour) 
@@ -233,9 +232,8 @@ export default function Booktime(props) {
         ) 
         + ":" + 
         (minute < 10 ? '0' + minute : minute) + " " + period
-
       let timepassed = currenttime > calcDateStr
-      let timetaken = scheduledTimes.indexOf(calcDateStr) > -1
+      let timetaken = JSON.stringify(scheduledInfo.scheduledIds).split(calcDateStr.toString()).length - 1 < scheduledInfo.workers.length
       let availableService = false, workerIds = []
 
       if (selectedWorkerinfo.worker != null && day.substr(0, 3) in selectedWorkerinfo.worker.days) {
@@ -307,7 +305,7 @@ export default function Booktime(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { openTime, closeTime, scheduled } = res
+					const { openTime, closeTime } = res
 
 					let openHour = openTime.hour, openMinute = openTime.minute, openPeriod = openTime.period
 					let closeHour = closeTime.hour, closeMinute = closeTime.minute, closePeriod = closeTime.period
@@ -335,7 +333,6 @@ export default function Booktime(props) {
             })
           }
 
-					setScheduledtimes(scheduled)
           setOpentime({ hour: openHour, minute: openMinute })
           setClosetime({ hour: closeHour, minute: closeMinute })
 					setLoaded(true)
@@ -347,8 +344,8 @@ export default function Booktime(props) {
 				}
 			})
 	}
-	const getTheWorkers = () => {
-		getWorkers(locationid)
+	const getAllTheStylists = () => {
+		getAllStylists(locationid)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -376,6 +373,50 @@ export default function Booktime(props) {
       .then((res) => {
         if (res) {
           setAllworkers(res.workers)
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
+  }
+  const getScheduledAppointments = async() => {
+    const { day, month, date, year } = selectedDateinfo
+    const jsonDate = { day, month, date, year }
+    const data = { locationid, jsonDate }
+
+    getDayHours(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const { opentime, closetime, workers, scheduledWorkers, scheduledIds } = res
+          const newScheduledworkers = {}, newScheduledids = {}
+
+          for (let k in scheduledWorkers) {
+            scheduledWorkers[k].forEach(function (time) {
+              if (k in newScheduledworkers) {
+                newScheduledworkers[k].push(jsonDateToUnix(JSON.parse(time)).toString())
+              } else {
+                newScheduledworkers[k] = [jsonDateToUnix(JSON.parse(time)).toString()]
+              }
+            })
+          }
+
+          for (let k in scheduledIds) {
+            let info = k.split("-")
+            let date = jsonDateToUnix(JSON.parse(info[0]))
+            let worker = info[1]
+
+            newScheduledids[date + "-" + worker] = scheduledIds[k]
+          }
+
+          setScheduledinfo({ ...scheduledInfo, scheduledWorkers: newScheduledworkers, scheduledIds: newScheduledids, workers })
+          getTimes()
         }
       })
       .catch((err) => {
@@ -503,10 +544,13 @@ export default function Booktime(props) {
 			setShowauth({ ...showAuth, show: true, booking: true })
 		}
 	}
+  const jsonDateToUnix = date => {
+    return Date.parse(date["day"] + " " + date["month"] + " " + date["date"] + " " + date["year"] + " " + date["hour"] + ":" + date["minute"])
+  }
 
 	useEffect(() => {
 		getTheNumCartItems()
-    getTheWorkers()
+    getAllTheStylists()
     getAllTheWorkersTime()
 
     if (serviceid) getTheServiceInfo()
@@ -697,7 +741,7 @@ export default function Booktime(props) {
                     case 1:
                       if (selectedDateinfo.date > 0) {
                         setStep(2)
-                        getTimes()
+                        getScheduledAppointments()
                       } else {
                         setCalendar({ ...calendar, errorMsg: "Please tap on a day" })
                       }
