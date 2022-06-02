@@ -247,16 +247,18 @@ export default function Userauth(props) {
 
             <Text style={styles.errorMsg}>{authInfo.errormsg}</Text>
 
-            {!authInfo.noAccount || authInfo.verified && (
-              <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => {
-                if (!authInfo.noAccount) {
-                  login()
-                } else if (authInfo.verified) {
-                  register()
-                }
-              }}>
-                <Text style={styles.submitHeader}>Get in</Text>
-              </TouchableOpacity>
+            {!authInfo.noAccount && (
+              !authInfo.verified ? 
+                <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => {
+                  if (!authInfo.noAccount) {
+                    login()
+                  } else if (authInfo.verified) {
+                    register()
+                  }
+                }}>
+                  <Text style={styles.submitHeader}>Get in</Text>
+                </TouchableOpacity>
+              : null
             )}
           </View>
 				</View>
