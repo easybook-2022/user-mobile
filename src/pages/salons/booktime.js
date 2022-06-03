@@ -243,7 +243,7 @@ export default function Booktime(props) {
         if (
           calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
           && 
-          calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+          calcDateStr < Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
         ) {
           availableService = true
           workerIds = [selectedWorkerinfo.worker.days[day.substr(0, 3)]["workerId"]]
@@ -260,7 +260,7 @@ export default function Booktime(props) {
             if (
               calcDateStr >= Date.parse(openStr.substring(0, openStr.length - 5) + startTime) 
               && 
-              calcDateStr <= Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
+              calcDateStr < Date.parse(closeStr.substring(0, closeStr.length - 5) + endTime)
             ) {              
               availableService = true
               workerIds.push(info.workerId)
