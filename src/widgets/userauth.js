@@ -258,7 +258,7 @@ export default function Userauth(props) {
                     register()
                   }
                 }}>
-                  <Text style={styles.submitHeader}>Get in</Text>
+                  <Text style={styles.submitHeader}>Sign in</Text>
                 </TouchableOpacity>
               : null
             )}

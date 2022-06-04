@@ -2,7 +2,7 @@
   "expo": {
     "name": "EasyGO (User)",
     "slug": "easygo-user",
-    "version": "0.0.22",
+    "version": "0.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -29,7 +29,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.geottuse.serviceapp.user",
-      "buildNumber": "3",
+      "buildNumber": "0",
       "infoPlist": {
         "NSCameraUsageDescription": "EasyGO (User) uses camera to allow you to take a profile picture",
         "NSMicrophoneUsageDescription": "EasyGO (User) does not need microphone",

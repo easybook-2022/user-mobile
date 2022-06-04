@@ -41,5 +41,5 @@ export const socket = io.connect(socket_url)
 export const registerInfo = { username: register.username, cellnumber: register.cellnumber, password: register.password, confirmPassword: register.confirmPassword, latitude: 43.663631, longitude: -79.351501 }
 export const url = local_url ? wifi_api_url : server_api_url
 export const isLocal = test_input
-export const useSpeech = true
+export const useSpeech = false
 export const logo_url = url + "/static/"
