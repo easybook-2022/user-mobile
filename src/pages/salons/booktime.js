@@ -505,7 +505,7 @@ export default function Booktime(props) {
 	}
 	const makeAnAppointment = async(id) => {
 		if (userId || id) {
-      setConfirm({ ...confirm, loading: true })
+      //setConfirm({ ...confirm, loading: true })
       setShowauth({ ...showAuth, show: false })
 
 			const { time } = selectedDateinfo
