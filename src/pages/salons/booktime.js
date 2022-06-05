@@ -11,7 +11,7 @@ import { displayTime, resizePhoto } from 'geottuse-tools'
 
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours, getDayHours } from '../../apis/locations'
-import { getAllStylists, getWorkerInfo, getAllWorkersTime } from '../../apis/owners'
+import { getAllStylists, getStylistInfo, getAllWorkersTime } from '../../apis/owners'
 import { getAppointmentInfo, makeAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
@@ -202,8 +202,8 @@ export default function Booktime(props) {
         if (day.num > 0 && (!day.passed && !day.noservice) && currDate == 0) {
           currDay = days[dayindex].substr(0, 3)
 
-          if (currDay in hoursInfo) {
-            hourInfo = hoursInfo[currDay]
+          if (currDay.substr(0, 3) in hoursInfo) {
+            hourInfo = hoursInfo[currDay.substr(0, 3)]
 
             current = Date.parse(days[dayindex] + " " + months[month] + ", " + day.num + " " + year + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
             now = Date.parse(days[currTime.getDay()] + " " + months[currTime.getMonth()] + ", " + currTime.getDate() + " " + currTime.getFullYear() + " " + currTime.getHours() + ":" + currTime.getMinutes())
@@ -398,54 +398,10 @@ export default function Booktime(props) {
         }
       })
   }
-  const getScheduledAppointments = async() => {
-    const { day, month, date, year } = selectedDateinfo
-    const jsonDate = { day, month, date, year }
-    const data = { locationid, jsonDate }
-
-    getDayHours(data)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
-        }
-      })
-      .then((res) => {
-        if (res) {
-          const { opentime, closetime, workers, scheduledWorkers, scheduledIds } = res
-          const newScheduledworkers = {}, newScheduledids = {}
-
-          for (let k in scheduledWorkers) {
-            scheduledWorkers[k].forEach(function (time) {
-              if (k in newScheduledworkers) {
-                newScheduledworkers[k].push(jsonDateToUnix(JSON.parse(time)).toString())
-              } else {
-                newScheduledworkers[k] = [jsonDateToUnix(JSON.parse(time)).toString()]
-              }
-            })
-          }
-
-          for (let k in scheduledIds) {
-            let info = k.split("-")
-            let date = jsonDateToUnix(JSON.parse(info[0]))
-            let worker = info[1]
-
-            newScheduledids[date + "-" + worker] = scheduledIds[k]
-          }
-
-          setScheduledinfo({ ...scheduledInfo, scheduledWorkers: newScheduledworkers, scheduledIds: newScheduledids, workers })
-          getTimes()
-        }
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          const { errormsg, status } = err.response.data
-        }
-      })
-  }
 	const selectWorker = id => {
     setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
 
-		getWorkerInfo(id)
+		getStylistInfo(id)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -505,7 +461,7 @@ export default function Booktime(props) {
 	}
 	const makeAnAppointment = async(id) => {
 		if (userId || id) {
-      //setConfirm({ ...confirm, loading: true })
+      setConfirm({ ...confirm, loading: true })
       setShowauth({ ...showAuth, show: false })
 
 			const { time } = selectedDateinfo
@@ -758,7 +714,7 @@ export default function Booktime(props) {
                     case 1:
                       if (selectedDateinfo.date > 0) {
                         setStep(2)
-                        getScheduledAppointments()
+                        getTimes()
                       } else {
                         setCalendar({ ...calendar, errorMsg: "Please tap on a day" })
                       }

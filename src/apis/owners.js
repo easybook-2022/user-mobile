@@ -5,12 +5,19 @@ export const getAllStylists = locationid => {
 	return axios.get(`${url}/owners/get_all_stylists/${locationid}`)
 }
 
-export const getWorkerInfo = id => {
-	return axios.get(`${url}/owners/get_worker_info/${id}`)
+export const getStylistInfo = id => {
+	return axios.get(`${url}/owners/get_stylist_info/${id}`)
 }
 
 export const getAllWorkersTime = id => {
   return axios.get(`${url}/owners/get_all_workers_time/${id}`)
+}
+
+export const getWorkersHour = data => {
+  return axios.post(
+    `${url}/owners/get_workers_hour`,
+    data
+  )
 }
 
 export const searchWorkers = data => {

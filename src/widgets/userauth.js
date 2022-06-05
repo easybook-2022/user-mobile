@@ -237,10 +237,6 @@ export default function Userauth(props) {
                     <TextInput style={styles.authInput} onChangeText={(username) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, username }})} value={authInfo.info.username} autoCorrect={false} autoCapitalize="none"/>
                   </View>
                   <View style={styles.authInputContainer}>
-                    <Text style={styles.authInputHeader}>Password:</Text>
-                    <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, password }})} value={authInfo.info.password} autoCorrect={false}/>
-                  </View>
-                  <View style={styles.authInputContainer}>
                     <Text style={styles.authInputHeader}>Confirm password:</Text>
                     <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})} value={authInfo.info.confirmPassword} autoCorrect={false}/>
                   </View>
@@ -249,8 +245,8 @@ export default function Userauth(props) {
 
             <Text style={styles.errorMsg}>{authInfo.errormsg}</Text>
 
-            {!authInfo.noAccount && (
-              !authInfo.verified ? 
+            {!authInfo.noAccount ? 
+              !authInfo.verified && (  
                 <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => {
                   if (!authInfo.noAccount) {
                     login()
@@ -260,8 +256,12 @@ export default function Userauth(props) {
                 }}>
                   <Text style={styles.submitHeader}>Sign in</Text>
                 </TouchableOpacity>
-              : null
-            )}
+              )
+              :
+              <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => setAuthinfo({ ...authInfo, noAccount: false })}>
+                <Text style={styles.submitHeader}>Back</Text>
+              </TouchableOpacity>
+            }
           </View>
 				</View>
 			</TouchableWithoutFeedback>
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
 	submitHeader: { fontSize: wsize(4), fontWeight: 'bold', textAlign: 'center' },
 
 	welcomeBox: { alignItems: 'center', width: '100%' },
-	boxHeader: { fontSize: wsize(5), marginVertical: '5%', textAlign: 'center' },
+	boxHeader: { fontSize: wsize(5), textAlign: 'center' },
 	boxOptions: { alignItems: 'center' },
   boxOption: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
   boxOptionHeader: { fontSize: wsize(5), fontWeight: 'bold'  },

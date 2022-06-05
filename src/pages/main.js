@@ -302,6 +302,10 @@ export default function Main(props) {
 			}
 		})
 		socket.io.on("close", () => userId != null ? setShowdisabledscreen(true) : {})
+
+    return () => {
+      socket.off("updateNumNotifications")
+    }
 	}
 
 	const initialize = () => {

@@ -6,7 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
-import { socket, url, logo_url } from '../../assets/info'
+import { socket, url, logo_url, useSpeech } from '../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 import * as Speech from 'expo-speech';
 import { getNotifications } from '../apis/users'
@@ -231,7 +231,7 @@ export default function Notification(props) {
             message = "Your appointment " + displayTime(item.time) + " is cancelled with "
             message += data.reason ? "reason: " + data.reason : "no reason"
 
-            if (Constants.isDevice) Speech.speak(message, { rate: 0.7 })
+            if (Constants.isDevice && useSpeech == true) Speech.speak(message, { rate: 0.7 })
           }
         })
 
@@ -245,7 +245,7 @@ export default function Notification(props) {
             if (item.orderNumber == data.ordernumber) {
               newItems.splice(index, 1)
 
-              if (Constants.isDevice) Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
+              if (Constants.isDevice && useSpeech == true) Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
             }
           })
         }
@@ -259,7 +259,7 @@ export default function Notification(props) {
             item.status = 'inprogress'
             item.waitTime = data.waitTime
 
-            if (Constants.isDevice) Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
+            if (Constants.isDevice && useSpeech == true) Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
           }
         })
 
@@ -390,7 +390,7 @@ export default function Notification(props) {
 							<Text style={styles.boxHeader}>{items.length} Notification(s)</Text>
 
 							<TouchableOpacity style={styles.refresh} onPress={() => getTheNotifications()}>
-								<Text style={styles.refreshHeader}>Refresh {numUnreaded > 0 ? <Text style={{ fontWeight: 'bold' }}>({numUnreaded})</Text> : null}</Text>
+								<Text style={styles.refreshHeader}>Reload {numUnreaded > 0 ? <Text style={{ fontWeight: 'bold' }}>({numUnreaded})</Text> : null}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -409,10 +409,7 @@ export default function Notification(props) {
 
 												<Text style={styles.itemHeader}>
                           {item.status == 'checkout' ? 
-                            item.locationType == "restaurant" ? 
-                              'The restaurant will respond\nyou with wait time'
-                              :
-                              ''
+                            item.locationType == "restaurant" && 'The restaurant will respond\nyou with wait time'
                             :
                             'The order will be ready for pickup in ' + item.waitTime + (item.waitTime.includes("minute") ? '' : ' minutes')
                           }
@@ -421,7 +418,6 @@ export default function Notification(props) {
                         <View style={{ alignItems: 'center' }}>
                           <TouchableOpacity style={styles.action} onPress={() => {
                             props.close()
-
                             props.navigation.navigate("seeorders", { ordernumber: item.orderNumber })
                           }}>
                             <Text style={styles.actionHeader}>See order ({item.numOrders})</Text>
@@ -487,8 +483,7 @@ export default function Notification(props) {
 														<View style={styles.storeRequested}>
 															<Text style={styles.itemServiceHeader}>
 																{item.action == "cancel" ? "Appointment cancelled" : "Time taken"}
-                                {'\n'}
-                                {item.reason && <Text>Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>}
+                                {item.reason && <Text>{'\n'}Reason: <Text style={{ fontWeight: '500' }}>{item.reason}</Text></Text>}
 															</Text>
 															{item.action == "cancel" && (
 																<View style={{ alignItems: 'center' }}>
