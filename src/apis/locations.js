@@ -29,11 +29,8 @@ export const makeReservation = data => {
 	)
 }
 
-export const getLocationHours = data => {
-	return axios.post(
-		`${url}/locations/get_hours`,
-		data
-	)
+export const getLocationHours = id => {
+	return axios.get(`${url}/locations/get_location_hours/${id}`)
 }
 
 export const getDayHours = data => {

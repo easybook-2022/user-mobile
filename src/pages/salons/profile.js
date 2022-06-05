@@ -38,7 +38,7 @@ export default function Profile(props) {
 	const [phonenumber, setPhonenumber] = useState('')
 	const [distance, setDistance] = useState(0)
 	const [showAuth, setShowauth] = useState(false)
-	const [showInfo, setShowinfo] = useState({ show: false, workerHours: [] })
+	const [showInfo, setShowinfo] = useState({ show: false, workerHours: [], locationHours: [] })
   const [refetchMenu, setRefetchmenu] = useState(false)
 	const [userId, setUserid] = useState(null)
 
@@ -83,13 +83,14 @@ export default function Profile(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, logo, fullAddress, city, province, postalcode, phonenumber, distance } = res.info
+					const { name, logo, fullAddress, city, province, postalcode, phonenumber, distance, hours } = res.info
 
 					setLogo(logo)
 					setName(name)
 					setAddress(fullAddress)
 					setPhonenumber(phonenumber)
 					setDistance(distance)
+          setShowinfo({ ...showInfo, locationHours: hours })
           setLoaded(true)
 				}
 			})
@@ -112,7 +113,7 @@ export default function Profile(props) {
       })
       .then((res) => {
         if (res) {
-          setShowinfo({ show: true, workerHours: res.workerHours })
+          setShowinfo({ ...showInfo, show: true, workerHours: res.workers })
         }
       })
       .catch((err) => {
@@ -230,7 +231,35 @@ export default function Profile(props) {
                   <Text style={styles.showInfoHeader}>{address}</Text>
                   <Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
                   <Text style={styles.showInfoHeader}>{distance}</Text>
+
+                  <View style={styles.placeHours}>
+                    <Text style={styles.placeHoursHeader}>Salon's Hour(s)</Text>
+
+                    {showInfo.locationHours.map(info => (
+                      !info.close && (
+                        <View style={styles.workerTimeContainer} key={info.key}>
+                          <Text style={styles.dayHeader}>{info.header}: </Text>
+                          <View style={styles.timeHeaders}>
+                            <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
+                            <View style={styles.column}><Text>:</Text></View>
+                            <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
+                            <Text style={styles.timeHeader}>{info.opentime.period}</Text>
+                          </View>
+                          <View style={styles.column}><Text> - </Text></View>
+                          <View style={styles.timeHeaders}>
+                            <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
+                            <View style={styles.column}><Text>:</Text></View>
+                            <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
+                            <Text style={styles.timeHeader}>{info.closetime.period}</Text>
+                          </View>
+                        </View>
+                      )
+                    ))}
+                  </View>
+
                   <View style={styles.workerInfoList}>
+                    <Text style={styles.workerInfoListHeader}>All Stylist(s)</Text>
+
                     {showInfo.workerHours.map(worker => (
                       <View key={worker.key} style={styles.worker}>
                         <View style={styles.workerInfo}>
@@ -293,10 +322,13 @@ const styles = StyleSheet.create({
 	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
 	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
-	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 30, textAlign: 'center' },
+	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+  placeHours: { marginVertical: 40 },
+  placeHoursHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
   workerInfoList: { width: '100%' },
-  worker: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30, width: '100%' },
+  workerInfoListHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
+  worker: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, width: '100%' },
   workerInfo: {  },
   workerInfoProfile: { borderRadius: 25, overflow: 'hidden' },
   workerInfoName: { color: 'black', textAlign: 'center' },
