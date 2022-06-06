@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { resizePhoto } from 'geottuse-tools';
 import * as Speech from 'expo-speech';
-import { socket, logo_url } from '../../assets/info'
+import { socket, logo_url, useSpeech } from '../../assets/info'
 import { seeOrders } from '../apis/carts'
 
 const { height, width } = Dimensions.get('window')
@@ -45,11 +45,11 @@ export default function Seeorders(props) {
   const startWebsocket = () => {
     socket.on("updateSeeorders", data => {
       if (data.type == "orderDone") {
-        if (Constants.isDevice) Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
+        if (Constants.isDevice && useSpeech == true) Speech.speak("Order #: " + data.ordernumber + " is done. You can pick it up now")
 
         props.navigation.goBack()
       } else if (data.type == "setWaitTime") {
-        if (Constants.isDevice) Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
+        if (Constants.isDevice && useSpeech == true) Speech.speak("Order #: " + data.ordernumber + " will be ready in " + data.waitTime + (data.waitTime.includes("minute") ? "" : " minute"), { rate: 0.7 })
       }
     })
     socket.io.on("open", () => {

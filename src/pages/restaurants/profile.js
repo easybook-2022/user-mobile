@@ -35,9 +35,9 @@ export default function Profile(props) {
 	const [address, setAddress] = useState('')
 	const [phonenumber, setPhonenumber] = useState('')
 	const [distance, setDistance] = useState(0)
-	const [showAuth, setShowauth] = useState({ show: false, locationHours: [] })
+	const [showAuth, setShowauth] = useState(false)
 	const [userId, setUserid] = useState(null)
-	const [showInfo, setShowinfo] = useState(false)
+	const [showInfo, setShowinfo] = useState({ show: false, locationHours: [] })
   const [refetchMenu, setRefetchmenu] = useState(0)
 
 	const [loaded, setLoaded] = useState(false)
@@ -182,7 +182,7 @@ export default function Profile(props) {
 				}, 1000)
 			}} navigate={() => {
         setOpenorders(false)
-        props.navigation.navigate("account", { required: "card" })
+        props.navigation.navigate("account")
       }} close={() => {
 				getTheNumCartItems()
 				setOpenorders(false)
@@ -195,11 +195,11 @@ export default function Profile(props) {
 					}} navigate={props.navigation.navigate}/>
 				</Modal>
 			)}
-			{showInfo && (
+			{showInfo.show && (
 				<Modal transparent={true}>
 					<SafeAreaView style={styles.showInfoContainer}>
 						<View style={styles.showInfoBox}>
-							<TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo(false)}>
+							<TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo({ ...showInfo, show: false })}>
 								<AntDesign name="close" size={wsize(7)}/>
 							</TouchableOpacity>
 
@@ -209,7 +209,7 @@ export default function Profile(props) {
 							<Text style={styles.showInfoHeader}>{distance}</Text>
 
               <View style={styles.placeHours}>
-                <Text style={styles.placeHoursHeader}>Salon's Hour(s)</Text>
+                <Text style={styles.placeHoursHeader}>Restaurant's Hour(s)</Text>
 
                 {showInfo.locationHours.map(info => (
                   !info.close && (
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
 
 	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
-	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, width: 44 },
+	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
 	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 10, textAlign: 'center' },
 	showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
   placeHours: { marginVertical: 40 },

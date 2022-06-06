@@ -220,11 +220,13 @@ export default function Booktime(props) {
       })
     })
 
-    if (currDate == 0) {
-      newMonth = month == 11 ? 1 : month + 1
-      newYear = month == 11 ? year + 1 : year
+    if (step == 1) {
+      if (currDate == 0) {
+        newMonth = month == 11 ? month = 0 : month + 1
+        newYear = month == 11 ? year + 1 : year
 
-      let { currDate, currDay } = getCalendar(newMonth, newYear)
+        let { currDate, currDay } = getCalendar(newMonth, newYear)
+      }
     }
 
     setCalendar({ ...calendar, firstDay, numDays, data, loading: false })
@@ -249,7 +251,7 @@ export default function Booktime(props) {
       let period = hour < 12 ? "am" : "pm"
       let timedisplay = (
         hour <= 12 ? 
-          (hour == 0 ? 12 : hour) 
+          hour == 0 ? 12 : hour
           : 
           hour - 12
         ) 
@@ -345,7 +347,7 @@ export default function Booktime(props) {
             selectedMonth = months[selectedTime.getMonth()]
 
             getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
-            setSelecteddateinfo({ month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time: 0 })
+            setSelecteddateinfo({ ...selectedDateinfo, month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time: 0 })
           } else {
              let { currDate, currDay } = getCalendar(currTime.getMonth(), currTime.getFullYear())
 
@@ -357,8 +359,8 @@ export default function Booktime(props) {
           }
 
           setHoursinfo(hours)
-          setOpentime({ hour: openHour, minute: openMinute })
-          setClosetime({ hour: closeHour, minute: closeMinute })
+          setOpentime({ ...openTime, hour: openHour, minute: openMinute })
+          setClosetime({ ...closeTime, hour: closeHour, minute: closeMinute })
 					setLoaded(true)
 				}
 			})
@@ -687,13 +689,8 @@ export default function Booktime(props) {
 
               {step == 0 && (
                 <TouchableOpacity style={styles.action} onPress={() => {
-                  switch (step) {
-                    case 0:
-                      getTheLocationHours(oldTime)
-                      setStep(1)
-
-                      break;
-                  }
+                  getTheLocationHours(oldTime)
+                  setStep(1)
                 }}>
                   <Text style={styles.actionHeader}>Skip</Text>
                 </TouchableOpacity>

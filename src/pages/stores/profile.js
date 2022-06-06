@@ -9,7 +9,6 @@ import { StackActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../../assets/info'
 import { resizePhoto } from 'geottuse-tools'
 import { getLocationProfile } from '../../apis/locations'
-import { getMenus } from '../../apis/menus'
 import { getNumCartItems } from '../../apis/carts'
 
 // components
@@ -17,6 +16,7 @@ import Orders from '../../components/orders'
 
 // widgets
 import Userauth from '../../widgets/userauth'
+import Menus from '../../widgets/menus'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -35,9 +35,9 @@ export default function Profile(props) {
   const [address, setAddress] = useState('')
   const [phonenumber, setPhonenumber] = useState('')
   const [distance, setDistance] = useState(0)
-  const [showAuth, setShowauth] = useState({ show: false, locationHours: [] })
+  const [showAuth, setShowauth] = useState(false)
   const [userId, setUserid] = useState(null)
-  const [showInfo, setShowinfo] = useState(false)
+  const [showInfo, setShowinfo] = useState({ show: false, locationHours: []})
   const [refetchMenu, setRefetchmenu] = useState(0)
 
   const [loaded, setLoaded] = useState(false)
@@ -89,6 +89,7 @@ export default function Profile(props) {
           setPhonenumber(phonenumber)
           setDistance(distance)
           setShowinfo({ ...showInfo, locationHours: hours })
+          setLoaded(true)
         }
       })
       .catch((err) => {
@@ -100,7 +101,6 @@ export default function Profile(props) {
   const initialize = () => {
     getTheNumCartItems()
     getTheLocationProfile()
-    getAllMenus()
   }
 
   useEffect(() => initialize(), [])
@@ -182,7 +182,7 @@ export default function Profile(props) {
         }, 1000)
       }} navigate={() => {
         setOpenorders(false)
-        props.navigation.navigate("account", { required: "card" })
+        props.navigation.navigate("account")
       }} close={() => {
         getTheNumCartItems()
         setOpenorders(false)
@@ -199,39 +199,41 @@ export default function Profile(props) {
         <Modal transparent={true}>
           <SafeAreaView style={styles.showInfoContainer}>
             <View style={styles.showInfoBox}>
-              <TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo(false)}>
-                <AntDesign name="close" size={wsize(7)}/>
-              </TouchableOpacity>
+              <ScrollView style={{ width: '100%' }}>
+                <TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo(false)}>
+                  <AntDesign name="close" size={wsize(7)}/>
+                </TouchableOpacity>
 
-              <Text style={styles.showInfoHeader}>{name}</Text>
-              <Text style={styles.showInfoHeader}>{address}</Text>
-              <Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
-              <Text style={styles.showInfoHeader}>{distance}</Text>
+                <Text style={styles.showInfoHeader}>{name}</Text>
+                <Text style={styles.showInfoHeader}>{address}</Text>
+                <Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
+                <Text style={styles.showInfoHeader}>{distance}</Text>
 
-              <View style={styles.placeHours}>
-                <Text style={styles.placeHoursHeader}>Salon's Hour(s)</Text>
+                <View style={styles.placeHours}>
+                  <Text style={styles.placeHoursHeader}>Store's Hour(s)</Text>
 
-                {showInfo.locationHours.map(info => (
-                  !info.close && (
-                    <View style={styles.workerTimeContainer} key={info.key}>
-                      <Text style={styles.dayHeader}>{info.header}: </Text>
-                      <View style={styles.timeHeaders}>
-                        <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
-                        <View style={styles.column}><Text>:</Text></View>
-                        <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
-                        <Text style={styles.timeHeader}>{info.opentime.period}</Text>
+                  {showInfo.locationHours.map(info => (
+                    !info.close && (
+                      <View style={styles.workerTimeContainer} key={info.key}>
+                        <Text style={styles.dayHeader}>{info.header}: </Text>
+                        <View style={styles.timeHeaders}>
+                          <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
+                          <View style={styles.column}><Text>:</Text></View>
+                          <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
+                          <Text style={styles.timeHeader}>{info.opentime.period}</Text>
+                        </View>
+                        <View style={styles.column}><Text> - </Text></View>
+                        <View style={styles.timeHeaders}>
+                          <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
+                          <View style={styles.column}><Text>:</Text></View>
+                          <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
+                          <Text style={styles.timeHeader}>{info.closetime.period}</Text>
+                        </View>
                       </View>
-                      <View style={styles.column}><Text> - </Text></View>
-                      <View style={styles.timeHeaders}>
-                        <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
-                        <View style={styles.column}><Text>:</Text></View>
-                        <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
-                        <Text style={styles.timeHeader}>{info.closetime.period}</Text>
-                      </View>
-                    </View>
-                  )
-                ))}
-              </View>
+                    )
+                  ))}
+                </View>
+              </ScrollView>
             </View>
           </SafeAreaView>
         </Modal>
