@@ -440,11 +440,11 @@ export default function Notification(props) {
 												</View>
 												<View style={{ flexDirection: 'column', width: wsize(70) }}>
 													<Text style={styles.itemServiceHeader}>
-                            Appointment booking 
-                            {'\n\nfor ' + item.service}
-                            {'\nat ' + item.location}
+                            Appointment booked 
+                            {'\nfor ' + item.service}
+                            {'\nat\n' + item.location}
                             {'\n' + displayTime(item.time)}
-                            {'\n' + (item.worker != null && '\nwith stylist: ' + item.worker.username)}
+                            {'\n' + (item.worker != null && '\nStylist: ' + item.worker.username)}
                           </Text>
 
 													{item.action == "confirmed" && (

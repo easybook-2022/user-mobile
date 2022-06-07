@@ -743,7 +743,7 @@ export default function Booktime(props) {
 									<>
 										{oldTime == 0 ? 
 											<Text style={styles.confirmHeader}>
-												<Text style={{ fontFamily: 'Chilanka_400Regular' }}>Make an appointment for</Text>
+												<Text style={{ fontFamily: 'Chilanka_400Regular' }}>Make appointment for</Text>
 												{'\n' + confirm.service + '\n'}
 												{displayTime(confirm.time) + '\n'}
 											</Text>
@@ -785,10 +785,8 @@ export default function Booktime(props) {
 									</>
 									:
 									<View style={styles.requestedHeaders}>
-                    <Text style={styles.requestedHeader}>Appointment made for{'\n'}</Text>
-                    <Text style={styles.requestedHeaderInfo}>
-                      {confirm.service + '\n' + displayTime(confirm.time)}
-                    </Text>
+                    <Text style={styles.requestedHeader}>Appointment made for</Text>
+                    <Text style={styles.requestedHeaderInfo}>{confirm.service + '\n' + displayTime(confirm.time)}</Text>
                   </View>
 								}
 							</View>
@@ -875,15 +873,15 @@ const styles = StyleSheet.create({
 	confirmContainer: { backgroundColor: 'white', flexDirection: 'column', justifyContent: 'space-around', padding: 10, width: '80%' },
 	confirmHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
 	note: { alignItems: 'center', marginBottom: 20 },
-	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(4), height: 100, padding: 5, width: '80%' },
+	noteInput: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(6), height: 100, padding: 5, width: '80%' },
 	confirmOptions: { flexDirection: 'row' },
 	confirmOption: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 2, margin: 10, padding: 5, width: wsize(20) },
 	confirmOptionHeader: { fontSize: wsize(4) },
 	requestedHeaders: { alignItems: 'center', paddingHorizontal: 20 },
 	requestedClose: { borderRadius: 5, borderStyle: 'solid', borderWidth: 1, marginVertical: 10, padding: 5, width: 100 },
 	requestedCloseHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
-	requestedHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
-	requestedHeaderInfo: { fontSize: wsize(5), textAlign: 'center' },
+	requestedHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), textAlign: 'center' },
+	requestedHeaderInfo: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 	errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },
