@@ -79,7 +79,6 @@ export default function Booktime(props) {
   const [userId, setUserid] = useState(null)
 	const [times, setTimes] = useState([])
 	const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ worker: null, workers: [], numWorkers: 0, loading: false })
-  const [scheduledInfo, setScheduledinfo] = useState({ scheduledIds: {}, scheduledWorkers: {}, workers: [] })
 	const [loaded, setLoaded] = useState(false)
 	const [showAuth, setShowauth] = useState({ show: false, booking: false })
   const [step, setStep] = useState(0)
@@ -142,13 +141,10 @@ export default function Booktime(props) {
         if (res) {
           const { locationId, name, time, worker } = res
 
-          const { day, month, date, year, hour, minute } = time
-          const unixtime = Date.parse(day + " " + month + " " + date + " " + year + " " + hour + ":" + minute)
-
           setName(name)
-          setOldtime(unixtime)
+          setOldtime(jsonDateToUnix(time))
           setSelectedworkerinfo(prev => ({ ...prev, worker }))
-          getTheLocationHours(time)
+          getTheLocationHours(jsonDateToUnix(time))
         }
       })
       .catch((err) => {
@@ -258,7 +254,7 @@ export default function Booktime(props) {
         + ":" + 
         (minute < 10 ? '0' + minute : minute) + " " + period
       let timepassed = currenttime > calcDateStr
-      let timetaken = JSON.stringify(scheduledInfo.scheduledIds).split(calcDateStr.toString()).length - 1 < scheduledInfo.workers.length
+      let timetaken = false
       let availableService = false, workerIds = []
 
       if (selectedWorkerinfo.worker != null && day.substr(0, 3) in selectedWorkerinfo.worker.days) {
@@ -335,21 +331,37 @@ export default function Booktime(props) {
 					let openHour = timeInfo["openHour"], openMinute = timeInfo["openMinute"], openPeriod = timeInfo["openPeriod"]
 					let closeHour = timeInfo["closeHour"], closeMinute = timeInfo["closeMinute"], closePeriod = timeInfo["closePeriod"]
 
-					const currTime = new Date(Date.now())
+          const now = Date.now()
+					const currTime = new Date(now)
 					const currMonth = months[currTime.getMonth()]
+          const currDay = days[currTime.getDay()]
+          let currDate = currTime.getDate()
 
-          let selectedTime = time > 0 ? new Date(time) : null
-          let selectedDay = null, selectedDate = null, selectedMonth = null
+          let selectedTime = time != undefined ? new Date(time) : null
+          let selectedDay = null, selectedDate = null, selectedMonth = null, selectedYear = null
+          let closedtime
 
 					if (selectedTime) {
             selectedDay = days[selectedTime.getDay()]
             selectedDate = selectedTime.getDate()
             selectedMonth = months[selectedTime.getMonth()]
+            selectedYear = selectedTime.getFullYear()
+            closedtime = Date.parse(selectedDay + " " + selectedMonth + ", " + selectedDate + " " + selectedYear + " " + closeHour + ":" + closeMinute)
 
-            getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
-            setSelecteddateinfo({ ...selectedDateinfo, month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time: 0 })
+            if (now > closedtime) { // current selected date passed close time
+              setSelecteddateinfo({ ...selectedDateinfo, month: currMonth, year: currTime.getFullYear(), day: currDay.substr(0, 3), date: currDate, time: 0 })
+
+              getCalendar(currTime.getMonth(), currTime.getFullYear())
+            } else {
+              selectedDay = days[selectedTime.getDay()]
+              selectedDate = selectedTime.getDate()
+              selectedMonth = months[selectedTime.getMonth()]
+
+              getCalendar(selectedTime.getMonth(), selectedTime.getFullYear())
+              setSelecteddateinfo({ ...selectedDateinfo, month: selectedMonth, year: selectedTime.getFullYear(), day: selectedDay.substr(0, 3), date: selectedDate, time: 0 })
+            }
           } else {
-             let { currDate, currDay } = getCalendar(currTime.getMonth(), currTime.getFullYear())
+            let { currDate, currDay } = getCalendar(currTime.getMonth(), currTime.getFullYear())
 
             setSelecteddateinfo({
               month: currMonth, year: currTime.getFullYear(), day: currDay.substr(0, 3),
@@ -749,10 +761,10 @@ export default function Booktime(props) {
 											</Text>
 											:
 											<Text style={styles.confirmHeader}>
-												Change Appointment for
-												{'\nService: ' + confirm.service + '\n\n'}
-												{displayTime(oldTime) + '\nto'}
-												{'\n' + displayTime(confirm.time) + '\n'}
+												Change Appointment
+												{'\n' + confirm.service + '\n'}
+												to
+												{'\n\n' + displayTime(confirm.time)}
 											</Text>
 										}
 

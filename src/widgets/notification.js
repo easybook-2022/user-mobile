@@ -197,11 +197,12 @@ export default function Notification(props) {
 				setItems(newItems)
 			} else if (data.type == "salonChangeAppointment") {
         const newItems = [...items]
-				const { id, time } = data
+				const { id, time, worker } = data
 
         newItems.forEach(function (item) {
           if (item.id == id) {
             item.time = time
+            item.worker = worker
           }
         })
 

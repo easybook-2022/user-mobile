@@ -1,7 +1,7 @@
 import io from 'socket.io-client'
 
-const local_url = true
-const test_input = true
+const local_url = false
+const test_input = false
 
 const testUsers = [
 	{ id: 0, username: "robogram", cellnumber: "(000) 000-0000", password: "password", confirmPassword: "password" },
@@ -25,7 +25,7 @@ const realUsers = [
 ]
 const emptyUser = { username: "", cellnumber: "", password: "", confirmPassword: "" }
 
-const useInput = true
+const useInput = false
 
 const login = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
 const register = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
@@ -41,5 +41,5 @@ export const socket = io.connect(socket_url)
 export const registerInfo = { username: register.username, cellnumber: register.cellnumber, password: register.password, confirmPassword: register.confirmPassword, latitude: 43.663631, longitude: -79.351501 }
 export const url = local_url ? wifi_api_url : server_api_url
 export const isLocal = test_input
-export const useSpeech = false
+export const useSpeech = local_url == false
 export const logo_url = url + "/static/"
