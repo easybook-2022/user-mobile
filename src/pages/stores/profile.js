@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../../assets/info'
 import { resizePhoto } from 'geottuse-tools'
 import { getLocationProfile } from '../../apis/locations'
@@ -151,7 +151,7 @@ export default function Profile(props) {
                 </TouchableOpacity>
               )}
 
-              <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.replace("main"))}>
+              <TouchableOpacity style={styles.bottomNav} onPress={() => navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
                 <Entypo name="home" size={wsize(7)}/>
               </TouchableOpacity>
               <TouchableOpacity style={styles.bottomNav} onPress={() => {
@@ -178,7 +178,7 @@ export default function Profile(props) {
       {openOrders && <Modal><Orders showNotif={() => {
         setOpenorders(false)
         setTimeout(function () {
-          props.navigation.dispatch(StackActions.replace("main", { showNotif: true }))
+          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
         }, 1000)
       }} navigate={() => {
         setOpenorders(false)

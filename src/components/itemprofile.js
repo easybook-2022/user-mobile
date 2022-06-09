@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, Platform, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { resizePhoto } from 'geottuse-tools';
 import { socket, logo_url } from '../../assets/info'
@@ -441,7 +441,7 @@ export default function Itemprofile(props) {
   							</TouchableOpacity>
   						)}
 
-  						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.replace("main"))}>
+  						<TouchableOpacity style={styles.bottomNav} onPress={() => navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
   							<Entypo name="home" size={30}/>
   						</TouchableOpacity>
 
@@ -466,7 +466,7 @@ export default function Itemprofile(props) {
           }} showNotif={() => {
   					setOpenorders(false)
   					setTimeout(function () {
-  						props.navigation.dispatch(StackActions.replace("main", { showNotif: true }))
+              navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
   					}, 1000)
   				}} close={() => {
   					getTheNumCartItems()

@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { logo_url } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'
 import { getUserInfo, updateUser } from '../apis/users'
@@ -70,7 +70,7 @@ export default function Account(props) {
 					if (res) {
             setLoading(false)
 
-						props.navigation.dispatch(StackActions.replace("main"))
+            navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))
 					}
 				})
 				.catch((err) => {

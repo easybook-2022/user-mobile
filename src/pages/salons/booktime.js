@@ -5,13 +5,13 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours, getDayHours } from '../../apis/locations'
-import { getAllStylists, getStylistInfo, getAllWorkersTime } from '../../apis/owners'
+import { getAllStylists, getStylistInfo, getAllWorkersTime, getWorkersHour } from '../../apis/owners'
 import { getAppointmentInfo, makeAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
@@ -40,6 +40,7 @@ export default function Booktime(props) {
 	const [name, setName] = useState()
   const [allWorkers, setAllworkers] = useState({})
   const [hoursInfo, setHoursinfo] = useState({})
+  const [scheduled, setScheduled] = useState({})
   const [oldTime, setOldtime] = useState(0)
 	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
 	const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
@@ -255,6 +256,19 @@ export default function Booktime(props) {
         (minute < 10 ? '0' + minute : minute) + " " + period
       let timepassed = currenttime > calcDateStr
       let timetaken = false
+
+      if (selectedWorkerinfo.worker != null) { // worker is selected
+        const workerid = selectedWorkerinfo.worker.id
+
+        timetaken = JSON.stringify(scheduled).includes("\"" + calcDateStr + "\":" + workerid)
+
+      } else {
+        let numWorkers = Object.keys(scheduled).length
+        let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "\":").length - 1
+
+        timetaken = occur == numWorkers
+      }
+
       let availableService = false, workerIds = []
 
       if (selectedWorkerinfo.worker != null && day.substr(0, 3) in selectedWorkerinfo.worker.days) {
@@ -419,6 +433,37 @@ export default function Booktime(props) {
         }
       })
   }
+  const getTheWorkersHour = () => {
+    const data = { locationid, ownerid: null }
+
+    getWorkersHour(data)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
+        }
+      })
+      .then((res) => {
+        if (res) {
+          const { workersHour } = res
+
+          for (let worker in workersHour) {
+            for (let info in workersHour[worker]) {
+              if (info == "scheduled") {
+                const newScheduled = {}
+
+                for (let time in workersHour[worker]["scheduled"]) {
+                  newScheduled[jsonDateToUnix(JSON.parse(time))] = workersHour[worker]["scheduled"][time]
+                }
+
+                workersHour[worker]["scheduled"] = newScheduled
+              }
+            }
+          }
+
+          setScheduled(workersHour)
+        }
+      })
+  }
 	const selectWorker = id => {
     setSelectedworkerinfo({ ...selectedWorkerinfo, loading: true })
 
@@ -523,7 +568,7 @@ export default function Booktime(props) {
                 setConfirm({ ...confirm, show: false, requested: false })
 
                 setTimeout(function () {
-                  props.navigation.dispatch(StackActions.replace("main", { showNotif: true }))
+                  props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
                 }, 1000)
               }, 2000)
             })
@@ -549,6 +594,7 @@ export default function Booktime(props) {
 		getTheNumCartItems()
     getAllTheStylists()
     getAllTheWorkersTime()
+    getTheWorkersHour()
 
     if (serviceid) getTheServiceInfo()
     if (scheduleid) {
@@ -687,10 +733,6 @@ export default function Booktime(props) {
                     props.navigation.goBack()
 
                     break;
-                  case 1:
-                    setSelectedworkerinfo({ ...selectedWorkerinfo, worker: null })
-
-                    break;
                   default:
                 }
 
@@ -724,9 +766,7 @@ export default function Booktime(props) {
 							</TouchableOpacity>
 						)}
 
-						<TouchableOpacity style={styles.bottomNav} onPress={() => {
-							props.navigation.dispatch(StackActions.replace("main"))
-						}}>
+						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
 							<Entypo name="home" size={wsize(7)}/>
 						</TouchableOpacity>
 
