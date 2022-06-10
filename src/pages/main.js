@@ -480,7 +480,7 @@ export default function Main(props) {
 								socket.emit("socket/user/logout", userId, () => {
 									clearInterval(updateTrackUser)
 									AsyncStorage.clear()
-									setUserid(null)
+									setUserid()
 								})
 							} else {
 								setShowauth(true)
