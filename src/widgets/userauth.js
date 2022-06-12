@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { SafeAreaView, ActivityIndicator, Dimensions, View, Text, Image, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isLocal, loginInfo, registerInfo } from '../../assets/info'
+import { isLocal, signinInfo } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'
 import { getCode, verifyUser, resetPassword, registerUser, loginUser } from '../apis/users'
 
 import AntDesign from 'react-native-vector-icons/AntDesign'
 
-const { username, cellnumber, password, confirmPassword } = loginInfo
+const { username, cellnumber, password, confirmPassword } = signinInfo
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
@@ -182,8 +182,12 @@ export default function Userauth(props) {
   useEffect(() => {
     const { password, confirmPassword } = authInfo.info
 
-    if (password == confirmPassword) {
-      register()
+    if (password.length == confirmPassword.length) {
+      if (password == confirmPassword) {
+        register()
+      } else {
+        setAuthinfo({ ...authInfo, info: {...authInfo.info, confirmPassword: "" }, errormsg: "Password is incorrect" })
+      }
     }
   }, [authInfo.info.confirmPassword && authInfo.info.confirmPassword.length])
 
@@ -258,7 +262,7 @@ export default function Userauth(props) {
                 </TouchableOpacity>
               )
               :
-              <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => setAuthinfo({ ...authInfo, noAccount: false })}>
+              <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => setAuthinfo({ ...authInfo, noAccount: false, verified: false })}>
                 <Text style={styles.submitHeader}>Back</Text>
               </TouchableOpacity>
             }

@@ -226,6 +226,7 @@ export default function Booktime(props) {
       }
     }
 
+    setSelecteddateinfo({ ...selectedDateinfo, date: currDate })
     setCalendar({ ...calendar, firstDay, numDays, data, loading: false })
 
     return { currDate, currDay }
