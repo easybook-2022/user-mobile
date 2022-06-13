@@ -23,7 +23,6 @@ export default function Notification(props) {
   const [userId, setUserid] = useState(null)
 	const [items, setItems] = useState([])
 	const [loaded, setLoaded] = useState(false)
-	const [numUnreaded, setNumunreaded] = useState(0)
 	const [confirm, setConfirm] = useState({ show: false, type: "", index: 0, name: "", price: "", quantity: 0 })
 	const [cancelSchedule, setCancelschedule] = useState({ show: false, id: -1, location: "", type: "", service: "", time: 0, index: -1, loading: false })
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
@@ -161,7 +160,6 @@ export default function Notification(props) {
             setUserid(userid)
 						setItems(res.notifications)
 						setLoaded(true)
-						setNumunreaded(0)
 					})
 				}
 			})
@@ -265,9 +263,7 @@ export default function Notification(props) {
         })
 
         setItems(newItems)
-      } else {
-				setNumunreaded(numUnreaded + 1)
-			}
+      }
 		})
 		socket.io.on("open", () => {
 			if (userId != null) {
@@ -391,7 +387,7 @@ export default function Notification(props) {
 							<Text style={styles.boxHeader}>{items.length} Notification(s)</Text>
 
 							<TouchableOpacity style={styles.refresh} onPress={() => getTheNotifications()}>
-								<Text style={styles.refreshHeader}>Reload {numUnreaded > 0 ? <Text style={{ fontWeight: 'bold' }}>({numUnreaded})</Text> : null}</Text>
+								<Text style={styles.refreshHeader}>Reload</Text>
 							</TouchableOpacity>
 						</View>
 					</View>

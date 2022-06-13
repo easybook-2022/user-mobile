@@ -44,7 +44,7 @@ export default function Booktime(props) {
   const [oldTime, setOldtime] = useState(0)
 	const [openTime, setOpentime] = useState({ hour: 0, minute: 0 })
 	const [closeTime, setClosetime] = useState({ hour: 0, minute: 0 })
-	const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, time: 0 })
+	const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0 })
 	const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
 		{ key: "day-row-0", row: [
 	    	{ key: "day-0-0", num: 0, passed: false }, { key: "day-0-1", num: 0, passed: false }, { key: "day-0-2", num: 0, passed: false }, 
@@ -83,7 +83,6 @@ export default function Booktime(props) {
 	const [loaded, setLoaded] = useState(false)
 	const [showAuth, setShowauth] = useState({ show: false, booking: false })
   const [step, setStep] = useState(0)
-
 	const [openCart, setOpencart] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 	const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
@@ -238,7 +237,7 @@ export default function Booktime(props) {
     let openStr = month + " " + date + ", " + year + " " + start
     let closeStr = month + " " + date + ", " + year + " " + end
     let openDateStr = Date.parse(openStr), closeDateStr = Date.parse(closeStr), calcDateStr = openDateStr
-    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0, firstTime = true
+    let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
 
     while (calcDateStr < closeDateStr - pushtime) {
       calcDateStr += pushtime
@@ -526,7 +525,6 @@ export default function Booktime(props) {
     getTimes(date, day.substr(0, 3))
 	}
 	const selectTime = (name, timeheader, time, workerIds) => {
-		setSelecteddateinfo({ ...selectedDateinfo, name, time })
     setConfirm({ ...confirm, show: true, service: name ? name : serviceinfo, time, workerIds })
 	}
 	const makeAnAppointment = async(id) => {
@@ -534,9 +532,8 @@ export default function Booktime(props) {
       setConfirm({ ...confirm, loading: true })
       setShowauth({ ...showAuth, show: false })
 
-			const { time } = selectedDateinfo
 			const { worker } = selectedWorkerinfo
-			const { note, workerIds } = confirm
+			const { note, workerIds, time } = confirm
       const selectedinfo = new Date(time)
       const day = days[selectedinfo.getDay()], month = months[selectedinfo.getMonth()], date = selectedinfo.getDate(), year = selectedinfo.getFullYear()
       const hour = selectedinfo.getHours(), minute = selectedinfo.getMinutes()

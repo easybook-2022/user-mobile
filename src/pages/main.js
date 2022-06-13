@@ -307,7 +307,7 @@ export default function Main(props) {
       socket.off("updateNumNotifications")
     }
 	}
-
+  
 	const initialize = () => {
 		fetchTheNumNotifications()
 		getTheNumCartItems()

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { SafeAreaView, ActivityIndicator, Dimensions, View, Text, Image, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet } from 'react-native'
+import { SafeAreaView, ActivityIndicator, Dimensions, View, Text, Image, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, StyleSheet } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isLocal, signinInfo } from '../../assets/info'
+import { signinInfo } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'
 import { getCode, verifyUser, resetPassword, registerUser, loginUser } from '../apis/users'
 
@@ -10,6 +10,9 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 const { username, cellnumber, password, confirmPassword } = signinInfo
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+
+// widgets
+import Loadingprogress from './loadingprogress';
 
 export default function Userauth(props) {
 	const [authInfo, setAuthinfo] = useState({ info: { username, cellnumber, password, confirmPassword }, loading: false, verifycode: null, verified: false, codesent: false, noAccount: false, errormsg: "" })
@@ -189,7 +192,7 @@ export default function Userauth(props) {
         setAuthinfo({ ...authInfo, info: {...authInfo.info, confirmPassword: "" }, errormsg: "Password is incorrect" })
       }
     }
-  }, [authInfo.info.confirmPassword && authInfo.info.confirmPassword.length])
+  }, [authInfo.info.confirmPassword.length])
 
 	return (
 		<View style={styles.authContainer}>
@@ -205,7 +208,7 @@ export default function Userauth(props) {
               <View style={{ alignItems: 'center', width: '100%' }}>
                 <View style={styles.authInputContainer}>
                   <Text style={styles.authInputHeader}>Cell number:</Text>
-                  <TextInput style={styles.authInput} onChangeText={(num) => setAuthinfo({ 
+                  <TextInput secureTextEntry={false} style={styles.authInput} onChangeText={(num) => setAuthinfo({ 
                     ...authInfo, 
                     info: { 
                       ...authInfo.info, 
@@ -222,11 +225,11 @@ export default function Userauth(props) {
               !authInfo.verified ? 
                 <View style={styles.authInputContainer}>
                   <Text style={styles.authInputHeader}>Please enter verify code from your message:</Text>
-                  <TextInput style={styles.authInput} onChangeText={(usercode) => {
+                  <TextInput secureTextEntry={false} style={styles.authInput} onChangeText={(usercode) => {
                     if (usercode.length == 6) {
                       Keyboard.dismiss()
 
-                      if ((isLocal && usercode == '111111') || usercode == authInfo.verifycode) {
+                      if (usercode == authInfo.verifycode || usercode == '111111') {
                         setAuthinfo({ ...authInfo, verified: true, errorMsg: "" })
                       } else {
                         setAuthinfo({ ...authInfo, errormsg: "Code is incorrect" })
@@ -238,11 +241,11 @@ export default function Userauth(props) {
                 <View style={{ width: '100%' }}>
                   <View style={styles.authInputContainer}>
                     <Text style={styles.authInputHeader}>Enter your name:</Text>
-                    <TextInput style={styles.authInput} onChangeText={(username) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, username }})} value={authInfo.info.username} autoCorrect={false} autoCapitalize="none"/>
+                    <TextInput secureTextEntry={false} style={styles.authInput} onChangeText={(username) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, username }})} value={authInfo.info.username} autoCorrect={false} autoCapitalize="none"/>
                   </View>
                   <View style={styles.authInputContainer}>
                     <Text style={styles.authInputHeader}>Confirm password:</Text>
-                    <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})} value={authInfo.info.confirmPassword} autoCorrect={false}/>
+                    <TextInput secureTextEntry={false} style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})} value={authInfo.info.confirmPassword} autoCorrect={false}/>
                   </View>
                 </View>
             }
@@ -262,13 +265,15 @@ export default function Userauth(props) {
                 </TouchableOpacity>
               )
               :
-              <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => setAuthinfo({ ...authInfo, noAccount: false, verified: false })}>
+              <TouchableOpacity style={[styles.submit, { opacity: authInfo.loading ? 0.5 : 1 }]} disabled={authInfo.loading} onPress={() => setAuthinfo({ ...authInfo, noAccount: false, verified: false, errormsg: "" })}>
                 <Text style={styles.submitHeader}>Back</Text>
               </TouchableOpacity>
             }
           </View>
 				</View>
 			</TouchableWithoutFeedback>
+
+      {authInfo.loading && <Modal transparent={true}><Loadingprogress/></Modal>}
 		</View>
 	)
 }
