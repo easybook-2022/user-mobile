@@ -171,7 +171,7 @@ export default function Profile(props) {
 								</TouchableOpacity>
 							)}
 
-							<TouchableOpacity style={styles.bottomNav} onPress={() => navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
 								<Entypo name="home" size={wsize(7)}/>
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.bottomNav} onPress={() => {
@@ -198,7 +198,7 @@ export default function Profile(props) {
 			{openCart && <Modal><Orders showNotif={() => {
 				setOpencart(false)
 				setTimeout(function () {
-          navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
+          props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
 				}, 1000)
 			}} navigate={() => {
         setOpencart(false)

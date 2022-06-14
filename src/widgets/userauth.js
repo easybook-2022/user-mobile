@@ -83,7 +83,7 @@ export default function Userauth(props) {
     const username = info.username ? info.username : ""
 		const cellnumber = info.cellnumber ? info.cellnumber : ""
 		const password = info.password ? info.password : ""
-		const confirmPassword = info.confirmPassword ? info.confirmPassword : ""
+		const confirmPassword = password
 		const data = { username, cellnumber, password, confirmPassword }
 
 		setAuthinfo({ ...authInfo, loading: true })
@@ -182,18 +182,6 @@ export default function Userauth(props) {
 			})
 	}
 
-  useEffect(() => {
-    const { password, confirmPassword } = authInfo.info
-
-    if (password.length == confirmPassword.length) {
-      if (password == confirmPassword) {
-        register()
-      } else {
-        setAuthinfo({ ...authInfo, info: {...authInfo.info, confirmPassword: "" }, errormsg: "Password is incorrect" })
-      }
-    }
-  }, [authInfo.info.confirmPassword.length])
-
 	return (
 		<View style={styles.authContainer}>
 			<TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -207,7 +195,7 @@ export default function Userauth(props) {
             {!authInfo.noAccount ? 
               <View style={{ alignItems: 'center', width: '100%' }}>
                 <View style={styles.authInputContainer}>
-                  <Text style={styles.authInputHeader}>Cell number:</Text>
+                  <Text style={styles.authInputHeader}>Cell phone number:</Text>
                   <TextInput secureTextEntry={false} style={styles.authInput} onChangeText={(num) => setAuthinfo({ 
                     ...authInfo, 
                     info: { 
@@ -232,10 +220,10 @@ export default function Userauth(props) {
                       if (usercode == authInfo.verifycode || usercode == '111111') {
                         setAuthinfo({ ...authInfo, verified: true, errorMsg: "" })
                       } else {
-                        setAuthinfo({ ...authInfo, errormsg: "Code is incorrect" })
+                        setAuthinfo({ ...authInfo, errormsg: "The code is wrong" })
                       }
                     }
-                  }} value={authInfo.info.usercode} keyboardType="numeric" autoCorrect={false}/>
+                  }} keyboardType="numeric" autoCorrect={false}/>
                 </View>
                 :
                 <View style={{ width: '100%' }}>
@@ -245,7 +233,17 @@ export default function Userauth(props) {
                   </View>
                   <View style={styles.authInputContainer}>
                     <Text style={styles.authInputHeader}>Confirm password:</Text>
-                    <TextInput secureTextEntry={false} style={styles.authInput} secureTextEntry={true} onChangeText={(password) => setAuthinfo({ ...authInfo, info: { ...authInfo.info, confirmPassword: password }})} value={authInfo.info.confirmPassword} autoCorrect={false}/>
+                    <TextInput style={styles.authInput} secureTextEntry={true} onChangeText={(confirmPassword) => {
+                      const { password } = authInfo.info
+
+                      if (password.length == confirmPassword.length) {
+                        if (password == confirmPassword) {
+                          register()
+                        } else {
+                          setAuthinfo(prev => ({ ...prev, info: {...authInfo.info }, errormsg: "Password is incorrect" }))
+                        }
+                      }
+                    }} autoCorrect={false}/>
                   </View>
                 </View>
             }

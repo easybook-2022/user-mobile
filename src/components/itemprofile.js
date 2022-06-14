@@ -441,7 +441,7 @@ export default function Itemprofile(props) {
   							</TouchableOpacity>
   						)}
 
-  						<TouchableOpacity style={styles.bottomNav} onPress={() => navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
+  						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
   							<Entypo name="home" size={30}/>
   						</TouchableOpacity>
 
@@ -466,7 +466,7 @@ export default function Itemprofile(props) {
           }} showNotif={() => {
   					setOpenorders(false)
   					setTimeout(function () {
-              navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
+              props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
   					}, 1000)
   				}} close={() => {
   					getTheNumCartItems()
