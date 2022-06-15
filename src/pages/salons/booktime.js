@@ -189,9 +189,14 @@ export default function Booktime(props) {
       })
   }
   const getCalendar = (month, year) => {
-    let currTime = new Date(), currDate = 0, currDay = '', datenow = Date.now()
+    let currTime = new Date(), currDate = 0, currDay = ''
     let firstDay = (new Date(year, month)).getDay(), numDays = 32 - new Date(year, month, 32).getDate(), daynum = 1
-    let data = calendar.data, datetime = 0, hourInfo, current, now
+    let data = calendar.data, datetime = 0, hourInfo, current, now = Date.parse(
+      days[currTime.getDay()] + " " + 
+      months[currTime.getMonth()] + " " + 
+      currTime.getDate() + " " + 
+      currTime.getFullYear()
+    )
 
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
@@ -202,7 +207,7 @@ export default function Booktime(props) {
           if (dayindex >= firstDay) {
             datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
-            day.passed = datenow > datetime
+            day.passed = now > datetime
             day.noservice = selectedWorkerinfo.id > -1 ? 
               !(days[dayindex].substr(0, 3) in selectedWorkerinfo.hours)
               :
@@ -214,7 +219,7 @@ export default function Booktime(props) {
         } else if (daynum <= numDays) {
           datetime = Date.parse(days[dayindex] + " " + months[month] + " " + daynum + " " + year)
 
-          day.passed = datenow > datetime
+          day.passed = now > datetime
           day.noservice = selectedWorkerinfo.id > -1 ? 
             !(days[dayindex].substr(0, 3) in selectedWorkerinfo.hours)
             :
