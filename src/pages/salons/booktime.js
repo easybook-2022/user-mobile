@@ -467,7 +467,7 @@ export default function Booktime(props) {
 
     setConfirm({ ...confirm, show: true, service: name ? name : serviceinfo, time, workerIds })
   }
-  const makeAnAppointment = async(id) => {
+  const makeAnAppointment = id => {
     if (userId || id) {
       setConfirm(prev => ({ ...prev, loading: true }))
       setShowauth(prev => ({ ...prev, show: false }))
@@ -691,6 +691,7 @@ export default function Booktime(props) {
               {step == 0 && (
                 <TouchableOpacity style={styles.action} onPress={() => {
                   getTheLocationHours()
+                  setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
                   setStep(1)
                 }}>
                   <Text style={styles.actionHeader}>Skip</Text>

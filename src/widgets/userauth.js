@@ -47,6 +47,8 @@ export default function Userauth(props) {
           switch (status) {
             case "nonexist":
               verify()
+            default:
+              setAuthinfo({ ...authInfo, errormsg, loading: false })
           }
 				}
 			})
