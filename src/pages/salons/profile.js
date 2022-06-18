@@ -122,7 +122,7 @@ export default function Profile(props) {
         }
       })
   }
-	
+  
 	useEffect(() => initialize(), [])
 
 	return (

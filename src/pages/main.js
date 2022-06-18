@@ -214,7 +214,7 @@ export default function Main(props) {
         AsyncStorage.setItem("longitude", longitude.toString())
         AsyncStorage.setItem("latitude", latitude.toString())
 
-        //updateTrackUser = setInterval(() => trackUserLocation(), 2000)
+        updateTrackUser = setInterval(() => trackUserLocation(), 2000)
         setGeolocation({ longitude, latitude })
         getTheLocations(longitude, latitude, "")
       }
@@ -346,7 +346,7 @@ export default function Main(props) {
 		}
 
 		return () => {
-			//clearInterval(updateTrackUser)
+			clearInterval(updateTrackUser)
 			socket.off("updateNumNotifications")
 		}
 	}, [numNotifications])

@@ -420,7 +420,7 @@ export default function Itemprofile(props) {
   					<View style={styles.itemActions}>
   						<View style={{ flexDirection: 'row' }}>
   							<TouchableOpacity style={styles.itemAction} onPress={() => addCart()}>
-  								<Text style={styles.itemActionHeader}>Order item</Text>
+  								<Text style={styles.itemActionHeader}>Order <Text style={{ fontWeight: 'bold' }}>{quantity}</Text> item</Text>
   							</TouchableOpacity>
   						</View>
   					</View>
@@ -480,6 +480,8 @@ export default function Itemprofile(props) {
 
                   if (showAuth.addcart == true) {
                     addCart(id)
+                  } else {
+                    setShowauth({ ...showAuth, show: false })
                   }
                 })
   						}} navigate={props.navigation.navigate}/>
