@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { SafeAreaView, Dimensions, View, ScrollView, Text, Image, TextInput, TouchableOpacity, Modal, StyleSheet } from 'react-native'
-import ImageZoom from 'react-native-image-pan-zoom';
 import { resizePhoto } from 'geottuse-tools';
 import { logo_url } from '../../assets/info'
 import { getMenus } from '../apis/menus'
@@ -229,17 +228,10 @@ export default function Menus(props) {
                       info.row.map(item => (
                         item.photo && item.photo.name && (
                           <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
-                            <ImageZoom 
-                              cropWidth={wsize(95)}
-                              cropHeight={height}
-                              imageWidth={wsize(95)}
-                              imageHeight={height}
-                            >
-                              <Image 
-                                style={{ width: '100%', height: '100%' }}
-                                source={{ uri: logo_url + item.photo.name }}
-                              />
-                            </ImageZoom>
+                            <Image 
+                              style={{ width: '100%', height: '100%' }}
+                              source={{ uri: logo_url + item.photo.name }}
+                            />
                           </View>
                         )
                       ))

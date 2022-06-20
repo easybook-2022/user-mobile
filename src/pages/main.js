@@ -311,9 +311,11 @@ export default function Main(props) {
 	const initialize = () => {
 		fetchTheNumNotifications()
 		getTheNumCartItems()
-		getLocationPermission()
+    getLocationPermission()
 
-		if (Constants.isDevice) getNotificationPermission()
+		if (Constants.isDevice) {
+      getNotificationPermission()
+    }
 		if (openNotif) {
 			setTimeout(function () {
 				setOpennotifications(true)
