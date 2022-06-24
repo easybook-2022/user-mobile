@@ -317,7 +317,7 @@ export default function Booktime(props) {
                   let time = splitInfo[0]
                   let status = splitInfo[1]
 
-                  newScheduled[jsonDateToUnix(JSON.parse(time))] = workersHour[worker]["scheduled"][info]
+                  newScheduled[jsonDateToUnix(JSON.parse(time)) + "-" + worker] = workersHour[worker]["scheduled"][info]
                 }
 
                 workersHour[worker]["scheduled"] = newScheduled
@@ -401,11 +401,11 @@ export default function Booktime(props) {
       if (selectedWorkerinfo.id > -1) { // worker is selected
         const workerid = selectedWorkerinfo.id
 
-        timetaken = JSON.stringify(scheduled).includes("\"" + calcDateStr + "\":" + workerid)
+        timetaken = calcDateStr + "-" + workerid in scheduled[workerid]["scheduled"]
 
       } else {
         let numWorkers = Object.keys(scheduled).length
-        let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "\":").length - 1
+        let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "-").length - 1
 
         timetaken = occur == numWorkers
       }
@@ -701,13 +701,22 @@ export default function Booktime(props) {
 
               {(step == 0 || step == 1) && (
                 step == 0 ? 
-                  <TouchableOpacity style={styles.action} onPress={() => {
-                    getTheLocationHours()
-                    setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
-                    setStep(1)
-                  }}>
-                    <Text style={styles.actionHeader}>Skip</Text>
-                  </TouchableOpacity>
+                  <>
+                    <TouchableOpacity style={styles.action} onPress={() => {
+                      getTheLocationHours()
+                      setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
+                      setStep(1)
+                    }}>
+                      <Text style={styles.actionHeader}>Random</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.action} onPress={() => {
+                      if (selectedWorkerinfo.id > -1) {
+                        selectWorker(selectedWorkerinfo.id)
+                      }
+                    }}>
+                      <Text style={styles.actionHeader}>Next</Text>
+                    </TouchableOpacity>
+                  </>
                   :
                   <TouchableOpacity style={styles.action} onPress={() => {
                     const { day, date } = selectedDateinfo
@@ -727,16 +736,16 @@ export default function Booktime(props) {
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
+            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
+              <Entypo name="home" size={wsize(7)}/>
+            </TouchableOpacity>
+            
             {userId && (
               <TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
                 <Entypo name="shopping-cart" size={wsize(7)}/>
                 {numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
               </TouchableOpacity>
             )}
-
-            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
-              <Entypo name="home" size={wsize(7)}/>
-            </TouchableOpacity>
 
             <TouchableOpacity style={styles.bottomNav} onPress={() => {
               if (userId) {
@@ -883,7 +892,7 @@ const styles = StyleSheet.create({
   unselectHeader: { color: 'black', fontSize: wsize(5) },
 
   actions: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
-  action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5, width: wsize(30) },
+  action: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   actionHeader: { color: 'black', fontSize: wsize(5), textAlign: 'center' },
 
   bottomNavs: { backgroundColor: 'white', flexDirection: 'column', height: '10%', justifyContent: 'space-around', width: '100%' },

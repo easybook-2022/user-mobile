@@ -86,7 +86,7 @@ export default function Menus(props) {
                           {type == "store" || type == "restaurant" ? 
                             "Order now" 
                             : 
-                            <Text><Text style={{ fontWeight: 'bold' }}>Book </Text> {info.name}</Text>
+                            <Text><Text style={{ fontWeight: 'bold' }}>Book</Text> {info.name}</Text>
                           }
                         </Text>
                       </TouchableOpacity>
@@ -128,7 +128,7 @@ export default function Menus(props) {
                         {type == "store" || type == "restaurant" ? 
                             "Order now" 
                             : 
-                            <Text><Text style={{ fontWeight: 'bold' }}>Book </Text> {info.name}</Text>
+                            <Text><Text style={{ fontWeight: 'bold' }}>Book</Text> {info.name}</Text>
                           }
                       </Text>
                     </TouchableOpacity>
