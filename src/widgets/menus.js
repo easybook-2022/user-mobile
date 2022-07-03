@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { SafeAreaView, Dimensions, View, ScrollView, Text, Image, TextInput, TouchableOpacity, Modal, StyleSheet } from 'react-native'
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { resizePhoto } from 'geottuse-tools';
 import { logo_url } from '../../assets/info'
 import { getMenus } from '../apis/menus'
@@ -70,15 +71,17 @@ export default function Menus(props) {
                     <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
                     <View style={styles.column}>
                       <TouchableOpacity style={styles.itemAction} onPress={() => {
+                        props.navigation.setParams({ initialize: true })
+
                         if (type == "salon") {
                           props.navigation.navigate(
                             "booktime", 
-                            { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() }
+                            { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
                           )
                         } else if (type == "restaurant" || type == "store") {
                           props.navigation.navigate(
                             "itemprofile", 
-                            { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus(), type }
+                            { locationid, menuid: "", productid: info.id, productinfo: "", type }
                           )
                         }
                       }}>
@@ -112,15 +115,17 @@ export default function Menus(props) {
                   <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
                   <View style={styles.column}>
                     <TouchableOpacity style={styles.itemAction} onPress={() => {
+                      props.navigation.setParams({ initialize: true })
+
                       if (type == "salon") {
                         props.navigation.navigate(
                           "booktime", 
-                          { locationid, menuid: "", serviceid: info.id, serviceInfo: "", initialize: () => getAllMenus() }
+                          { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
                         )
                       } else if (type == "restaurant" || type == "store") {
                         props.navigation.navigate(
                           "itemprofile", 
-                          { locationid, menuid: "", productid: info.id, productinfo: "", initialize: () => getAllMenus(), type }
+                          { locationid, menuid: "", productid: info.id, productinfo: "", type }
                         )
                       }
                     }}>
@@ -143,6 +148,18 @@ export default function Menus(props) {
   }
 
   useEffect(() => getAllMenus(), [refetchMenu])
+
+  useFocusEffect(
+    useCallback(() => {
+      if (props.route.params) {
+        const params = props.route.params
+
+        if (params.initialize) getAllMenus()
+      }
+
+      props.navigation.setParams({ initialize: null })
+    }, [useIsFocused()])
+  )
 
   return (
     <View style={styles.box}>
@@ -184,12 +201,14 @@ export default function Menus(props) {
                       <TouchableOpacity style={styles.menuInputTouch} onPress={() => {
                         if (requestInfo.search) {
                           setRequestinfo({ ...requestInfo, show: false })
+                          props.navigation.setParams({ initialize: true })
+
                           if (type == "salon") {
                             props.navigation.navigate(
                               "booktime", 
                               { 
                                 locationid, menuid: "", serviceid: "", 
-                                serviceinfo: requestInfo.search, initialize: () => getAllMenus(), 
+                                serviceinfo: requestInfo.search, 
                                 type: "salon"
                               }
                             )
@@ -198,7 +217,7 @@ export default function Menus(props) {
                               "itemprofile", 
                               { 
                                 locationid, menuid: "", productid: "", 
-                                productinfo: requestInfo.search, initialize: () => getAllMenus(), 
+                                productinfo: requestInfo.search, 
                                 type
                               }
                             )

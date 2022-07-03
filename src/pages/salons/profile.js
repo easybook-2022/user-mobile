@@ -151,6 +151,7 @@ export default function Profile(props) {
             <Menus 
               locationid={locationid} 
               navigation={props.navigation} 
+              route={props.route}
               type="salon"
               refetchMenu={refetchMenu}
             />
