@@ -86,6 +86,7 @@ export default function Booktime(props) {
   const [numCartItems, setNumcartitems] = useState(0)
 
   const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
+  const [showTimetaken, setShowtimetaken] = useState({ show: false, time: '' })
   const [openCart, setOpencart] = useState(false)
   const [showAuth, setShowauth] = useState({ show: false, booking: false })
 
@@ -543,6 +544,18 @@ export default function Booktime(props) {
                 setConfirm({ errorMsg: "Unable to reschedule due to schedule conflict" })
                 
                 break;
+              case "confirmed":
+              case "blocked":
+                // already taken, booking is late
+                setShowtimetaken({ ...showTimetaken, show: true, time })
+
+                setTimeout(function () {
+                  setShowtimetaken({ ...showTimetaken, show: false })
+                }, 2000)
+
+                setConfirm({ ...confirm, show: false, requested: false })
+
+                break;
               default:
                 setConfirm({ errorMsg: errormsg })
             }
@@ -738,8 +751,12 @@ export default function Booktime(props) {
                       <Text style={styles.actionHeader}>Random</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.action} onPress={() => {
-                      if (selectedWorkerinfo.id > -1) {
-                        selectWorker(selectedWorkerinfo.id)
+                      if (allStylists.numStylists == 1) {
+                        getTheLocationHours()
+                        setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
+                        setStep(1)
+                      } else {
+                        if (selectedWorkerinfo.id > -1) selectWorker(selectedWorkerinfo.id)
                       }
                     }}>
                       <Text style={styles.actionHeader}>Next</Text>
@@ -751,7 +768,7 @@ export default function Booktime(props) {
 
                     selectDate(date, day)
                   }}>
-                    <Text style={styles.actionHeader}>Pick today</Text>
+                    <Text style={styles.actionHeader}>Next</Text>
                   </TouchableOpacity>
               )}
             </View>
@@ -851,6 +868,15 @@ export default function Booktime(props) {
           </TouchableWithoutFeedback>
         </Modal>
       )}
+      {showTimetaken.show && (
+        <Modal transparent={true}>
+          <SafeAreaView style={styles.timeTakenBox}>
+            <View style={styles.timeTakenContainer}>
+              <Text style={styles.timeTakenHeader}>{displayTime(showTimetaken.time)} has already been taken</Text>
+            </View>
+          </SafeAreaView>
+        </Modal>
+      )}
       {openCart && <Modal><Orders navigation={props.navigation} close={() => {
         getTheNumCartItems()
         setOpencart(false)
@@ -944,6 +970,11 @@ const styles = StyleSheet.create({
   requestedCloseHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
   requestedHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), textAlign: 'center' },
   requestedHeaderInfo: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
+
+  // time taken alert box
+  timeTakenBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  timeTakenContainer: { backgroundColor: 'white', flexDirection: 'column', height: '30%', justifyContent: 'space-around', width: '90%' },
+  timeTakenHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
   errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },

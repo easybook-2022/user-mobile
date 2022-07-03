@@ -29,7 +29,7 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Profile(props) {
-	const { locationid, refetch } = props.route.params
+	const { locationid } = props.route.params
 	const func = props.route.params
 
 	const [logo, setLogo] = useState('')
@@ -132,7 +132,7 @@ export default function Profile(props) {
 					<View style={styles.profileInfo}>
 						<View style={styles.column}>
               <TouchableOpacity style={styles.headerAction} onPress={() => getTheWorkersTime()}>
-                <Text style={styles.headerActionHeader}>View Salon{'\n'}Info</Text>
+                <Text style={styles.headerActionHeader}>Info</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.column}>
@@ -233,7 +233,7 @@ export default function Profile(props) {
                   <Text style={styles.showInfoHeader}>{distance}</Text>
 
                   <View style={styles.placeHours}>
-                    <Text style={styles.placeHoursHeader}>Salon's Hour(s)</Text>
+                    <Text style={styles.placeHoursHeader}>Business's Hour(s)</Text>
 
                     {showInfo.locationHours.map(info => (
                       !info.close && (
@@ -258,7 +258,7 @@ export default function Profile(props) {
                   </View>
 
                   <View style={styles.workerInfoList}>
-                    <Text style={styles.workerInfoListHeader}>All Stylist(s)</Text>
+                    <Text style={styles.workerInfoListHeader}>Stylist(s)</Text>
 
                     {showInfo.workerHours.map(worker => (
                       <View key={worker.key} style={styles.worker}>
@@ -325,18 +325,18 @@ const styles = StyleSheet.create({
 	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', marginVertical: 10, textAlign: 'center' },
 	showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
   placeHours: { marginVertical: 40 },
-  placeHoursHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
+  placeHoursHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
   workerInfoList: { width: '100%' },
-  workerInfoListHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
-  worker: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, width: '100%' },
+  workerInfoListHeader: { fontSize: wsize(5), fontWeight: 'bold', textAlign: 'center' },
+  worker: { alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.2)', marginBottom: 30, paddingVertical: 20, width: '100%' },
   workerInfo: {  },
   workerInfoProfile: { borderRadius: 25, overflow: 'hidden' },
-  workerInfoName: { color: 'black', textAlign: 'center' },
+  workerInfoName: { color: 'black', fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   workerTime: {  },
   workerTimeContainer: { flexDirection: 'row', marginBottom: 10 },
   dayHeader: {  },
   timeHeaders: { flexDirection: 'row' },
-  timeHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  timeHeader: { fontSize: wsize(5), fontWeight: 'bold' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
   row: { flexDirection: 'row', justifyContent: 'space-around' },

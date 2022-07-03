@@ -94,17 +94,11 @@ export default function App() {
               )           
             )
           })}/>
-          <Stack.Screen name="account" component={Account} options={({ navigation, route }) => ({
+          <Stack.Screen name="account" component={Account} options={({ navigation }) => ({
             headerTitle: () => <Text style={styles.header}>Account Info</Text>,
             headerLeft: () => (
               Platform.OS == 'ios' && (
-                <TouchableOpacity style={styles.back} onPress={() => {
-                  if (route.params && route.params.refetch) {
-                      route.params.refetch()
-                  }
-
-                  navigation.goBack()
-                }}>
+                <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
                   <Text style={styles.backHeader}>Go Back</Text>
                 </TouchableOpacity>
               )

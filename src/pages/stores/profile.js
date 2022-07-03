@@ -27,7 +27,7 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Profile(props) {
-  const { locationid, refetch } = props.route.params
+  const { locationid } = props.route.params
   const func = props.route.params
 
   const [logo, setLogo] = useState('')
@@ -112,7 +112,7 @@ export default function Profile(props) {
           <View style={styles.profileInfo}>
             <View style={styles.column}>
               <TouchableOpacity style={styles.headerAction} onPress={() => setShowinfo({ ...showInfo, show: true })}>
-                <Text style={styles.headerActionHeader}>View Info</Text>
+                <Text style={styles.headerActionHeader}>Info</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.column}>
@@ -210,7 +210,7 @@ export default function Profile(props) {
                 <Text style={styles.showInfoHeader}>{distance}</Text>
 
                 <View style={styles.placeHours}>
-                  <Text style={styles.placeHoursHeader}>Store's Hour(s)</Text>
+                  <Text style={styles.placeHoursHeader}>Business's Hour(s)</Text>
 
                   {showInfo.locationHours.map(info => (
                     !info.close && (

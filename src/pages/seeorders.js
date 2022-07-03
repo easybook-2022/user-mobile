@@ -11,7 +11,7 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Seeorders(props) {
-  const { ordernumber, refetch } = props.route.params
+  const { ordernumber } = props.route.params
 
   const [userId, setUserid] = useState(null)
   const [orders, setOrders] = useState([])

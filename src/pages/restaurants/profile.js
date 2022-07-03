@@ -27,7 +27,7 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Profile(props) {
-	const { locationid, refetch } = props.route.params
+	const { locationid } = props.route.params
 	const func = props.route.params
 
 	const [logo, setLogo] = useState('')
@@ -104,7 +104,7 @@ export default function Profile(props) {
   }
 
 	useEffect(() => initialize(), [])
-
+  
 	return (
 		<SafeAreaView style={styles.profile}>
 			{loaded ? 

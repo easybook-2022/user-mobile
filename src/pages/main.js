@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { 
 	SafeAreaView, Platform, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, 
 	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native'
+import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
@@ -324,9 +325,19 @@ export default function Main(props) {
 		}
 	}
 
-	useEffect(() => {	
-		initialize()
-	}, [])
+  useEffect(() => initialize(), [])
+
+  useFocusEffect(
+    useCallback(() => {
+      if (props.route.params) {
+        const params = props.route.params
+
+        if (params.initialize) {
+          initialize()
+        }
+      }
+    }, [useIsFocused()])
+  );
 
 	useEffect(() => {
 		startWebsocket()
@@ -415,7 +426,8 @@ export default function Main(props) {
                               renderItem={({ item, index }) => 
                                 <TouchableOpacity style={styles.location} onPress={() => {
                                   clearInterval(updateTrackUser)
-                                  props.navigation.navigate(item.nav, { locationid: item.id, refetch: () => initialize() })
+                                  props.navigation.setParams({ initialize: true })
+                                  props.navigation.navigate(item.nav, { locationid: item.id })
                                 }}>
                                   <View style={styles.locationPhotoHolder}>
                                     <Image source={{ uri: logo_url + item.logo.name }} style={resizePhoto(item.logo, wsize(30))}/>
@@ -464,7 +476,9 @@ export default function Main(props) {
 						{userId && (
 							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								clearInterval(updateTrackUser)
-								props.navigation.navigate("account", { refetch: () => initialize() })
+
+                props.navigation.setParams({ initialize: true })
+								props.navigation.navigate("account")
 							}}>
 								<FontAwesome5 name="user-circle" size={wsize(7)}/>
 							</TouchableOpacity>
