@@ -197,9 +197,9 @@ export default function Booktime(props) {
   const getCalendar = (month, year) => {
     let currTime = new Date(), currDate = 0, currDay = ''
     let firstDay = (new Date(year, month)).getDay(), numDays = 32 - new Date(year, month, 32).getDate(), daynum = 1
-    let data = calendar.data, datetime = 0, hourInfo, current, now = Date.parse(
+    let data = calendar.data, datetime = 0, hourInfo, closedtime, now = Date.parse(
       days[currTime.getDay()] + " " + 
-      months[currTime.getMonth()] + " " + 
+      months[currTime.getMonth()] + ", " + 
       currTime.getDate() + " " + 
       currTime.getFullYear()
     )
@@ -241,10 +241,10 @@ export default function Booktime(props) {
           if (currDay in hoursInfo) {
             hourInfo = hoursInfo[currDay]
 
-            current = Date.parse(days[dayindex] + " " + months[month] + ", " + day.num + " " + year + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
+            closedtime = Date.parse(days[dayindex] + " " + months[month] + ", " + day.num + " " + year + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
             now = Date.now()
 
-            if (now < current) {
+            if (now < closedtime) {
               currDate = day.num
             } else {
               day.passed = true
@@ -259,7 +259,7 @@ export default function Booktime(props) {
     setSelecteddateinfo({ 
       ...selectedDateinfo, 
       month: months[month], day: currDay, 
-      date: bookedDateinfo.date == 0 ? currDate : bookedDateinfo.date, 
+      date: bookedDateinfo.date == 0 ? currDate : bookedDateinfo.date,
       year 
     })
     setCalendar({ ...calendar, data, firstDay, numDays })
@@ -376,8 +376,8 @@ export default function Booktime(props) {
 
     getCalendar(month, year)
   }
-  const selectDate = (date, day) => {
-    const { month, year } = selectedDateinfo
+  const selectDate = () => {
+    const { date, day, month, year } = selectedDateinfo
     const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
     let start = day in allWorkerstime ? allWorkerstime[day][0]["start"] : openHour + ":" + openMinute
     let end = day in allWorkerstime ? allWorkerstime[day][0]["end"] : closeHour + ":" + closeMinute
@@ -402,7 +402,7 @@ export default function Booktime(props) {
         + ":" + 
         (minute < 10 ? '0' + minute : minute) + " " + period
       let timepassed = currenttime > calcDateStr
-      let timetaken = false
+      let timetaken = false, blocked = false
 
       if (selectedWorkerinfo.id > -1) { // worker is selected
         const workerid = selectedWorkerinfo.id
@@ -452,15 +452,34 @@ export default function Booktime(props) {
       }
 
       if (!timepassed && !timetaken && availableService == true) {
-        timesRow.push({
-          key: timesNum.toString(), header: timedisplay, 
-          time: calcDateStr, workerIds
-        })
-        timesNum++
+        let startCalc = calcDateStr
+        const numTaken = scheduleid ? 1 + bookedDateinfo.blocked.length : 0
 
-        if (timesRow.length == 3) {
-          newTimes.push({ key: newTimes.length, row: timesRow })
-          timesRow = []
+        for (let k = 1; k <= numTaken; k++) {
+          startCalc += pushtime
+
+          if (selectedWorkerinfo.id > -1) { // stylist is picked by client
+            if (JSON.stringify(scheduled).includes("\"" + startCalc + "-" + selectedWorkerinfo.id + "\"")) {
+              blocked = true
+            }
+          } else {
+            if (JSON.stringify(scheduled).split("\"" + startCalc + "-").length - 1 == allStylists.numStylists) {
+              blocked = true
+            }
+          }
+        }
+
+        if (!blocked) {
+          timesRow.push({
+            key: timesNum.toString(), header: timedisplay, 
+            time: calcDateStr, workerIds
+          })
+          timesNum++
+
+          if (timesRow.length == 3) {
+            newTimes.push({ key: newTimes.length, row: timesRow })
+            timesRow = []
+          }
         }
       }
     }
@@ -584,7 +603,6 @@ export default function Booktime(props) {
     getAllTheStylists()
     getTheLocationHours()
     getAllTheWorkersTime()
-    getAllScheduledTimes()
 
     if (serviceid) getTheServiceInfo()
     if (scheduleid) getTheAppointmentInfo()
@@ -601,6 +619,10 @@ export default function Booktime(props) {
       getCalendar(prevTime.getMonth(), prevTime.getFullYear())
     }
   }, [selectedWorkerinfo.hours])
+
+  useEffect(() => {
+    if (Object.keys(scheduled).length > 0) selectDate()
+  }, [scheduled])
 
 	return (
 		<SafeAreaView style={styles.booktime}>
@@ -680,11 +702,17 @@ export default function Booktime(props) {
                                   </TouchableOpacity>
                                 :
                                 selectedDateinfo.date == day.num ?
-                                  <TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => selectDate(day.num, days[dayindex].substr(0, 3))}>
+                                  <TouchableOpacity key={day.key} style={[styles.dayTouch, { backgroundColor: 'black' }]} onPress={() => {
+                                    setSelecteddateinfo({ ...selectedDateinfo, date: day.num, day: days[dayindex].substr(0, 3) })
+                                    getAllScheduledTimes()
+                                  }}>
                                     <Text style={[styles.dayTouchHeader, { color: 'white' }]}>{day.num}</Text>
                                   </TouchableOpacity>
                                   :
-                                  <TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => selectDate(day.num, days[dayindex].substr(0, 3))}>
+                                  <TouchableOpacity key={day.key} style={styles.dayTouch} onPress={() => {
+                                    setSelecteddateinfo({ ...selectedDateinfo, date: day.num, day: days[dayindex].substr(0, 3) })
+                                    getAllScheduledTimes()
+                                  }}>
                                     <Text style={styles.dayTouchHeader}>{day.num}</Text>
                                   </TouchableOpacity>
                               :
@@ -763,11 +791,7 @@ export default function Booktime(props) {
                     </TouchableOpacity>
                   </>
                   :
-                  <TouchableOpacity style={styles.action} onPress={() => {
-                    const { day, date } = selectedDateinfo
-
-                    selectDate(date, day)
-                  }}>
+                  <TouchableOpacity style={styles.action} onPress={() => getAllScheduledTimes()}>
                     <Text style={styles.actionHeader}>Next</Text>
                   </TouchableOpacity>
               )}

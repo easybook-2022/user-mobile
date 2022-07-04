@@ -332,9 +332,7 @@ export default function Main(props) {
       if (props.route.params) {
         const params = props.route.params
 
-        if (params.initialize) {
-          initialize()
-        }
+        if (params.initialize) initialize()
       }
     }, [useIsFocused()])
   );

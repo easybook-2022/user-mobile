@@ -103,7 +103,9 @@ export default function Profile(props) {
     getTheLocationProfile()
   }
 
-	useEffect(() => initialize(), [])
+	useEffect(() => {
+    initialize()
+  }, [])
 
 	return (
 		<SafeAreaView style={styles.profile}>
