@@ -453,6 +453,7 @@ export default function Notification(props) {
                                   </TouchableOpacity>
                                   <TouchableOpacity style={styles.action} onPress={() => {
                                     props.close()
+                                    props.navigation.setParams({ initialize: true, showNotif: true })
                                     props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id })
                                   }}>
                                     <Text style={styles.actionHeader}>Rebook</Text>
@@ -466,6 +467,7 @@ export default function Notification(props) {
                                     </TouchableOpacity>
                                     <TouchableOpacity style={styles.action} onPress={() => {
                                       props.close()
+                                      props.navigation.setParams({ initialize: true, showNotif: true })
                                       props.navigation.navigate("booktime", { locationid: item.locationid, serviceid: item.serviceid, scheduleid: item.id, serviceinfo: item.service })
                                     }}>
                                       <Text style={styles.actionHeader}>Rebook</Text>
@@ -489,6 +491,7 @@ export default function Notification(props) {
 																	</TouchableOpacity>
                                   <TouchableOpacity style={styles.action} onPress={() => {
                                     props.close()
+                                    props.navigation.setParams({ initialize: true, showNotif: true })
                                     props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.service })
                                   }}>
                                     <Text style={styles.actionHeader}>Rebook</Text>
@@ -508,6 +511,7 @@ export default function Notification(props) {
                                     </TouchableOpacity>
                                     <TouchableOpacity style={styles.action} onPress={() => {
                                       props.close()
+                                      props.navigation.setParams({ initialize: true, showNotif: true })
                                       props.navigation.navigate("booktime", { locationid: item.locationid, scheduleid: item.id, serviceid: item.serviceid, serviceinfo: item.service })
                                     }}>
                                       <Text style={styles.actionHeader}>Rebook</Text>

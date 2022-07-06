@@ -34,20 +34,6 @@ const wsize = p => {return width * (p / 100)}
 
 export default function Main(props) {
 	let updateTrackUser
-	const firstTime = props.route.params ? 
-    props.route.params.firstTime ? 
-      true 
-      : 
-      false 
-    : 
-    false
-	const openNotif = props.route.params ? 
-    props.route.params.showNotif ? 
-      true 
-      : 
-      false 
-    : 
-    false
 
 	const [locationPermission, setLocationpermission] = useState(null)
 	const [notificationPermission, setNotificationpermission] = useState(false)
@@ -317,10 +303,9 @@ export default function Main(props) {
 		if (Constants.isDevice) {
       getNotificationPermission()
     }
-		if (openNotif) {
+		if (props.route.params && props.route.params.showNotif) {
 			setTimeout(function () {
 				setOpennotifications(true)
-				props.navigation.setParams({ showNotif: false })
 			}, 1000)
 		}
 	}
@@ -330,13 +315,16 @@ export default function Main(props) {
   useFocusEffect(
     useCallback(() => {
       if (props.route.params) {
+        console.log(props.route.params)
         const params = props.route.params
 
         if (params.initialize) initialize()
       }
+
+      props.navigation.setParams({ initialize: false, showNotif: false })
     }, [useIsFocused()])
   );
-
+  
 	useEffect(() => {
 		startWebsocket()
 

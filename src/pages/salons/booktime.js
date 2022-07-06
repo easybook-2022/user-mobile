@@ -5,13 +5,13 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { CommonActions } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours, getDayHours } from '../../apis/locations'
-import { getAllStylists, getAllWorkersTime, getWorkersHour } from '../../apis/owners'
+import { getAllStylists, getStylistInfo, getAllWorkersTime, getWorkersHour } from '../../apis/owners'
 import { getAppointmentInfo, makeAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
@@ -77,7 +77,7 @@ export default function Booktime(props) {
       ]}
   ], loading: false, errorMsg: "" })
   const [times, setTimes] = useState([])
-  const [allStylists, setAllstylists] = useState({ stylists: [], numStylists: 0 })
+  const [allStylists, setAllstylists] = useState({ stylists: [], numStylists: 0, ids: [] })
   const [allWorkerstime, setAllworkerstime] = useState({})
   const [scheduled, setScheduled] = useState({})
   const [loaded, setLoaded] = useState(false)
@@ -133,7 +133,7 @@ export default function Booktime(props) {
         }
       })
   }
-  const getTheAppointmentInfo = async() => {
+  const getTheAppointmentInfo = async(fetchBlocked) => {
     getAppointmentInfo(scheduleid)
       .then((res) => {
         if (res.status == 200) {
@@ -147,12 +147,14 @@ export default function Booktime(props) {
 
           setName(name)
           setOldtime(unix)
-          setSelectedworkerinfo({ ...selectedWorkerinfo, id: worker.id })
+
+          if (!fetchBlocked) setSelectedworkerinfo({ ...selectedWorkerinfo, id: worker.id })
 
           const prevTime = new Date(unix)
 
           blocked.forEach(function (info) {
-            info["unix"] = jsonDateToUnix(JSON.parse(info["time"]))
+            info["time"] = JSON.parse(info["time"])
+            info["unix"] = jsonDateToUnix(info["time"])
           })
 
           setBookeddateinfo({ 
@@ -259,7 +261,10 @@ export default function Booktime(props) {
     setSelecteddateinfo({ 
       ...selectedDateinfo, 
       month: months[month], day: currDay, 
-      date: bookedDateinfo.date == 0 ? currDate : bookedDateinfo.date,
+      date: bookedDateinfo.date == 0 ? 
+        currDate 
+        : 
+        bookedDateinfo.date < currDate ? currDate : bookedDateinfo.date,
       year 
     })
     setCalendar({ ...calendar, data, firstDay, numDays })
@@ -273,7 +278,7 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          setAllstylists({ ...allStylists, stylists: res.owners, numStylists: res.numWorkers })
+          setAllstylists({ ...allStylists, stylists: res.owners, numStylists: res.numWorkers, ids: res.ids })
         }
       })
       .catch((err) => {
@@ -323,7 +328,7 @@ export default function Booktime(props) {
                   let time = splitInfo[0]
                   let status = splitInfo[1]
 
-                  newScheduled[jsonDateToUnix(JSON.parse(time)) + "-" + worker] = workersHour[worker]["scheduled"][info]
+                  newScheduled[jsonDateToUnix(JSON.parse(time)) + "-" + worker + "-" + status] = workersHour[worker]["scheduled"][info]
                 }
 
                 workersHour[worker]["scheduled"] = newScheduled
@@ -336,26 +341,27 @@ export default function Booktime(props) {
       })
   }
   const selectWorker = id => {
-    const workingDays = {}
-
-    for (let day in allWorkerstime) {
-      allWorkerstime[day].forEach(function (workerInfo) {
-        const { workerId, start, end } = workerInfo
-
-        if (workerId == id) {
-          workingDays[day] = { start, end }
+    getStylistInfo(id)
+      .then((res) => {
+        if (res.status == 200) {
+          return res.data
         }
       })
-    }
+      .then((res) => {
+        if (res) {
+          const daysInfo = res.days
+          const workingDays = {}
 
-    allStylists.stylists.forEach(function (item) {
-      item.row.forEach(function (worker) {
-        if (worker.id == id) {
+          for (let day in daysInfo) {
+            const { start, end } = daysInfo[day]
+
+            workingDays[day] = { start, end }
+          }
+
           setSelectedworkerinfo({ ...selectedWorkerinfo, id, hours: workingDays })
           setStep(1)
         }
       })
-    })
   }
   const dateNavigate = dir => {
     const currTime = new Date(Date.now())
@@ -377,8 +383,9 @@ export default function Booktime(props) {
     getCalendar(month, year)
   }
   const selectDate = () => {
-    const { date, day, month, year } = selectedDateinfo
+    const { date, day, month, year } = selectedDateinfo, { blocked } = bookedDateinfo
     const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
+    const numBlockTaken = scheduleid ? 1 + blocked.length : 0
     let start = day in allWorkerstime ? allWorkerstime[day][0]["start"] : openHour + ":" + openMinute
     let end = day in allWorkerstime ? allWorkerstime[day][0]["end"] : closeHour + ":" + closeMinute
     let openStr = month + " " + date + ", " + year + " " + start
@@ -402,13 +409,14 @@ export default function Booktime(props) {
         + ":" + 
         (minute < 10 ? '0' + minute : minute) + " " + period
       let timepassed = currenttime > calcDateStr
-      let timetaken = false, blocked = false
+      let timetaken = false, timeBlocked = false
 
       if (selectedWorkerinfo.id > -1) { // worker is selected
         const workerid = selectedWorkerinfo.id
 
-        timetaken = calcDateStr + "-" + workerid in scheduled[workerid]["scheduled"]
-
+        if (calcDateStr + "-" + workerid + "-c" in scheduled[workerid]["scheduled"]) {
+          timetaken = true
+        }
       } else {
         let numWorkers = Object.keys(scheduled).length
         let occur = JSON.stringify(scheduled).split("\"" + calcDateStr + "-").length - 1
@@ -453,23 +461,22 @@ export default function Booktime(props) {
 
       if (!timepassed && !timetaken && availableService == true) {
         let startCalc = calcDateStr
-        const numTaken = scheduleid ? 1 + bookedDateinfo.blocked.length : 0
 
-        for (let k = 1; k <= numTaken; k++) {
-          startCalc += pushtime
-
-          if (selectedWorkerinfo.id > -1) { // stylist is picked by client
-            if (JSON.stringify(scheduled).includes("\"" + startCalc + "-" + selectedWorkerinfo.id + "\"")) {
-              blocked = true
-            }
-          } else {
-            if (JSON.stringify(scheduled).split("\"" + startCalc + "-").length - 1 == allStylists.numStylists) {
-              blocked = true
+        for (let k = 1; k <= numBlockTaken; k++) {
+          if (selectedWorkerinfo.id > -1) {
+            if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
+              if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
+                timeBlocked = true
+              }
+            } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) {
+              timeBlocked = true
             }
           }
+
+          startCalc += pushtime
         }
 
-        if (!blocked) {
+        if (!timeBlocked) {
           timesRow.push({
             key: timesNum.toString(), header: timedisplay, 
             time: calcDateStr, workerIds
@@ -512,10 +519,11 @@ export default function Booktime(props) {
       const selectedinfo = new Date(time)
       const day = days[selectedinfo.getDay()], month = months[selectedinfo.getMonth()], date = selectedinfo.getDate(), year = selectedinfo.getFullYear()
       const hour = selectedinfo.getHours(), minute = selectedinfo.getMinutes()
-      const selecteddate = JSON.stringify({ day, month, date, year, hour, minute })
+      const selecteddate = { day, month, date, year, hour, minute }
 
       blocked.forEach(function (info, index) {
         info["newTime"] = unixToJsonDate(time + (info["unix"] - oldTime))
+        info["newUnix"] = (time + (info["unix"] - oldTime)).toString()
       })
 
       let data = { 
@@ -526,9 +534,9 @@ export default function Booktime(props) {
         serviceid: serviceid ? serviceid : -1, 
         serviceinfo: serviceinfo ? serviceinfo : name,
         time: selecteddate, note: note ? note : "", 
+        timeDisplay: displayTime(selecteddate),
         type: scheduleid ? "remakeAppointment" : "makeAppointment",
-        timeDisplay: displayTime({ day, month, date, year, hour, minute }),
-        blocked
+        blocked, unix: time
       }
 
       makeAppointment(data)
@@ -539,17 +547,18 @@ export default function Booktime(props) {
         })
         .then((res) => {
           if (res) {
-            data = { ...data, receiver: res.receiver, time, speak: res.speak, worker: res.speak.worker }
+            data = { 
+              ...data, 
+              receiver: res.receiver, time, speak: res.speak, worker: res.speak.worker, 
+            }
 
             socket.emit("socket/makeAppointment", data, () => {
-              setConfirm(prev => ({ ...prev, show: true, requested: true, loading: false }))
+              setConfirm({ ...confirm, show: true, requested: true, loading: false })
 
               setTimeout(function () {
-                setConfirm(prev => ({ ...prev, show: false, requested: false }))
+                setConfirm({ ...confirm, show: false, requested: false })
 
-                setTimeout(function () {
-                  props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
-                }, 1000)
+                props.navigation.dispatch(StackActions.popToTop())
               }, 2000)
             })
           }
@@ -769,31 +778,33 @@ export default function Booktime(props) {
               </TouchableOpacity>
 
               {(step == 0 || step == 1) && (
-                step == 0 ? 
-                  <>
-                    <TouchableOpacity style={styles.action} onPress={() => {
-                      getTheLocationHours()
-                      setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
-                      setStep(1)
-                    }}>
-                      <Text style={styles.actionHeader}>Random</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.action} onPress={() => {
-                      if (allStylists.numStylists == 1) {
-                        getTheLocationHours()
+                <>
+                  {step == 0 && (
+                    <>
+                      <TouchableOpacity style={styles.action} onPress={() => {
                         setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
                         setStep(1)
-                      } else {
-                        if (selectedWorkerinfo.id > -1) selectWorker(selectedWorkerinfo.id)
-                      }
+                      }}>
+                        <Text style={styles.actionHeader}>Pick Random</Text>
+                      </TouchableOpacity>
+
+                      {selectedWorkerinfo.id > -1 && (
+                        <TouchableOpacity style={styles.action} onPress={() => selectWorker(selectedWorkerinfo.id)}>
+                          <Text style={styles.actionHeader}>Next</Text>
+                        </TouchableOpacity>
+                      )}
+                    </>
+                  )}
+
+                  {step == 1 && (
+                    <TouchableOpacity style={styles.action} onPress={() => {
+                      getTheAppointmentInfo(true)
+                      getAllScheduledTimes()
                     }}>
                       <Text style={styles.actionHeader}>Next</Text>
                     </TouchableOpacity>
-                  </>
-                  :
-                  <TouchableOpacity style={styles.action} onPress={() => getAllScheduledTimes()}>
-                    <Text style={styles.actionHeader}>Next</Text>
-                  </TouchableOpacity>
+                  )}
+                </>
               )}
             </View>
           </>
@@ -805,7 +816,7 @@ export default function Booktime(props) {
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
-            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
+            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.popToTop())}>
               <Entypo name="home" size={wsize(7)}/>
             </TouchableOpacity>
             
