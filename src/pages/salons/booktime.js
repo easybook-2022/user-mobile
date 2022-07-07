@@ -206,13 +206,6 @@ export default function Booktime(props) {
       currTime.getFullYear()
     ), timeStr = ""
 
-    console.log("            ")
-    console.log("            ")
-    console.log("            ")
-    console.log("            ")
-    console.log("            ")
-    console.log("            ")
-
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
         day.num = 0
@@ -280,7 +273,7 @@ export default function Booktime(props) {
           if (currDay in hoursInfo) {
             hourInfo = hoursInfo[currDay]
 
-            closedtime = Date.parse(days[dayindex] + " " + months[month] + " " + day.num + " " + year + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
+            closedtime = Date.parse(timeStr + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
             now = Date.now()
 
             if (now < closedtime) {
@@ -636,7 +629,7 @@ export default function Booktime(props) {
       hour: info.getHours(), minute: info.getMinutes() 
     }
   }
-
+  
 	useEffect(() => {
     getTheNumCartItems()
     getAllTheStylists()

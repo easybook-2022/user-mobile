@@ -166,7 +166,7 @@ export default function Menus(props) {
       {loaded ? 
         <View style={{ alignItems: 'center' }}>
           <TouchableOpacity style={styles.openInput} onPress={() => setRequestinfo({ ...requestInfo, show: true })}>
-            <Text style={styles.openInputHeader}>Search</Text>
+            <Text style={styles.openInputHeader}>Type in service</Text>
           </TouchableOpacity>
           <ScrollView style={{ height: '90%', width: '100%' }}>
             <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}</View>
