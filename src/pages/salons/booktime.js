@@ -206,6 +206,8 @@ export default function Booktime(props) {
       currTime.getFullYear()
     ), timeStr = ""
 
+    console.log("              ")
+
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
         day.num = 0
@@ -248,6 +250,8 @@ export default function Booktime(props) {
             !(days[dayindex].substr(0, 3) in selectedWorkerinfo.hours)
             :
             !(days[dayindex].substr(0, 3) in allWorkerstime)
+
+          console.log(daynum, day.passed, day.noservice, allWorkerstime)
 
           if (!day.noservice) {
             if (selectedWorkerinfo.id > -1 && days[dayindex].substr(0, 3) in selectedWorkerinfo.hours) {
