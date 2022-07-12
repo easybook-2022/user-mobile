@@ -315,13 +315,12 @@ export default function Main(props) {
   useFocusEffect(
     useCallback(() => {
       if (props.route.params) {
-        console.log(props.route.params)
         const params = props.route.params
 
         if (params.initialize) initialize()
-      }
 
-      props.navigation.setParams({ initialize: false, showNotif: false })
+        props.navigation.setParams({ initialize: false, showNotif: false })
+      }
     }, [useIsFocused()])
   );
   
@@ -412,7 +411,7 @@ export default function Main(props) {
                               renderItem={({ item, index }) => 
                                 <TouchableOpacity style={styles.location} onPress={() => {
                                   clearInterval(updateTrackUser)
-                                  props.navigation.setParams({ initialize: true })
+                                  props.navigation.setParams({ initialize: true, showNotif: true })
                                   props.navigation.navigate(item.nav, { locationid: item.id })
                                 }}>
                                   <View style={styles.locationPhotoHolder}>
