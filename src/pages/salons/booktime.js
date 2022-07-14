@@ -817,10 +817,10 @@ export default function Booktime(props) {
                         
                         setStep(1)
                       }}>
-                        <Text style={styles.actionHeader}>Pick Random</Text>
+                        <Text style={styles.actionHeader}>{allStylists.numStylists == 1 ? 'Next' : 'Pick Random'}</Text>
                       </TouchableOpacity>
 
-                      {selectedWorkerinfo.id > -1 && (
+                      {selectedWorkerinfo.id > -1 && allStylists.numStylists > 1 && (
                         <TouchableOpacity style={styles.action} onPress={() => selectWorker(selectedWorkerinfo.id)}>
                           <Text style={styles.actionHeader}>Next</Text>
                         </TouchableOpacity>
@@ -848,7 +848,10 @@ export default function Booktime(props) {
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
-            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.popToTop())}>
+            <TouchableOpacity style={styles.bottomNav} onPress={() => {
+              props.navigation.setParams({})
+              props.navigation.dispatch(StackActions.popToTop())
+            }}>
               <Entypo name="home" size={wsize(7)}/>
             </TouchableOpacity>
             

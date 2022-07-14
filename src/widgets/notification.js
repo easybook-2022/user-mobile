@@ -193,7 +193,20 @@ export default function Notification(props) {
         })
 
 				setItems(newItems)
-			} else if (data.type == "salonChangeAppointment") {
+			} else if (data.type == "pushAppointments") {
+        const newItems = [...items]
+        const rebooks = data.rebooks
+
+        console.log(rebooks)
+
+        newItems.forEach(function (item, index) {
+          const { day, month, date, year, hour, minute } = rebooks[item.id.toString()]
+
+          item.time = { day, month, date, year, hour, minute }
+        })
+
+        setItems(newItems)
+      } else if (data.type == "salonChangeAppointment") {
         const newItems = [...items]
 				const { id, time, worker } = data
 
