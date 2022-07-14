@@ -1,28 +1,20 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, SafeAreaView, View, Text, TouchableOpacity } from 'react-native';
-import { tr } from '../../assets/translate'
 
 export default function Disable(props) {
-  const { ownerId, close } = props.route.params
-  const [language, setLanguage] = useState('')
-
-  const initialize = () => {
-    tr.locale = await AsyncStorage.getItem("language")
-
-    setLanguage(await AsyncStorage.getItem("language"))
-  }
-
-  useEffect(() => {
-    initialize()
-  }, [])
+  const { close } = props.route.params
 
   return (
     <SafeAreaView style={styles.disabled}>
       <View style={styles.disabledContainer}>
-        <Text style={styles.disabledHeader}>{tr.t("disableHeader")}</Text>
+        <Text style={styles.disabledHeader}>
+          There is an update to the app{'\n'}
+          Please wait a moment{'\n'}
+          Or tap 'Close'
+        </Text>
 
         <TouchableOpacity style={styles.disabledClose} onPress={close}>
-          <Text style={styles.disabledCloseHeader}>{tr.t("buttons.close")}</Text>
+          <Text style={styles.disabledCloseHeader}>Close</Text>
         </TouchableOpacity>
 
         <ActivityIndicator size="large"/>

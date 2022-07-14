@@ -136,21 +136,9 @@ export default function Seeorders(props) {
 
       {showDisabledScreen && (
         <Modal transparent={true}>
-          <SafeAreaView style={styles.disabled}>
-            <View style={styles.disabledContainer}>
-              <Text style={styles.disabledHeader}>
-                There is an update to the app{'\n\n'}
-                Please wait a moment{'\n\n'}
-                or tap 'Close'
-              </Text>
-
-              <TouchableOpacity style={styles.disabledClose} onPress={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}>
-                <Text style={styles.disabledCloseHeader}>Close</Text>
-              </TouchableOpacity>
-
-              <ActivityIndicator size="large"/>
-            </View>
-          </SafeAreaView>
+          <Disable 
+            close={() => socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))}
+          />
         </Modal>
       )}
     </SafeAreaView>
