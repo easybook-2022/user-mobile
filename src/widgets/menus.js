@@ -161,12 +161,14 @@ export default function Menus(props) {
     }, [useIsFocused()])
   )
 
+  const header = type == "restaurant" && "meal" || type == "store" && "product" || type == "salon" && "service"
+
   return (
     <View style={styles.box}>
       {loaded ? 
         <View style={{ alignItems: 'center' }}>
           <TouchableOpacity style={styles.openInput} onPress={() => setRequestinfo({ ...requestInfo, show: true })}>
-            <Text style={styles.openInputHeader}>Type in service</Text>
+            <Text style={styles.openInputHeader}>Type in {header}</Text>
           </TouchableOpacity>
           <ScrollView style={{ height: '90%', width: '100%' }}>
             <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}</View>
@@ -189,11 +191,7 @@ export default function Menus(props) {
                   <View style={styles.menuInputBox}>
                     <TextInput 
                       style={styles.menuInput} type="text" 
-                      placeholder={
-                        "Enter " + 
-                        (type == "restaurant" && "meal" || type == "store" && "product" || type == "salon" && "service") 
-                        + " # or name"
-                      } 
+                      placeholder={"Enter " + header + " # or name"} 
                       placeholderTextColor="rgba(0, 0, 0, 0.5)"
                       onChangeText={(info) => setRequestinfo({ ...requestInfo, search: info, error: false })} maxLength={37} autoCorrect={false} autoCapitalize="none"
                     />

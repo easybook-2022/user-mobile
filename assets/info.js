@@ -29,7 +29,7 @@ const useInput = true
 
 const signin = test_input ? testUsers[0] : useInput ? realUsers[0] : emptyUser
 
-const host = "192.168.2.107"
+const host = "10.0.0.60"
 const wifi_api_url = "http://" + host + ":5001/flask"
 const wifi_socket_url = "http://" + host + ":5002"
 const server_api_url = "https://www.easygo.tk/flask"
