@@ -1,41 +1,43 @@
 import axios from 'axios'
 import { url } from '../../assets/info'
 
+const beginUrl = `${url}/locations/`
+
 export const getLocations = data => {
 	return axios.post(
-		`${url}/locations/get_locations`,
+		`${beginUrl}get_locations`,
 		data
 	)
 }
 
 export const getMoreLocations = data => {
 	return axios.post(
-		`${url}/locations/get_more_locations`,
+		`${beginUrl}get_more_locations`,
 		data
 	)
 }
 
 export const getLocationProfile = data => {
 	return axios.post(
-		`${url}/locations/get_location_profile`,
+		`${beginUrl}get_location_profile`,
 		data
 	)
 }
 
 export const makeReservation = data => {
 	return axios.post(
-		`${url}/locations/make_reservation`,
+		`${beginUrl}make_reservation`,
 		data
 	)
 }
 
 export const getLocationHours = id => {
-	return axios.get(`${url}/locations/get_location_hours/${id}`)
+	return axios.get(`${beginUrl}get_location_hours/${id}`)
 }
 
 export const getDayHours = data => {
   return axios.post(
-    `${url}/locations/get_day_hours`,
+    `${beginUrl}get_day_hours`,
     data
   )
 }

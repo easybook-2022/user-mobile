@@ -206,8 +206,6 @@ export default function Booktime(props) {
       currTime.getFullYear()
     ), timeStr = ""
 
-    console.log("              ")
-
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
         day.num = 0
@@ -250,8 +248,6 @@ export default function Booktime(props) {
             !(days[dayindex].substr(0, 3) in selectedWorkerinfo.hours)
             :
             !(days[dayindex].substr(0, 3) in allWorkerstime)
-
-          console.log(daynum, day.passed, day.noservice, allWorkerstime)
 
           if (!day.noservice) {
             if (selectedWorkerinfo.id > -1 && days[dayindex].substr(0, 3) in selectedWorkerinfo.hours) {
@@ -411,8 +407,8 @@ export default function Booktime(props) {
     const { date, day, month, year } = selectedDateinfo, { blocked } = bookedDateinfo
     const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
     const numBlockTaken = scheduleid ? 1 + blocked.length : 0
-    let start = day in allWorkerstime ? allWorkerstime[day][0]["start"] : openHour + ":" + openMinute
-    let end = day in allWorkerstime ? allWorkerstime[day][0]["end"] : closeHour + ":" + closeMinute
+    let start = openHour + ":" + openMinute
+    let end = closeHour + ":" + closeMinute
     let timeStr = month + " " + date + " " + year + " "
     let openDateStr = Date.parse(timeStr + start), closeDateStr = Date.parse(timeStr + end), calcDateStr = openDateStr
     let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0

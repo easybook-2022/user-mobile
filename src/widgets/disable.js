@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, SafeAreaView, View, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, SafeAreaView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 export default function Disable(props) {
   const { close } = props.route.params

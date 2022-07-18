@@ -191,7 +191,7 @@ export default function Userauth(props) {
 					<AntDesign style={styles.authBoxClose} name="closecircleo" size={wsize(8)} onPress={() => props.close()}/>
 
           <View style={styles.welcomeBox}>
-            <Text style={styles.boxHeader}>Welcome to EasyGO</Text>
+            <Text style={styles.boxHeader}>Welcome to EasyBook</Text>
             <Text style={styles.boxHeader}>We show you the nearest services</Text>
 
             {!authInfo.noAccount ? 

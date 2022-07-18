@@ -19,6 +19,7 @@ import { getNumCartItems } from '../apis/carts'
 import Orders from '../components/orders'
 
 // widgets
+import Disable from '../widgets/disable'
 import Userauth from '../widgets/userauth'
 import NotificationsBox from '../widgets/notification'
 
@@ -224,7 +225,7 @@ export default function Main(props) {
 		}
 
 		const { data } = await Notifications.getExpoPushTokenAsync({
-			experienceId: "@robogram/easygo-user"
+			experienceId: "@robogram/serviceapp-user"
 		})
 
 		if (userid) {

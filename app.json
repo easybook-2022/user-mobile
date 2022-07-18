@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "EasyGO U",
-    "slug": "easygo-user",
+    "name": "EasyBook U",
+    "slug": "serviceapp-user",
     "version": "0.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -31,9 +31,9 @@
       "bundleIdentifier": "com.geottuse.serviceapp.user",
       "buildNumber": "0",
       "infoPlist": {
-        "NSCameraUsageDescription": "EasyGO (User) uses camera to allow you to take a profile picture",
-        "NSMicrophoneUsageDescription": "EasyGO (User) does not need microphone",
-        "NSLocationWhenInUseUsageDescription": "EasyGO (User) tracks you to show you the nearest restaurants, salons and stores"
+        "NSCameraUsageDescription": "EasyBook (User) uses camera to allow you to take a profile picture",
+        "NSMicrophoneUsageDescription": "EasyBook (User) does not need microphone",
+        "NSLocationWhenInUseUsageDescription": "EasyBook (User) tracks you to show you the nearest restaurants, salons and stores"
       }
     },
     "android": {
