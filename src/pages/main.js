@@ -417,7 +417,18 @@ export default function Main(props) {
                                   props.navigation.navigate(item.nav, { locationid: item.id })
                                 }}>
                                   <View style={styles.locationPhotoHolder}>
-                                    <Image source={{ uri: logo_url + item.logo.name }} style={resizePhoto(item.logo, wsize(30))}/>
+                                    <Image source={
+                                      item.logo.name ? { uri: ogo_url + item.logo.name } : 
+                                        (
+                                          item.service == "store" && require("../../assets/store-profile.png")
+                                          ||
+                                          item.service == "restaurant" && require("../../assets/restaurant-profile.png")
+                                          ||
+                                          item.service == "hair" && require("../../assets/hairsalon-profile.png")
+                                          ||
+                                          item.service == "nail" && require("../../assets/nailsalon-profile.png")
+                                        )
+                                    } style={resizePhoto(item.logo, wsize(25))}/>
                                   </View>
 
                                   <Text style={styles.locationHeader}>{item.name}</Text>
@@ -425,9 +436,8 @@ export default function Main(props) {
 
                                   <View style={styles.locationAction}>
                                     <Text>
-                                      {item.service == "restaurant" && "Order"}
+                                      {(item.service == "restaurant" || item.service == "store") && "Order"}
                                       {(item.service == "hair" || item.service == "nail") && "Book"}
-                                      {item.service == "store" && "Order"}
                                       {' '}now
                                     </Text>
                                   </View>
@@ -557,7 +567,7 @@ const styles = StyleSheet.create({
 	rowHeader: { fontSize: wsize(6), fontWeight: 'bold', margin: 10 },
 	
 	location: { alignItems: 'center', flexDirection: 'column', justifyContent: 'space-between', margin: 5, width: wsize(40) },
-	locationPhotoHolder: { backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(30) / 2, flexDirection: 'column', height: wsize(30), justifyContent: 'space-around', overflow: 'hidden', width: wsize(30) },
+	locationPhotoHolder: { alignItems: 'center', backgroundColor: 'rgba(127, 127, 127, 0.2)', borderRadius: wsize(30) / 2, flexDirection: 'column', height: wsize(30), justifyContent: 'space-around', overflow: 'hidden', width: wsize(30) },
 	locationHeader: { fontSize: wsize(6), fontWeight: 'bold', textAlign: 'center' },
   locationAction: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   locationActionHeader: { textAlign: 'center' },

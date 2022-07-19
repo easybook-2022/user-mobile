@@ -34,7 +34,6 @@ export default function Booktime(props) {
   const pushtime = 1000 * (60 * 15)
 
   const { locationid, serviceid, serviceinfo } = props.route.params
-  const func = props.route.params
   const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
   const [userId, setUserid] = useState(null)
@@ -845,7 +844,6 @@ export default function Booktime(props) {
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
             <TouchableOpacity style={styles.bottomNav} onPress={() => {
-              props.navigation.setParams({})
               props.navigation.dispatch(StackActions.popToTop())
             }}>
               <Entypo name="home" size={wsize(7)}/>
