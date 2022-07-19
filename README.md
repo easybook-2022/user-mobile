@@ -12,4 +12,6 @@ xcrun -k --sdk iphoneos --show-sdk-path
 sudo xcode-select --switch /Applications/Xcode.app
 
 # (android)
-keytool -export -rfc -alias upload -file upload_certificate.pem -keystore keystore.jks
+expo credentials:manager, create keystore
+expo fetch:android:keystore, fetch keystore and its information from expo
+keytool -export -rfc -alias <alias_copy_from_fetch> -file upload_certificate.pem -keystore serviceapp-user.jks

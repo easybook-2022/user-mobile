@@ -31,8 +31,6 @@ export default function Itemprofile(props) {
 	const [itemNote, setItemnote] = useState('')
 	const [itemImage, setItemimage] = useState({ name: "", height: 0, width: 0 })
 	const [itemPrice, setItemprice] = useState(0)
-	const [options, setOptions] = useState([])
-	const [others, setOthers] = useState([])
 	const [sizes, setSizes] = useState([])
 	const [quantity, setQuantity] = useState(1)
 	const [cost, setCost] = useState(0)
@@ -42,7 +40,7 @@ export default function Itemprofile(props) {
 	const [userId, setUserid] = useState(null)
   const [loaded, setLoaded] = useState(false)
 
-	const [orderingItem, setOrderingitem] = useState({ name: "", image: "", options: [], others: [], sizes: [], quantity: 0, cost: 0 })
+	const [orderingItem, setOrderingitem] = useState({ name: "", image: "", sizes: [], quantity: 0, cost: 0 })
 
 	const [openOrders, setOpenorders] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(2)
@@ -70,30 +68,6 @@ export default function Itemprofile(props) {
 				})
 		}
 	}
-	const changeAmount = (index, action) => {
-		let newOptions = [...options]
-		let { selected } = newOptions[index]
-
-		selected = action == "+" ? selected + 1 : selected - 1
-
-		if (selected >= 0) {
-			newOptions[index].selected = selected
-
-			setOptions(newOptions)
-		}
-	}
-	const changePercentage = (index, action) => {
-		let newOptions = [...options]
-		let { selected } = newOptions[index]
-
-		selected = action == "+" ? selected + 10 : selected - 10
-
-		if (selected >= 0 && selected <= 100) {
-			newOptions[index].selected = selected
-
-			setOptions(newOptions)
-		}
-	}
 	const selectSize = (index) => {
 		let newSizes = [...sizes]
 		let newCost = cost
@@ -110,25 +84,6 @@ export default function Itemprofile(props) {
 		newCost = quantity * parseFloat(newSizes[index].price)
 
 		setSizes(newSizes)
-		setCost(newCost)
-	}
-	const selectOther = (index) => {
-		let newOthers = [...others]
-		let newCost = parseFloat(cost)
-
-		newOthers.forEach(function (other, otherindex) {
-			if (otherindex == index) {
-				if (other.selected) {
-					newCost -= parseFloat(other.price)
-				} else {
-					newCost += parseFloat(other.price)
-				}
-
-				other.selected = !other.selected
-			}
-		})
-
-		setOthers(newOthers)
 		setCost(newCost)
 	}
 	const changeQuantity = (action) => {
@@ -165,8 +120,6 @@ export default function Itemprofile(props) {
       setShowauth({ ...showAuth, show: false })
 
 			let callfor = [], receiver = []
-			let newOptions = JSON.parse(JSON.stringify(options))
-			let newOthers = JSON.parse(JSON.stringify(others))
 			let newSizes = JSON.parse(JSON.stringify(sizes))
 			let size = "", price = 0
       
@@ -182,14 +135,6 @@ export default function Itemprofile(props) {
 				} else {
 					price = itemPrice * quantity
 				}
-
-				newOptions.forEach(function (option) {
-					delete option['key']
-				})
-
-				newOthers.forEach(function (other) {
-					delete other['key']
-				})
 			}
       
 			if (price || productinfo) {
@@ -199,7 +144,7 @@ export default function Itemprofile(props) {
 					productinfo: productinfo ? productinfo : "", 
 					quantity, 
 					callfor, 
-					options: newOptions, others: newOthers, sizes: newSizes, 
+					sizes: newSizes, 
 					note: itemNote, type, 
 					receiver
 				}
@@ -240,15 +185,13 @@ export default function Itemprofile(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { productImage, name, options, others, sizes, price } = res.productInfo
+					const { productImage, name, sizes, price, cost } = res.productInfo
 
 					setItemname(name)
 					setItemimage(productImage)
 					setItemprice(price)
-					setOptions(options)
-					setOthers(others)
 					setSizes(sizes)
-					setCost(quantity * price)
+					setCost(cost)
           setLoaded(true)
 				}
 			})
@@ -286,73 +229,6 @@ export default function Itemprofile(props) {
   					</View>
 
   					<Text style={styles.boxHeader}>{itemName ? itemName : productinfo}</Text>
-
-  					{options.map((option, index) => (
-  						<View key={option.key} style={{ alignItems: 'center' }}>
-  							<View style={styles.info}>
-  								<Text style={styles.infoHeader}>{option.header}:</Text>
-
-  								{option.type == "amount" && (
-  									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  										<View style={styles.amount}>
-  											<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "-")}>
-  												<Text style={styles.amountActionHeader}>-</Text>
-  											</TouchableOpacity>
-  											<Text style={styles.amountHeader}>{option.selected}</Text>
-  											<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "+")}>
-  												<Text style={styles.amountActionHeader}>+</Text>
-  											</TouchableOpacity>
-  										</View>
-  									</View>
-  								)}
-
-  								{option.type == "percentage" && (
-  									<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-  										<View style={styles.percentage}>
-  											<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "-")}>
-  												<Text style={styles.percentageActionHeader}>-</Text>
-  											</TouchableOpacity>
-  											<Text style={styles.percentageHeader}>{option.selected}%</Text>
-  											<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "+")}>
-  												<Text style={styles.percentageActionHeader}>+</Text>
-  											</TouchableOpacity>
-  										</View>
-  									</View>
-  								)}
-  							</View>
-  						</View>
-  					))}
-
-  					{others.length > 0 && (
-  						<View style={styles.othersBox}>
-  							<Text style={styles.othersHeader}>Other options</Text>
-
-  							<View style={styles.others}>
-  								{others.map((other, index) => (
-  									<View key={other.key} style={{ alignItems: 'center' }}>
-  										<View style={styles.other}>
-  											<View style={{ flexDirection: 'row' }}>
-  												<Text style={styles.otherName}># {other.name}:</Text>
-  												<Text style={styles.otherInput}>{other.input}</Text>
-  											</View>
-  											<View style={{ flexDirection: 'row', marginTop: 10 }}>
-  												<Text style={styles.otherPrice}>$ {other.price}</Text>
-
-  												<View style={styles.otherActions}>
-  													<TouchableOpacity style={other.selected ? styles.otherActionLeftDisabled : styles.otherActionLeft} onPress={() => selectOther(index)}>
-  														<Text style={[styles.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
-  													</TouchableOpacity>
-  													<TouchableOpacity style={!other.selected ? styles.otherActionRightDisabled : styles.otherActionRight} onPress={() => selectOther(index)}>
-  														<Text style={[styles.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
-  													</TouchableOpacity>
-  												</View>
-  											</View>
-  										</View>
-  									</View>
-  								))}
-  							</View>
-  						</View>
-  					)}
 
   					{sizes.length > 0 && (
   						<View style={styles.sizesBox}>
@@ -441,7 +317,7 @@ export default function Itemprofile(props) {
   							</TouchableOpacity>
   						)}
 
-  						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
+  						<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main" }]}))}>
   							<Entypo name="home" size={30}/>
   						</TouchableOpacity>
 
@@ -466,7 +342,7 @@ export default function Itemprofile(props) {
           }} showNotif={() => {
   					setOpenorders(false)
   					setTimeout(function () {
-              props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
+              props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main", params: { showNotif: true }}]}))
   					}, 1000)
   				}} close={() => {
   					getTheNumCartItems()
@@ -514,20 +390,6 @@ const styles = StyleSheet.create({
 	percentage: { flexDirection: 'row', justifyContent: 'space-between', width: 100 },
 	percentageAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
 	percentageHeader: { fontSize: wsize(4), fontWeight: 'bold', padding: 10 },
-
-	// others
-	othersBox: { alignItems: 'center', marginVertical: 20 },
-	othersHeader: { fontWeight: 'bold' },
-	others: { marginVertical: 20, width: '100%' },
-	other: {  },
-	otherName: { fontSize: wsize(5), fontWeight: 'bold' },
-	otherInput: { fontSize: wsize(5) },
-	otherPrice: { fontWeight: 'bold', marginRight: 10, marginTop: 5 },
-	otherActions: { flexDirection: 'row', marginTop: -5 },
-	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
-	otherActionLeftDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
-	otherActionRight: { alignItems: 'center', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
-	otherActionRightDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
 
 	// sizes
 	sizesBox: { alignItems: 'center', marginVertical: 20 },

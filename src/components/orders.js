@@ -26,46 +26,12 @@ export default function Orders(props) {
 	const [showConfirm, setShowconfirm] = useState(false)
 	const [itemInfo, setIteminfo] = useState({ 
 		show: false, cartid: "", name: "", info: "", note: "", 
-		image: "", price: "", options: [], others: [], sizes: [], quantity: 1, cost: 0,
+		image: "", price: "", sizes: [], quantity: 1, cost: 0,
 		errorMsg: ""
 	})
 	const [errorMsg, setErrormsg] = useState('')
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
-	
-	const changeOption = (index, selected) => {
-		let { options } = itemInfo
-		let newOptions = [...options]
 
-		newOptions[index].selected = selected
-
-		setIteminfo({ ...itemInfo, options: newOptions })
-	}
-	const changeAmount = (index, action) => {
-		let { options } = itemInfo
-		let newOptions = [...options]
-		let { selected } = newOptions[index]
-
-		selected = action == "+" ? selected + 1 : selected - 1
-
-		if (selected >= 0) {
-			newOptions[index].selected = selected
-
-			setIteminfo({ ...itemInfo, options: newOptions })
-		}
-	}
-	const changePercentage = (index, action) => {
-		let { options } = itemInfo
-		let newOptions = [...options]
-		let { selected } = newOptions[index]
-
-		selected = action == "+" ? selected + 10 : selected - 10
-
-		if (selected >= 0 && selected <= 100) {
-			newOptions[index].selected = selected
-
-			setIteminfo({ ...itemInfo, options: newOptions })
-		}
-	}
 	const selectSize = (index) => {
 		let { sizes, quantity, cost } = itemInfo
 		let newSizes = [...sizes]
@@ -112,7 +78,7 @@ export default function Orders(props) {
 		})
 	}
 	const changeQuantity = (action) => {
-		let { price, others, sizes, quantity } = itemInfo
+		let { price, sizes, quantity } = itemInfo
 		let newQuantity = quantity
 		let newCost = 0
 
@@ -131,12 +97,6 @@ export default function Orders(props) {
 		} else {
 			newCost += newQuantity * parseFloat(price)
 		}
-
-		others.forEach(function (other) {
-			if (other.selected) {
-				newCost += parseFloat(other.price)
-			}
-		})
 
 		setIteminfo({
 			...itemInfo,
@@ -179,14 +139,14 @@ export default function Orders(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, info, image, quantity, options, others, sizes, note, price, cost } = res.cartItem
+					const { name, info, image, quantity, sizes, note, price, cost } = res.cartItem
 
 					setIteminfo({
 						...itemInfo,
 						show: true,
 						cartid,
 						name, info, image,
-						quantity, note, options, others, sizes,
+						quantity, note, sizes,
 						price, cost
 					})
 				}
@@ -198,26 +158,14 @@ export default function Orders(props) {
 			})
 	}
 	const updateTheCartItem = () => {
-		const { cartid, quantity, options, others, sizes, note } = itemInfo
-		const newOptions = JSON.parse(JSON.stringify(options))
-		const newOthers = JSON.parse(JSON.stringify(others))
+		const { cartid, quantity, sizes, note } = itemInfo
 		const newSizes = JSON.parse(JSON.stringify(sizes))
 		const data = { cartid, quantity, note }
-
-		newOptions.forEach(function (option) {
-			delete option['key']
-		})
-
-		newOthers.forEach(function (other) {
-			delete other['key']
-		})
 
 		newSizes.forEach(function (size) {
 			delete size['key']
 		})
 
-		data['options'] = newOptions
-		data['others'] = newOthers
 		data['sizes'] = newSizes
 
     setLoaded(false)
@@ -413,24 +361,6 @@ export default function Orders(props) {
     												<View style={styles.itemInfos}>
     													<Text style={styles.itemName}>{item.name}</Text>
 
-    													{item.options.map((option, infoindex) => (
-    														<Text key={option.key} style={styles.itemInfo}>
-    															<Text style={{ fontWeight: 'bold' }}>{option.header}: </Text> 
-    															{option.selected}
-    															{option.type == 'percentage' && '%'}
-    														</Text>
-    													))}
-
-    													{item.others.map((other, otherindex) => (
-    														other.selected ? 
-    															<Text key={other.key} style={styles.itemInfo}>
-    																<Text style={{ fontWeight: 'bold' }}>{other.name}: </Text>
-    																<Text>{other.input}</Text>
-    																<Text>($ {other.price})</Text>
-    															</Text>
-    														: null
-    													))}
-
     													{item.sizes.map((size, sizeindex) => (
     														size.selected ? 
     															<Text key={size.key} style={styles.itemInfo}>
@@ -440,7 +370,10 @@ export default function Orders(props) {
     														: null
     													))}
     												</View>
-    												<Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+      											<View>
+                              <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
+                              <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Cost:</Text>$ {item.cost}</Text>
+                            </View>
     											</View>
 
     											<View style={{ alignItems: 'center' }}>
@@ -522,73 +455,6 @@ export default function Orders(props) {
 							<Text style={styles.boxItemHeader}>{itemInfo.name}</Text>
 							<Text style={styles.boxItemHeaderInfo}>{itemInfo.info}</Text>
 
-							{itemInfo.options.map((option, index) => (
-								<View key={option.key} style={{ alignItems: 'center' }}>
-									<View style={styles.info}>
-										<Text style={styles.infoHeader}>{option.header}:</Text>
-
-										{option.type == "amount" && (
-											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-												<View style={styles.amount}>
-													<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "-")}>
-														<Text style={styles.amountActionHeader}>-</Text>
-													</TouchableOpacity>
-													<Text style={styles.amountHeader}>{option.selected}</Text>
-													<TouchableOpacity style={styles.amountAction} onPress={() => changeAmount(index, "+")}>
-														<Text style={styles.amountActionHeader}>+</Text>
-													</TouchableOpacity>
-												</View>
-											</View>
-										)}
-
-										{option.type == "percentage" && (
-											<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-												<View style={styles.percentage}>
-													<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "-")}>
-														<Text style={styles.percentageActionHeader}>-</Text>
-													</TouchableOpacity>
-													<Text style={styles.percentageHeader}>{option.selected}%</Text>
-													<TouchableOpacity style={styles.percentageAction} onPress={() => changePercentage(index, "+")}>
-														<Text style={styles.percentageActionHeader}>+</Text>
-													</TouchableOpacity>
-												</View>
-											</View>
-										)}
-									</View>
-								</View>
-							))}
-
-							{itemInfo.others.length > 0 && (
-								<View style={styles.othersBox}>
-									<Text style={styles.othersHeader}>Other options</Text>
-
-									<View style={styles.others}>
-										{itemInfo.others.map((other, index) => (
-											<View key={other.key} style={{ alignItems: 'center' }}>
-												<View style={styles.other}>
-													<View style={{ flexDirection: 'row' }}>
-														<Text style={styles.otherName}># {other.name}:</Text>
-														<Text style={styles.otherInput}>{other.input}</Text>
-													</View>
-													<View style={{ flexDirection: 'row', marginTop: 10 }}>
-														<Text style={styles.otherPrice}>$ {other.price}</Text>
-
-														<View style={styles.otherActions}>
-															<TouchableOpacity style={other.selected ? styles.otherActionLeftDisabled : styles.otherActionLeft} onPress={() => selectOther(index)}>
-																<Text style={[styles.otherActionHeader, { color: other.selected ? 'white' : 'black' }]}>Yes</Text>
-															</TouchableOpacity>
-															<TouchableOpacity style={!other.selected ? styles.otherActionRightDisabled : styles.otherActionRight} onPress={() => selectOther(index)}>
-																<Text style={[styles.otherActionHeader, { color: !other.selected ? 'white' : 'black' }]}>No</Text>
-															</TouchableOpacity>
-														</View>
-													</View>
-												</View>
-											</View>
-										))}
-									</View>
-								</View>
-							)}
-
 							{itemInfo.sizes.length > 0 && (
 								<View style={styles.sizesBox}>
 									<Text style={styles.sizesHeader}>Select a Size</Text>
@@ -635,6 +501,8 @@ export default function Orders(props) {
                   </View>
 								</View>
 							</View>
+
+              <Text style={styles.boxItemHeader}>$ {itemInfo.cost}</Text>
 
 							{itemInfo.errorMsg ? <Text style={styles.errorMsg}>{itemInfo.errorMsg}</Text> : null}
 

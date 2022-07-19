@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, CommonActions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform, Text, View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -98,7 +98,12 @@ export default function App() {
             headerTitle: () => <Text style={styles.header}>Account Info</Text>,
             headerLeft: () => (
               Platform.OS == 'ios' && (
-                <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+                <TouchableOpacity style={styles.back} onPress={() => navigation.dispatch(
+                  CommmonActions.reset({
+                    index: 0,
+                    routes: [{ name: "main", params: { initialize: true }}]
+                  })
+                )}>
                   <Text style={styles.backHeader}>Go Back</Text>
                 </TouchableOpacity>
               )

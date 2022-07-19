@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { StackActions } from '@react-navigation/native';
+import { CommonActions, StackActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
@@ -580,7 +580,16 @@ export default function Booktime(props) {
               setTimeout(function () {
                 setConfirm({ ...confirm, show: false, requested: false })
 
-                props.navigation.dispatch(StackActions.popToTop())
+                props.navigation.dispatch(
+                  CommonActions.reset({ 
+                    index: 0, 
+                    routes: [{ 
+                      name: "main", 
+                      params: { initialize: true, showNotif: true }
+                    }]
+                  }
+                )
+              )
               }, 2000)
             })
           }
@@ -843,9 +852,7 @@ export default function Booktime(props) {
 
         <View style={styles.bottomNavs}>
           <View style={styles.bottomNavsRow}>
-            <TouchableOpacity style={styles.bottomNav} onPress={() => {
-              props.navigation.dispatch(StackActions.popToTop())
-            }}>
+            <TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(StackActions.popToTop())}>
               <Entypo name="home" size={wsize(7)}/>
             </TouchableOpacity>
             

@@ -43,7 +43,7 @@ export default function Profile(props) {
 
 	const [loaded, setLoaded] = useState(false)
 
-	const [openCart, setOpencart] = useState(false)
+	const [openOrders, setOpenorders] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
 
 	const getTheNumCartItems = async() => {
@@ -165,13 +165,13 @@ export default function Profile(props) {
 							)}
 
 							{userId && (
-								<TouchableOpacity style={styles.bottomNav} onPress={() => setOpencart(true)}>
+								<TouchableOpacity style={styles.bottomNav} onPress={() => setOpenorders(true)}>
 									<Entypo name="shopping-cart" size={wsize(7)}/>
 									{numCartItems > 0 && <Text style={styles.numCartItemsHeader}>{numCartItems}</Text>}
 								</TouchableOpacity>
 							)}
 
-							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main" }]}))}>
+							<TouchableOpacity style={styles.bottomNav} onPress={() => props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main" }]}))}>
 								<Entypo name="home" size={wsize(7)}/>
 							</TouchableOpacity>
 							<TouchableOpacity style={styles.bottomNav} onPress={() => {
@@ -195,17 +195,17 @@ export default function Profile(props) {
 				</View>
 			}
 
-			{openCart && <Modal><Orders showNotif={() => {
-				setOpencart(false)
+			{openOrders && <Modal><Orders showNotif={() => {
+				setOpenorders(false)
 				setTimeout(function () {
-          props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: "main", params: { showNotif: true }}]}))
+          props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main", params: { showNotif: true }}]}))
 				}, 1000)
 			}} navigate={() => {
-        setOpencart(false)
+        setOpenorders(false)
         props.navigation.navigate("account")
       }} close={() => {
 				getTheNumCartItems()
-				setOpencart(false)
+				setOpenorders(false)
 			}}/></Modal>}
 			{showAuth && (
 				<Modal transparent={true}>

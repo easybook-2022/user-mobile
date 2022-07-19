@@ -413,12 +413,11 @@ export default function Main(props) {
                                 <TouchableOpacity style={styles.location} onPress={() => {
                                   clearInterval(updateTrackUser)
                                   
-                                  props.navigation.setParams({ initialize: true, showNotif: true })
                                   props.navigation.navigate(item.nav, { locationid: item.id })
                                 }}>
                                   <View style={styles.locationPhotoHolder}>
                                     <Image source={
-                                      item.logo.name ? { uri: ogo_url + item.logo.name } : 
+                                      item.logo.name ? { uri: logo_url + item.logo.name } : 
                                         (
                                           item.service == "store" && require("../../assets/store-profile.png")
                                           ||
@@ -474,7 +473,6 @@ export default function Main(props) {
 							<TouchableOpacity style={styles.bottomNav} onPress={() => {
 								clearInterval(updateTrackUser)
 
-                props.navigation.setParams({ initialize: true })
 								props.navigation.navigate("account")
 							}}>
 								<FontAwesome5 name="user-circle" size={wsize(7)}/>
