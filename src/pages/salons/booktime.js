@@ -12,7 +12,7 @@ import { displayTime, resizePhoto } from 'geottuse-tools'
 import { getServiceInfo } from '../../apis/services'
 import { getLocationHours, getDayHours } from '../../apis/locations'
 import { getAllStylists, getStylistInfo, getAllWorkersTime, getWorkersHour } from '../../apis/owners'
-import { getAppointmentInfo, makeAppointment } from '../../apis/schedules'
+import { getAppointmentInfo, getExistBooking, makeAppointment } from '../../apis/schedules'
 import { getNumCartItems } from '../../apis/carts'
 
 // components
@@ -34,8 +34,8 @@ export default function Booktime(props) {
   const pushtime = 1000 * (60 * 15)
 
   const { locationid, serviceid, serviceinfo } = props.route.params
-  const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
+  const [scheduleId, setScheduleid] = useState(props.route.params.scheduleid ? props.route.params.scheduleid : null)
   const [userId, setUserid] = useState(null)
   const [name, setName] = useState('')
   const [hoursInfo, setHoursinfo] = useState({})
@@ -85,7 +85,7 @@ export default function Booktime(props) {
   const [numCartItems, setNumcartitems] = useState(0)
 
   const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
-  const [showTimetaken, setShowtimetaken] = useState({ show: false, time: '' })
+  const [showScheduleconflict, setShowscheduleconflict] = useState({ show: false, header: "" })
   const [openCart, setOpencart] = useState(false)
   const [showAuth, setShowauth] = useState({ show: false, booking: false })
 
@@ -133,7 +133,7 @@ export default function Booktime(props) {
       })
   }
   const getTheAppointmentInfo = async(fetchBlocked) => {
-    getAppointmentInfo(scheduleid)
+    getAppointmentInfo(scheduleId)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -173,6 +173,25 @@ export default function Booktime(props) {
           const { errormsg, status } = err.response.data
         }
       })
+  }
+  const getTheExistBooking = async() => {
+    const userid = await AsyncStorage.getItem("userid")
+
+    if (userid && serviceid && !scheduleId) {
+      const data = { userid, serviceid }
+
+      getExistBooking(data)
+        .then((res) => {
+          if (res.status == 200) {
+            return res.data
+          }
+        })
+        .then((res) => {
+          if (res) {
+            setScheduleid(res.scheduleid)
+          }
+        })
+    }
   }
   const getTheLocationHours = () => {
     getLocationHours(locationid)
@@ -405,7 +424,7 @@ export default function Booktime(props) {
   const selectDate = () => {
     const { date, day, month, year } = selectedDateinfo, { blocked } = bookedDateinfo
     const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
-    const numBlockTaken = scheduleid ? 1 + blocked.length : 0
+    const numBlockTaken = scheduleId ? 1 + blocked.length : 0
     let start = openHour + ":" + openMinute
     let end = closeHour + ":" + closeMinute
     let timeStr = month + " " + date + " " + year + " "
@@ -549,7 +568,7 @@ export default function Booktime(props) {
       })
 
       let data = { 
-        id: scheduleid, // id for socket purpose (updating)
+        id: scheduleId, // id for socket purpose (updating)
         userid: userId || id, 
         workerid: workerid > -1 ? workerid : workerIds[Math.floor(Math.random() * (workerIds.length - 1)) + 0], 
         locationid, 
@@ -557,7 +576,7 @@ export default function Booktime(props) {
         serviceinfo: serviceinfo ? serviceinfo : name,
         time: selecteddate, note: note ? note : "", 
         timeDisplay: displayTime(selecteddate),
-        type: scheduleid ? "remakeAppointment" : "makeAppointment",
+        type: scheduleId ? "remakeAppointment" : "makeAppointment",
         blocked, unix: time
       }
 
@@ -606,10 +625,10 @@ export default function Booktime(props) {
               case "confirmed":
               case "blocked":
                 // already taken, booking is late
-                setShowtimetaken({ ...showTimetaken, show: true, time })
+                setShowscheduleconflict({ ...showScheduleconflict, show: true, header: displayTime(time) + " has already been taken" })
 
                 setTimeout(function () {
-                  setShowtimetaken({ ...showTimetaken, show: false })
+                  setShowscheduleconflict({ ...showScheduleconflict, show: false, header: "" })
                 }, 2000)
 
                 setConfirm({ ...confirm, show: false, requested: false })
@@ -643,9 +662,10 @@ export default function Booktime(props) {
     getAllTheStylists()
     getTheLocationHours()
     getAllTheWorkersTime()
+    getTheExistBooking()
 
     if (serviceid) getTheServiceInfo()
-    if (scheduleid) getTheAppointmentInfo()
+    if (scheduleId) getTheAppointmentInfo()
 	}, [])
 
   useEffect(() => {
@@ -664,6 +684,10 @@ export default function Booktime(props) {
     if (Object.keys(scheduled).length > 0) selectDate()
   }, [scheduled])
 
+  useEffect(() => {
+    getTheAppointmentInfo()
+  }, [scheduleId])
+
 	return (
 		<SafeAreaView style={styles.booktime}>
 		  <View style={styles.box}>
@@ -678,7 +702,7 @@ export default function Booktime(props) {
           <>
             {step == 0 && (
               <View style={styles.workerSelection}>
-                <Text style={styles.workerSelectionHeader}>Pick a {!scheduleid ? '' : '\ndifferent'} stylist (Optional)</Text>
+                <Text style={styles.workerSelectionHeader}>Pick a {!scheduleId ? '' : '\ndifferent'} stylist (Optional)</Text>
 
                 <View style={styles.workersList}>
                   <FlatList
@@ -708,7 +732,7 @@ export default function Booktime(props) {
 
             {step == 1 && (
               <View style={styles.dateSelection}>
-                <Text style={styles.dateSelectionHeader}>Tap a {!scheduleid ? '' : '\ndifferent'} date below</Text>
+                <Text style={styles.dateSelectionHeader}>Tap a {!scheduleId ? '' : '\ndifferent'} date below</Text>
 
                 {!calendar.loading && (
                   <>
@@ -770,8 +794,8 @@ export default function Booktime(props) {
             {step == 2 && (
               <View style={styles.timesSelection}>
                 <ScrollView style={{ width: '100%' }}>
-                  <Text style={[styles.timesHeader, { fontSize: 15 }]}>{scheduleid && 'Current: ' + displayTime(oldTime)}</Text>
-                  <Text style={styles.timesHeader}>Tap a {!scheduleid ? '' : '\ndifferent'} time below</Text>
+                  <Text style={[styles.timesHeader, { fontSize: 15 }]}>{scheduleId && 'Current: ' + displayTime(oldTime)}</Text>
+                  <Text style={styles.timesHeader}>Tap a {!scheduleId ? '' : '\ndifferent'} time below</Text>
 
                   <View style={{ alignItems: 'center' }}>
                     <View style={styles.times}>
@@ -878,7 +902,7 @@ export default function Booktime(props) {
           </View>
         </View>
 			</View>
-
+      
       {confirm.show && (
         <Modal transparent={true}>
           <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -939,11 +963,11 @@ export default function Booktime(props) {
           </TouchableWithoutFeedback>
         </Modal>
       )}
-      {showTimetaken.show && (
+      {showScheduleconflict.show && (
         <Modal transparent={true}>
-          <SafeAreaView style={styles.timeTakenBox}>
-            <View style={styles.timeTakenContainer}>
-              <Text style={styles.timeTakenHeader}>{displayTime(showTimetaken.time)} has already been taken</Text>
+          <SafeAreaView style={styles.scheduleConflictBox}>
+            <View style={styles.scheduleConflict}>
+              <Text style={styles.scheduleConflictHeader}>{showScheduleconflict.header}</Text>
             </View>
           </SafeAreaView>
         </Modal>
@@ -1042,10 +1066,10 @@ const styles = StyleSheet.create({
   requestedHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(6), textAlign: 'center' },
   requestedHeaderInfo: { fontSize: wsize(7), fontWeight: 'bold', textAlign: 'center' },
 
-  // time taken alert box
-  timeTakenBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
-  timeTakenContainer: { backgroundColor: 'white', flexDirection: 'column', height: '30%', justifyContent: 'space-around', width: '90%' },
-  timeTakenHeader: { fontSize: wsize(6), textAlign: 'center' },
+  // schedule conflict alert box
+  scheduleConflictBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
+  scheduleConflict: { backgroundColor: 'white', flexDirection: 'column', height: '30%', justifyContent: 'space-around', width: '90%' },
+  scheduleConflictHeader: { fontSize: wsize(6), textAlign: 'center' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
   errorMsg: { color: 'darkred', fontSize: wsize(4), textAlign: 'center' },

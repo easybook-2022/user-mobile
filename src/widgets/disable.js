@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, SafeAreaView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 export default function Disable(props) {
-  const { close } = props.route.params
-
   return (
     <SafeAreaView style={styles.disabled}>
       <View style={styles.disabledContainer}>
@@ -13,7 +11,7 @@ export default function Disable(props) {
           Or tap 'Close'
         </Text>
 
-        <TouchableOpacity style={styles.disabledClose} onPress={close}>
+        <TouchableOpacity style={styles.disabledClose} onPress={props.close}>
           <Text style={styles.disabledCloseHeader}>Close</Text>
         </TouchableOpacity>
 

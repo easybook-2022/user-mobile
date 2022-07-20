@@ -28,3 +28,10 @@ export const getScheduleInfo = id => {
 export const getAppointmentInfo = id => {
   return axios.get(`${beginUrl}get_appointment_info/${id}`)
 }
+
+export const getExistBooking = data => {
+  return axios.post(
+    `${beginUrl}/get_exist_booking`,
+    data
+  )
+}
