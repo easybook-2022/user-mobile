@@ -21,13 +21,6 @@ export const cancelRequest = data => {
   )
 }
 
-export const sendServicePayment = data => {
-	return axios.post(
-		`${beginUrl}send_service_payment`,
-		data
-	)
-}
-
 export const getScheduleInfo = id => {
 	return axios.get(`${beginUrl}get_schedule_info/${id}`)
 }

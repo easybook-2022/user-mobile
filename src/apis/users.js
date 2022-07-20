@@ -47,14 +47,6 @@ export const getNotifications = id => {
 	return axios.get(`${beginUrl}get_notifications/${id}`)
 }
 
-export const selectUser = id => {
-	return axios.get(`${beginUrl}select_user/${id}`)
-}
-
-export const cancelRequest = id => {
-	return axios.get(`${beginUrl}cancel_request/${id}`)
-}
-
 export const getCode = phonenumber => {
 	return axios.get(`${beginUrl}get_reset_code/${phonenumber}`)
 }
