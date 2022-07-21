@@ -40,61 +40,107 @@ export default function Menus(props) {
         }
       })
   }
+  const displayListItem = (id, info) => {
+    return (
+      <View style={styles.item}>
+        <View style={styles.column}>
+          <View style={{ alignItems: 'center' }}>
+            {info.image.name && (
+              <View style={styles.itemImageHolder}>
+                <Image 
+                  style={resizePhoto(info.image, wsize(20))} 
+                  source={{ uri: logo_url + info.image.name }}
+                />
+              </View>
+            )}
+            <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+          </View>
+        </View>
+        <View style={styles.column}>
+          {info.sizes.length > 0 ? 
+            info.sizes.length > 2 ? 
+              <View>
+                <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[0].name}</Text>: $ {info.sizes[0].price}</Text>
+                <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[1].name}</Text>: $ {info.sizes[1].price}</Text>
+                <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[2].name}</Text>: $ {info.sizes[2].price}</Text>
+                
+                {info.sizes.length == 4 && <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[3].name}</Text>: $ {info.sizes[3].price}</Text>}
+
+                <Text style={{ fontWeight: 'bold' }}>({info.sizes.length}) sizes</Text>
+              </View>
+              :
+              info.sizes.map((size, index) => <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>$ {size.price}</Text>)
+            :
+            <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price} (1 size)</Text></View>
+          }
+        </View>
+        <View style={styles.column}>
+          <TouchableOpacity style={styles.itemAction} onPress={() => {
+            props.navigation.setParams({ initialize: true })
+
+            if (type == "salon") {
+              props.navigation.navigate(
+                "booktime", 
+                { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
+              )
+            } else if (type == "restaurant" || type == "store") {
+              props.navigation.navigate(
+                "itemprofile", 
+                { locationid, menuid: "", productid: info.id, productinfo: "", type }
+              )
+            }
+          }}>
+            <Text style={styles.itemActionHeader}>
+              {type == "store" || type == "restaurant" ? 
+                "Order now" 
+                : 
+                <Text><Text style={{ fontWeight: 'bold' }}>Book</Text> {info.name}</Text>
+              }
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    )
+  }
   const displayList = info => {
-    let { id, image, name, list, listType, left } = info
+    let { id, image, name, list, show } = info
 
     return (
-      <View style={{ marginLeft: left }}>
+      <View>
         {name ?
           <View style={styles.menu}>
             <View style={{ flexDirection: 'row' }}>
-              <View style={styles.menuImageHolder}>
-                <Image 
-                  style={resizePhoto(image, wsize(10))} 
-                  source={image.name ? { uri: logo_url + image.name } : require("../../assets/noimage.jpeg")}
-                />
+              {image.name && (
+                <View style={styles.menuImageHolder}>
+                  <Image 
+                    style={resizePhoto(image, wsize(10))} 
+                    source={{ uri: logo_url + image.name }}
+                  />
+                </View>
+              )}
+              <View style={styles.column}><Text style={styles.menuName}>({list.length}) {name} (Menu)</Text></View>
+              <View style={styles.column}>
+                <TouchableOpacity style={styles.menuShow} onPress={() => {
+                  const newList = [...menuInfo.list]
+
+                  newList.forEach(function (info) {
+                    if (info.id == id) {
+                      info.show = !info.show
+                    }
+                  })
+
+                  setMenuinfo({ ...menuInfo, list: newList })
+                }}>
+                  <Text style={styles.menuShowHeader}>{show ? "Hide" : "Show"}</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
             </View>
             {list.length > 0 && list.map((info, index) => (
               <View key={"list-" + index}>
                 {info.listType == "list" ? 
-                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left + 10 })
+                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show })
                   :
-                  <View style={styles.item}>
-                    <View style={styles.itemImageHolder}>
-                      <Image 
-                        style={resizePhoto(info.image, wsize(20))} 
-                        source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
-                      />
-                    </View>
-                    <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
-                    <View style={styles.column}>
-                      <TouchableOpacity style={styles.itemAction} onPress={() => {
-                        props.navigation.setParams({ initialize: true })
-
-                        if (type == "salon") {
-                          props.navigation.navigate(
-                            "booktime", 
-                            { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
-                          )
-                        } else if (type == "restaurant" || type == "store") {
-                          props.navigation.navigate(
-                            "itemprofile", 
-                            { locationid, menuid: "", productid: info.id, productinfo: "", type }
-                          )
-                        }
-                      }}>
-                        <Text style={styles.itemActionHeader}>
-                          {type == "store" || type == "restaurant" ? 
-                            "Order now" 
-                            : 
-                            <Text><Text style={{ fontWeight: 'bold' }}>Book</Text> {info.name}</Text>
-                          }
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
+                  show && <View>{displayListItem(id, info)}</View>
                 }
               </View>
             ))}
@@ -103,42 +149,9 @@ export default function Menus(props) {
           list.map((info, index) => (
             <View key={"list-" + index}>
               {info.listType == "list" ? 
-                displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, left: left == 0 ? left : left + 10 })
+                displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show })
                 :
-                <View style={styles.item}>
-                  <View style={styles.itemImageHolder}>
-                    <Image 
-                      style={resizePhoto(info.image, wsize(20))} 
-                      source={info.image.name ? { uri: logo_url + info.image.name } : require("../../assets/noimage.jpeg")}
-                    />
-                  </View>
-                  <View style={styles.column}><Text style={styles.itemHeader}>{info.price ? '$' + info.price : info.sizes.length + ' size(s)'}</Text></View>
-                  <View style={styles.column}>
-                    <TouchableOpacity style={styles.itemAction} onPress={() => {
-                      props.navigation.setParams({ initialize: true })
-
-                      if (type == "salon") {
-                        props.navigation.navigate(
-                          "booktime", 
-                          { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
-                        )
-                      } else if (type == "restaurant" || type == "store") {
-                        props.navigation.navigate(
-                          "itemprofile", 
-                          { locationid, menuid: "", productid: info.id, productinfo: "", type }
-                        )
-                      }
-                    }}>
-                      <Text style={styles.itemActionHeader}>
-                        {type == "store" || type == "restaurant" ? 
-                            "Order now" 
-                            : 
-                            <Text><Text style={{ fontWeight: 'bold' }}>Book</Text> {info.name}</Text>
-                          }
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
+                show && <View>{displayListItem(id, info)}</View>
               }
             </View>
           ))
@@ -161,7 +174,9 @@ export default function Menus(props) {
     }, [useIsFocused()])
   )
 
-  const header = type == "restaurant" && "meal" || type == "store" && "product" || type == "salon" && "service"
+  const header = type == "restaurant" && "meal" || 
+                type == "store" && "product" || 
+                type == "salon" && "service"
 
   return (
     <View style={styles.box}>
@@ -171,7 +186,7 @@ export default function Menus(props) {
             <Text style={styles.openInputHeader}>Type in {header}</Text>
           </TouchableOpacity>
           <ScrollView style={{ height: '90%', width: '100%' }}>
-            <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list, left: 0 })}</View>
+            <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list })}</View>
           </ScrollView>
         </View>
         :
@@ -278,16 +293,18 @@ const styles = StyleSheet.create({
   menuInputError: { color: 'darkred', marginLeft: 10 },
   menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
-  menu: { backgroundColor: 'white', borderTopLeftRadius: 3, borderTopRightRadius: 3, padding: 3 },
+  menu: { borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 40, padding: 3 },
   menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-  menuName: { fontSize: wsize(6), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
+  menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
+  menuShow: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+  menuShowHeader: { fontSize: wsize(4), textAlign: 'center' },
   itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
-  item: { backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3, width: '100%' },
+  item: { backgroundColor: 'white', borderRadius: 3, flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3, padding: 5, width: '100%' },
   itemImageHolder: { borderRadius: wsize(20) / 2, flexDirection: 'column', height: wsize(20), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(20) },
-  itemHeader: { fontSize: wsize(6), fontWeight: 'bold' },
+  itemHeader: { fontSize: wsize(5), fontWeight: 'bold' },
   itemActions: { flexDirection: 'row', marginTop: 0 },
   itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-  itemActionHeader: { fontSize: wsize(5), textAlign: 'center' },
+  itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
 })
