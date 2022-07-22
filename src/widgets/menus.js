@@ -69,7 +69,7 @@ export default function Menus(props) {
                 <Text style={{ fontWeight: 'bold' }}>({info.sizes.length}) sizes</Text>
               </View>
               :
-              info.sizes.map((size, index) => <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>$ {size.price}</Text>)
+              info.sizes.map((size, index) => <Text key={index} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>$ {size.price}</Text>)
             :
             <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price} (1 size)</Text></View>
           }
@@ -103,7 +103,7 @@ export default function Menus(props) {
     )
   }
   const displayList = info => {
-    let { id, image, name, list, show } = info
+    let { id, image, name, list, show = true } = info
 
     return (
       <View>
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   menuInputError: { color: 'darkred', marginLeft: 10 },
   menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
-  menu: { borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 40, padding: 3 },
+  menu: { borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3 },
   menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
   menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
   menuShow: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
