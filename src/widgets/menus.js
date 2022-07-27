@@ -54,6 +54,7 @@ export default function Menus(props) {
               </View>
             )}
             <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+            <View style={styles.column}><Text style={styles.itemMiniHeader}>{info.description}</Text></View>
           </View>
         </View>
         <View style={styles.column}>
@@ -109,7 +110,7 @@ export default function Menus(props) {
       <View>
         {name ?
           <View style={styles.menu}>
-            <View style={{ flexDirection: 'row' }}>
+            <View style={styles.menuRow}>
               {image.name && (
                 <View style={styles.menuImageHolder}>
                   <Image 
@@ -123,11 +124,17 @@ export default function Menus(props) {
                 <TouchableOpacity style={styles.menuShow} onPress={() => {
                   const newList = [...menuInfo.list]
 
-                  newList.forEach(function (info) {
-                    if (info.id == id) {
-                      info.show = !info.show
-                    }
-                  })
+                  const toggleMenu = list => {
+                    list.forEach(function (item) {
+                      if (item.id == id) {
+                        item.show = !item.show
+                      } else if (item.list) {
+                        toggleMenu(item.list)
+                      }
+                    })
+                  }
+
+                  toggleMenu(newList)
 
                   setMenuinfo({ ...menuInfo, list: newList })
                 }}>
@@ -137,22 +144,24 @@ export default function Menus(props) {
             </View>
             {list.length > 0 && list.map((info, index) => (
               <View key={"list-" + index}>
-                {info.listType == "list" ? 
-                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show })
-                  :
-                  show && <View>{displayListItem(id, info)}</View>
-                }
+                {show && (
+                  info.listType == "list" ? 
+                    displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show })
+                    :
+                    <View>{displayListItem(id, info)}</View>
+                )}
               </View>
             ))}
           </View>
           :
           list.map((info, index) => (
             <View key={"list-" + index}>
-              {info.listType == "list" ? 
-                displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show })
-                :
-                show && <View>{displayListItem(id, info)}</View>
-              }
+              {show && (
+                info.listType == "list" ? 
+                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show })
+                  :
+                  <View>{displayListItem(id, info)}</View>
+              )}
             </View>
           ))
         }
@@ -294,14 +303,16 @@ const styles = StyleSheet.create({
   menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
   menu: { borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3 },
+  menuRow: { alignItems: 'center' },
   menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-  menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
+  menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline', width: wsize(50) },
   menuShow: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   menuShowHeader: { fontSize: wsize(4), textAlign: 'center' },
   itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
   item: { backgroundColor: 'white', borderRadius: 3, flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3, padding: 5, width: '100%' },
   itemImageHolder: { borderRadius: wsize(20) / 2, flexDirection: 'column', height: wsize(20), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(20) },
   itemHeader: { fontSize: wsize(5), fontWeight: 'bold' },
+  itemMiniHeader: { fontSize: wsize(4) },
   itemActions: { flexDirection: 'row', marginTop: 0 },
   itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5 },
   itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
