@@ -438,6 +438,9 @@ export default function Itemprofile(props) {
   				{openOrders && <Modal><Orders navigate={() => {
             setOpenorders(false)
             props.navigation.navigate("account")
+          }} addMore={() => {
+            setOpenorders(false)
+            props.navigation.goBack()
           }} showNotif={() => {
   					setOpenorders(false)
   					setTimeout(function () {

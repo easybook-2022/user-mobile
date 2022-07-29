@@ -398,9 +398,9 @@ export default function Orders(props) {
     											: null }
     										</View>
 
-                        {index == items.length - 1 && (
+                        {(index == items.length - 1 && props.addMore) && (
                           <View style={{ alignItems: 'center' }}>
-                            <TouchableOpacity style={styles.sendAction} onPress={() => props.close()}>
+                            <TouchableOpacity style={styles.sendAction} onPress={() => props.addMore()}>
                               <Text style={styles.sendActionHeader}>Add more item +</Text>
                             </TouchableOpacity>
                           </View>

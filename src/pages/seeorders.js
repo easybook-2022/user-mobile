@@ -78,12 +78,14 @@ export default function Seeorders(props) {
             renderItem={({ item, index }) => 
               <View style={styles.item} key={item.key}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <View style={styles.itemImageHolder}>
-                    <Image 
-                      source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")} 
-                      style={resizePhoto(item.image, wsize(30))}
-                    />
-                  </View>
+                  {item.image.name && (
+                    <View style={styles.itemImageHolder}>
+                      <Image 
+                        source={{ uri: logo_url + item.image.name }} 
+                        style={resizePhoto(item.image, wsize(30))}
+                      />
+                    </View>
+                  )}
 
                   <View style={styles.itemInfos}>
                     <Text style={styles.itemName}>{item.name}</Text>

@@ -45,7 +45,7 @@ export default function Menus(props) {
       <View style={styles.item}>
         {type == "restaurant" ? 
           <>
-            <View style={[styles.column, { width: '25%' }]}>
+            <View style={[styles.column, { width: '40%' }]}>
               <View style={{ alignItems: 'center' }}>
                 {info.image.name && (
                   <View style={styles.itemImageHolder}>
@@ -59,7 +59,7 @@ export default function Menus(props) {
                 <View style={styles.column}><Text style={styles.itemMiniHeader}>{info.description}</Text></View>
               </View>
             </View>
-            <View style={styles.column}>
+            <View style={{ width: '40%' }}>
               {info.price ? 
                 <Text style={styles.itemHeader}>$ {info.price} (1 size)</Text>
                 :
@@ -67,7 +67,7 @@ export default function Menus(props) {
                   {info.sizes.length > 0 && (
                     <>
                       {info.sizes.map(size => <Text key={size.key} style={styles.itemHeader}>{size.name}: ${size.price}</Text>)}
-                      <Text style={[styles.itemHeader, { marginTop: '5%' }]}>({info.sizes.length}) sizes</Text> 
+                      <Text style={[styles.itemHeader]}>({info.sizes.length}) sizes</Text> 
                     </>
                   )}
 
@@ -84,8 +84,8 @@ export default function Menus(props) {
 
               {info.percents.map(percent => <Text key={percent.key} style={styles.itemHeader}>{percent.input}: ${percent.price}</Text>)}
             </View>
-            <View style={styles.column}>
-              <TouchableOpacity style={styles.itemAction} onPress={() => {
+            <View style={[styles.column, { width: '20%' }]}>
+              <TouchableOpacity style={[styles.itemAction, { width: '100%' }]} onPress={() => {
                 props.navigation.setParams({ initialize: true })
 
                 props.navigation.navigate(
