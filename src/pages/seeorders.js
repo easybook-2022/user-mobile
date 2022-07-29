@@ -89,13 +89,31 @@ export default function Seeorders(props) {
                     <Text style={styles.itemName}>{item.name}</Text>
                     <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Quantity:</Text> {item.quantity}</Text>
 
-                    {item.sizes.map((size, sizeindex) => (
-                      size.selected ? 
+                    {item.sizes.map((size) => (
+                      size.selected && ( 
                         <Text key={size.key} style={styles.itemInfo}>
                           <Text style={{ fontWeight: 'bold' }}>Size: </Text>
                           <Text>{size.name}</Text>
                         </Text>
-                      : null
+                      )
+                    ))}
+
+                    {item.quantities.map((quantity) => (
+                      quantity.selected && (
+                        <Text key={quantity.key} style={styles.itemInfo}>
+                          <Text style={{ fontWeight: 'bold' }}>Quantity: </Text>
+                          <Text>{quantity.input}</Text>
+                        </Text>
+                      )
+                    ))}
+
+                    {item.percents.map((percent) => (
+                      percent.selected && (
+                        <Text key={percent.key} style={styles.itemInfo}>
+                          <Text style={{ fontWeight: 'bold' }}>Percentage: </Text>
+                          <Text>{percent.input}</Text>
+                        </Text>
+                      )
                     ))}
 
                     <Text style={styles.header}><Text style={{ fontWeight: 'bold' }}>Cost:</Text>$ {item.cost}</Text>

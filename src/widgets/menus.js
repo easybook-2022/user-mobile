@@ -43,74 +43,122 @@ export default function Menus(props) {
   const displayListItem = (id, info) => {
     return (
       <View style={styles.item}>
-        <View style={styles.column}>
-          <View style={{ alignItems: 'center' }}>
-            {info.image.name && (
-              <View style={styles.itemImageHolder}>
-                <Image 
-                  style={resizePhoto(info.image, wsize(20))} 
-                  source={{ uri: logo_url + info.image.name }}
-                />
+        {type == "restaurant" ? 
+          <>
+            <View style={[styles.column, { width: '25%' }]}>
+              <View style={{ alignItems: 'center' }}>
+                {info.image.name && (
+                  <View style={styles.itemImageHolder}>
+                    <Image 
+                      style={resizePhoto(info.image, wsize(20))} 
+                      source={{ uri: logo_url + info.image.name }}
+                    />
+                  </View>
+                )}
+                <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
+                <View style={styles.column}><Text style={styles.itemMiniHeader}>{info.description}</Text></View>
               </View>
-            )}
-            <View style={styles.column}><Text style={styles.itemHeader}>{info.name}</Text></View>
-            <View style={styles.column}><Text style={styles.itemMiniHeader}>{info.description}</Text></View>
-          </View>
-        </View>
-        <View style={styles.column}>
-          {info.sizes.length > 0 ? 
-            info.sizes.length > 2 ? 
-              <View>
-                <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[0].name}</Text>: $ {info.sizes[0].price}</Text>
-                <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[1].name}</Text>: $ {info.sizes[1].price}</Text>
-                <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[2].name}</Text>: $ {info.sizes[2].price}</Text>
-                
-                {info.sizes.length == 4 && <Text style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{info.sizes[3].name}</Text>: $ {info.sizes[3].price}</Text>}
+            </View>
+            <View style={styles.column}>
+              {info.price ? 
+                <Text style={styles.itemHeader}>$ {info.price} (1 size)</Text>
+                :
+                <>
+                  {info.sizes.length > 0 && (
+                    <>
+                      {info.sizes.map(size => <Text key={size.key} style={styles.itemHeader}>{size.name}: ${size.price}</Text>)}
+                      <Text style={[styles.itemHeader, { marginTop: '5%' }]}>({info.sizes.length}) sizes</Text> 
+                    </>
+                  )}
 
-                <Text style={{ fontWeight: 'bold' }}>({info.sizes.length}) sizes</Text>
-              </View>
-              :
-              info.sizes.map((size, index) => <Text key={index} style={{ fontSize: wsize(4.5) }}><Text style={{ fontWeight: 'bold' }}>{size.name}</Text>$ {size.price}</Text>)
-            :
-            <View style={styles.column}><Text style={styles.itemHeader}>$ {info.price} (1 size)</Text></View>
-          }
-        </View>
-        <View style={styles.column}>
-          <TouchableOpacity style={styles.itemAction} onPress={() => {
-            props.navigation.setParams({ initialize: true })
-
-            if (type == "salon") {
-              props.navigation.navigate(
-                "booktime", 
-                { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
-              )
-            } else if (type == "restaurant" || type == "store") {
-              props.navigation.navigate(
-                "itemprofile", 
-                { locationid, menuid: "", productid: info.id, productinfo: "", type }
-              )
-            }
-          }}>
-            <Text style={styles.itemActionHeader}>
-              {type == "store" || type == "restaurant" ? 
-                "Order now" 
-                : 
-                <Text><Text style={{ fontWeight: 'bold' }}>Book</Text> {info.name}</Text>
+                  {info.quantities.length > 0 && info.quantities.map(quantity => 
+                    <Text 
+                      key={quantity.key} 
+                      style={styles.itemHeader}
+                    >
+                      {quantity.input}: ${quantity.price}
+                    </Text>
+                  )}
+                </>
               }
-            </Text>
-          </TouchableOpacity>
-        </View>
+
+              {info.percents.map(percent => <Text key={percent.key} style={styles.itemHeader}>{percent.input}: ${percent.price}</Text>)}
+            </View>
+            <View style={styles.column}>
+              <TouchableOpacity style={styles.itemAction} onPress={() => {
+                props.navigation.setParams({ initialize: true })
+
+                props.navigation.navigate(
+                  "itemprofile", 
+                  { locationid, menuid: "", productid: info.id, productinfo: "", type }
+                )
+              }}>
+                <Text style={styles.itemActionHeader}>Order now</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+          :
+          <>
+            <View style={{ flexDirection: 'row', width: '100%' }}>
+              {info.image.name && (
+                <View style={{ width: '25%' }}>
+                  <View style={styles.itemImageHolder}>
+                    <Image 
+                      style={resizePhoto(info.image, wsize(20))} 
+                      source={{ uri: logo_url + info.image.name }}
+                    />
+                  </View>
+                </View>
+              )}
+              
+              <View style={{ width: '80%' }}>
+                <Text style={styles.itemHeader}>{info.name}</Text>
+                <Text style={styles.itemMiniHeader}>{info.description}</Text>
+                <TouchableOpacity style={styles.itemAction} onPress={() => {
+                  props.navigation.setParams({ initialize: true })
+
+                  props.navigation.navigate(
+                    "booktime", 
+                    { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
+                  )
+                }}>
+                  <Text style={styles.itemActionHeader}>Book</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        }
       </View>
     )
   }
   const displayList = info => {
-    let { id, image, name, list, show = true } = info
+    let { id, image, name, list, show = true, parentId = "" } = info
 
     return (
       <View>
         {name ?
-          <View style={styles.menu}>
-            <View style={styles.menuRow}>
+          <View style={styles.menu} >
+            <TouchableOpacity style={styles.menuRow} onPress={() => {
+              const newList = [...menuInfo.list]
+
+              const toggleMenu = list => {
+                list.forEach(function (item) {
+                  if (item.parentId == parentId) {
+                    item.show = false
+                  }
+
+                  if (item.id == id) {
+                    item.show = show ? false : true
+                  } else if (item.list) {
+                    toggleMenu(item.list)
+                  }
+                })
+              }
+
+              toggleMenu(newList)
+
+              setMenuinfo({ ...menuInfo, list: newList })
+            }}>
               {image.name && (
                 <View style={styles.menuImageHolder}>
                   <Image 
@@ -120,28 +168,7 @@ export default function Menus(props) {
                 </View>
               )}
               <View style={styles.column}><Text style={styles.menuName}>({list.length}) {name} (Menu)</Text></View>
-              <View style={styles.column}>
-                <TouchableOpacity style={styles.menuShow} onPress={() => {
-                  const newList = [...menuInfo.list]
-
-                  const toggleMenu = list => {
-                    list.forEach(function (item) {
-                      if (item.id == id) {
-                        item.show = !item.show
-                      } else if (item.list) {
-                        toggleMenu(item.list)
-                      }
-                    })
-                  }
-
-                  toggleMenu(newList)
-
-                  setMenuinfo({ ...menuInfo, list: newList })
-                }}>
-                  <Text style={styles.menuShowHeader}>{show ? "Hide" : "Show"}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            </TouchableOpacity>
             {list.length > 0 && list.map((info, index) => (
               <View key={"list-" + index}>
                 {show && (
@@ -303,18 +330,16 @@ const styles = StyleSheet.create({
   menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
   menu: { borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3 },
-  menuRow: { alignItems: 'center' },
+  menuRow: { flexDirection: 'row' },
   menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-  menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline', width: wsize(50) },
-  menuShow: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, padding: 5 },
-  menuShowHeader: { fontSize: wsize(4), textAlign: 'center' },
+  menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
   itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
   item: { backgroundColor: 'white', borderRadius: 3, flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3, padding: 5, width: '100%' },
   itemImageHolder: { borderRadius: wsize(20) / 2, flexDirection: 'column', height: wsize(20), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(20) },
   itemHeader: { fontSize: wsize(5), fontWeight: 'bold' },
   itemMiniHeader: { fontSize: wsize(4) },
-  itemActions: { flexDirection: 'row', marginTop: 0 },
-  itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5 },
+  itemActions: { flexDirection: 'row' },
+  itemAction: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, padding: 5, width: '50%' },
   itemActionHeader: { fontSize: wsize(4), textAlign: 'center' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },

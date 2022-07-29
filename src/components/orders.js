@@ -26,54 +26,47 @@ export default function Orders(props) {
 	const [showConfirm, setShowconfirm] = useState(false)
 	const [itemInfo, setIteminfo] = useState({ 
 		show: false, cartid: "", name: "", info: "", note: "", 
-		image: "", price: "", sizes: [], quantity: 1, cost: 0,
+		image: "", price: "", sizes: [], quantities: [], percents: [], 
+    quantity: 1, cost: 0,
 		errorMsg: ""
 	})
 	const [errorMsg, setErrormsg] = useState('')
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
 
-	const selectSize = (index) => {
-		let { sizes, quantity, cost } = itemInfo
-		let newSizes = [...sizes]
-		let newCost = cost
+	const selectOption = (index, option) => {
+		let { sizes, quantities, percents, quantity, cost } = itemInfo
+		let newCost = cost, newOptions
 
-		newSizes.forEach(function (size) {
-			if (size.selected) {
-				size.selected = false
+    switch (option) {
+      case "sizes":
+        newOptions = [...sizes]
 
-				newCost -= parseFloat(size.price)
+        break;
+      case "quantities":
+        newOptions = [...quantities]
+
+        break;
+      case "percents":
+        newOptions = [...percents]
+
+        break;
+      default:
+
+    }
+
+		newOptions.forEach(function (info) {
+			if (info.selected) {
+				info.selected = false
+
+				newCost -= parseFloat(info.price)
 			}
 		})
-
-		newSizes[index].selected = true
-		newCost = quantity * parseFloat(newSizes[index].price)
+		newOptions[index].selected = true
+		newCost = quantity * parseFloat(newOptions[index].price)
 
 		setIteminfo({
 			...itemInfo,
-			sizes: newSizes,
-			cost: newCost
-		})
-	}
-	const selectOther = (index) => {
-		let { others, cost } = itemInfo
-		let newOthers = [...others]
-		let newCost = parseFloat(cost)
-
-		newOthers.forEach(function (other, otherindex) {
-			if (otherindex == index) {
-				if (other.selected) {
-					newCost -= parseFloat(other.price)
-				} else {
-					newCost += parseFloat(other.price)
-				}
-
-				other.selected = !other.selected
-			}
-		})
-
-		setIteminfo({
-			...itemInfo,
-			others: newOthers,
+			[option]: newOptions,
 			cost: newCost
 		})
 	}
@@ -139,14 +132,15 @@ export default function Orders(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, info, image, quantity, sizes, note, price, cost } = res.cartItem
+					const { name, info, image, quantity, sizes, quantities, percents, note, price, cost } = res.cartItem
 
 					setIteminfo({
 						...itemInfo,
 						show: true,
 						cartid,
 						name, info, image,
-						quantity, note, sizes,
+						quantity, note, 
+            sizes, quantities, percents,
 						price, cost
 					})
 				}
@@ -158,17 +152,33 @@ export default function Orders(props) {
 			})
 	}
 	const updateTheCartItem = () => {
-		const { cartid, quantity, sizes, note } = itemInfo
-		const newSizes = JSON.parse(JSON.stringify(sizes))
-		const data = { cartid, quantity, note }
-
-		newSizes.forEach(function (size) {
-			delete size['key']
-		})
-
-		data['sizes'] = newSizes
+		const { cartid, quantity, sizes, quantities, percents, note } = itemInfo
+		let data = { cartid, quantity, note }
+    const newSizes = [], newQuantities = [], newPercents = []
 
     setLoaded(false)
+
+    sizes.forEach(function (size) {
+      if (size.selected) {
+        newSizes.push(size.name)
+      }
+    })
+
+    quantities.forEach(function (quantity) {
+      if (quantity.selected) {
+        newQuantities.push(quantity.name)
+      }
+    })
+
+    percents.forEach(function (percent) {
+      if (percent.selected) {
+        newPercents.push(percent.name)
+      }
+    })
+
+    data["sizes"] = newSizes
+    data["quantities"] = newQuantities
+    data["percents"] = newPercents
 
 		updateCartItem(data)
 			.then((res) => {
@@ -211,8 +221,7 @@ export default function Orders(props) {
 	}
 
 	const checkout = () => {
-		const time = Date.now()
-		let data = { userid: userId, time, type: "checkout" }
+		let data = { userid: userId }
 
 		checkoutCart(data)
 			.then((res) => {
@@ -457,20 +466,37 @@ export default function Orders(props) {
 
 							{itemInfo.sizes.length > 0 && (
 								<View style={styles.sizesBox}>
-									<Text style={styles.sizesHeader}>Select a Size</Text>
+									<Text style={styles.sizesHeader}>Select a size</Text>
 
 									<View style={styles.sizes}>
-										{itemInfo.sizes.map((size, index) => (
-											<View key={size.key} style={styles.size}>
-												<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectSize(index)}>
-													<Text style={size.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{size.name}</Text>
+										{itemInfo.sizes.map((info, index) => (
+											<View key={info.key} style={styles.size}>
+												<TouchableOpacity style={info.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "sizes")}>
+													<Text style={info.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{info.name}</Text>
 												</TouchableOpacity>
-												<Text style={styles.sizePrice}>$ {size.price}</Text>
+												<Text style={styles.sizePrice}>$ {info.price}</Text>
 											</View>
 										))}
 									</View>
 								</View>
 							)}
+
+              {itemInfo.quantities.length > 0 && (
+                <View style={styles.sizesBox}>
+                  <Text style={styles.sizesHeader}>Select a quantity</Text>
+
+                  <View style={styles.sizes}>
+                    {itemInfo.quantities.map((info, index) => (
+                      <View key={info.key} style={styles.size}>
+                        <TouchableOpacity style={info.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "quantities")}>
+                          <Text style={info.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{info.name}</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.sizePrice}>$ {info.price}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
 
 							<View style={styles.note}>
 								<TextInput 

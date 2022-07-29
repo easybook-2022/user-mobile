@@ -32,6 +32,8 @@ export default function Itemprofile(props) {
 	const [itemImage, setItemimage] = useState({ name: "", height: 0, width: 0 })
 	const [itemPrice, setItemprice] = useState(0)
 	const [sizes, setSizes] = useState([])
+  const [quantities, setQuantities] = useState([])
+  const [percents, setPercents] = useState([])
 	const [quantity, setQuantity] = useState(1)
 	const [cost, setCost] = useState(0)
 	const [errorMsg, setErrormsg] = useState('')
@@ -68,25 +70,67 @@ export default function Itemprofile(props) {
 				})
 		}
 	}
-	const selectSize = (index) => {
-		let newSizes = [...sizes]
-		let newCost = cost
+	const selectOption = (index, option) => {
+		let newCost = cost, newOptions
 
-		newSizes.forEach(function (size) {
-			if (size.selected) {
-				size.selected = false
+    switch (option) {
+      case "size":
+        newOptions = [...sizes]
 
-				newCost -= parseFloat(size.price)
-			}
-		})
+        newOptions.forEach(function (option) {
+          if (option.selected) {
+            option.selected = false
 
-		newSizes[index].selected = true
-		newCost = quantity * parseFloat(newSizes[index].price)
+            newCost -= parseFloat(option.price)
+          }
+        })
 
-		setSizes(newSizes)
+        newOptions[index].selected = true
+        newCost = quantity * parseFloat(newOptions[index].price)
+
+        setSizes(newOptions)
+
+        break;
+      case "quantity":
+        newOptions = [...quantities]
+
+        newOptions.forEach(function (option) {
+          if (option.selected) {
+            option.selected = false
+
+            newCost -= parseFloat(option.price)
+          }
+        })
+
+        newOptions[index].selected = true
+        newCost = quantity * parseFloat(newOptions[index].price)
+
+        setQuantities(newOptions)
+
+        break;
+      case "percent":
+        newOptions = [...percents]
+
+        newOptions.forEach(function (option) {
+          if (option.selected) {
+            option.selected = false
+
+            newCost -= parseFloat(option.price)
+          }
+        })
+
+        newOptions[index].selected = true
+        newCost = quantity * parseFloat(newOptions[index].price)
+
+        setPercents(newOptions)
+
+        break;
+      default:
+    }
+
 		setCost(newCost)
 	}
-	const changeQuantity = (action) => {
+	const changeQuantity = action => {
 		let newQuantity = quantity
 		let newCost = 0
 
@@ -96,45 +140,62 @@ export default function Itemprofile(props) {
 			newQuantity = 1
 		}
 
-		if (sizes.length > 0) {
-			sizes.forEach(function (size) {
-				if (size.selected) {
-					newCost += newQuantity * parseFloat(size.price)
-				}
-			})
-		} else {
-			newCost += newQuantity * parseFloat(itemPrice)
-		}
-
-		others.forEach(function (other) {
-			if (other.selected) {
-				newCost += parseFloat(other.price)
-			}
-		})
+    if (itemPrice) {
+      newCost += newQuantity * parseFloat(itemPrice)
+    } else {
+      if (sizes.length > 0) {
+        sizes.forEach(function (size) {
+          if (size.selected) {
+            newCost += newQuantity * parseFloat(size.price)
+          }
+        })
+      } else {
+        quantities.forEach(function (quantity) {
+          if (quantity.selected) {
+            newCost += newQuantity * parseFloat(quantity.price)
+          }
+        })
+      }
+    }
 
 		setQuantity(newQuantity)
 		setCost(newCost)
 	}
-	const addCart = async(id) => {
+	const addCart = async id => {
 		if (userId || id) {
       setShowauth({ ...showAuth, show: false })
 
 			let callfor = [], receiver = []
-			let newSizes = JSON.parse(JSON.stringify(sizes))
+			const newSizes = [], newQuantities = [], newPercents = []
 			let size = "", price = 0
       
 			if (!productinfo) {
-				if (newSizes.length > 0) {
-					newSizes.forEach(function (info) {
-						delete info['key']
+        if (itemPrice) {
+          price = itemPrice * quantity
+        } else {
+          sizes.forEach(function (info) {
+            if (info.selected) {
+              newSizes.push(info.name)
 
-						if (info.selected) {
-							price = parseFloat(info.price) * quantity
-						}
-					})
-				} else {
-					price = itemPrice * quantity
-				}
+              price += parseFloat(info.price) * quantity
+            }
+          })
+
+          quantities.forEach(function (info) {
+            if (info.selected) {
+              newQuantities.push(info.input)
+
+              price += parseFloat(info.price) * quantity
+            }
+          })
+          percents.forEach(function (info) {
+            if (info.selected) {
+              newPercents.push(info.input)
+
+              price += parseFloat(info.price) * quantity
+            }
+          })
+        }
 			}
       
 			if (price || productinfo) {
@@ -144,8 +205,8 @@ export default function Itemprofile(props) {
 					productinfo: productinfo ? productinfo : "", 
 					quantity, 
 					callfor, 
-					sizes: newSizes, 
-					note: itemNote, type, 
+					sizes: newSizes, quantities: newQuantities, percents: newPercents, 
+					note: itemNote ? itemNote : "", type, 
 					receiver
 				}
 
@@ -185,12 +246,14 @@ export default function Itemprofile(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { productImage, name, sizes, price, cost } = res.productInfo
+					const { productImage, name, sizes, quantities, percents, price, cost } = res.productInfo
 
 					setItemname(name)
 					setItemimage(productImage)
 					setItemprice(price)
 					setSizes(sizes)
+          setQuantities(quantities)
+          setPercents(percents)
 					setCost(cost)
           setLoaded(true)
 				}
@@ -220,12 +283,14 @@ export default function Itemprofile(props) {
   			<View style={styles.box}>
   				<ScrollView style={{ height: '100%' }}>
   					<View style={{ alignItems: 'center', marginTop: 20 }}>
-  						<View style={styles.imageHolder}>
-                <Image 
-                  source={itemImage.name && itemImage.name != "" ? { uri: logo_url + itemImage.name } : require("../../assets/noimage.jpeg")} 
-                  style={resizePhoto(itemImage, wsize(40))}
-                />
-              </View>
+    					{itemImage.name && (
+                <View style={styles.imageHolder}>
+                  <Image 
+                    source={{ uri: logo_url + itemImage.name }} 
+                    style={resizePhoto(itemImage, wsize(40))}
+                  />
+                </View>
+              )}
   					</View>
 
   					<Text style={styles.boxHeader}>{itemName ? itemName : productinfo}</Text>
@@ -237,7 +302,7 @@ export default function Itemprofile(props) {
   							<View style={styles.sizes}>
   								{sizes.map((size, index) => (
   									<View key={size.key} style={styles.size}>
-  										<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectSize(index)}>
+  										<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "size")}>
   											<Text style={size.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{size.name}</Text>
   										</TouchableOpacity>
   										<Text style={styles.sizePrice}>$ {size.price}</Text>
@@ -246,6 +311,40 @@ export default function Itemprofile(props) {
   							</View>
   						</View>
   					)}
+
+            {quantities.length > 0 && (
+              <View style={styles.sizesBox}>
+                <Text style={styles.sizesHeader}>Select a quantity</Text>
+
+                <View style={styles.sizes}>
+                  {quantities.map((quantity, index) => (
+                    <View key={quantity.key} style={styles.size}>
+                      <TouchableOpacity style={quantity.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "quantity")}>
+                        <Text style={quantity.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{quantity.input}</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.sizePrice}>$ {quantity.price}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {percents.length > 0 && (
+              <View style={styles.sizesBox}>
+                <Text style={styles.sizesHeader}>Select a percentage (Optional)</Text>
+
+                <View style={styles.sizes}>
+                  {percents.map((percent, index) => (
+                    <View key={percent.key} style={styles.size}>
+                      <TouchableOpacity style={percent.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "percent")}>
+                        <Text style={quantity.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{percent.input}</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.sizePrice}>$ {percent.price}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
 
   					{!productinfo ? 
   						<View style={styles.note}>

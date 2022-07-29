@@ -424,7 +424,7 @@ export default function Booktime(props) {
   const selectDate = () => {
     const { date, day, month, year } = selectedDateinfo, { blocked } = bookedDateinfo
     const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
-    const numBlockTaken = scheduleId ? 1 + blocked.length : 0
+    const numBlockTaken = scheduleId > -1 ? 1 + blocked.length : 0
     let start = openHour + ":" + openMinute
     let end = closeHour + ":" + closeMinute
     let timeStr = month + " " + date + " " + year + " "
@@ -576,7 +576,7 @@ export default function Booktime(props) {
         serviceinfo: serviceinfo ? serviceinfo : name,
         time: selecteddate, note: note ? note : "", 
         timeDisplay: displayTime(selecteddate),
-        type: scheduleId ? "remakeAppointment" : "makeAppointment",
+        type: scheduleId > -1 ? "remakeAppointment" : "makeAppointment",
         blocked, unix: time
       }
 
@@ -691,18 +691,11 @@ export default function Booktime(props) {
 	return (
 		<SafeAreaView style={styles.booktime}>
 		  <View style={styles.box}>
-				<View style={styles.headers}>
-          <Text style={styles.serviceHeader}>
-            <Text style={{ fontSize: wsize(5) }}>for </Text> 
-            {name ? name : serviceinfo}
-          </Text>
-        </View>
-
         {loaded ? 
           <>
             {step == 0 && (
               <View style={styles.workerSelection}>
-                <Text style={styles.workerSelectionHeader}>Pick a {!scheduleId ? '' : '\ndifferent'} stylist (Optional)</Text>
+                <Text style={styles.workerSelectionHeader}>Pick a{scheduleId == -1 ? '' : '\ndifferent'} stylist (Optional)</Text>
 
                 <View style={styles.workersList}>
                   <FlatList
@@ -732,7 +725,7 @@ export default function Booktime(props) {
 
             {step == 1 && (
               <View style={styles.dateSelection}>
-                <Text style={styles.dateSelectionHeader}>Tap a {!scheduleId ? '' : '\ndifferent'} date below</Text>
+                <Text style={styles.dateSelectionHeader}>Tap a{scheduleId == -1 ? '' : '\ndifferent'} date below</Text>
 
                 {!calendar.loading && (
                   <>
@@ -794,8 +787,8 @@ export default function Booktime(props) {
             {step == 2 && (
               <View style={styles.timesSelection}>
                 <ScrollView style={{ width: '100%' }}>
-                  <Text style={[styles.timesHeader, { fontSize: 15 }]}>{scheduleId && 'Current: ' + displayTime(oldTime)}</Text>
-                  <Text style={styles.timesHeader}>Tap a {!scheduleId ? '' : '\ndifferent'} time below</Text>
+                  <Text style={[styles.timesHeader, { fontSize: 15 }]}>{scheduleId > -1 && 'Current: ' + displayTime(oldTime)}</Text>
+                  <Text style={styles.timesHeader}>Tap a{scheduleId == -1 ? '' : '\ndifferent'} time below</Text>
 
                   <View style={{ alignItems: 'center' }}>
                     <View style={styles.times}>
@@ -1000,7 +993,6 @@ const styles = StyleSheet.create({
   booktime: { backgroundColor: 'white', height: '100%', width: '100%' },
   box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-  headers: { height: '10%' },
   serviceHeader: { fontSize: wsize(8), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
 
   // stylists list
