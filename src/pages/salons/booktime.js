@@ -233,7 +233,7 @@ export default function Booktime(props) {
 
         if (rowindex == 0) {
           if (dayindex >= firstDay) {
-            datetime = Date.parse(timeStr)
+            datetime = Date.parse(timeStr + " 23:00")
 
             day.passed = now > datetime
             day.noservice = selectedWorkerinfo.id > -1 ? 
@@ -249,9 +249,15 @@ export default function Booktime(props) {
               } else {
                 let timeInfos = allWorkerstime[days[dayindex].substr(0, 3)]
 
-                timeInfos.forEach(function (timeInfo) {
+                for (let k = 0; k < timeInfos.length; k++) {
+                  let timeInfo = timeInfos[k]
+
                   day.noservice = !(Date.now() < Date.parse(timeStr + " " + timeInfo.end))
-                })
+
+                  if (!day.noservice) {
+                    break;
+                  }
+                }
               }
             }
             
@@ -259,7 +265,7 @@ export default function Booktime(props) {
             daynum++
           }
         } else if (daynum <= numDays) {
-          datetime = Date.parse(timeStr)
+          datetime = Date.parse(timeStr + " 23:00")
 
           day.passed = now > datetime
           day.noservice = selectedWorkerinfo.id > -1 ? 
@@ -275,9 +281,15 @@ export default function Booktime(props) {
             } else {
               let timeInfos = allWorkerstime[days[dayindex].substr(0, 3)]
 
-              timeInfos.forEach(function (timeInfo) {
+              for (let k = 0; k < timeInfos.length; k++) {
+                let timeInfo = timeInfos[k]
+
                 day.noservice = !(Date.now() < Date.parse(timeStr + " " + timeInfo.end))
-              })
+
+                if (!day.noservice) {
+                  break;
+                }
+              }
             }
           }
 
@@ -521,8 +533,10 @@ export default function Booktime(props) {
             startCalc += pushtime
           }
         } else {
-          if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
-            timeBlocked = true
+          if (selectedWorkerinfo.id > -1) {
+            if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
+              timeBlocked = true
+            }
           }
         }
 
