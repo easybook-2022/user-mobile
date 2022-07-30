@@ -431,7 +431,7 @@ export default function Booktime(props) {
     let openDateStr = Date.parse(timeStr + start), closeDateStr = Date.parse(timeStr + end), calcDateStr = openDateStr
     let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
 
-    while (calcDateStr < closeDateStr - pushtime) {
+    while (calcDateStr <= (closeDateStr - pushtime)) {
       calcDateStr += pushtime
 
       let timestr = new Date(calcDateStr)
@@ -504,12 +504,15 @@ export default function Booktime(props) {
           for (let k = 1; k <= numBlockTaken; k++) {
             if (selectedWorkerinfo.id > -1) {
               let { start, end } = selectedWorkerinfo.hours[day]
+              
               if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
                 if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
                   timeBlocked = true
                 }
               } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is taken
-                timeBlocked = true
+                if (scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-c"] != scheduleId) {
+                  timeBlocked = true
+                }
               } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
                 timeBlocked = true
               }
@@ -641,7 +644,7 @@ export default function Booktime(props) {
 
                 break;
               default:
-                setConfirm({ errorMsg: errormsg })
+                setConfirm({ errorMsg: errormsg, show: false, requested: false })
             }
           }
         })
