@@ -377,12 +377,11 @@ export default function Booktime(props) {
       .then((res) => {
         if (res) {
           const { workersHour } = res
+          const newScheduled = {}
 
           for (let worker in workersHour) {
             for (let info in workersHour[worker]) {
               if (info == "scheduled") {
-                const newScheduled = {}
-
                 for (let info in workersHour[worker]["scheduled"]) {
                   let splitInfo = info.split("-")
                   let time = splitInfo[0]
