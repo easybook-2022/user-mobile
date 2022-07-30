@@ -438,15 +438,20 @@ export default function Notification(props) {
 										{item.type == "service" && (
 											<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 												<View style={styles.itemImageHolders}>
-													<View style={styles.itemLocationImageHolder}>
-														<Image source={{ uri: logo_url + item.locationimage.name }} style={resizePhoto(item.locationimage, wsize(30) - 5)}/>
-													</View>
-													<View style={styles.itemServiceImageHolder}>
-														<Image 
-                              source={item.serviceimage.name ? { uri: logo_url + item.serviceimage.name } : require("../../assets/noimage.jpeg")} 
-                              style={resizePhoto(item.serviceimage, wsize(30) - 10)}
-                            />
-													</View>
+  												{item.locationimage.name && (
+                            <View style={styles.itemLocationImageHolder}>
+                              <Image source={{ uri: logo_url + item.locationimage.name }} style={resizePhoto(item.locationimage, wsize(30) - 5)}/>
+                            </View>
+                          )}
+
+  												{item.serviceimage.name && (
+                            <View style={styles.itemServiceImageHolder}>
+                              <Image 
+                                source={{ uri: logo_url + item.serviceimage.name }} 
+                                style={resizePhoto(item.serviceimage, wsize(30) - 10)}
+                              />
+                            </View>
+                          )}
 												</View>
 												<View style={{ flexDirection: 'column', width: wsize(70) }}>
 													<Text style={styles.itemServiceHeader}>

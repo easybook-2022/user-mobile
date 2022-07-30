@@ -500,21 +500,27 @@ export default function Booktime(props) {
       if (!timepassed && !timetaken && availableService == true) {
         let startCalc = calcDateStr
 
-        for (let k = 1; k <= numBlockTaken; k++) {
-          if (selectedWorkerinfo.id > -1) {
-            let { start, end } = selectedWorkerinfo.hours[day]
-            if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
-              if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
+        if (numBlockTaken) {
+          for (let k = 1; k <= numBlockTaken; k++) {
+            if (selectedWorkerinfo.id > -1) {
+              let { start, end } = selectedWorkerinfo.hours[day]
+              if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
+                if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
+                  timeBlocked = true
+                }
+              } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is taken
+                timeBlocked = true
+              } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
                 timeBlocked = true
               }
-            } else if (startCalc + "-" + selectedWorkerinfo.id + "-c" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is taken
-              timeBlocked = true
-            } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
-              timeBlocked = true
             }
-          }
 
-          startCalc += pushtime
+            startCalc += pushtime
+          }
+        } else {
+          if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
+            timeBlocked = true
+          }
         }
 
         if (!timeBlocked) {
@@ -1025,7 +1031,7 @@ const styles = StyleSheet.create({
   dayTouchDisabledHeader: { fontSize: wsize(12) * 0.4, fontWeight: 'bold' },
 
   // times list
-  timesSelection: { alignItems: 'center', height: '60%' },
+  timesSelection: { alignItems: 'center', height: '80%' },
   timesHeader: { fontSize: wsize(8), fontWeight: 'bold', textAlign: 'center' },
   times: { alignItems: 'center', paddingBottom: 50, width: '100%' },
   

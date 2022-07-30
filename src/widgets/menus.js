@@ -40,7 +40,7 @@ export default function Menus(props) {
         }
       })
   }
-  const displayListItem = (id, info) => {
+  const displayListItem = info => {
     return (
       <View style={styles.item}>
         {type == "restaurant" ? 
@@ -114,6 +114,7 @@ export default function Menus(props) {
               <View style={{ width: '80%' }}>
                 <Text style={styles.itemHeader}>{info.name}</Text>
                 <Text style={styles.itemMiniHeader}>{info.description}</Text>
+                <Text style={styles.itemHeader}>$ {info.price}</Text>
                 <TouchableOpacity style={styles.itemAction} onPress={() => {
                   props.navigation.setParams({ initialize: true })
 
@@ -167,15 +168,15 @@ export default function Menus(props) {
                   />
                 </View>
               )}
-              <View style={styles.column}><Text style={styles.menuName}>({list.length}) {name} (Menu)</Text></View>
+              <View style={styles.column}><Text style={styles.menuName}>{name} (Menu)</Text></View>
             </TouchableOpacity>
             {list.length > 0 && list.map((info, index) => (
               <View key={"list-" + index}>
                 {show && (
                   info.listType == "list" ? 
-                    displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show })
+                    displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show, parentId: info.parentId })
                     :
-                    <View>{displayListItem(id, info)}</View>
+                    <View>{displayListItem(info)}</View>
                 )}
               </View>
             ))}
@@ -185,9 +186,9 @@ export default function Menus(props) {
             <View key={"list-" + index}>
               {show && (
                 info.listType == "list" ? 
-                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show })
+                  displayList({ id: info.id, name: info.name, image: info.image, list: info.list, listType: info.listType, show: info.show, parentId: info.parentId })
                   :
-                  <View>{displayListItem(id, info)}</View>
+                  <View>{displayListItem(info)}</View>
               )}
             </View>
           ))
@@ -218,9 +219,6 @@ export default function Menus(props) {
     <View style={styles.box}>
       {loaded ? 
         <View style={{ alignItems: 'center' }}>
-          <TouchableOpacity style={styles.openInput} onPress={() => setRequestinfo({ ...requestInfo, show: true })}>
-            <Text style={styles.openInputHeader}>Type in {header}</Text>
-          </TouchableOpacity>
           <ScrollView style={{ height: '90%', width: '100%' }}>
             <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list })}</View>
           </ScrollView>
@@ -332,7 +330,7 @@ const styles = StyleSheet.create({
   menu: { borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3 },
   menuRow: { flexDirection: 'row' },
   menuImageHolder: { borderRadius: wsize(10) / 2, flexDirection: 'column', height: wsize(10), justifyContent: 'space-around', overflow: 'hidden' },
-  menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2, textDecorationLine: 'underline' },
+  menuName: { fontSize: wsize(5), fontWeight: 'bold', marginLeft: 5, marginTop: wsize(4) / 2 },
   itemInfo: { fontSize: wsize(5), marginLeft: 10, marginVertical: 10 },
   item: { backgroundColor: 'white', borderRadius: 3, flexDirection: 'row', justifyContent: 'space-between', marginVertical: 3, padding: 5, width: '100%' },
   itemImageHolder: { borderRadius: wsize(20) / 2, flexDirection: 'column', height: wsize(20), justifyContent: 'space-around', margin: 5, overflow: 'hidden', width: wsize(20) },
