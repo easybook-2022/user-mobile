@@ -520,7 +520,7 @@ export default function Booktime(props) {
             if (selectedWorkerinfo.id > -1) {
               let { start, end } = selectedWorkerinfo.hours[day]
               
-              if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
+              if (startCalc + "-" + selectedWorkerinfo.id + "-bl" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
                 if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
                   timeBlocked = true
                 }
@@ -545,7 +545,7 @@ export default function Booktime(props) {
           }
         } else {
           if (selectedWorkerinfo.id > -1) {
-            if (startCalc + "-" + selectedWorkerinfo.id + "-b" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
+            if (startCalc + "-" + selectedWorkerinfo.id + "-bl" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
               timeBlocked = true
             }
           }
