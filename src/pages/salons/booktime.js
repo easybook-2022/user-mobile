@@ -42,7 +42,7 @@ export default function Booktime(props) {
   const [oldTime, setOldtime] = useState(0)
   const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0 })
   const [bookedDateinfo, setBookeddateinfo] = useState({ month: '', year: 0, day: '', date: 0, blocked: [] })
-  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, hours: {}, loading: false })
+  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, hours: null, loading: false })
   const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
     { key: "day-row-0", row: [
         { key: "day-0-0", num: 0, passed: false, noservice: false }, { key: "day-0-1", num: 0, passed: false, noservice: false }, { key: "day-0-2", num: 0, passed: false, noservice: false }, 
@@ -217,7 +217,7 @@ export default function Booktime(props) {
   const getCalendar = (month, year) => {
     let currTime = new Date(), currDate = 0, currDay = ''
     let firstDay = (new Date(year, month)).getDay(), numDays = 32 - new Date(year, month, 32).getDate(), daynum = 1
-    let data = calendar.data, datetime = 0, hourInfo, closedtime, now = Date.parse(
+    let data = calendar.data, datetime = 0, hourInfo, closedtime, finishworktime, now = Date.parse(
       days[currTime.getDay()] + " " + 
       months[currTime.getMonth()] + " " + 
       currTime.getDate() + " " + 
@@ -306,8 +306,20 @@ export default function Booktime(props) {
             closedtime = Date.parse(timeStr + " " + hourInfo["closeHour"] + ":" + hourInfo["closeMinute"])
             now = Date.now()
 
-            if (now < closedtime) {
-              currDate = day.num
+            if (now < closedtime) { // before salon closes
+              if (selectedWorkerinfo.id > -1) {
+                if (currDay in selectedWorkerinfo.hours) {
+                  const { start, end } = selectedWorkerinfo.hours[currDay]
+
+                  finishworktime = Date.parse(timeStr + " " + end)
+
+                  if (now < finishworktime) { // before stylist finishes work
+                    currDate = day.num
+                  }
+                }
+              } else {
+                currDate = day.num
+              }
             } else {
               day.passed = true
             }
@@ -611,7 +623,7 @@ export default function Booktime(props) {
         time: selecteddate, note: note ? note : "", 
         timeDisplay: displayTime(selecteddate),
         type: scheduleId > -1 ? "remakeAppointment" : "makeAppointment",
-        blocked, unix: time
+        blocked
       }
 
       makeAppointment(data)
@@ -705,12 +717,14 @@ export default function Booktime(props) {
   useEffect(() => {
     const currTime = new Date()
 
-    if (oldTime == 0) {
-      getCalendar(currTime.getMonth(), currTime.getFullYear())
-    } else {
-      const prevTime = new Date(oldTime)
+    if (selectedWorkerinfo.hours != null) {
+      if (oldTime == 0) {
+        getCalendar(currTime.getMonth(), currTime.getFullYear())
+      } else {
+        const prevTime = new Date(oldTime)
 
-      getCalendar(prevTime.getMonth(), prevTime.getFullYear())
+        getCalendar(prevTime.getMonth(), prevTime.getFullYear())
+      }
     }
   }, [selectedWorkerinfo.hours])
 
