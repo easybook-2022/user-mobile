@@ -79,6 +79,7 @@ export default function Menus(props) {
                       {quantity.input}: ${quantity.price}
                     </Text>
                   )}
+                  <Text style={[styles.itemHeader]}>({info.quantities.length}) sizes</Text> 
                 </>
               }
 
