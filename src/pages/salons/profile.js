@@ -194,7 +194,7 @@ export default function Profile(props) {
 					<ActivityIndicator color="black" size="large"/>
 				</View>
 			}
-
+      
 			{openOrders && <Modal><Orders showNotif={() => {
 				setOpenorders(false)
 				setTimeout(function () {

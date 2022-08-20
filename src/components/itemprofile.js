@@ -34,6 +34,7 @@ export default function Itemprofile(props) {
 	const [sizes, setSizes] = useState([])
   const [quantities, setQuantities] = useState([])
   const [percents, setPercents] = useState([])
+  const [extras, setExtras] = useState([])
 	const [quantity, setQuantity] = useState(1)
 	const [cost, setCost] = useState(0)
 	const [errorMsg, setErrormsg] = useState('')
@@ -125,6 +126,23 @@ export default function Itemprofile(props) {
         setPercents(newOptions)
 
         break;
+      case "extra":
+        newOptions = [...extras]
+
+        newOptions.forEach(function (option) {
+          if (option.selected) {
+            option.selected = false
+
+            newCost -= parseFloat(option.price)
+          }
+        })
+
+        newOptions[index].selected = true
+        newCost = quantity * parseFloat(newOptions[index].price)
+
+        setExtras(newOptions)
+
+        break;
       default:
     }
 
@@ -166,7 +184,7 @@ export default function Itemprofile(props) {
       setShowauth({ ...showAuth, show: false })
 
 			let callfor = [], receiver = []
-			const newSizes = [], newQuantities = [], newPercents = []
+			const newSizes = [], newQuantities = [], newPercents = [], newExtras = []
 			let size = "", price = 0
       
 			if (!productinfo) {
@@ -188,14 +206,23 @@ export default function Itemprofile(props) {
               price += parseFloat(info.price) * quantity
             }
           })
-          percents.forEach(function (info) {
-            if (info.selected) {
-              newPercents.push(info.input)
-
-              price += parseFloat(info.price) * quantity
-            }
-          })
         }
+
+        percents.forEach(function (info) {
+          if (info.selected) {
+            newPercents.push(info.input)
+
+            price += parseFloat(info.price) * quantity
+          }
+        })
+
+        extras.forEach(function (info) {
+          if (info.selected) {
+            newExtras.push(info.input)
+
+            price += parseFloat(info.price) * quantity
+          }
+        })
 			}
       
 			if (price || productinfo) {
@@ -205,7 +232,7 @@ export default function Itemprofile(props) {
 					productinfo: productinfo ? productinfo : "", 
 					quantity, 
 					callfor, 
-					sizes: newSizes, quantities: newQuantities, percents: newPercents, 
+					sizes: newSizes, quantities: newQuantities, percents: newPercents, extras: newExtras, 
 					note: itemNote ? itemNote : "", type, 
 					receiver
 				}
@@ -246,7 +273,7 @@ export default function Itemprofile(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { productImage, name, sizes, quantities, percents, price, cost } = res.productInfo
+					const { productImage, name, sizes, quantities, percents, extras, price, cost } = res.productInfo
 
 					setItemname(name)
 					setItemimage(productImage)
@@ -254,6 +281,7 @@ export default function Itemprofile(props) {
 					setSizes(sizes)
           setQuantities(quantities)
           setPercents(percents)
+          setExtras(extras)
 					setCost(cost)
           setLoaded(true)
 				}
@@ -296,16 +324,16 @@ export default function Itemprofile(props) {
   					<Text style={styles.boxHeader}>{itemName ? itemName : productinfo}</Text>
 
   					{sizes.length > 0 && (
-  						<View style={styles.sizesBox}>
-  							<Text style={styles.sizesHeader}>Select a Size</Text>
+  						<View style={styles.optionsBox}>
+  							<Text style={styles.optionsHeader}>Select a Size</Text>
 
-  							<View style={styles.sizes}>
-  								{sizes.map((size, index) => (
-  									<View key={size.key} style={styles.size}>
-  										<TouchableOpacity style={size.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "size")}>
-  											<Text style={size.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{size.name}</Text>
+  							<View style={styles.options}>
+  								{sizes.map((info, index) => (
+  									<View key={info.key} style={styles.option}>
+  										<TouchableOpacity style={info.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "size")}>
+  											<Text style={info.selected ? styles.optionTouchHeaderDisabled : styles.optionTouchHeader}>{info.name}</Text>
   										</TouchableOpacity>
-  										<Text style={styles.sizePrice}>$ {size.price}</Text>
+  										<Text style={styles.optionPrice}>$ {info.price}</Text>
   									</View>
   								))}
   							</View>
@@ -313,16 +341,16 @@ export default function Itemprofile(props) {
   					)}
 
             {quantities.length > 0 && (
-              <View style={styles.sizesBox}>
-                <Text style={styles.sizesHeader}>Select a quantity</Text>
+              <View style={styles.optionsBox}>
+                <Text style={styles.optionsHeader}>Select a quantity</Text>
 
-                <View style={styles.sizes}>
-                  {quantities.map((quantity, index) => (
-                    <View key={quantity.key} style={styles.size}>
-                      <TouchableOpacity style={quantity.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "quantity")}>
-                        <Text style={quantity.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{quantity.input}</Text>
+                <View style={styles.options}>
+                  {quantities.map((info, index) => (
+                    <View key={info.key} style={styles.option}>
+                      <TouchableOpacity style={info.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "quantity")}>
+                        <Text style={info.selected ? styles.optionTouchHeaderDisabled : styles.optionTouchHeader}>{info.input}</Text>
                       </TouchableOpacity>
-                      <Text style={styles.sizePrice}>$ {quantity.price}</Text>
+                      <Text style={styles.optionPrice}>$ {info.price}</Text>
                     </View>
                   ))}
                 </View>
@@ -330,16 +358,33 @@ export default function Itemprofile(props) {
             )}
 
             {percents.length > 0 && (
-              <View style={styles.sizesBox}>
-                <Text style={styles.sizesHeader}>Select a percentage (Optional)</Text>
+              <View style={styles.optionsBox}>
+                <Text style={styles.optionsHeader}>Select a percentage (Optional)</Text>
 
-                <View style={styles.sizes}>
-                  {percents.map((percent, index) => (
-                    <View key={percent.key} style={styles.size}>
-                      <TouchableOpacity style={percent.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "percent")}>
-                        <Text style={quantity.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{percent.input}</Text>
+                <View style={styles.options}>
+                  {percents.map((info, index) => (
+                    <View key={info.key} style={styles.option}>
+                      <TouchableOpacity style={info.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "percent")}>
+                        <Text style={info.selected ? styles.optionTouchHeaderDisabled : styles.optionTouchHeader}>{info.input}</Text>
                       </TouchableOpacity>
-                      <Text style={styles.sizePrice}>$ {percent.price}</Text>
+                      <Text style={styles.optionPrice}>$ {info.price}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {extras.length > 0 && (
+              <View style={styles.optionsBox}>
+                <Text style={styles.optionsHeader}>Select an extra (Optional)</Text>
+
+                <View style={styles.options}>
+                  {extras.map((info, index) => (
+                    <View key={info.key} style={styles.option}>
+                      <TouchableOpacity style={info.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "extra")}>
+                        <Text style={info.selected ? styles.optionTouchHeaderDisabled : styles.optionTouchHeader}>{info.input}</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.optionPrice}>$ {info.price}</Text>
                     </View>
                   ))}
                 </View>
@@ -494,15 +539,15 @@ const styles = StyleSheet.create({
 	percentageHeader: { fontSize: wsize(4), fontWeight: 'bold', padding: 10 },
 
 	// sizes
-	sizesBox: { alignItems: 'center', marginVertical: 20 },
-	sizesHeader: { fontWeight: 'bold' },
-	sizes: { marginVertical: 20 },
-	size: { flexDirection: 'row', marginVertical: 5 },
-	sizeTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
-	sizeTouchDisabled: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
-	sizeTouchHeader: { textAlign: 'center' },
-	sizeTouchHeaderDisabled: { color: 'white', textAlign: 'center' },
-	sizePrice: { fontWeight: 'bold', margin: 10 },
+	optionsBox: { alignItems: 'center', marginVertical: 20 },
+  optionsHeader: { fontWeight: 'bold' },
+  options: { marginVertical: 20 },
+  option: { flexDirection: 'row', marginVertical: 5 },
+  optionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
+  optionTouchDisabled: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
+  optionTouchHeader: { textAlign: 'center' },
+  optionTouchHeaderDisabled: { color: 'white', textAlign: 'center' },
+  optionPrice: { fontWeight: 'bold', margin: 10 },
 
 	// note
 	noteHeader: { fontSize: wsize(5), fontWeight: 'bold' },

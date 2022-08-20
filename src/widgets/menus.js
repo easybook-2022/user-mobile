@@ -15,8 +15,7 @@ const wsize = p => {return width * (p / 100)}
 
 export default function Menus(props) {
   const { locationid, refetchMenu, type } = props
-  const [requestInfo, setRequestinfo] = useState({ show: false, search: '', error: false })
-  const [menuInfo, setMenuinfo] = useState({ list: [], photos: [] })
+  const [menus, setMenus] = useState([])
   const [loaded, setLoaded] = useState(false)
 
   const getAllMenus = () => {
@@ -30,7 +29,7 @@ export default function Menus(props) {
       })
       .then((res) => {
         if (res) {
-          setMenuinfo({ ...menuInfo, list: res.list, photos: res.photos })
+          setMenus(res.list)
           setLoaded(true)
         }
       })
@@ -66,24 +65,22 @@ export default function Menus(props) {
                 <>
                   {info.sizes.length > 0 && (
                     <>
-                      {info.sizes.map(size => <Text key={size.key} style={styles.itemHeader}>{size.name}: ${size.price}</Text>)}
-                      <Text style={[styles.itemHeader]}>({info.sizes.length}) sizes</Text> 
+                      {info.sizes.map(info => <Text key={info.key} style={styles.itemHeader}>{info.name}: ${info.price}</Text>)}
+                      <Text style={styles.itemHeader}>({info.sizes.length}) size(s)</Text> 
                     </>
                   )}
 
-                  {info.quantities.length > 0 && info.quantities.map(quantity => 
-                    <Text 
-                      key={quantity.key} 
-                      style={styles.itemHeader}
-                    >
-                      {quantity.input}: ${quantity.price}
-                    </Text>
+                  {info.quantities.length > 0 && (
+                    <>
+                      {info.quantities.map(info => <Text key={info.key} style={styles.itemHeader}>{info.input}: ${info.price}</Text>)}
+                      <Text style={styles.itemHeader}>({info.quantities.length}) quantity(s)</Text>
+                    </>
                   )}
-                  <Text style={[styles.itemHeader]}>({info.quantities.length}) sizes</Text> 
                 </>
               }
 
-              {info.percents.map(percent => <Text key={percent.key} style={styles.itemHeader}>{percent.input}: ${percent.price}</Text>)}
+              {info.percents.map(info => <Text key={info.key} style={styles.itemHeader}>{info.input}: ${info.price}</Text>)}
+              {info.extras.map(info => <Text key={info.key} style={styles.itemHeader}>{info.input}: ${info.price}</Text>)}
             </View>
             <View style={[styles.column, { width: '20%' }]}>
               <TouchableOpacity style={[styles.itemAction, { width: '100%' }]} onPress={() => {
@@ -141,7 +138,7 @@ export default function Menus(props) {
         {name ?
           <View style={styles.menu} >
             <TouchableOpacity style={styles.menuRow} onPress={() => {
-              const newList = [...menuInfo.list]
+              const newList = [...menus]
 
               const toggleMenu = list => {
                 list.forEach(function (item) {
@@ -159,7 +156,7 @@ export default function Menus(props) {
 
               toggleMenu(newList)
 
-              setMenuinfo({ ...menuInfo, list: newList })
+              setMenus(newList)
             }}>
               {image.name && (
                 <View style={styles.menuImageHolder}>
@@ -220,96 +217,13 @@ export default function Menus(props) {
     <View style={styles.box}>
       {loaded ? 
         <View style={{ alignItems: 'center' }}>
-          <ScrollView style={{ height: '90%', width: '100%' }}>
-            <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menuInfo.list })}</View>
+          <ScrollView style={{ width: '100%' }}>
+            <View style={{ marginHorizontal: width * 0.025 }}>{displayList({ id: "", name: "", image: "", list: menus })}</View>
           </ScrollView>
         </View>
         :
         <Loadingprogress/>
       }
-
-      {loaded && requestInfo.show && (
-        <Modal transparent={true}>
-          <SafeAreaView style={{ flex: 1 }}>
-            <View style={styles.serviceInputBox}>
-              <TouchableOpacity onPress={() => setRequestinfo({ ...requestInfo, show: false })}>
-                <AntDesign color="white" name="closecircleo" size={30}/>
-              </TouchableOpacity>
-
-              {(menuInfo.photos.length > 0 || menuInfo.list.length > 0) && (
-                <>
-                  <View style={styles.menuInputBox}>
-                    <TextInput 
-                      style={styles.menuInput} type="text" 
-                      placeholder={"Enter " + header + " # or name"} 
-                      placeholderTextColor="rgba(0, 0, 0, 0.5)"
-                      onChangeText={(info) => setRequestinfo({ ...requestInfo, search: info, error: false })} maxLength={37} autoCorrect={false} autoCapitalize="none"
-                    />
-                    <View style={styles.menuInputActions}>
-                      <TouchableOpacity style={styles.menuInputTouch} onPress={() => {
-                        if (requestInfo.search) {
-                          setRequestinfo({ ...requestInfo, show: false })
-                          props.navigation.setParams({ initialize: true })
-
-                          if (type == "salon") {
-                            props.navigation.navigate(
-                              "booktime", 
-                              { 
-                                locationid, menuid: "", serviceid: "", 
-                                serviceinfo: requestInfo.search, 
-                                type: "salon"
-                              }
-                            )
-                          } else {
-                            props.navigation.navigate(
-                              "itemprofile", 
-                              { 
-                                locationid, menuid: "", productid: "", 
-                                productinfo: requestInfo.search, 
-                                type
-                              }
-                            )
-                          }
-                        } else {
-                          setRequestinfo({ ...requestInfo, error: true })
-                        }
-                      }}>
-                        <Text style={styles.menuInputTouchHeader}>
-                          {type == "salon" ? 
-                            <Text>Book <Text style={{ fontWeight: 'bold' }}>{requestInfo.search + ' '}</Text>now</Text>
-                            : 
-                            "Order item"
-                          }
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  {requestInfo.error && <Text style={styles.menuInputError}>Your request is empty</Text>}
-                </>
-              )}
-
-              <ScrollView style={{ height: '90%', width: '100%' }}>
-                {menuInfo.photos.length > 0 && ( 
-                  menuInfo.photos[0].row && (
-                    menuInfo.photos.map(info => (
-                      info.row.map(item => (
-                        item.photo && item.photo.name && (
-                          <View key={item.key} style={[styles.menuPhoto, resizePhoto(item.photo, wsize(95)), { borderRadius: wsize(95) / 2 }]}>
-                            <Image 
-                              style={{ width: '100%', height: '100%' }}
-                              source={{ uri: logo_url + item.photo.name }}
-                            />
-                          </View>
-                        )
-                      ))
-                    ))
-                  )
-                )}
-              </ScrollView>
-            </View>
-          </SafeAreaView>
-        </Modal>
-      )}
     </View>
   )
 }
@@ -318,15 +232,6 @@ const styles = StyleSheet.create({
   box: { height: '100%', width: '100%' },
   openInput: { borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), margin: 5, padding: 10, width: '40%' },
   openInputHeader: { fontSize: wsize(4), textAlign: 'center' },
-
-  serviceInputBox: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.9)', height: '100%', width: '100%' },
-  menuInputBox: { alignItems: 'center', marginBottom: 5, width: '100%' },
-  menuInput: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), padding: 10, width: '95%' },
-  menuInputActions: { flexDirection: 'row', justifyContent: 'space-around' },
-  menuInputTouch: { backgroundColor: 'white', borderRadius: 3, borderStyle: 'solid', borderWidth: 2, fontSize: wsize(5), margin: 5, padding: 10, width: '40%' },
-  menuInputTouchHeader: { fontSize: wsize(4), textAlign: 'center' },
-  menuInputError: { color: 'darkred', marginLeft: 10 },
-  menuPhoto: { marginBottom: 10, marginHorizontal: width * 0.025 },
 
   menu: { borderTopLeftRadius: 3, borderTopRightRadius: 3, marginBottom: 30, padding: 3 },
   menuRow: { flexDirection: 'row' },

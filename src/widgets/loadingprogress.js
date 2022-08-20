@@ -10,5 +10,5 @@ export default function Loadingprogress(props) {
 }
 
 const styles = StyleSheet.create({
-  box: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.2)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }
+  box: { alignItems: 'center', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' }
 })

@@ -152,7 +152,7 @@ export default function Booktime(props) {
           const prevTime = new Date(unix)
 
           blocked.forEach(function (info) {
-            info["time"] = JSON.parse(info["time"])
+            info["time"] = info["time"]
             info["unix"] = jsonDateToUnix(info["time"])
           })
 
@@ -448,8 +448,7 @@ export default function Booktime(props) {
     const { date, day, month, year } = selectedDateinfo, { blocked } = bookedDateinfo
     const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
     const numBlockTaken = scheduleId > -1 ? 1 + blocked.length : 0
-    let start = openHour + ":" + openMinute
-    let end = closeHour + ":" + closeMinute
+    let start = openHour + ":" + openMinute, end = closeHour + ":" + closeMinute, workerStart = 0, workerEnd = 0
     let timeStr = month + " " + date + " " + year + " "
     let openDateStr = Date.parse(timeStr + start), closeDateStr = Date.parse(timeStr + end), calcDateStr = openDateStr
     let currenttime = Date.now(), newTimes = [], timesRow = [], timesNum = 0
@@ -530,25 +529,29 @@ export default function Booktime(props) {
         if (numBlockTaken) {
           for (let k = 1; k <= numBlockTaken; k++) {
             if (selectedWorkerinfo.id > -1) {
-              let { start, end } = selectedWorkerinfo.hours[day]
-              
-              if (startCalc + "-" + selectedWorkerinfo.id + "-bl" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
-                if (!JSON.stringify(blocked).includes("\"unix\":" + startCalc)) {
-                  timeBlocked = true
+              workerStart = selectedWorkerinfo.hours[day].start
+              workerEnd = selectedWorkerinfo.hours[day].end
+
+
+              if (scheduleId > -1) { // rebooking
+                if (startCalc + "-" + selectedWorkerinfo.id + "-bl" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
+                  if (!JSON.stringify(bookedDateinfo.blocked).includes("\"unix\":" + startCalc)) { // blocked time belong to schedule
+                    timeBlocked = true
+                  }
                 }
-              } else if (
+              }
+
+              if ( // time is taken
                 startCalc + "-" + selectedWorkerinfo.id + "-co" in scheduled[selectedWorkerinfo.id]["scheduled"]
                 ||
                 startCalc + "-" + selectedWorkerinfo.id + "-ca" in scheduled[selectedWorkerinfo.id]["scheduled"]
-              ) { // time is taken
-                if (
-                  scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-co"] != scheduleId
-                  ||
-                  scheduled[selectedWorkerinfo.id]["scheduled"][startCalc + "-" + selectedWorkerinfo.id + "-ca"] != scheduleId
-                ) {
+              ) {
+                if (startCalc != oldTime) {
                   timeBlocked = true
                 }
-              } else if (startCalc >= Date.parse(timeStr + end)) { // stylist is off
+              }
+
+              if (startCalc > Date.parse(timeStr + workerEnd)) { // stylist is off
                 timeBlocked = true
               }
             }
@@ -636,7 +639,7 @@ export default function Booktime(props) {
           if (res) {
             data = { 
               ...data, 
-              receiver: res.receiver, time, speak: res.speak, worker: res.speak.worker, 
+              receiver: res.receiver, time, info: res.info, worker: res.info.worker, 
             }
 
             socket.emit("socket/makeAppointment", data, () => {

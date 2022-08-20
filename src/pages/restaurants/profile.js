@@ -30,7 +30,7 @@ export default function Profile(props) {
 	const { locationid } = props.route.params
 	const func = props.route.params
 
-	const [logo, setLogo] = useState('')
+	const [logo, setLogo] = useState({ name: '', width: 0, height: 0 })
 	const [name, setName] = useState('')
 	const [address, setAddress] = useState('')
 	const [phonenumber, setPhonenumber] = useState('')
@@ -200,43 +200,56 @@ export default function Profile(props) {
 			)}
 			{showInfo.show && (
 				<Modal transparent={true}>
+          
 					<SafeAreaView style={styles.showInfoContainer}>
+            
 						<View style={styles.showInfoBox}>
-							<TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo({ ...showInfo, show: false })}>
-								<AntDesign name="close" size={wsize(7)}/>
-							</TouchableOpacity>
+              <ScrollView>
+                <View style={{ alignItems: 'center', width: '100%' }}>
+  							<TouchableOpacity style={styles.showInfoClose} onPress={() => setShowinfo({ ...showInfo, show: false })}>
+  								<AntDesign name="close" size={wsize(7)}/>
+  							</TouchableOpacity>
 
-							<Text style={styles.showInfoHeader}>{name}</Text>
-							<Text style={styles.showInfoHeader}>{address}</Text>
-							<Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
-							<Text style={styles.showInfoHeader}>{distance}</Text>
+  							<Text style={styles.showInfoHeader}>{name}</Text>
 
-              <View style={styles.placeHours}>
-                <Text style={styles.placeHoursHeader}>Restaurant's Hour(s)</Text>
+                <View style={styles.showInfoPhotoHolder}>
+                  <Image style={resizePhoto(logo, wsize(30))} source={{ uri: logo_url + logo.name }}/>
+                </View>
 
-                {showInfo.locationHours.map(info => (
-                  !info.close && (
-                    <View style={styles.workerTimeContainer} key={info.key}>
-                      <Text style={styles.dayHeader}>{info.header}: </Text>
-                      <View style={styles.timeHeaders}>
-                        <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
-                        <View style={styles.column}><Text>:</Text></View>
-                        <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
-                        <Text style={styles.timeHeader}>{info.opentime.period}</Text>
+  							<Text style={styles.showInfoHeader}>{address}</Text>
+  							<Text style={styles.showInfoPhonenumber}>{phonenumber}</Text>
+  							<Text style={styles.showInfoHeader}>{distance}</Text>
+
+                <View style={styles.placeHours}>
+                  <Text style={styles.placeHoursHeader}>Restaurant's Hour(s)</Text>
+
+                  {showInfo.locationHours.map(info => (
+                    !info.close && (
+                      <View style={styles.workerTimeContainer} key={info.key}>
+                        <Text style={styles.dayHeader}>{info.header}: </Text>
+                        <View style={styles.timeHeaders}>
+                          <Text style={styles.timeHeader}>{info.opentime.hour}</Text>
+                          <View style={styles.column}><Text>:</Text></View>
+                          <Text style={styles.timeHeader}>{info.opentime.minute}</Text>
+                          <Text style={styles.timeHeader}>{info.opentime.period}</Text>
+                        </View>
+                        <View style={styles.column}><Text> - </Text></View>
+                        <View style={styles.timeHeaders}>
+                          <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
+                          <View style={styles.column}><Text>:</Text></View>
+                          <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
+                          <Text style={styles.timeHeader}>{info.closetime.period}</Text>
+                        </View>
                       </View>
-                      <View style={styles.column}><Text> - </Text></View>
-                      <View style={styles.timeHeaders}>
-                        <Text style={styles.timeHeader}>{info.closetime.hour}</Text>
-                        <View style={styles.column}><Text>:</Text></View>
-                        <Text style={styles.timeHeader}>{info.closetime.minute}</Text>
-                        <Text style={styles.timeHeader}>{info.closetime.period}</Text>
-                      </View>
-                    </View>
-                  )
-                ))}
-              </View>
+                    )
+                  ))}
+                </View>
+                </View>
+              </ScrollView>
 						</View>
+            
 					</SafeAreaView>
+          
 				</Modal>
 			)}
 		</SafeAreaView>
@@ -261,22 +274,16 @@ const styles = StyleSheet.create({
 
 	showInfoContainer: { alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', flexDirection: 'column', height: '100%', justifyContent: 'space-around', width: '100%' },
 	showInfoBox: { alignItems: 'center', backgroundColor: 'white', flexDirection: 'column', height: '80%', justifyContent: 'space-around', width: '80%' },
-	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 30 },
+	showInfoClose: { alignItems: 'center', borderRadius: 20, borderStyle: 'solid', borderWidth: 2, marginVertical: 10 },
 	showInfoHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 10, textAlign: 'center' },
-	showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
+	showInfoPhotoHolder: { borderRadius: wsize(30) / 2, height: wsize(30), overflow: 'hidden', width: wsize(30) },
+  showInfoPhonenumber: { fontSize: wsize(5), fontWeight: 'bold', marginHorizontal: 10, marginVertical: 8, textAlign: 'center' },
   placeHours: { marginVertical: 40 },
   placeHoursHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
-  workerInfoList: { width: '100%' },
-  workerInfoListHeader: { fontFamily: 'Chilanka_400Regular', fontSize: wsize(5), textAlign: 'center' },
-  worker: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 30, width: '100%' },
-  workerInfo: {  },
-  workerInfoProfile: { borderRadius: 25, overflow: 'hidden' },
-  workerInfoName: { color: 'black', textAlign: 'center' },
-  workerTime: {  },
   workerTimeContainer: { flexDirection: 'row', marginBottom: 10 },
-  dayHeader: {  },
+  dayHeader: { fontSize: wsize(4.5) },
   timeHeaders: { flexDirection: 'row' },
-  timeHeader: { fontSize: wsize(4), fontWeight: 'bold' },
+  timeHeader: { fontSize: wsize(4.5), fontWeight: 'bold' },
 
   column: { flexDirection: 'column', justifyContent: 'space-around' },
   row: { flexDirection: 'row', justifyContent: 'space-around' },

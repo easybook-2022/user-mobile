@@ -70,7 +70,12 @@ export default function Account(props) {
 					if (res) {
             setLoading(false)
 
-            props.navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "main" }]}))
+            props.navigation.dispatch(
+              CommonActions.reset({ 
+                index: 0, 
+                routes: [{ name: "main" }]
+              })
+            )
 					}
 				})
 				.catch((err) => {

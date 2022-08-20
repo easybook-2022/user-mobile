@@ -99,7 +99,7 @@ export default function App() {
             headerLeft: () => (
               Platform.OS == 'ios' && (
                 <TouchableOpacity style={styles.back} onPress={() => navigation.dispatch(
-                  CommmonActions.reset({
+                  CommonActions.reset({
                     index: 0,
                     routes: [{ name: "main", params: { initialize: true }}]
                   })

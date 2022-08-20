@@ -18,10 +18,8 @@ export default function Userauth(props) {
 	const [authInfo, setAuthinfo] = useState({ info: { username, cellnumber, password, confirmPassword }, loading: false, verifycode: null, verified: false, codesent: false, noAccount: false, errormsg: "" })
 
 	const login = () => {
-		const { info } = authInfo
-		const cellnumber = info.cellnumber ? info.cellnumber : ""
-		const password = info.password ? info.password : ""
-		const data = { cellnumber, password }
+		const { cellnumber, password } = authInfo.info
+		const data = { username, cellnumber, password }
 
 		setAuthinfo({ ...authInfo, loading: true })
 
@@ -81,12 +79,8 @@ export default function Userauth(props) {
 			})
 	}
 	const register = () => {
-		const { info } = authInfo
-    const username = info.username ? info.username : ""
-		const cellnumber = info.cellnumber ? info.cellnumber : ""
-		const password = info.password ? info.password : ""
-		const confirmPassword = password
-		const data = { username, cellnumber, password, confirmPassword }
+		const { username, cellnumber, password } = authInfo.info
+		const data = { username, cellnumber, password, confirmPassword: password }
 
 		setAuthinfo({ ...authInfo, loading: true })
 
