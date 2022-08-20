@@ -41,7 +41,21 @@ export default function Menus(props) {
   }
   const displayListItem = info => {
     return (
-      <View style={styles.item}>
+      <TouchableOpacity style={styles.item} onPress={() => {
+        props.navigation.setParams({ initialize: true })
+
+        if (type == "restaurant") {
+          props.navigation.navigate(
+            "itemprofile", 
+            { locationid, menuid: "", productid: info.id, productinfo: "", type }
+          )
+        } else {
+          props.navigation.navigate(
+            "booktime", 
+            { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
+          )
+        }
+      }}>
         {type == "restaurant" ? 
           <>
             <View style={[styles.column, { width: '40%' }]}>
@@ -83,16 +97,7 @@ export default function Menus(props) {
               {info.extras.map(info => <Text key={info.key} style={styles.itemHeader}>{info.input}: ${info.price}</Text>)}
             </View>
             <View style={[styles.column, { width: '20%' }]}>
-              <TouchableOpacity style={[styles.itemAction, { width: '100%' }]} onPress={() => {
-                props.navigation.setParams({ initialize: true })
-
-                props.navigation.navigate(
-                  "itemprofile", 
-                  { locationid, menuid: "", productid: info.id, productinfo: "", type }
-                )
-              }}>
-                <Text style={styles.itemActionHeader}>Order now</Text>
-              </TouchableOpacity>
+              <View style={[styles.itemAction, { width: '100%' }]}><Text style={styles.itemActionHeader}>Order now</Text></View>
             </View>
           </>
           :
@@ -113,21 +118,12 @@ export default function Menus(props) {
                 <Text style={styles.itemHeader}>{info.name}</Text>
                 <Text style={styles.itemMiniHeader}>{info.description}</Text>
                 <Text style={styles.itemHeader}>$ {info.price}</Text>
-                <TouchableOpacity style={styles.itemAction} onPress={() => {
-                  props.navigation.setParams({ initialize: true })
-
-                  props.navigation.navigate(
-                    "booktime", 
-                    { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
-                  )
-                }}>
-                  <Text style={styles.itemActionHeader}>Book</Text>
-                </TouchableOpacity>
+                <View style={styles.itemAction}><Text style={styles.itemActionHeader}>Book</Text></View>
               </View>
             </View>
           </>
         }
-      </View>
+      </TouchableOpacity>
     )
   }
   const displayList = info => {

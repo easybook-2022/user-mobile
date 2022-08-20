@@ -79,7 +79,7 @@ export default function App() {
             )
           })}/>
           <Stack.Screen name="booktime" component={Booktime} options={({ navigation, route }) => ({
-            headerTitle: () => <Text style={styles.header}>{route.params.scheduleid ? 'Rebook' : 'Book'} an appointment</Text>,
+            headerTitle: () => <Text style={styles.header}>{route.params.scheduleid ? 'Change' : 'Book an'} appointment</Text>,
             headerLeft: () => (
               Platform.OS == 'ios' && (
                 <TouchableOpacity style={styles.back} onPress={() => {

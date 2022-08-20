@@ -34,15 +34,16 @@ export default function Booktime(props) {
   const pushtime = 1000 * (60 * 15)
 
   const { locationid, serviceid, serviceinfo } = props.route.params
+  const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
-  const [scheduleId, setScheduleid] = useState(props.route.params.scheduleid ? props.route.params.scheduleid : null)
   const [userId, setUserid] = useState(null)
+  const [clientInfo, setClientinfo] = useState({ id: -1, name: "" })
   const [name, setName] = useState('')
   const [hoursInfo, setHoursinfo] = useState({})
   const [oldTime, setOldtime] = useState(0)
-  const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0 })
+  const [selectedDateinfo, setSelecteddateinfo] = useState({ month: '', year: 0, day: '', date: 0, hour: 0, minute: 0, select: false })
   const [bookedDateinfo, setBookeddateinfo] = useState({ month: '', year: 0, day: '', date: 0, blocked: [] })
-  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, hours: null, loading: false })
+  const [selectedWorkerinfo, setSelectedworkerinfo] = useState({ id: -1, username: '', profile: { name: '', width: 0, height: 0 }, hours: {}, loading: false })
   const [calendar, setCalendar] = useState({ firstDay: 0, numDays: 30, data: [
     { key: "day-row-0", row: [
         { key: "day-0-0", num: 0, passed: false, noservice: false }, { key: "day-0-1", num: 0, passed: false, noservice: false }, { key: "day-0-2", num: 0, passed: false, noservice: false }, 
@@ -81,7 +82,7 @@ export default function Booktime(props) {
   const [scheduled, setScheduled] = useState({})
   const [loaded, setLoaded] = useState(false)
 
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(props.route.params.scheduleid ? null : 0)
   const [numCartItems, setNumcartitems] = useState(0)
 
   const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
@@ -133,7 +134,7 @@ export default function Booktime(props) {
       })
   }
   const getTheAppointmentInfo = async(fetchBlocked) => {
-    getAppointmentInfo(scheduleId)
+    getAppointmentInfo(scheduleid)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -147,13 +148,30 @@ export default function Booktime(props) {
           setName(name)
           setOldtime(unix)
 
-          if (!fetchBlocked) setSelectedworkerinfo({ ...selectedWorkerinfo, id: worker.id })
+          if (!fetchBlocked) {
+            setSelectedworkerinfo({ 
+              ...selectedWorkerinfo, 
+              id: worker.id, username: worker.username, 
+              profile: JSON.parse(worker.profile),
+              hours: worker.days
+            })
+          }
 
           const prevTime = new Date(unix)
 
           blocked.forEach(function (info) {
             info["time"] = info["time"]
             info["unix"] = jsonDateToUnix(info["time"])
+          })
+
+          setSelecteddateinfo({
+            ...selectedDateinfo,
+            month: months[prevTime.getMonth()],  
+            day: days[prevTime.getDay()].substr(0, 3),
+            year: prevTime.getFullYear(),
+            date: prevTime.getDate(),
+            hour: prevTime.getHours(),
+            minute: prevTime.getMinutes()
           })
 
           setBookeddateinfo({ 
@@ -174,25 +192,6 @@ export default function Booktime(props) {
         }
       })
   }
-  const getTheExistBooking = async() => {
-    const userid = await AsyncStorage.getItem("userid")
-
-    if (userid && serviceid && !scheduleId) {
-      const data = { userid, serviceid }
-
-      getExistBooking(data)
-        .then((res) => {
-          if (res.status == 200) {
-            return res.data
-          }
-        })
-        .then((res) => {
-          if (res) {
-            setScheduleid(res.scheduleid)
-          }
-        })
-    }
-  }
   const getTheLocationHours = () => {
     getLocationHours(locationid)
       .then((res) => {
@@ -205,7 +204,6 @@ export default function Booktime(props) {
           const { hours } = res
 
           setHoursinfo(hours)
-          setLoaded(true)
         }
       })
       .catch((err) => {
@@ -408,10 +406,12 @@ export default function Booktime(props) {
           }
 
           setScheduled(workersHour)
+
+          if (scheduleid) setStep(null)
         }
       })
   }
-  const selectWorker = id => {
+  const selectWorker = (id, close) => {
     getStylistInfo(id)
       .then((res) => {
         if (res.status == 200) {
@@ -420,8 +420,14 @@ export default function Booktime(props) {
       })
       .then((res) => {
         if (res) {
-          setSelectedworkerinfo({ ...selectedWorkerinfo, id, hours: res.days })
-          setStep(1)
+          setSelectedworkerinfo({ ...selectedWorkerinfo, id, username: res.username, profile: res.profile, hours: res.days })
+          setSelecteddateinfo({ ...selectedDateinfo, select: true })
+
+          if (close) {
+            setStep(1)
+          } else {
+            setStep(null)
+          }
         }
       })
   }
@@ -447,7 +453,7 @@ export default function Booktime(props) {
   const selectDate = () => {
     const { date, day, month, year } = selectedDateinfo, { blocked } = bookedDateinfo
     const { openHour, openMinute, closeHour, closeMinute } = hoursInfo[day]
-    const numBlockTaken = scheduleId > -1 ? 1 + blocked.length : 0
+    const numBlockTaken = scheduleid ? 1 + blocked.length : 0
     let start = openHour + ":" + openMinute, end = closeHour + ":" + closeMinute, workerStart = 0, workerEnd = 0
     let timeStr = month + " " + date + " " + year + " "
     let openDateStr = Date.parse(timeStr + start), closeDateStr = Date.parse(timeStr + end), calcDateStr = openDateStr
@@ -533,7 +539,7 @@ export default function Booktime(props) {
               workerEnd = selectedWorkerinfo.hours[day].end
 
 
-              if (scheduleId > -1) { // rebooking
+              if (scheduleid) { // rebooking
                 if (startCalc + "-" + selectedWorkerinfo.id + "-bl" in scheduled[selectedWorkerinfo.id]["scheduled"]) { // time is blocked
                   if (!JSON.stringify(bookedDateinfo.blocked).includes("\"unix\":" + startCalc)) { // blocked time belong to schedule
                     timeBlocked = true
@@ -617,7 +623,7 @@ export default function Booktime(props) {
       })
 
       let data = { 
-        id: scheduleId, // id for socket purpose (updating)
+        id: scheduleid, // id for socket purpose (updating)
         userid: userId || id, 
         workerid: workerid > -1 ? workerid : workerIds[Math.floor(Math.random() * (workerIds.length - 1)) + 0], 
         locationid, 
@@ -625,7 +631,7 @@ export default function Booktime(props) {
         serviceinfo: serviceinfo ? serviceinfo : name,
         time: selecteddate, note: note ? note : "", 
         timeDisplay: displayTime(selecteddate),
-        type: scheduleId > -1 ? "remakeAppointment" : "makeAppointment",
+        type: scheduleid ? "remakeAppointment" : "makeAppointment",
         blocked
       }
 
@@ -711,16 +717,18 @@ export default function Booktime(props) {
     getAllTheStylists()
     getTheLocationHours()
     getAllTheWorkersTime()
-    getTheExistBooking()
 
     if (serviceid) getTheServiceInfo()
-    if (scheduleId) getTheAppointmentInfo()
+    if (scheduleid) {
+      getAllScheduledTimes()
+      getTheAppointmentInfo()
+    }
 	}, [])
 
   useEffect(() => {
-    const currTime = new Date()
+    if (selectedDateinfo.select) {
+      const currTime = new Date()
 
-    if (selectedWorkerinfo.hours != null) {
       if (oldTime == 0) {
         getCalendar(currTime.getMonth(), currTime.getFullYear())
       } else {
@@ -729,24 +737,41 @@ export default function Booktime(props) {
         getCalendar(prevTime.getMonth(), prevTime.getFullYear())
       }
     }
-  }, [selectedWorkerinfo.hours])
-
-  useEffect(() => {
-    if (Object.keys(scheduled).length > 0) selectDate()
-  }, [scheduled])
-
-  useEffect(() => {
-    getTheAppointmentInfo()
-  }, [scheduleId])
+  }, [selectedDateinfo.select])
 
 	return (
 		<SafeAreaView style={styles.booktime}>
 		  <View style={styles.box}>
         {loaded ? 
           <>
+            {step == null && (
+              <View style={styles.options}>
+                <TouchableOpacity style={styles.option} onPress={() => setStep(0)}>
+                  <View style={styles.column}><Text style={styles.optionHeader}>Change Stylist</Text></View>
+
+                  <View style={{ alignItems: 'center' }}>
+                    <View style={styles.selectedProfile}>
+                      <Image style={resizePhoto(selectedWorkerinfo.profile, wsize(10))} source={selectedWorkerinfo.profile.name ? { uri: logo_url + selectedWorkerinfo.profile.name } : require("../../../assets/profilepicture.jpeg")}/>
+                    </View>
+                    <Text style={styles.selectedHeader}>{selectedWorkerinfo.username}</Text>
+                  </View>
+                </TouchableOpacity>
+                
+                <View style={{ alignItems: 'center', width: '100%' }}>
+                  <Text style={styles.optionOldHeader}>{displayTime(jsonDateToUnix(selectedDateinfo))}</Text>
+                  <TouchableOpacity style={styles.option} onPress={() => selectWorker(selectedWorkerinfo.id, true)}>
+                    <View style={styles.column}><Text style={styles.optionHeader}>Change Date</Text></View>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.option} onPress={() => selectDate()}>
+                    <View style={styles.column}><Text style={styles.optionHeader}>Change Time</Text></View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
             {step == 0 && (
               <View style={styles.workerSelection}>
-                <Text style={styles.workerSelectionHeader}>Pick a{scheduleId == -1 ? '' : '\ndifferent'} stylist (Optional)</Text>
+                <Text style={styles.workerSelectionHeader}>Pick a{!scheduleid ? '' : '\ndifferent'} stylist (Optional)</Text>
 
                 <View style={styles.workersList}>
                   <FlatList
@@ -776,7 +801,7 @@ export default function Booktime(props) {
 
             {step == 1 && (
               <View style={styles.dateSelection}>
-                <Text style={styles.dateSelectionHeader}>Tap a{scheduleId == -1 ? '' : '\ndifferent'} date below</Text>
+                <Text style={styles.dateSelectionHeader}>Tap a{!scheduleid ? '' : '\ndifferent'} date below</Text>
 
                 {!calendar.loading && (
                   <>
@@ -838,8 +863,8 @@ export default function Booktime(props) {
             {step == 2 && (
               <View style={styles.timesSelection}>
                 <ScrollView style={{ width: '100%' }}>
-                  <Text style={[styles.timesHeader, { fontSize: 15 }]}>{scheduleId > -1 && 'Current: ' + displayTime(oldTime)}</Text>
-                  <Text style={styles.timesHeader}>Tap a{scheduleId == -1 ? '' : '\ndifferent'} time below</Text>
+                  <Text style={[styles.timesHeader, { fontSize: 15 }]}>{scheduleid && 'Current: ' + displayTime(oldTime)}</Text>
+                  <Text style={styles.timesHeader}>Tap a{!scheduleid ? '' : '\ndifferent'} time below</Text>
 
                   <View style={{ alignItems: 'center' }}>
                     <View style={styles.times}>
@@ -862,54 +887,69 @@ export default function Booktime(props) {
             )}
 
             <View style={styles.actions}>
-              <TouchableOpacity style={styles.action} onPress={() => {
-                switch (step) {
-                  case 0:
-                    props.navigation.goBack()
-
-                    break;
-                  default:
-                }
-
-                setStep(step - 1)
-              }}>
-                <Text style={styles.actionHeader}>Back</Text>
-              </TouchableOpacity>
-
-              {(step == 0 || step == 1) && (
+              {scheduleid ? 
                 <>
-                  {step == 0 && (
-                    <>
-                      <TouchableOpacity style={styles.action} onPress={() => {
-                        if (allStylists.numStylists == 1) {
-                          selectWorker(allStylists.ids[0])
-                        } else {
-                          setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
-                        }
-                        
-                        setStep(1)
-                      }}>
-                        <Text style={styles.actionHeader}>{allStylists.numStylists == 1 ? 'Next' : 'Pick Random'}</Text>
-                      </TouchableOpacity>
+                  <TouchableOpacity style={styles.action} onPress={() => {
+                    const { day, month, date, year, hour, minute } = selectedDateinfo
+                    const time = { day, month, date, year, hour, minute }
 
-                      {selectedWorkerinfo.id > -1 && allStylists.numStylists > 1 && (
-                        <TouchableOpacity style={styles.action} onPress={() => selectWorker(selectedWorkerinfo.id)}>
+                    selectTime({ time: jsonDateToUnix(time), workerIds: [selectedWorkerinfo.hours[day]["workerId"]] })
+                  }}>
+                    <Text style={styles.actionHeader}>Done</Text>
+                  </TouchableOpacity>
+                </>
+                :
+                <>
+                  <TouchableOpacity style={styles.action} onPress={() => {
+                    switch (step) {
+                      case 0:
+                        props.navigation.goBack()
+
+                        break;
+                      default:
+                    }
+
+                    setStep(step - 1)
+                  }}>
+                    <Text style={styles.actionHeader}>Back</Text>
+                  </TouchableOpacity>
+
+                  {(step == 0 || step == 1) && (
+                    <>
+                      {step == 0 && (
+                        <>
+                          <TouchableOpacity style={styles.action} onPress={() => {
+                            if (allStylists.numStylists == 1) {
+                              selectWorker(allStylists.ids[0])
+                            } else {
+                              setSelectedworkerinfo({ ...selectedWorkerinfo, id: -1, hours: {} })
+                            }
+                            
+                            setStep(1)
+                          }}>
+                            <Text style={styles.actionHeader}>{allStylists.numStylists == 1 ? 'Next' : 'Pick Random'}</Text>
+                          </TouchableOpacity>
+
+                          {selectedWorkerinfo.id > -1 && allStylists.numStylists > 1 && (
+                            <TouchableOpacity style={styles.action} onPress={() => selectWorker(selectedWorkerinfo.id)}>
+                              <Text style={styles.actionHeader}>Next</Text>
+                            </TouchableOpacity>
+                          )}
+                        </>
+                      )}
+
+                      {step == 1 && (
+                        <TouchableOpacity style={styles.action} onPress={() => {
+                          getTheAppointmentInfo(true)
+                          getAllScheduledTimes()
+                        }}>
                           <Text style={styles.actionHeader}>Next</Text>
                         </TouchableOpacity>
                       )}
                     </>
                   )}
-
-                  {step == 1 && (
-                    <TouchableOpacity style={styles.action} onPress={() => {
-                      getTheAppointmentInfo(true)
-                      getAllScheduledTimes()
-                    }}>
-                      <Text style={styles.actionHeader}>Next</Text>
-                    </TouchableOpacity>
-                  )}
                 </>
-              )}
+              }
             </View>
           </>
           :
@@ -1044,7 +1084,13 @@ const styles = StyleSheet.create({
   booktime: { backgroundColor: 'white', height: '100%', width: '100%' },
   box: { backgroundColor: '#EAEAEA', flexDirection: 'column', height: '100%', justifyContent: 'space-between', width: '100%' },
 
-  serviceHeader: { fontSize: wsize(8), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
+  options: { alignItems: 'center', flexDirection: 'column', height: '50%', justifyContent: 'space-around', width: '100%' },
+  option: { borderRadius: 5, borderStyle: 'solid', borderWidth: 2, flexDirection: 'row', justifyContent: 'space-around', marginVertical: 5, padding: 5, width: '80%' },
+  optionHeader: { fontSize: wsize(7), fontWeight: '200', textAlign: 'center' },
+  optionOldHeader: { backgroundColor: 'black', color: 'white', fontSize: wsize(7), padding: 10 },
+
+  selectedHeader: { fontSize: wsize(8), fontWeight: 'bold', paddingVertical: 10, textAlign: 'center' },
+  selectedProfile: { borderRadius: wsize(10) / 2, height: wsize(10), overflow: 'hidden', width: wsize(10) },
 
   // stylists list
   workerSelection: { alignItems: 'center', marginTop: 20 },
