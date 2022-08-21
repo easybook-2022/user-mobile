@@ -722,6 +722,8 @@ export default function Booktime(props) {
     if (scheduleid) {
       getAllScheduledTimes()
       getTheAppointmentInfo()
+    } else {
+      setLoaded(true)
     }
 	}, [])
 
@@ -738,6 +740,24 @@ export default function Booktime(props) {
       }
     }
   }, [selectedDateinfo.select])
+
+  useEffect(() => { // booking (only)
+    if (!scheduleid) {
+      const currTime = new Date()
+
+      getCalendar(currTime.getMonth(), currTime.getFullYear())
+    } else {
+      const prevTime = new Date(oldTime)
+
+      getCalendar(prevTime.getMonth(), prevTime.getFullYear())
+    }
+  }, [selectedWorkerinfo.hours])
+
+  useEffect(() => {
+    if (!scheduleid && Object.keys(scheduled).length > 0) {
+      selectDate()
+    }
+  }, [scheduled])
 
 	return (
 		<SafeAreaView style={styles.booktime}>
@@ -780,7 +800,13 @@ export default function Booktime(props) {
                       <View key={item.key} style={styles.workersRow}>
                         {item.row.map(info => (
                           info.id ? 
-                            <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => selectWorker(info.id)}>
+                            <TouchableOpacity key={info.key} style={[styles.worker, { backgroundColor: (selectedWorkerinfo.id == info.id) ? 'rgba(0, 0, 0, 0.3)' : null }]} disabled={selectedWorkerinfo.loading} onPress={() => {
+                              if (scheduleid) {
+                                selectWorker(info.id)
+                              } else {
+                                selectWorker(info.id, true)
+                              }
+                            }}>
                               <View style={styles.workerProfile}>
                                 <Image 
                                   source={info.profile.name ? { uri: logo_url + info.profile.name } : require("../../../assets/profilepicture.jpeg")} 

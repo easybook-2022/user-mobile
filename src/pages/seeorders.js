@@ -7,6 +7,9 @@ import * as Speech from 'expo-speech';
 import { socket, logo_url, useSpeech } from '../../assets/info'
 import { seeOrders } from '../apis/carts'
 
+// widgets
+import Disable from '../widgets/disable'
+
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 

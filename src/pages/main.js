@@ -394,7 +394,7 @@ export default function Main(props) {
                       item.locations.length > 0 && (
                         <View key={item.key} style={styles.service}>
                           <Text style={styles.rowHeader}>{item.locations.length} {item.header} near you</Text>
-
+                          
                           <View style={styles.row}>
                             <FlatList
                               ListFooterComponent={() => {

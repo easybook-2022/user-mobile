@@ -29,7 +29,7 @@ export default function App() {
         <Stack.Navigator initialRouteName="main">
           <Stack.Screen name="main" component={Main} options={{ headerShown: false }}/>
           <Stack.Screen name="seeorders" component={Seeorders} options={({ navigation, route }) => ({
-            headerTitle: () => <Text style={styles.header}>#{route.params.ordernumber} Order(s)</Text>,
+            headerTitle: () => <Text style={styles.header}>Order(s)</Text>,
             headerLeft: () => (
               Platform.OS == 'ios' && (
                 <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>

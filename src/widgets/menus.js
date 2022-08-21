@@ -47,12 +47,12 @@ export default function Menus(props) {
         if (type == "restaurant") {
           props.navigation.navigate(
             "itemprofile", 
-            { locationid, menuid: "", productid: info.id, productinfo: "", type }
+            { locationid, menuid: "", productid: info.id, type }
           )
         } else {
           props.navigation.navigate(
             "booktime", 
-            { locationid, menuid: "", serviceid: info.id, serviceInfo: "" }
+            { locationid, menuid: "", serviceid: info.id }
           )
         }
       }}>

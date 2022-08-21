@@ -24,7 +24,7 @@ const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
 
 export default function Itemprofile(props) {
-	const { locationid, productid, productinfo, type } = props.route.params
+	const { locationid, productid, type } = props.route.params
 	const func = props.route.params
 
 	const [itemName, setItemname] = useState('')
@@ -187,49 +187,46 @@ export default function Itemprofile(props) {
 			const newSizes = [], newQuantities = [], newPercents = [], newExtras = []
 			let size = "", price = 0
       
-			if (!productinfo) {
-        if (itemPrice) {
-          price = itemPrice * quantity
-        } else {
-          sizes.forEach(function (info) {
-            if (info.selected) {
-              newSizes.push(info.name)
+      if (itemPrice) {
+        price = itemPrice * quantity
+      } else {
+        sizes.forEach(function (info) {
+          if (info.selected) {
+            newSizes.push(info.name)
 
-              price += parseFloat(info.price) * quantity
-            }
-          })
+            price += parseFloat(info.price) * quantity
+          }
+        })
 
-          quantities.forEach(function (info) {
-            if (info.selected) {
-              newQuantities.push(info.input)
+        quantities.forEach(function (info) {
+          if (info.selected) {
+            newQuantities.push(info.input)
 
-              price += parseFloat(info.price) * quantity
-            }
-          })
+            price += parseFloat(info.price) * quantity
+          }
+        })
+      }
+
+      percents.forEach(function (info) {
+        if (info.selected) {
+          newPercents.push(info.input)
+
+          price += parseFloat(info.price) * quantity
         }
+      })
 
-        percents.forEach(function (info) {
-          if (info.selected) {
-            newPercents.push(info.input)
+      extras.forEach(function (info) {
+        if (info.selected) {
+          newExtras.push(info.input)
 
-            price += parseFloat(info.price) * quantity
-          }
-        })
-
-        extras.forEach(function (info) {
-          if (info.selected) {
-            newExtras.push(info.input)
-
-            price += parseFloat(info.price) * quantity
-          }
-        })
-			}
+          price += parseFloat(info.price) * quantity
+        }
+      })
       
-			if (price || productinfo) {
+			if (price) {
 				const data = { 
 					userid: userId || id, locationid, 
 					productid: productid ? productid : -1, 
-					productinfo: productinfo ? productinfo : "", 
 					quantity, 
 					callfor, 
 					sizes: newSizes, quantities: newQuantities, percents: newPercents, extras: newExtras, 
@@ -274,6 +271,17 @@ export default function Itemprofile(props) {
 			.then((res) => {
 				if (res) {
 					const { productImage, name, sizes, quantities, percents, extras, price, cost } = res.productInfo
+          let newCost = cost
+
+          if (sizes.length == 1) {
+            sizes[0].selected = true
+            newCost += parseFloat(sizes[0].price)
+          }
+
+          if (quantities.length == 1) {
+            quantities[0].selected = true
+            newCost += parseFloat(quantities[0].price)
+          }
 
 					setItemname(name)
 					setItemimage(productImage)
@@ -282,7 +290,7 @@ export default function Itemprofile(props) {
           setQuantities(quantities)
           setPercents(percents)
           setExtras(extras)
-					setCost(cost)
+					setCost(newCost)
           setLoaded(true)
 				}
 			})
@@ -321,7 +329,7 @@ export default function Itemprofile(props) {
               )}
   					</View>
 
-  					<Text style={styles.boxHeader}>{itemName ? itemName : productinfo}</Text>
+  					<Text style={styles.boxHeader}>{itemName}</Text>
 
   					{sizes.length > 0 && (
   						<View style={styles.optionsBox}>
@@ -391,26 +399,14 @@ export default function Itemprofile(props) {
               </View>
             )}
 
-  					{!productinfo ? 
-  						<View style={styles.note}>
-  							<TextInput 
-  								style={styles.noteInput} multiline textAlignVertical="top" 
-  								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder="Leave a note if you want" 
-  								maxLength={100} onChangeText={(note) => setItemnote(note)} 
-  								autoCorrect={false} autoCapitalize="none"
-  							/>
-  						</View>
-  						:
-  						<View style={styles.note}>
-  							<Text style={styles.noteHeader}>Add some instruction if you want ?</Text>
-  							<TextInput 
-  								style={styles.noteInput} multiline textAlignVertical="top" 
-  								placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder={"example: " + (type == "store" ? "make it medium size" : "add 2 cream and 1 sugar")}
-  								maxLength={100} onChangeText={(note) => setItemnote(note)} 
-  								autoCorrect={false} autoCapitalize="none"
-  							/>
-  						</View>
-  					}
+  					<View style={styles.note}>
+              <TextInput 
+                style={styles.noteInput} multiline textAlignVertical="top" 
+                placeholderTextColor="rgba(127, 127, 127, 0.8)" placeholder="Leave a note if you want" 
+                maxLength={100} onChangeText={(note) => setItemnote(note)} 
+                autoCorrect={false} autoCapitalize="none"
+              />
+            </View>
 
   					<View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
   						<View style={styles.quantity}>
@@ -433,14 +429,14 @@ export default function Itemprofile(props) {
               </View>
   					</View>
 
-  					{!productinfo ? <Text style={styles.price}>Cost: $ {cost.toFixed(2)}</Text> : null}
+  					<Text style={styles.price}>Cost: $ {cost.toFixed(2)}</Text>
 
   					{errorMsg ? <Text style={styles.errorMsg}>{errorMsg}</Text> : null}
 
   					<View style={styles.itemActions}>
   						<View style={{ flexDirection: 'row' }}>
   							<TouchableOpacity style={styles.itemAction} onPress={() => addCart()}>
-  								<Text style={styles.itemActionHeader}>Order <Text style={{ fontWeight: 'bold' }}>{quantity}</Text> item</Text>
+  								<Text style={styles.itemActionHeader}>Add to cart</Text>
   							</TouchableOpacity>
   						</View>
   					</View>

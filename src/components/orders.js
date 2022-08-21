@@ -26,7 +26,7 @@ export default function Orders(props) {
 	const [showConfirm, setShowconfirm] = useState(false)
 	const [itemInfo, setIteminfo] = useState({ 
 		show: false, cartid: "", name: "", info: "", note: "", 
-		image: "", price: "", sizes: [], quantities: [], percents: [], 
+		image: "", price: "", sizes: [], quantities: [], percents: [], extras: [], 
     quantity: 1, cost: 0,
 		errorMsg: ""
 	})
@@ -132,7 +132,7 @@ export default function Orders(props) {
 			})
 			.then((res) => {
 				if (res) {
-					const { name, info, image, quantity, sizes, quantities, percents, note, price, cost } = res.cartItem
+					const { name, info, image, quantity, sizes, quantities, percents, extras, note, price, cost } = res.cartItem
 
 					setIteminfo({
 						...itemInfo,
@@ -140,7 +140,7 @@ export default function Orders(props) {
 						cartid,
 						name, info, image,
 						quantity, note, 
-            sizes, quantities, percents,
+            sizes, quantities, percents, extras, 
 						price, cost
 					})
 				}
@@ -152,9 +152,9 @@ export default function Orders(props) {
 			})
 	}
 	const updateTheCartItem = () => {
-		const { cartid, quantity, sizes, quantities, percents, note } = itemInfo
+		const { cartid, quantity, sizes, quantities, percents, extras, note } = itemInfo
 		let data = { cartid, quantity, note }
-    const newSizes = [], newQuantities = [], newPercents = []
+    const newSizes = [], newQuantities = [], newPercents = [], newExtras = []
 
     setLoaded(false)
 
@@ -166,19 +166,26 @@ export default function Orders(props) {
 
     quantities.forEach(function (quantity) {
       if (quantity.selected) {
-        newQuantities.push(quantity.name)
+        newQuantities.push(quantity.input)
       }
     })
 
     percents.forEach(function (percent) {
       if (percent.selected) {
-        newPercents.push(percent.name)
+        newPercents.push(percent.input)
+      }
+    })
+
+    extras.forEach(function (extra) {
+      if (extra.selected) {
+        newExtras.push(extra.input)
       }
     })
 
     data["sizes"] = newSizes
     data["quantities"] = newQuantities
     data["percents"] = newPercents
+    data["extras"] = newExtras
 
 		updateCartItem(data)
 			.then((res) => {
@@ -361,12 +368,14 @@ export default function Orders(props) {
     												<TouchableOpacity disabled={item.status == "checkout"} onPress={() => removeTheCartItem(item.id)}>
     													<AntDesign name="closecircleo" size={wsize(7)}/>
     												</TouchableOpacity>
-    												<View style={styles.itemImageHolder}>
-                              <Image 
-                                source={item.image.name ? { uri: logo_url + item.image.name } : require("../../assets/noimage.jpeg")} 
-                                style={resizePhoto(item.image, 70)}
-                              />
-                            </View>
+      											{item.image.name && (
+                              <View style={styles.itemImageHolder}>
+                                <Image 
+                                  source={{ uri: logo_url + item.image.name }} 
+                                  style={resizePhoto(item.image, 70)}
+                                />
+                              </View>
+                            )}
     												<View style={styles.itemInfos}>
     													<Text style={styles.itemName}>{item.name}</Text>
 
@@ -465,16 +474,16 @@ export default function Orders(props) {
 							<Text style={styles.boxItemHeaderInfo}>{itemInfo.info}</Text>
 
 							{itemInfo.sizes.length > 0 && (
-								<View style={styles.sizesBox}>
-									<Text style={styles.sizesHeader}>Select a size</Text>
+								<View style={styles.optionsBox}>
+									<Text style={styles.optionsHeader}>Select a size</Text>
 
-									<View style={styles.sizes}>
+									<View style={styles.options}>
 										{itemInfo.sizes.map((info, index) => (
-											<View key={info.key} style={styles.size}>
-												<TouchableOpacity style={info.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "sizes")}>
-													<Text style={info.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{info.name}</Text>
+											<View key={info.key} style={styles.option}>
+												<TouchableOpacity style={info.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "sizes")}>
+													<Text style={info.selected ? styles.optionTouchHeaderDisabled : styles.optionTouchHeader}>{info.name}</Text>
 												</TouchableOpacity>
-												<Text style={styles.sizePrice}>$ {info.price}</Text>
+												<Text style={styles.optionPrice}>$ {info.price}</Text>
 											</View>
 										))}
 									</View>
@@ -482,16 +491,50 @@ export default function Orders(props) {
 							)}
 
               {itemInfo.quantities.length > 0 && (
-                <View style={styles.sizesBox}>
-                  <Text style={styles.sizesHeader}>Select a quantity</Text>
+                <View style={styles.optionsBox}>
+                  <Text style={styles.optionsHeader}>Select a quantity</Text>
 
-                  <View style={styles.sizes}>
+                  <View style={styles.options}>
                     {itemInfo.quantities.map((info, index) => (
-                      <View key={info.key} style={styles.size}>
-                        <TouchableOpacity style={info.selected ? styles.sizeTouchDisabled : styles.sizeTouch} onPress={() => selectOption(index, "quantities")}>
-                          <Text style={info.selected ? styles.sizeTouchHeaderDisabled : styles.sizeTouchHeader}>{info.name}</Text>
+                      <View key={info.key} style={styles.option}>
+                        <TouchableOpacity style={info.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "quantities")}>
+                          <Text style={info.selected ? styles.optionTouchHeaderDisabled : styles.optionTouchHeader}>{info.input}</Text>
                         </TouchableOpacity>
-                        <Text style={styles.sizePrice}>$ {info.price}</Text>
+                        <Text style={styles.optionPrice}>$ {info.price}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {itemInfo.percents.length > 0 && (
+                <View style={styles.optionsBox}>
+                  <Text style={styles.optionsHeader}>Select a percent (Optional)</Text>
+
+                  <View style={styles.options}>
+                    {itemInfo.percents.map((info, index) => (
+                      <View key={info.key} style={styles.option}>
+                        <TouchableOpacity style={info.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "percents")}>
+                          <Text style={info.selected ? styles.optionTouchHeaderDisabled : styles.optionTouchHeader}>{info.input}</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.optionPrice}>$ {info.price}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {itemInfo.extras.length > 0 && (
+                <View style={styles.optionsBox}>
+                  <Text style={styles.optionsHeader}>Select an extra (Optional)</Text>
+
+                  <View style={styles.options}>
+                    {itemInfo.extras.map((info, index) => (
+                      <View key={info.key} style={styles.option}>
+                        <TouchableOpacity style={info.selected ? styles.optionTouchDisabled : styles.optionTouch} onPress={() => selectOption(index, "extras")}>
+                          <Text style={info.selected ? styles.optionTouchHeaderDisabled : styles.optionTouchHeader}>{info.input}</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.optionPrice}>$ {info.price}</Text>
                       </View>
                     ))}
                   </View>
@@ -611,30 +654,16 @@ const styles = StyleSheet.create({
 	percentageAction: { alignItems: 'center', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, height: 35, paddingTop: 8, width: 35 },
 	percentageHeader: { fontSize: wsize(4), fontWeight: 'bold', padding: 10 },
 
-	// others
-	othersBox: { alignItems: 'center', marginVertical: 20 },
-	othersHeader: { fontWeight: 'bold' },
-	others: { marginVertical: 20, width: '100%' },
-	other: { alignItems: 'center', marginVertical: 5, width: '100%' },
-	otherName: { fontSize: wsize(5), fontWeight: 'bold' },
-	otherInput: { fontSize: wsize(5) },
-	otherPrice: { fontWeight: 'bold', marginRight: 10, marginTop: 5 },
-	otherActions: { flexDirection: 'row', marginTop: -5 },
-	otherActionLeft: { alignItems: 'center', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
-	otherActionLeftDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomLeftRadius: 5, borderTopLeftRadius: 5, borderRightWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
-	otherActionRight: { alignItems: 'center', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
-	otherActionRightDisabled: { alignItems: 'center', backgroundColor: 'black', borderBottomRightRadius: 5, borderTopRightRadius: 5, borderLeftWidth: 0.25, borderStyle: 'solid', borderWidth: 0.5, padding: 10, width: 50 },
-
-	// sizes
-	sizesBox: { alignItems: 'center', marginVertical: 20 },
-	sizesHeader: { fontWeight: 'bold' },
-	sizes: { marginVertical: 20 },
-	size: { flexDirection: 'row', marginVertical: 5 },
-	sizeTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
-	sizeTouchDisabled: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
-	sizeTouchHeader: { textAlign: 'center' },
-	sizeTouchHeaderDisabled: { color: 'white', textAlign: 'center' },
-	sizePrice: { fontWeight: 'bold', margin: 10 },
+	// options
+	optionsBox: { alignItems: 'center', marginVertical: 20 },
+  optionsHeader: { fontWeight: 'bold' },
+  options: { marginVertical: 20 },
+  option: { flexDirection: 'row', marginVertical: 5 },
+  optionTouch: { borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
+  optionTouchDisabled: { backgroundColor: 'black', borderRadius: 5, borderStyle: 'solid', borderWidth: 0.5, padding: 10 },
+  optionTouchHeader: { textAlign: 'center' },
+  optionTouchHeaderDisabled: { color: 'white', textAlign: 'center' },
+  optionPrice: { fontWeight: 'bold', margin: 10 },
 
 	// note
 	note: { alignItems: 'center', marginBottom: 20 },
