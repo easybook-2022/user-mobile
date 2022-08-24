@@ -9,7 +9,6 @@ import { CommonActions, StackActions } from '@react-navigation/native';
 import { socket, logo_url } from '../../../assets/info'
 import { displayTime, resizePhoto } from 'geottuse-tools'
 
-import { getServiceInfo } from '../../apis/services'
 import { getLocationHours, getDayHours } from '../../apis/locations'
 import { getAllStylists, getStylistInfo, getAllWorkersTime, getWorkersHour } from '../../apis/owners'
 import { getAppointmentInfo, getExistBooking, makeAppointment } from '../../apis/schedules'
@@ -37,7 +36,6 @@ export default function Booktime(props) {
   const scheduleid = props.route.params.scheduleid ? props.route.params.scheduleid : null
 
   const [userId, setUserid] = useState(null)
-  const [clientInfo, setClientinfo] = useState({ id: -1, name: "" })
   const [name, setName] = useState('')
   const [hoursInfo, setHoursinfo] = useState({})
   const [oldTime, setOldtime] = useState(0)
@@ -82,7 +80,7 @@ export default function Booktime(props) {
   const [scheduled, setScheduled] = useState({})
   const [loaded, setLoaded] = useState(false)
 
-  const [step, setStep] = useState(props.route.params.scheduleid ? null : 0)
+  const [step, setStep] = useState(scheduleid ? null : 0)
   const [numCartItems, setNumcartitems] = useState(0)
 
   const [confirm, setConfirm] = useState({ show: false, service: "", time: 0, workerIds: [], note: "", requested: false, errormsg: "" })
@@ -112,26 +110,6 @@ export default function Booktime(props) {
           }
         })
     }
-  }
-  const getTheServiceInfo = async() => {
-    getServiceInfo(serviceid)
-      .then((res) => {
-        if (res.status == 200) {
-          return res.data
-        }
-      })
-      .then((res) => {
-        if (res) {
-          const { name } = res.serviceInfo
-
-          setName(name)
-        }
-      })
-      .catch((err) => {
-        if (err.response && err.response.status == 400) {
-          
-        }
-      })
   }
   const getTheAppointmentInfo = async(fetchBlocked) => {
     getAppointmentInfo(scheduleid)
@@ -718,7 +696,6 @@ export default function Booktime(props) {
     getTheLocationHours()
     getAllTheWorkersTime()
 
-    if (serviceid) getTheServiceInfo()
     if (scheduleid) {
       getAllScheduledTimes()
       getTheAppointmentInfo()
@@ -729,9 +706,9 @@ export default function Booktime(props) {
 
   useEffect(() => {
     if (selectedDateinfo.select) {
-      const currTime = new Date()
-
       if (oldTime == 0) {
+        const currTime = new Date()
+
         getCalendar(currTime.getMonth(), currTime.getFullYear())
       } else {
         const prevTime = new Date(oldTime)

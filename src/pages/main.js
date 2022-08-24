@@ -72,6 +72,7 @@ export default function Main(props) {
 					}
 				})
 				.catch((err) => {
+          console.log(err)
 					if (err.response && err.response.status == 400) {
             const { errormsg, status } = err.response.data
 					}
