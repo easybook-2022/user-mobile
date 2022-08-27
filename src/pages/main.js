@@ -290,7 +290,7 @@ export default function Main(props) {
 				socket.emit("socket/user/login", userId, () => setShowdisabledscreen(false))
 			}
 		})
-		socket.io.on("close", () => userId != null ? setShowdisabledscreen(true) : {})
+		socket.io.on("close", () => userId != null ? setShowdisabledscreen(true) : setShowdisabledscreen(false))
 
     return () => {
       socket.off("updateNumNotifications")
@@ -349,8 +349,8 @@ export default function Main(props) {
 			clearInterval(updateTrackUser)
 			socket.off("updateNumNotifications")
 		}
-	}, [numNotifications])
-
+	}, [numNotifications, userId])
+  
 	return (
 		<SafeAreaView style={styles.main}> 
 			<View style={styles.box}>
@@ -492,7 +492,7 @@ export default function Main(props) {
 								socket.emit("socket/user/logout", userId, () => {
 									clearInterval(updateTrackUser)
 									AsyncStorage.clear()
-									setUserid()
+									setUserid(null)
 								})
 							} else {
 								setShowauth(true)

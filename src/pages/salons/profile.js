@@ -30,7 +30,7 @@ const wsize = p => {return width * (p / 100)}
 
 export default function Profile(props) {
 	const { locationid } = props.route.params
-
+  
 	const [logo, setLogo] = useState('')
 	const [name, setName] = useState('')
 	const [address, setAddress] = useState('')
