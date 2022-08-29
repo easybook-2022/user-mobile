@@ -3,6 +3,7 @@ import {
 	SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, View, Text, TextInput, 
 	Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -18,6 +19,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Account(props) {
 	const [username, setUsername] = useState('')
@@ -30,8 +32,9 @@ export default function Account(props) {
 
 	const getTheUserInfo = async() => {
 		const userid = await AsyncStorage.getItem("userid")
+    const data = { userid, cancelToken: source.token }
 
-		getUserInfo(userid)
+		getUserInfo(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -56,7 +59,7 @@ export default function Account(props) {
 		const userid = await AsyncStorage.getItem("userid")
 
 		if (username && cellnumber) {
-			const data = { userid, username, cellnumber, password, confirmPassword }
+			const data = { userid, username, cellnumber, password, confirmPassword, cancelToken: source.token }
 
 			setLoading(true)
 
@@ -113,6 +116,14 @@ export default function Account(props) {
   
 	useEffect(() => {
 		getTheUserInfo()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
 	}, [])
 
 	return (

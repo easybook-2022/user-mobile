@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { SafeAreaView, Dimensions, View, ScrollView, Text, Image, TextInput, TouchableOpacity, Modal, StyleSheet } from 'react-native'
+import axios from 'axios'
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { resizePhoto } from 'geottuse-tools';
 import { logo_url } from '../../assets/info'
@@ -12,6 +13,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Menus(props) {
   const { locationid, refetchMenu, type } = props
@@ -21,7 +23,9 @@ export default function Menus(props) {
   const getAllMenus = () => {
     setLoaded(false)
 
-    getMenus(locationid)
+    const data = { locationid, cancelToken: source.token }
+
+    getMenus(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -190,6 +194,16 @@ export default function Menus(props) {
       </View>
     )
   }
+
+  useEffect(() => {
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
+  }, [])
 
   useEffect(() => getAllMenus(), [refetchMenu])
 

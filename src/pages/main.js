@@ -3,6 +3,7 @@ import {
 	SafeAreaView, Platform, ActivityIndicator, Dimensions, View, FlatList, Image, Text, TextInput, 
 	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native'
+import axios from 'axios'
 import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -32,6 +33,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Main(props) {
 	let updateTrackUser
@@ -57,7 +59,9 @@ export default function Main(props) {
 		const userid = await AsyncStorage.getItem("userid")
 
 		if (userid) {
-			getNumNotifications(userid)
+      const data = { userid, cancelToken: source.token }
+
+			getNumNotifications(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -83,7 +87,9 @@ export default function Main(props) {
 		const userid = await AsyncStorage.getItem("userid")
 
 		if (userid) {
-			getNumCartItems(userid)
+      const data = { userid, cancelToken: source.token }
+
+			getNumCartItems(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -102,7 +108,7 @@ export default function Main(props) {
 
 	const getTheLocations = async(longitude, latitude, locationName) => {
 		const d = new Date(), day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-		const data = { longitude, latitude, locationName, day: day[d.getDay()] }
+		const data = { longitude, latitude, locationName, day: day[d.getDay()], cancelToken: source.token }
 
     setLoaded(false)
 
@@ -138,7 +144,7 @@ export default function Main(props) {
 		const location = newLocations[lindex]
 		const { longitude, latitude } = geolocation
 		const d = new Date(), day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-		const data = { longitude, latitude, locationName: searchLocationname, type, index, day: day[d.getDay()] }
+		const data = { longitude, latitude, locationName: searchLocationname, type, index, day: day[d.getDay()], cancelToken: source.token }
 
 		getMoreLocations(data)
 			.then((res) => {
@@ -230,7 +236,7 @@ export default function Main(props) {
 		})
 
 		if (userid) {
-			updateNotificationToken({ userid, token: data })
+			updateNotificationToken({ userid, token: data, cancelToken: source.token })
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -312,7 +318,17 @@ export default function Main(props) {
 		}
 	}
 
-  useEffect(() => initialize(), [])
+  useEffect(() => {
+    initialize()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
+  }, [])
 
   useFocusEffect(
     useCallback(() => {

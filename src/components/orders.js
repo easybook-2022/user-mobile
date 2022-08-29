@@ -3,12 +3,13 @@ import {
   SafeAreaView, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, 
   Text, TextInput, TouchableOpacity, StyleSheet, Modal 
 } from 'react-native';
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { resizePhoto } from 'geottuse-tools'
 import { socket, logo_url } from '../../assets/info'
 import { searchFriends, selectUser, requestUserPaymentMethod } from '../apis/users'
-import { getCartItems, getCartItemsTotal, editCartItem, updateCartItem, removeFromCart, changeCartItem, checkoutCart } from '../apis/carts'
+import { getCartItems, editCartItem, updateCartItem, removeFromCart, changeCartItem, checkoutCart } from '../apis/carts'
 
 import Loadingprogress from '../widgets/loadingprogress'
 
@@ -16,6 +17,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Orders(props) {
 	const [userId, setUserid] = useState(null)
@@ -100,8 +102,9 @@ export default function Orders(props) {
 
 	const getTheCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
+    const data = { userid, cancelToken: source.token }
 
-		getCartItems(userid)
+		getCartItems(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -124,7 +127,9 @@ export default function Orders(props) {
 			})
 	}
 	const editTheCartItem = async(cartid) => {
-		editCartItem(cartid)
+    const data = { cartid, cancelToken: source.token }
+
+		editCartItem(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -153,7 +158,7 @@ export default function Orders(props) {
 	}
 	const updateTheCartItem = () => {
 		const { cartid, quantity, sizes, quantities, percents, extras, note } = itemInfo
-		let data = { cartid, quantity, note }
+		let data = { cartid, quantity, note, cancelToken: source.token }
     const newSizes = [], newQuantities = [], newPercents = [], newExtras = []
 
     setLoaded(false)
@@ -206,7 +211,9 @@ export default function Orders(props) {
 			})
 	}
 	const removeTheCartItem = id => {
-		removeFromCart(id)
+    const data = { id, cancelToken: source.token }
+
+		removeFromCart(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -225,10 +232,15 @@ export default function Orders(props) {
 					setItems(newItems)
 				}
 			})
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
 	}
 
 	const checkout = () => {
-		let data = { userid: userId }
+		let data = { userid: userId, cancelToken: source.token }
 
 		checkoutCart(data)
 			.then((res) => {
@@ -331,6 +343,14 @@ export default function Orders(props) {
 
 	useEffect(() => {
 		getTheCartItems()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
 	}, [])
 
 	useEffect(() => {

@@ -3,16 +3,31 @@ import { url } from '../../assets/info'
 
 const beginUrl = `${url}/owners/`
 
-export const getAllStylists = id => {
-	return axios.get(`${beginUrl}get_all_stylists/${id}`)
+export const getAllStylists = data => {
+  const { locationid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_all_stylists/${locationid}`,
+    { cancelToken }
+  )
 }
 
-export const getStylistInfo = id => {
-	return axios.get(`${beginUrl}get_stylist_info/${id}`)
+export const getStylistInfo = data => {
+  const { workerid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_stylist_info/${workerid}`,
+    { cancelToken }
+  )
 }
 
-export const getAllWorkersTime = id => {
-  return axios.get(`${beginUrl}get_all_workers_time/${id}`)
+export const getAllWorkersTime = data => {
+  const { locationid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}get_all_workers_time/${locationid}`,
+    { cancelToken }
+  )
 }
 
 export const getWorkersHour = data => {
@@ -29,6 +44,11 @@ export const searchWorkers = data => {
 	)
 }
 
-export const getWorkersTime = id => {
-  return axios.get(`${beginUrl}get_workers_time/${id}`)
+export const getWorkersTime = data => {
+  const { locationid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}get_workers_time/${locationid}`,
+    { cancelToken }
+  )
 }

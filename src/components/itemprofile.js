@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, Platform, Dimensions, ScrollView, View, FlatList, Image, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions } from '@react-navigation/native';
 import Constants from 'expo-constants';
@@ -22,6 +23,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Itemprofile(props) {
 	const { locationid, productid, type } = props.route.params
@@ -52,7 +54,9 @@ export default function Itemprofile(props) {
 		const userid = await AsyncStorage.getItem("userid")
 
 		if (userid) {
-			getNumCartItems(userid)
+      const data = { userid, cancelToken: source.token }
+
+			getNumCartItems(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -231,7 +235,7 @@ export default function Itemprofile(props) {
 					callfor, 
 					sizes: newSizes, quantities: newQuantities, percents: newPercents, extras: newExtras, 
 					note: itemNote ? itemNote : "", type, 
-					receiver
+					receiver, cancelToken: source.token
 				}
 
 				addItemtocart(data)
@@ -262,7 +266,9 @@ export default function Itemprofile(props) {
 		setNumcartitems(numCartItems + 1)
 	}
 	const getTheProductInfo = async() => {
-		getProductInfo(productid)
+    const data = { productid, cancelToken: source.token }
+
+		getProductInfo(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -311,7 +317,17 @@ export default function Itemprofile(props) {
     }
 	}
 
-	useEffect(() => initialize(), [])
+	useEffect(() => {
+    initialize()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
+  }, [])
 
 	return (
 		<SafeAreaView style={styles.itemprofile}>

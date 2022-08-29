@@ -35,20 +35,37 @@ export const updateNotificationToken = data => {
 	)
 }
 
-export const getUserInfo = id => {
-	return axios.get(`${beginUrl}get_user_info/${id}`)
+export const getUserInfo = data => {
+  const { userid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_user_info/${userid}`,
+    { cancelToken }
+  )
 }
 
-export const getNumNotifications = id => {
-	return axios.get(`${beginUrl}get_num_notifications/${id}`)
+export const getNumNotifications = data => {
+  const { userid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_num_notifications/${userid}`,
+    { cancelToken }
+  )
 }
 
-export const getNotifications = id => {
-	return axios.get(`${beginUrl}get_notifications/${id}`)
+export const getNotifications = data => {
+  const { userid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_notifications/${userid}`,
+    { cancelToken }
+  )
 }
 
-export const getCode = phonenumber => {
-	return axios.get(`${beginUrl}get_reset_code/${phonenumber}`)
+export const getCode = data => {
+  const { cellnumber, cancelToken } = data
+
+	return axios.get(`${beginUrl}get_reset_code/${cellnumber}`)
 }
 
 export const resetPassword = data => {

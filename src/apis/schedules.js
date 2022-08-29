@@ -10,8 +10,13 @@ export const makeAppointment = data => {
 	)
 }
 
-export const closeSchedule = id => {
-	return axios.get(`${beginUrl}close_schedule/${id}`)
+export const closeSchedule = data => {
+  const { scheduleid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}close_schedule/${scheduleid}`,
+    { cancelToken }
+  )
 }
 
 export const cancelRequest = data => {
@@ -21,12 +26,13 @@ export const cancelRequest = data => {
   )
 }
 
-export const getScheduleInfo = id => {
-	return axios.get(`${beginUrl}get_schedule_info/${id}`)
-}
+export const getAppointmentInfo = data => {
+  const { scheduleid, cancelToken } = data
 
-export const getAppointmentInfo = id => {
-  return axios.get(`${beginUrl}get_appointment_info/${id}`)
+  return axios.get(
+    `${beginUrl}get_appointment_info/${scheduleid}`,
+    { cancelToken }
+  )
 }
 
 export const getExistBooking = data => {

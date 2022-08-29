@@ -3,6 +3,7 @@ import {
   SafeAreaView, Platform, ActivityIndicator, Dimensions, ScrollView, View, FlatList, Image, Text, 
   TextInput, TouchableOpacity, Linking, StyleSheet, Modal 
 } from 'react-native';
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions } from '@react-navigation/native';
@@ -25,6 +26,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Profile(props) {
 	const { locationid } = props.route.params
@@ -44,12 +46,14 @@ export default function Profile(props) {
 	
 	const [openOrders, setOpenorders] = useState(false)
 	const [numCartItems, setNumcartitems] = useState(0)
-  
+
 	const getTheNumCartItems = async() => {
 		const userid = await AsyncStorage.getItem("userid")
 
 		if (userid) {
-			getNumCartItems(userid)
+      const data = { userid, cancelToken: source.token }
+
+			getNumCartItems(data)
 				.then((res) => {
 					if (res.status == 200) {
 						return res.data
@@ -71,7 +75,7 @@ export default function Profile(props) {
 	const getTheLocationProfile = async() => {
 		const longitude = await AsyncStorage.getItem("longitude")
 		const latitude = await AsyncStorage.getItem("latitude")
-		const data = { locationid, longitude, latitude }
+		const data = { locationid, longitude, latitude, cancelToken: source.token }
 
 		getLocationProfile(data)
 			.then((res) => {
@@ -105,6 +109,14 @@ export default function Profile(props) {
 
 	useEffect(() => {
     initialize()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
   }, [])
 
 	return (

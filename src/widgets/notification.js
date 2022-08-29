@@ -3,6 +3,7 @@ import {
   SafeAreaView, Platform, ActivityIndicator, Dimensions, View, FlatList, Text, 
   TextInput, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
@@ -18,6 +19,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Notification(props) {
   const [userId, setUserid] = useState(null)
@@ -28,7 +30,7 @@ export default function Notification(props) {
 	const [showDisabledScreen, setShowdisabledscreen] = useState(false)
 
 	const cancelTheCartOrder = async(cartid, index) => {
-		let data = { userid: userId, cartid, type: "cancelCartOrder" }
+		let data = { userid: userId, cartid, type: "cancelCartOrder", cancelToken: source.token }
 
 		cancelCartOrder(data)
 			.then((res) => {
@@ -57,7 +59,7 @@ export default function Notification(props) {
 	const confirmTheCartOrder = async(index) => {
 		const info = items[index]
 		const { id, name, quantity, price } = info
-		let data = { userid: userId, id, type: "confirmCartOrder" }
+		let data = { userid: userId, id, type: "confirmCartOrder", cancelToken: source.token }
 
 		confirmCartOrder(data)
 			.then((res) => {
@@ -77,12 +79,17 @@ export default function Notification(props) {
           })
 				}
 			})
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
 	}
 	const closeTheSchedule = index => {
 		const { id } = items[index]
-		let data = { scheduleid: id, type: "closeSchedule" }
+		let data = { scheduleid: id, type: "closeSchedule", cancelToken: source.token }
 
-		closeSchedule(id)
+		closeSchedule(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -113,7 +120,7 @@ export default function Notification(props) {
 			setCancelschedule({ show: true, id, location, type: locationtype, service, time, index })
 		} else {
 			const { id, time, index } = cancelSchedule
-			let data = { userid: userId, scheduleid: id, type: "cancelRequest", timeDisplay: displayTime(time) }
+			let data = { userid: userId, scheduleid: id, type: "cancelRequest", timeDisplay: displayTime(time), cancelToken: source.token }
 
       setCancelschedule({ ...cancelSchedule, loading: true })
 
@@ -147,8 +154,9 @@ export default function Notification(props) {
 
 	const getTheNotifications = async() => {
 		const userid = await AsyncStorage.getItem("userid")
+    const data = { userid, cancelToken: source.token }
 
-		getNotifications(userid)
+		getNotifications(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -288,6 +296,14 @@ export default function Notification(props) {
 
 	useEffect(() => {
 		getTheNotifications()
+
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
 	}, [])
 
 	useEffect(() => {
@@ -642,8 +658,8 @@ const styles = StyleSheet.create({
 	body: { flexDirection: 'column', height: '80%', justifyContent: 'space-around' },
 	item: { borderStyle: 'solid', borderBottomWidth: 0.5, borderTopWidth: 0.5, paddingHorizontal: 10, paddingVertical: 30 },
 	itemImageHolders: { alignItems: 'center', width: wsize(30) },
-  itemLocationImageHolder: { borderRadius: (wsize(30) - 5) / 2, height: wsize(30) - 5, overflow: 'hidden' },
-	itemServiceImageHolder: { borderRadius: (wsize(30) - 10) / 2, height: wsize(30) - 10, overflow: 'hidden' },
+  itemLocationImageHolder: { alignItems: 'center', borderRadius: (wsize(30) - 5) / 2, flexDirection: 'column', height: wsize(30) - 5, justifyContent: 'space-around', overflow: 'hidden', width: wsize(30) - 5 },
+	itemServiceImageHolder: { alignItems: 'center', borderRadius: (wsize(30) - 10) / 2, flexDirection: 'column', height: wsize(30) - 10, justifyContent: 'space-around', overflow: 'hidden', width: wsize(30) - 10 },
 
 	// service
 	itemServiceHeader: { fontSize: wsize(5), fontWeight: 'bold', margin: 10, textAlign: 'center' },

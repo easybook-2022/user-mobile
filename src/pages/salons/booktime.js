@@ -3,6 +3,7 @@ import {
 	SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TextInput, 
 	TouchableOpacity, TouchableWithoutFeedback, Keyboard, StyleSheet, Modal 
 } from 'react-native';
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { CommonActions, StackActions } from '@react-navigation/native';
@@ -27,6 +28,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Booktime(props) {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -93,7 +95,9 @@ export default function Booktime(props) {
     const userid = await AsyncStorage.getItem("userid")
 
     if (userid) {
-      getNumCartItems(userid)
+      const data = { userid, cancelToken: source.token }
+
+      getNumCartItems(data)
         .then((res) => {
           if (res.status == 200) {
             return res.data
@@ -113,7 +117,9 @@ export default function Booktime(props) {
     }
   }
   const getTheAppointmentInfo = async(fetchBlocked) => {
-    getAppointmentInfo(scheduleid)
+    const data = { scheduleid, cancelToken: source.token }
+
+    getAppointmentInfo(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -172,7 +178,9 @@ export default function Booktime(props) {
       })
   }
   const getTheServiceInfo = () => {
-    getServiceInfo(serviceid)
+    const data = { serviceid, cancelToken: source.token }
+
+    getServiceInfo(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -188,7 +196,9 @@ export default function Booktime(props) {
       })
   }
   const getTheLocationHours = () => {
-    getLocationHours(locationid)
+    const data = { locationid, cancelToken: source.token }
+
+    getLocationHours(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -215,7 +225,7 @@ export default function Booktime(props) {
       months[currTime.getMonth()] + " " + 
       currTime.getDate() + " " + 
       currTime.getFullYear()
-    ), timeStr = "", newMonth, newDate
+    ), timeStr = "", newMonth, newDate = null
 
     data.forEach(function (info, rowindex) {
       info.row.forEach(function (day, dayindex) {
@@ -314,27 +324,43 @@ export default function Booktime(props) {
           } else {
             day.noservice = true
           }
-        }   
+        }
       })
     })
 
-    newMonth = months[month]
-    newDate = bookedDateinfo.date == 0 ? 
-        currDate 
-        : 
-        bookedDateinfo.date < currDate ? currDate : bookedDateinfo.date
+    if (currDate > 0) {
+      newMonth = months[month]
 
-    setSelecteddateinfo({ 
-      ...selectedDateinfo, 
-      month: newMonth, day: currDay, 
-      date: newDate, year,
-      update: scheduleid ? selectedDateinfo.update + 1 : selectedWorkerinfo.update,
-      updateType: scheduleid ? 'time' : selectedDateinfo.updateType
-    })
-    setCalendar({ ...calendar, data, firstDay, numDays })
+      if (!scheduleid) {
+        newDate = currDate
+      } else {
+        if (months.indexOf(bookedDateinfo.month) < month || bookedDateinfo.date < currDate) {
+          newDate = currDate
+        } else {
+          newDate = bookedDateinfo.date
+        }
+      }
+
+      setSelecteddateinfo({ 
+        ...selectedDateinfo, 
+        month: newMonth, day: currDay, 
+        date: newDate, year,
+        update: scheduleid ? selectedDateinfo.update + 1 : selectedWorkerinfo.update,
+        updateType: scheduleid ? 'time' : selectedDateinfo.updateType
+      })
+
+      setCalendar({ ...calendar, data, firstDay, numDays })
+    } else {
+      getCalendar(
+        month == 11 ? 0 : month + 1,
+        month == 11 ? year + 1 : year
+      )
+    }
   }
   const getAllTheStylists = () => {
-    getAllStylists(locationid)
+    const data = { locationid, cancelToken: source.token }
+
+    getAllStylists(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -352,7 +378,9 @@ export default function Booktime(props) {
       })
   }
   const getAllTheWorkersTime = () => {
-    getAllWorkersTime(locationid)
+    const data = { locationid, cancelToken: source.token }
+
+    getAllWorkersTime(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -404,9 +432,16 @@ export default function Booktime(props) {
           if (scheduleid) setStep(null)
         }
       })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
+        }
+      })
   }
   const selectWorker = (id, showCalendar) => {
-    getStylistInfo(id)
+    const data = { workerid: id, cancelToken: source.token }
+
+    getStylistInfo(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -424,6 +459,11 @@ export default function Booktime(props) {
           } else {
             setStep(showCalendar ? 1 : null)
           }
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status == 400) {
+          const { errormsg, status } = err.response.data
         }
       })
   }
@@ -621,7 +661,7 @@ export default function Booktime(props) {
         time: selecteddate, note: note ? note : "", 
         timeDisplay: displayTime(selecteddate),
         type: scheduleid ? "remakeAppointment" : "makeAppointment",
-        blocked
+        blocked, cancelToken: source.token
       }
 
       makeAppointment(data)
@@ -700,8 +740,10 @@ export default function Booktime(props) {
       hour: info.getHours(), minute: info.getMinutes() 
     }
   }
-  
+
 	useEffect(() => {
+    source = axios.CancelToken.source();
+
     getTheNumCartItems()
     getAllTheStylists()
     getTheLocationHours()
@@ -713,6 +755,12 @@ export default function Booktime(props) {
       getTheAppointmentInfo()
     } else {
       setLoaded(true)
+    }
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
     }
 	}, [])
 
@@ -747,7 +795,7 @@ export default function Booktime(props) {
                 compareStr + "bl" in scheduled[workerid]["scheduled"]
               )
             ) { // stylist is off or time is blocked, confirmed
-              selectDate()
+              setStep(1)
             }
           }
         } else {

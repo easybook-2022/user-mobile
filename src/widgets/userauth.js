@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { SafeAreaView, ActivityIndicator, Dimensions, View, Text, Image, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, StyleSheet } from 'react-native'
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signinInfo } from '../../assets/info'
 import { displayPhonenumber } from 'geottuse-tools'
@@ -10,6 +11,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 const { username, cellnumber, password, confirmPassword } = signinInfo
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 // widgets
 import Loadingprogress from './loadingprogress';
@@ -19,7 +21,7 @@ export default function Userauth(props) {
 
 	const login = () => {
 		const { cellnumber, password } = authInfo.info
-		const data = { username, cellnumber, password }
+		const data = { username, cellnumber, password, cancelToken: source.token }
 
 		setAuthinfo({ ...authInfo, loading: true })
 
@@ -57,7 +59,9 @@ export default function Userauth(props) {
 
 		setAuthinfo({ ...authInfo, loading: true })
 
-		verifyUser(cellnumber)
+    const data = { cellnumber, cancelToken: source.token }
+
+		verifyUser(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -80,7 +84,7 @@ export default function Userauth(props) {
 	}
 	const register = () => {
 		const { username, cellnumber, password } = authInfo.info
-		const data = { username, cellnumber, password, confirmPassword: password }
+		const data = { username, cellnumber, password, confirmPassword: password, cancelToken: source.token }
 
 		setAuthinfo({ ...authInfo, loading: true })
 
@@ -109,8 +113,9 @@ export default function Userauth(props) {
 	}
 	const getTheCode = () => {
 		const cellnumber = authInfo.info.cellnumber ? authInfo.info.cellnumber : ""
+    const data = { cellnumber, cancelToken: source.token }
 
-		getCode(cellnumber)
+		getCode(data)
 			.then((res) => {
 				if (res.status == 200) {
 					return res.data
@@ -151,7 +156,7 @@ export default function Userauth(props) {
 		const cellnumber = info.cellnumber ? info.cellnumber : ""
 		const newPassword = info.newPassword ? info.newPassword : ""
 		const confirmPassword = info.confirmPassword ? info.confirmPassword : ""
-		const data = { cellnumber, newPassword, confirmPassword }
+		const data = { cellnumber, newPassword, confirmPassword, cancelToken: source.token }
 
 		resetPassword(data)
 			.then((res) => {
@@ -177,6 +182,16 @@ export default function Userauth(props) {
 				}
 			})
 	}
+
+  useEffect(() => {
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
+  }, [])
 
 	return (
 		<View style={styles.authContainer}>

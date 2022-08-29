@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { SafeAreaView, ActivityIndicator, Platform, Dimensions, ScrollView, View, FlatList, Text, Image, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { resizePhoto } from 'geottuse-tools';
@@ -12,6 +13,7 @@ import Disable from '../widgets/disable'
 
 const { height, width } = Dimensions.get('window')
 const wsize = p => {return width * (p / 100)}
+let source
 
 export default function Seeorders(props) {
   const { ordernumber } = props.route.params
@@ -23,8 +25,9 @@ export default function Seeorders(props) {
   
   const seeTheOrders = async() => {
     const userid = await AsyncStorage.getItem("userid")
+    const data = { userid, cancelToken: source.token }
 
-    seeOrders(ordernumber)
+    seeOrders(data)
       .then((res) => {
         if (res.status == 200) {
           return res.data
@@ -62,6 +65,16 @@ export default function Seeorders(props) {
     })
     socket.io.on("close", () => userId != null ? setShowdisabledscreen(true) : {})
   }
+
+  useEffect(() => {
+    source = axios.CancelToken.source();
+
+    return () => {
+      if (source) {
+        source.cancel("components got unmounted");
+      }
+    }
+  }, [])
 
   useEffect(() => {
     startWebsocket()

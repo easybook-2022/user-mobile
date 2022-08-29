@@ -3,20 +3,31 @@ import { url } from '../../assets/info'
 
 const beginUrl = `${url}/carts/`
 
-export const getNumCartItems = id => {
-	return axios.get(`${beginUrl}get_num_items/${id}`)
+export const getNumCartItems = data => {
+  const { userid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_num_items/${userid}`,
+    { cancelToken }
+  )
 }
 
-export const getCartItems = id => {
-	return axios.get(`${beginUrl}get_cart_items/${id}`)
+export const getCartItems = data => {
+  const { userid, cancelToken } = data
+
+	return axios.get(
+    `${beginUrl}get_cart_items/${userid}`,
+    { cancelToken }
+  )
 }
 
-export const getCartItemsTotal = id => {
-	return axios.get(`${beginUrl}get_cart_items_total/${id}`)
-}
+export const editCartItem = data => {
+  const { cartid, cancelToken } = data
 
-export const editCartItem = id => {
-	return axios.get(`${beginUrl}edit_cart_item/${id}`)
+	return axios.get(
+    `${beginUrl}edit_cart_item/${cartid}`,
+    { cancelToken }
+  )
 }
 
 export const updateCartItem = data => {
@@ -33,8 +44,12 @@ export const addItemtocart = data => {
 	)
 }
 
-export const removeFromCart = id => {
-	return axios.get(`${beginUrl}remove_item_from_cart/${id}`)
+export const removeFromCart = data => {
+  const { id, cancelToken } = data
+	return axios.get(
+    `${beginUrl}remove_item_from_cart/${id}`,
+    { cancelToken }
+  )
 }
 
 export const checkoutCart = data => {
@@ -44,6 +59,11 @@ export const checkoutCart = data => {
 	)
 }
 
-export const seeOrders = id => {
-  return axios.get(`${beginUrl}see_orders/${id}`)
+export const seeOrders = data => {
+  const { userid, cancelToken } = data
+
+  return axios.get(
+    `${beginUrl}see_orders/${userid}`,
+    { cancelToken }
+  )
 }
