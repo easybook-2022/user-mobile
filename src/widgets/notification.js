@@ -476,6 +476,12 @@ export default function Notification(props) {
                             {'\nat\n' + item.location}
                             {'\n' + displayTime(item.time)}
                             {'\n' + (item.worker != null && '\nStylist: ' + item.worker.username)}
+                            {'\n\n' + (
+                              item.leftoverVisits == 0 ? 
+                                'You have a discount.\nLet the cashier know'
+                                :
+                                'You have ' + item.leftoverVisits + ' visit(s)\nleft before your next discount'
+                            )}
                           </Text>
 
 													{item.action == "confirmed" && (

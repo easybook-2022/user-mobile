@@ -663,7 +663,7 @@ export default function Booktime(props) {
         type: scheduleid ? "remakeAppointment" : "makeAppointment",
         blocked, cancelToken: source.token
       }
-
+      
       makeAppointment(data)
         .then((res) => {
           if (res.status == 200) {
