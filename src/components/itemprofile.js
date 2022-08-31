@@ -318,9 +318,9 @@ export default function Itemprofile(props) {
 	}
 
 	useEffect(() => {
-    initialize()
-
     source = axios.CancelToken.source();
+    
+    initialize()
 
     return () => {
       if (source) {

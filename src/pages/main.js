@@ -319,9 +319,9 @@ export default function Main(props) {
 	}
 
   useEffect(() => {
-    initialize()
-
     source = axios.CancelToken.source();
+    
+    initialize()
 
     return () => {
       if (source) {

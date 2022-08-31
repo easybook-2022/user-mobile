@@ -115,9 +115,9 @@ export default function Account(props) {
 	}
   
 	useEffect(() => {
-		getTheUserInfo()
-
     source = axios.CancelToken.source();
+    
+		getTheUserInfo()
 
     return () => {
       if (source) {

@@ -295,9 +295,9 @@ export default function Notification(props) {
 	}
 
 	useEffect(() => {
-		getTheNotifications()
-
     source = axios.CancelToken.source();
+    
+		getTheNotifications()
 
     return () => {
       if (source) {
